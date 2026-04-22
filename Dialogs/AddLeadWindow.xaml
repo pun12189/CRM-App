@@ -1,0 +1,114 @@
+﻿<Window x:Class="CallMan.Dialogs.AddLeadWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CallMan.Dialogs"
+        mc:Ignorable="d"
+        Title="Generate New Lead" Height="700" Width="400">
+    <StackPanel Margin="20">
+        <TextBlock Text="Customer Name"/>
+        <TextBox Text="{Binding NewLead.CustomerName}" Margin="0,5,0,10"/>
+
+        <TextBlock Text="Phone"/>
+        <TextBox Text="{Binding NewLead.Phone}" Margin="0,5,0,10"/>
+
+        <TextBlock Text="Email"/>
+        <TextBox Text="{Binding NewLead.Email}" Margin="0,5,0,10"/>
+
+        <TextBlock Text="Lead Type (Status)"/>
+        <ComboBox SelectedValue="{Binding NewLead.Status}" Margin="0,5,0,10">
+            <ComboBoxItem Content="New"/>
+            <ComboBoxItem Content="Follow-up"/>
+            <ComboBoxItem Content="Mature"/>
+        </ComboBox>
+
+        <GroupBox Header="Company &amp; Address (Optional)" Margin="0,10,0,0">
+            <Grid Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,5">
+                    <TextBlock Text="Company Name"/>
+                    <TextBox Text="{Binding NewLead.CompanyName}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,5">
+                    <TextBlock Text="Address"/>
+                    <TextBox Text="{Binding NewLead.AddressLine}" Height="40" TextWrapping="Wrap"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,5,0">
+                    <TextBlock Text="Pincode"/>
+                    <TextBox Text="{Binding NewLead.Pincode}"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,5,0">
+                    <TextBlock Text="City"/>
+                    <TextBox Text="{Binding NewLead.City}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,5,0">
+                    <TextBlock Text="State"/>
+                    <TextBox Text="{Binding NewLead.State}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,0,5,0">
+                    <TextBlock Text="District"/>
+                    <TextBox Text="{Binding NewLead.District}"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="4" Grid.Column="0" Margin="0,0,5,0">
+                    <TextBlock Text="Country"/>
+                    <TextBox Text="{Binding NewLead.Country}"/>
+                </StackPanel>
+
+            </Grid>
+        </GroupBox>
+
+        <Separator Margin="0,10"/>
+        <TextBlock Text="Custom Information" FontWeight="Bold"/>
+
+        <Grid Margin="0,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox Text="{Binding TempFieldName}" Tag="Label (e.g. City)" Margin="0,0,5,0"/>
+            <TextBox Grid.Column="1" Text="{Binding TempFieldValue}" Tag="Value" Margin="0,0,5,0"/>
+            <Button Grid.Column="2" Content="Add" Command="{Binding AddCustomFieldCommand}" Width="50" Background="#EEE"/>
+        </Grid>
+
+        <ItemsControl ItemsSource="{Binding VisibleCustomFields}" Height="100">
+            <ItemsControl.Template>
+                <ControlTemplate>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsPresenter/>
+                    </ScrollViewer>
+                </ControlTemplate>
+            </ItemsControl.Template>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                        <TextBlock Text="{Binding Key}" FontWeight="SemiBold" Width="100"/>
+                        <TextBlock Text="→ " Foreground="Gray"/>
+                        <TextBlock Text="{Binding Value}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Button Content="Save Lead" Command="{Binding SaveLeadCommand}" 
+                Margin="0,20,0,0" Height="40" Background="#1794A1" Foreground="White"/>
+    </StackPanel>
+</Window>

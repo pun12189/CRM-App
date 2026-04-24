@@ -6,11 +6,24 @@
         xmlns:local="clr-namespace:CallMan"
         xmlns:vm="clr-namespace:CallMan.ViewModels"
         xmlns:views="clr-namespace:CallMan.Views"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="SofricONE CRM" WindowState="Maximized" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <DataTemplate DataType="{x:Type vm:LeadViewModel}">
             <views:LeadView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MaturedLeadsViewModel}">
+            <views:MaturedLeadsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OrderViewModel}">
+            <views:OrderView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AllOrdersViewModel}">
+            <views:AllOrdersView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView />
         </DataTemplate>
         <Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -70,13 +83,60 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="1" Background="#2C3E50">
-            <StackPanel Orientation="Horizontal" Margin="10,0">
-                <Button Content="Dashboard" Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"/>
-                <Button Content="Leads" Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateCommand}" CommandParameter="Leads"/>
-                <Button Content="Customers" Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateCommand}" CommandParameter="Customers"/>
-                <Button Content="Admin Settings" Style="{StaticResource MenuButtonStyle}" Command="{Binding NavigateCommand}" CommandParameter="Settings"/>
-            </StackPanel>
+        <Border Grid.Row="1" Background="#2C3E50" Height="60" Effect="{DynamicResource MaterialDesignShadowDepth2}">
+            <Grid VerticalAlignment="Center">
+                <StackPanel Orientation="Horizontal">
+                    <Button Command="{Binding NavigateCommand}" 
+                    CommandParameter="Dashboard"
+                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                    Foreground="White" Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ViewDashboard" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="DASHBOARD" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding NavigateCommand}" 
+                    CommandParameter="Leads"
+                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                    Foreground="White" Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="AccountFilter" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="LEADS" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding NavigateCommand}" 
+                    CommandParameter="Customers"
+                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                    Foreground="White" Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Handshake" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="CUSTOMERS" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding NavigateCommand}" 
+                    CommandParameter="Orders"
+                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                    Foreground="White" Margin="0,0,10,0">   
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Handshake" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="ORDERS" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding NavigateCommand}" 
+                    CommandParameter="Settings"
+                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                    Foreground="White" >
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Cog" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="ADMIN SETTINGS" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>                
+            </Grid>
         </Border>
 
         <ContentControl Grid.Row="2" Content="{Binding CurrentView}"/>

@@ -40,13 +40,16 @@ namespace CallMan
 
             // 2. Register Services (They will now receive the DbContext)
             services.AddSingleton<IAuthService, AuthService>();
+            services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<LeadService>(); // Our Lead Management service
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();
             services.AddTransient<LoginViewModel>();
             services.AddTransient<LeadViewModel>();
-            services.AddTransient<AddLeadDialogViewModel>();            
+            services.AddTransient<AddLeadDialogViewModel>();
+            services.AddTransient<MaturedLeadsViewModel>(); 
+            services.AddTransient<AllOrdersViewModel>();
 
             // Views/Modules
             services.AddTransient<DashboardViewModel>();

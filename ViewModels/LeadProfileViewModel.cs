@@ -130,6 +130,14 @@ namespace CallMan.ViewModels
                         SelectedLead.Status = IsMatured ? "Matured" : (IsDead ? "Dead" : "Followup");
                         if (IsMatured)
                         {
+                            var newOrder = new Order
+                            {
+                                LeadId = SelectedLead.LeadId,
+                                TotalAmount = OrderValue,
+                                Description = $"Initial Order: {Message}",
+                                OrderDate = DateTime.Now
+                            };
+                            
                             var payment = new PaymentEntry
                             {
                                 LeadId = SelectedLead.LeadId,
@@ -139,7 +147,7 @@ namespace CallMan.ViewModels
                             };
 
                             // Use the service method that handles the transaction
-                            await _leadService.MatureLeadWithDoubleHistoryAsync(SelectedLead, payment, history);
+                            await _leadService.MatureLeadWithDoubleHistoryAsync(SelectedLead, newOrder, payment, history);
                         }
                         else
                         {

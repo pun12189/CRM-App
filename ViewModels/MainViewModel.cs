@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CallMan.Interfaces;
+using CallMan.Services;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,8 +20,14 @@ namespace CallMan.ViewModels
         [ObservableProperty]
         private string _userName = "Sanchi Developer";
 
-        public MainViewModel()
+        private readonly LeadService _leadService;
+        private readonly IDialogService _dialogService;
+
+        // These are injected via DI when the app starts
+        public MainViewModel(LeadService leadService, IDialogService dialogService)
         {
+            _leadService = leadService;
+            _dialogService = dialogService; 
             // Load Dashboard by default
             Navigate("Dashboard");
         }
@@ -35,6 +43,12 @@ namespace CallMan.ViewModels
                     break;
                 case "Dashboard":
                     CurrentView = App.ServiceProvider.GetRequiredService<DashboardViewModel>();
+                    break;
+                case "Customers":
+                    CurrentView = App.ServiceProvider.GetRequiredService<MaturedLeadsViewModel>();
+                    break;
+                case "Orders":
+                    CurrentView = App.ServiceProvider.GetRequiredService<AllOrdersViewModel>();
                     break;
                     // Add other cases as you build them
             }

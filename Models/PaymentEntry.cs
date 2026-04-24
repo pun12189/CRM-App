@@ -16,6 +16,9 @@ namespace CallMan.Models
         private int _leadId;
 
         [ObservableProperty]
+        private int _orderId;
+
+        [ObservableProperty]
         private decimal _totalOrderValue;
 
         [ObservableProperty]

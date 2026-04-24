@@ -61,7 +61,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Margin="3" VerticalAlignment="Center">
-                                <TextBlock HorizontalAlignment="Center" Text="{Binding Company, StringFormat=({0})}" FontSize="10" Margin="0,5,0,0" FontWeight="Bold"/>
+                                <TextBlock HorizontalAlignment="Center" Text="{Binding CompanyName, StringFormat=({0})}" FontSize="10" Margin="0,5,0,0" FontWeight="Bold"/>
                                 <TextBlock Text="{Binding CustomerName}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,5,5"/>
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                     <Button BorderThickness="0" ToolTip="Update Info" Command="{Binding DataContext.OpenLeadProfileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" Background="Transparent" Foreground="DarkSlateGray" FontWeight="Bold" Margin="5,0">

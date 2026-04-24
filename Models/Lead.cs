@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
@@ -14,7 +15,7 @@ namespace CallMan.Models
         public string CustomerName { get; set; } = string.Empty;
         public string? Email { get; set; }
         public string? Phone { get; set; }
-        public string Status { get; set; } = "New";
+        [ObservableProperty] private string _status = "New";
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // Structured Address Fields
@@ -56,5 +57,13 @@ namespace CallMan.Models
         [NotMapped]
         [ObservableProperty]
         private LeadHistoryEntry? _latestUpdate;
+
+        // UI Visual Helpers
+        public string PaymentStatusText => TotalBalanceDue <= 0 ? "Fully Paid" : "Balance Pending";
+        public string PaymentStatusColor => TotalBalanceDue <= 0 ? "#27AE60" : "#E67E22"; // Green vs Orange
+
+        // Navigation Properties (Optional, useful for deep loading)
+        public ObservableCollection<Order> Orders { get; set; } = new();
+        public ObservableCollection<PaymentEntry> Payments { get; set; } = new();
     }
 }

@@ -1,6 +1,7 @@
 ﻿using CallMan.Data;
 using CallMan.Models;
 using Dapper;
+using Mysqlx.Crud;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -204,7 +205,7 @@ namespace CallMan.Services
             }
         }
 
-        public async Task<bool> MatureLeadWithDoubleHistoryAsync(Lead lead, PaymentEntry payment, LeadHistoryEntry followUp)
+        public async Task<bool> MatureWithOrderAndPaymentAsync(Lead lead, Models.Order order, PaymentEntry payment, LeadHistoryEntry history)
         {
             using var db = _context.CreateConnection();
             db.Open();
@@ -215,9 +216,48 @@ namespace CallMan.Services
                 // 1. Update Lead Status
                 await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured' WHERE LeadId = @LeadId", new { lead.LeadId }, trans);
 
-                // 2. Record Financial Entry
-                string paySql = @"INSERT INTO Payments (LeadId, TotalOrderValue, AmountReceived, Remarks, PaymentDate) 
-                          VALUES (@LeadId, @TotalOrderValue, @AmountReceived, @Remarks, NOW())";
+                // 2. Create the Order
+                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, Status) 
+                            VALUES (@LeadId, @TotalAmount, @Description, 'Partially Paid');
+                            SELECT LAST_INSERT_ID();";
+                int newOrderId = await db.QuerySingleAsync<int>(orderSql, order, trans);
+
+                // 3. Record First Payment linked to that Order
+                payment.OrderId = newOrderId;
+                string paySql = @"INSERT INTO Payments (LeadId, OrderId, TotalOrderValue, AmountReceived, Remarks) 
+                          VALUES (@LeadId, @OrderId, @TotalOrderValue, @AmountReceived, @Remarks)";
+                await db.ExecuteAsync(paySql, payment, trans);
+
+                // 4. Add History Milestone
+                await db.ExecuteAsync("INSERT INTO LeadHistory (LeadId, Message, ActionType, FollowupStage) VALUES (@LeadId, @Message, 'System', 'Matured')", history, trans);
+
+                trans.Commit();
+                return true;
+            }
+            catch { trans.Rollback(); throw; }
+        }
+
+        public async Task<bool> MatureLeadWithDoubleHistoryAsync(Lead lead, Models.Order order, PaymentEntry payment, LeadHistoryEntry followUp)
+        {
+            using var db = _context.CreateConnection();
+            db.Open();
+            using var trans = db.BeginTransaction();
+
+            try
+            {
+                // 1. Update Lead Status
+                await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured' WHERE LeadId = @LeadId", new { lead.LeadId }, trans);
+
+                // 2. Create the Order
+                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, Status) 
+                            VALUES (@LeadId, @TotalAmount, @Description, 'Partially Paid');
+                            SELECT LAST_INSERT_ID();";
+                int newOrderId = await db.QuerySingleAsync<int>(orderSql, order, trans);
+
+                // 3. Record First Payment linked to that Order
+                payment.OrderId = newOrderId;
+                string paySql = @"INSERT INTO Payments (LeadId, OrderId, TotalOrderValue, AmountReceived, Remarks) 
+                          VALUES (@LeadId, @OrderId, @TotalOrderValue, @AmountReceived, @Remarks)";
                 await db.ExecuteAsync(paySql, payment, trans);
 
                 // 3. ENTRY #1: The Maturity Milestone (System Entry)
@@ -234,11 +274,151 @@ namespace CallMan.Services
                 trans.Commit();
                 return true;
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e.Message);
                 trans.Rollback();
                 return false;
             }
+        }
+
+        // Get all Matured Leads with calculated totals
+        public async Task<IEnumerable<Lead>> GetMaturedLedgerAsync()
+        {
+            using var db = _context.CreateConnection();
+            string sql = @"SELECT l.*, 
+            (SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders WHERE LeadId = l.LeadId) as TotalOrderAmount,
+            (SELECT COALESCE(SUM(AmountReceived), 0) FROM Payments WHERE LeadId = l.LeadId) as TotalPaidAmount
+            FROM Leads l WHERE l.Status = 'Matured'";
+            return await db.QueryAsync<Lead>(sql);
+        }
+
+        // Record a payment and auto-update Order status
+        public async Task RecordPaymentAsync(PaymentEntry p)
+        {
+            using var db = _context.CreateConnection();
+            db.Open();
+            using var trans = db.BeginTransaction();
+            try
+            {
+                await db.ExecuteAsync("INSERT INTO Payments (OrderId, LeadId, AmountReceived, PaymentMethod, Remarks) VALUES (@OrderId, @LeadId, @AmountReceived, @PaymentMethod, @Remarks)", p, trans);
+                string updateOrder = "UPDATE Orders o SET Status = IF((SELECT SUM(AmountReceived) FROM Payments WHERE OrderId = o.OrderId) >= o.TotalAmount, 'Fully Paid', 'Partially Paid') WHERE OrderId = @OrderId";
+                await db.ExecuteAsync(updateOrder, new { p.OrderId }, trans);
+                trans.Commit();
+            }
+            catch { trans.Rollback(); throw; }
+        }
+
+        // Fetch all orders for a specific customer
+        public async Task<IEnumerable<Models.Order>> GetOrdersByLeadIdAsync(int leadId)
+        {
+            using var db = _context.CreateConnection();
+            string sql = "SELECT * FROM Orders WHERE LeadId = @leadId ORDER BY OrderDate DESC";
+            return await db.QueryAsync<Models.Order>(sql, new { leadId });
+        }
+
+        // Create a new order (often done during the Maturity step or later)
+        public async Task CreateOrderAsync(Models.Order order)
+        {
+            using var db = _context.CreateConnection();
+            string sql = "INSERT INTO Orders (LeadId, TotalAmount, Description, Status) VALUES (@LeadId, @TotalAmount, @Description, 'Partially Paid')";
+            await db.ExecuteAsync(sql, order);
+        }
+
+        public async Task<IEnumerable<Models.Order>> GetAllOrdersWithCustomerNamesAsync()
+        {
+            using var db = _context.CreateConnection();
+            // Join Orders with Leads to get the CustomerName for each order
+            string sql = @"
+        SELECT o.*, l.CustomerName 
+        FROM Orders o
+        INNER JOIN Leads l ON o.LeadId = l.LeadId
+        ORDER BY o.OrderDate DESC";
+
+            return await db.QueryAsync<Models.Order>(sql);
+        }
+
+        public async Task<Lead> GetLeadByIdAsync(int leadId)
+        {
+            using var db = _context.CreateConnection();
+            string sql = "SELECT * FROM Leads WHERE LeadId = @leadId";
+            return await db.QuerySingleOrDefaultAsync<Lead>(sql, new { leadId });
+        }
+
+        public async Task<DashboardStats> GetDashboardStatsAsync()
+        {
+            using var db = _context.CreateConnection();
+
+            // Using a single complex query to get all counts for performance
+            string sql = @"
+        SELECT 
+            (SELECT COUNT(*) FROM Leads) as AllLeads,
+            (SELECT COUNT(*) FROM Leads WHERE Status = 'New') as NewLeads,
+            (SELECT COUNT(*) FROM Leads WHERE Status = 'Untouched') as Untouched,
+            (SELECT COUNT(*) FROM Leads WHERE Status = 'Dead') as Dead,
+            (SELECT COUNT(*) FROM Leads WHERE Status = 'Matured') as Customers,
+            (SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders) as TotalBusiness";
+
+            return await db.QuerySingleAsync<DashboardStats>(sql);
+        }
+
+        public async Task<IEnumerable<PaymentReminder>> GetPaymentRemindersAsync()
+        {
+            using var db = _context.CreateConnection();
+
+            // We calculate pending balance per customer
+            string sql = @"
+        SELECT l.CustomerName, l.Phone,
+               ((SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders WHERE LeadId = l.LeadId) - 
+                (SELECT COALESCE(SUM(AmountReceived), 0) FROM Payments WHERE LeadId = l.LeadId)) as PendingBalance
+        FROM Leads l
+        WHERE l.Status = 'Matured'
+        HAVING PendingBalance > 0
+        ORDER BY PendingBalance DESC";
+
+            return await db.QueryAsync<PaymentReminder>(sql);
+        }
+
+        public async Task<IEnumerable<string>> GetUniqueLeadHoldersAsync()
+        {
+            using var db = _context.CreateConnection();
+            // Fetch unique names of staff assigned to leads
+            string sql = "SELECT DISTINCT FullName FROM Users WHERE Email IS NOT NULL AND Email != '' ORDER BY FullName";
+            return await db.QueryAsync<string>(sql);
+        }
+
+        public async Task<DashboardStats> GetDashboardStatsFilteredAsync(DashboardFilter filter)
+        {
+            using var db = _context.CreateConnection();
+
+            // Base WHERE clause logic
+            string whereClause = " WHERE 1=1 ";
+            var parameters = new DynamicParameters();
+
+            if (!string.IsNullOrEmpty(filter.LeadHolder))
+            {
+                whereClause += " AND LeadHolder = @LeadHolder ";
+                parameters.Add("LeadHolder", filter.LeadHolder);
+            }
+
+            if (filter.FromDate != null && filter.ToDate != null)
+            {
+                // Filtering based on Lead Creation or Update date
+                whereClause += " AND CreatedDate BETWEEN @FromDate AND @ToDate ";
+                parameters.Add("FromDate", filter.FromDate);
+                parameters.Add("ToDate", filter.ToDate);
+            }
+
+            string sql = $@"
+        SELECT 
+            (SELECT COUNT(*) FROM Leads {whereClause}) as AllLeads,
+            (SELECT COUNT(*) FROM Leads {whereClause} AND Status = 'New') as NewLeads,
+            (SELECT COUNT(*) FROM Leads {whereClause} AND Status = 'Matured') as Customers,
+            (SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Orders o 
+                    INNER JOIN Leads l ON o.LeadId = l.LeadId 
+                    {whereClause.Replace("CreatedDate", "o.OrderDate")}) as TotalBusiness";
+
+            return await db.QuerySingleAsync<DashboardStats>(sql, parameters);
         }
     }
 }

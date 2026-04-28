@@ -25,6 +25,12 @@
         <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
             <views:DashboardView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AdminSettingsViewModel}">
+            <views:AdminSettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UserManagementViewModel}">
+            <views:UserManagementView />
+        </DataTemplate>
         <Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -53,7 +59,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="LightGray" BorderBrush="#DCDDE1" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="Black" BorderBrush="#DCDDE1" BorderThickness="0,0,0,1">
             <Grid Margin="20,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -62,7 +68,7 @@
                 </Grid.ColumnDefinitions>
 
                 
-                <Image Source="/Assets/logo.png" Width="100" Stretch="Uniform" Margin="0,0,10,0"/>                
+                <Image Source="/Assets/logo.png" Width="190" Stretch="Uniform" CacheMode="BitmapCache" UseLayoutRounding="True" RenderOptions.BitmapScalingMode="HighQuality" Margin="0,0,10,0"/>                
 
                 <Border Grid.Column="1" HorizontalAlignment="Center" Background="#F1F3F6" CornerRadius="18" Width="400" Height="36">
                     <Grid>
@@ -127,7 +133,7 @@
                     </Button>
 
                     <Button Command="{Binding NavigateCommand}" 
-                    CommandParameter="Settings"
+                    CommandParameter="Admin"
                     Style="{StaticResource MaterialDesignFlatMidBgButton}"
                     Foreground="White" >
                         <StackPanel Orientation="Horizontal">

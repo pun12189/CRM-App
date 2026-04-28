@@ -1,5 +1,6 @@
 ﻿using CallMan.Data;
 using CallMan.Interfaces;
+using CallMan.Models;
 using CallMan.Services;
 using CallMan.ViewModels;
 using CallMan.Views;
@@ -41,6 +42,7 @@ namespace CallMan
             // 2. Register Services (They will now receive the DbContext)
             services.AddSingleton<IAuthService, AuthService>();
             services.AddSingleton<IDialogService, DialogService>();
+            services.AddSingleton<IUserSession, UserSession>();
             services.AddSingleton<LeadService>(); // Our Lead Management service
 
             // 3. VIEWMODELS (State Layer)
@@ -50,6 +52,10 @@ namespace CallMan
             services.AddTransient<AddLeadDialogViewModel>();
             services.AddTransient<MaturedLeadsViewModel>(); 
             services.AddTransient<AllOrdersViewModel>();
+            services.AddTransient<AdminSettingsViewModel>();
+
+            services.AddTransient<UserManagementViewModel>();
+            services.AddTransient<AddStaffDialogViewModel>();
 
             // Views/Modules
             services.AddTransient<DashboardViewModel>();

@@ -3,6 +3,7 @@ using CallMan.Models;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -71,17 +72,22 @@ namespace CallMan.ViewModels
             return lead.CustomerName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                    (lead.Phone?.Contains(SearchText) ?? false) ||
                    (lead.City?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                   (lead.CompanyName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false);
+                   (lead.CompanyName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (lead.LeadHolder?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (lead.District?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (lead.Email?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (lead.Status?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (lead.State?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false);
         }
 
         [RelayCommand]
         private void OpenAddLeadDialog()
         {
-            var dialogVm = new AddLeadDialogViewModel(_leadService);
-            var dialogWindow = new AddLeadWindow { DataContext = dialogVm };
+            var vm = App.ServiceProvider.GetRequiredService<AddLeadDialogViewModel>();
+            var dialogWindow = new AddLeadWindow { DataContext = vm };
 
             // Subscribe to the close request
-            dialogVm.RequestClose += (result) =>
+            vm.RequestClose += (result) =>
             {
                 dialogWindow.DialogResult = result;
                 dialogWindow.Close();
@@ -100,10 +106,11 @@ namespace CallMan.ViewModels
             if (leadToEdit == null) return;
 
             // Open the Dialog and pass the lead data
-            var dialogVm = new AddLeadDialogViewModel(_leadService, leadToEdit);
-            var dialogWindow = new AddLeadWindow { DataContext = dialogVm, Title = "Update Lead Info" };
+            var vm = App.ServiceProvider.GetRequiredService<AddLeadDialogViewModel>();
+            vm.Initialize(leadToEdit);
+            var dialogWindow = new AddLeadWindow { DataContext = vm, Title = "Update Lead Info" };
 
-            dialogVm.RequestClose += (result) => {
+            vm.RequestClose += (result) => {
                 dialogWindow.DialogResult = result;
                 dialogWindow.Close();
             };

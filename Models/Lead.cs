@@ -30,6 +30,9 @@ namespace CallMan.Models
         // For Dynamic JSON
         public string? MetadataJson { get; set; }
 
+        [ObservableProperty]
+        private string? _leadHolder;
+
         [NotMapped]
         [ObservableProperty]
         private decimal _totalOrderAmount;

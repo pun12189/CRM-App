@@ -50,6 +50,9 @@ namespace CallMan.ViewModels
                 case "Orders":
                     CurrentView = App.ServiceProvider.GetRequiredService<AllOrdersViewModel>();
                     break;
+                case "Admin":
+                    CurrentView = App.ServiceProvider.GetRequiredService<AdminSettingsViewModel>();
+                    break;
                     // Add other cases as you build them
             }
         }

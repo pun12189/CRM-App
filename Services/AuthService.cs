@@ -32,11 +32,11 @@ namespace CallMan.Services
             string sql = "SELECT * FROM Users WHERE Email = @email AND IsActive = 1 LIMIT 1";
             var user = await db.QueryFirstOrDefaultAsync<User>(sql, new { email });
 
-            if (user != null && BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-            {
-                user.LoadMetadata();
+            if (user != null && BCrypt.Net.BCrypt.Verify(password, user.Password))
+            {                
                 return user;
             }
+
             return null;
         }
 
@@ -57,7 +57,7 @@ namespace CallMan.Services
             string newHash = BCrypt.Net.BCrypt.HashPassword(tempPassword);
 
             // 3. Update the database
-            const string updateSql = "UPDATE Users SET PasswordHash = @newHash WHERE Email = @email";
+            const string updateSql = "UPDATE Users SET Password = @newHash WHERE Email = @email";
             var result = await db.ExecuteAsync(updateSql, new { newHash, email });
 
             return await SendEmailAsync(email, tempPassword);

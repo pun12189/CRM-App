@@ -9,6 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\logo.png" />
+    <None Remove="Assets\opn.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Dapper" Version="2.1.72" />
@@ -20,12 +25,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Assets\logo.png">
+    <Resource Include="Assets\logo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Assets\opn.png">
+    </Resource>
+    <Resource Include="Assets\opn.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Resource>
   </ItemGroup>
 
 </Project>

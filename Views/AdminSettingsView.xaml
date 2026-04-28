@@ -1,0 +1,67 @@
+﻿<UserControl x:Class="CallMan.Views.AdminSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <materialDesign:BooleanToVisibilityConverter x:Key="InverseBoolToVis" TrueValue="Collapsed" FalseValue="Visible" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid Background="#F5F7F9" Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,20">
+            <Button Command="{Binding BackToGridCommand}" 
+                Visibility="{Binding IsMainGridVisible, Converter={StaticResource InverseBoolToVis}}"
+                Style="{StaticResource MaterialDesignFlatButton}" Content="← Back to Settings"/>
+            <TextBlock Text="Admin Settings" FontSize="24" FontWeight="Bold" Foreground="#1794A1" HorizontalAlignment="Right"/>
+        </DockPanel>
+
+        <ScrollViewer Grid.Row="1" Visibility="{Binding IsMainGridVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="300"/>
+                </Grid.ColumnDefinitions>
+
+                <UniformGrid Columns="4" VerticalAlignment="Top">
+                    <Button Style="{StaticResource SettingTileStyle}" Content="Staff" CommandParameter="Staff" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Content="Permissions" CommandParameter="Permissions" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Content="Departments" CommandParameter="Departments" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Content="Order Stages" CommandParameter="OrderStages" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Content="Fetch Inquiries" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Content="Login Logs" CommandParameter="Logs" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Content="Workflows" CommandParameter="Workflows" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Content="Company Profile" CommandParameter="CProfile" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Content="Connect Email" CommandParameter="Email" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Content="Connect Whatsapp" CommandParameter="Whatsapp" Command="{Binding NavigateToSettingCommand}"/>
+                </UniformGrid>
+
+                <materialDesign:Card Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Top">
+                    <StackPanel>
+                        <Expander Header="Lead Settings" IsExpanded="True" Background="#1794A1" Foreground="White">
+                            <StackPanel Background="White">
+                                <Button Content="Add New Location" Style="{StaticResource SidebarLinkStyle}"/>
+                                <Button Content="Dead Reasons" Style="{StaticResource SidebarLinkStyle}"/>
+                                <Button Content="Followup Stages" Style="{StaticResource SidebarLinkStyle}"/>
+                                <Button Content="Mature Stages" Style="{StaticResource SidebarLinkStyle}"/>
+                                <Separator/>
+                                <Button Content="Lead Label" Style="{StaticResource SidebarLinkStyle}"/>
+                            </StackPanel>
+                        </Expander>
+                    </StackPanel>
+                </materialDesign:Card>
+            </Grid>
+        </ScrollViewer>
+
+        <ContentControl Grid.Row="1" Content="{Binding CurrentSettingView}" 
+                    Visibility="{Binding IsMainGridVisible, Converter={StaticResource InverseBoolToVis}}"/>
+    </Grid>
+</UserControl>

@@ -16,6 +16,7 @@ namespace CallMan.ViewModels
     public partial class LoginViewModel : ObservableObject
     {
         private readonly IAuthService _authService;
+        private readonly IUserSession _session;
 
         [ObservableProperty] private string _email = "";
         [ObservableProperty] private string _errorMessage = "";
@@ -25,7 +26,11 @@ namespace CallMan.ViewModels
         [ObservableProperty] private bool _isLoginVisible = true;
         [ObservableProperty] private bool _isForgotVisible = false;
 
-        public LoginViewModel(IAuthService authService) => _authService = authService;
+        public LoginViewModel(IAuthService authService, IUserSession session) 
+        {
+            _authService = authService; 
+            _session = session;
+        }
 
         [RelayCommand]
         private async Task Login(object passwordBox)
@@ -52,6 +57,7 @@ namespace CallMan.ViewModels
 
                 if (user != null)
                 {
+                    _session.CurrentUser = user.FullName;
                     var mainWindow = App.ServiceProvider.GetRequiredService<MainWindow>();
                     mainWindow.Show();
 

@@ -9,6 +9,29 @@
                 <materialDesign:BundledTheme BaseTheme="Light" PrimaryColor="DeepPurple" SecondaryColor="Amber" />
                 <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesign3.Defaults.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            
+            <Style x:Key="SettingTileStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                <Setter Property="Background" Value="#2CB3A5"/>
+                <Setter Property="Foreground" Value="White"/>
+                <Setter Property="Height" Value="100"/>
+                <Setter Property="Margin" Value="10"/>
+                <Setter Property="FontSize" Value="22"/>
+                <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="10"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#24968B"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="SidebarLinkStyle" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="Foreground" Value="#444"/>
+                <Setter Property="Padding" Value="15,10"/>
+                <Setter Property="Height" Value="NaN"/>
+                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                <Setter Property="BorderBrush" Value="#EEE"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

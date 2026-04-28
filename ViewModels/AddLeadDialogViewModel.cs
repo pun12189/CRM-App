@@ -1,4 +1,5 @@
-﻿using CallMan.Models;
+﻿using CallMan.Interfaces;
+using CallMan.Models;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -14,6 +15,7 @@ namespace CallMan.ViewModels
     public partial class AddLeadDialogViewModel : ObservableObject
     {
         private readonly LeadService _leadService;
+        private readonly IUserSession _session;
 
         [ObservableProperty]
         private Lead _newLead = new();
@@ -36,17 +38,25 @@ namespace CallMan.ViewModels
         [ObservableProperty]
         private ObservableCollection<CustomFieldEntry> _visibleCustomFields = new();
 
-        public AddLeadDialogViewModel(LeadService leadService, Lead? existingLead = null)
+        public AddLeadDialogViewModel(LeadService leadService, IUserSession session)
         {
             _leadService = leadService;
+            _session = session;
+            _isEditMode = false;
+            NewLead.Status = "New";
+        // Initialize with default status
+
+        NewLead.LeadHolder = _session.CurrentUser;
+        }
+
+        public void Initialize(Lead? existingLead)
+        {
             if (existingLead != null)
             {
                 NewLead = existingLead;
                 _isEditMode = true;
                 // Load address fields from existingLead if they aren't auto-bound
             }
-            // Initialize with default status
-            NewLead.Status = "New";
         }
 
         [RelayCommand]

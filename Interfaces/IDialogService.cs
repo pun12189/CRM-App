@@ -14,5 +14,6 @@ namespace CallMan.Interfaces
         void ShowOrderWindow(Lead selectedLead);
         Task<bool?> ShowGlobalNewOrderDialog();
         Task<DashboardFilter?> ShowFilterDialog();
+        Task<bool?> ShowAddStaffWindow(User? userToEdit);
     }
 }

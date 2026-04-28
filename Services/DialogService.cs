@@ -2,11 +2,13 @@
 using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace CallMan.Services
 {
@@ -90,6 +92,21 @@ namespace CallMan.Services
 
             window.ShowDialog();
             return result;
+        }
+
+        public async Task<bool?> ShowAddStaffWindow(User? userToEdit)
+        {
+            var vm = App.ServiceProvider.GetRequiredService<AddStaffDialogViewModel>();
+            vm.Initialize(userToEdit);
+
+            var window = new AddStaffWindow
+            {
+                DataContext = vm,
+                Owner = App.Current.MainWindow,
+                WindowStartupLocation = WindowStartupLocation.CenterOwner
+            };
+
+            return window.ShowDialog();
         }
     }
 }

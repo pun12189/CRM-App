@@ -1,0 +1,85 @@
+﻿<UserControl x:Class="CallMan.Views.UserManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CallMan.Views"
+             mc:Ignorable="d" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid Background="White" Margin="20">
+        <Grid.RowDefinitions>            
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        
+        <DockPanel Grid.Row="0" Margin="15">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" DockPanel.Dock="Left">
+                <TextBlock Text="Staff Management" FontSize="18" FontWeight="SemiBold" Foreground="#444"/>
+                <!--<TextBlock Text="(Users limit is 8, Total 8)" FontSize="14" Foreground="#FF8A3D" Margin="10,0,0,0" VerticalAlignment="Center"/>-->
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Content="Export" Background="#FF8A3D" BorderBrush="#FF8A3D" Margin="0,0,10,0" Height="32" Visibility="Collapsed"/>
+                <Button Content="Add New Staff" Command="{Binding OpenAddStaffDialogCommand}" 
+                    Background="#1794A1" BorderBrush="#1794A1" Height="32"/>
+            </StackPanel>
+        </DockPanel>
+
+        <DataGrid Grid.Row="1" ItemsSource="{Binding UsersList}" AutoGenerateColumns="False" 
+              CanUserAddRows="False" SelectionMode="Single"
+              Background="#F9F9F9" BorderThickness="1" BorderBrush="#DDD"
+              RowHeight="60" ColumnHeaderHeight="45">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="#" Binding="{Binding UserId}" Width="40"/>                
+
+                <DataGridTemplateColumn Header="Name" Width="180">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="{Binding FullName}" Foreground="#1794A1" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding UserId, StringFormat='ID- {0}'}" FontSize="10" Foreground="#888"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="E-mail" Binding="{Binding Email}" Width="180"/>
+                <DataGridTextColumn Header="Phone/Whatsapp" Binding="{Binding Phone}" Width="130"/>
+                <DataGridTextColumn Header="Team Leader" Binding="{Binding SeniorName}" Width="130"/>
+                <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="110"/>
+
+                <DataGridTemplateColumn Header="Status" Width="90">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="#27AE60" CornerRadius="4" Padding="5,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock Text="Active" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="Member Since" Binding="{Binding CreatedDate, StringFormat='dd-MMM-yyyy hh:mm'}" Width="*"/>
+
+                <DataGridTemplateColumn Header="Action" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource MaterialDesignIconButton}" Width="30" Height="30" 
+                                    Command="{Binding DataContext.EditUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
+                                    <materialDesign:PackIcon Kind="Edit" Foreground="#FF8A3D" Width="18"/>
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignIconButton}" Width="30" Height="30" Command="{Binding DataContext.DeleteUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
+                                    <materialDesign:PackIcon Kind="Delete" Foreground="#E74C3C" Width="18"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

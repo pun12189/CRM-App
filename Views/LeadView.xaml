@@ -79,13 +79,28 @@
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>                
+                <DataGridTemplateColumn Header="Phone" Width="150">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Phone}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="150"/>
                 <DataGridTemplateColumn Header="Status" Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border Background="LightBlue" CornerRadius="10" Padding="10" VerticalAlignment="Center" HorizontalAlignment="Center">
                                 <TextBlock Text="{Binding Status}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Lead Holder" Width="180">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Border Background="DarkSlateGray" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding LeadHolder}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

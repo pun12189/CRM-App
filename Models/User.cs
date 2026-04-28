@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -12,18 +13,19 @@ namespace CallMan.Models
     public partial class User : ObservableObject
     {
         public int UserId { get; set; }
-        public string Email { get; set; } = string.Empty;
-        public string PasswordHash { get; set; } = string.Empty;
-        public string? FullName { get; set; }
-        public string? Role { get; set; }
-        public bool IsActive { get; set; }
-        public string? MetadataJson { get; set; }
 
-        [NotMapped]
-        public Dictionary<string, object> AdditionalInfo { get; set; } = new();
+        [ObservableProperty] private string _email = string.Empty;
+        [ObservableProperty] private string? _phone; // Optional
+        [ObservableProperty] private string _fullName = string.Empty;
+        [ObservableProperty] private string _password;
+        [ObservableProperty] private string _role = "Executive";
+        [ObservableProperty] private int? _seniorId;
+        [ObservableProperty] private decimal _monthlyTarget;
+        [ObservableProperty] private bool _isActive = true;
 
-        public void LoadMetadata() =>
-            AdditionalInfo = string.IsNullOrEmpty(MetadataJson)
-                ? new() : JsonSerializer.Deserialize<Dictionary<string, object>>(MetadataJson)!;
+        // Helper for ComboBoxes
+        public string DisplayName => $"{FullName} ({Role})";
+
+        public string? SeniorName { get; set; }
     }
 }

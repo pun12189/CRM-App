@@ -44,9 +44,9 @@ namespace CallMan.Services
             lead.MetadataJson = JsonSerializer.Serialize(lead.CustomFields);
 
             string sql = @"INSERT INTO Leads (CustomerName, Email, Phone, Status, MetadataJson, 
-               CompanyName, AddressLine, City, District, State, Pincode, Country, CreatedAt) 
+               CompanyName, AddressLine, City, District, State, Pincode, Country, CreatedAt, LeadHolder) 
                VALUES (@CustomerName, @Email, @Phone, @Status, @MetadataJson, 
-               @CompanyName, @AddressLine, @City, @District, @State, @Pincode, @Country, NOW());
+               @CompanyName, @AddressLine, @City, @District, @State, @Pincode, @Country, NOW(), @LeadHolder);
             SELECT LAST_INSERT_ID();";
 
             int newId = await db.ExecuteScalarAsync<int>(sql, lead);
@@ -75,8 +75,7 @@ namespace CallMan.Services
                     CustomerName = @CustomerName, Email = @Email, Phone = @Phone, 
                     Status = @Status, CompanyName = @CompanyName, AddressLine = @AddressLine, 
                     City = @City, District = @District, State = @State, 
-                    Pincode = @Pincode, MetadataJson = @MetadataJson 
-                   WHERE LeadId = @LeadId";
+                    Pincode = @Pincode, MetadataJson = @MetadataJson, LeadHolder = @LeadHolder WHERE LeadId = @LeadId";
 
             var rows = await db.ExecuteAsync(sql, lead);
             return rows > 0;
@@ -419,6 +418,79 @@ namespace CallMan.Services
                     {whereClause.Replace("CreatedDate", "o.OrderDate")}) as TotalBusiness";
 
             return await db.QuerySingleAsync<DashboardStats>(sql, parameters);
+        }       
+
+        // --- USER MANAGEMENT METHODS ---
+
+        // 1. Get all users including their Senior's name for the DataGrid
+        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        {
+            using var db = _context.CreateConnection();
+            string sql = @"
+            SELECT u.*, s.FullName as SeniorName 
+            FROM Users u
+            LEFT JOIN Users s ON u.SeniorId = s.UserId
+            ORDER BY u.Role, u.FullName";
+
+            return await db.QueryAsync<User>(sql);
+        }
+
+        // 2. Create User (Email-based)
+        public async Task<int> CreateUserAsync(User user)
+        {
+            using var db = _context.CreateConnection();
+            string sql = @"
+            INSERT INTO Users (Email, Password, FullName, Phone, Role, SeniorId, MonthlyTarget, IsActive)
+            VALUES (@Email, @Password, @FullName, @Phone, @Role, @SeniorId, @MonthlyTarget, @IsActive);
+            SELECT LAST_INSERT_ID();";
+
+            return await db.QuerySingleAsync<int>(sql, user);
+        }
+
+        // 3. Update User
+        public async Task<bool> UpdateUserAsync(User user)
+        {
+            using var db = _context.CreateConnection();
+            string sql = @"
+            UPDATE Users 
+            SET Email = @Email, 
+                FullName = @FullName, 
+                Phone = @Phone, 
+                Role = @Role, 
+                SeniorId = @SeniorId, 
+                MonthlyTarget = @MonthlyTarget, 
+                IsActive = @IsActive
+            WHERE UserId = @UserId";
+
+            int affected = await db.ExecuteAsync(sql, user);
+            return affected > 0;
+        }        
+
+        // --- DASHBOARD & HIERARCHY LOGIC ---
+
+        // 5. Get Team Stats (Used by Team Leaders or Sub-Admins)
+        public async Task<decimal> GetTeamTotalBusinessAsync(int seniorId)
+        {
+            using var db = _context.CreateConnection();
+            string sql = @"
+            SELECT COALESCE(SUM(o.TotalAmount), 0)
+            FROM Orders o
+            INNER JOIN Leads l ON o.LeadId = l.LeadId
+            INNER JOIN Users u ON l.LeadHolder = u.Email
+            WHERE u.SeniorId = @seniorId";
+
+            return await db.QuerySingleAsync<decimal>(sql, new { seniorId });
+        }
+
+        public async Task<bool> DeleteUserAsync(int userId)
+        {
+            using var db = _context.CreateConnection();
+            // Safety Check: We might want to prevent deleting the last Admin
+            string sql = "DELETE FROM Users WHERE UserId = @userId";
+
+            int affected = await db.ExecuteAsync(sql, new { userId });
+            return affected > 0;
         }
     }
 }
+

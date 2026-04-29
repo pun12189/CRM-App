@@ -17,27 +17,52 @@ namespace CallMan.Services
 {
     public class AuthService : IAuthService
     {
+        private readonly ApiService _apiService;
         private readonly CrmDbContext _context;
+        private readonly IUserSession _session;
 
-        // The context is automatically injected by the DI container
-        public AuthService(CrmDbContext context)
+        public AuthService(ApiService apiService, CrmDbContext context, IUserSession session)
         {
+            _apiService = apiService;
             _context = context;
+            _session = session;
         }
 
-        public async Task<User?> AuthenticateByEmailAsync(string email, string password)
+        public async Task<bool> AuthenticateByEmailAsync(string email, string password)
         {
+            // 1. CALL THE API SERVICE FIRST (Master Admin)
+            var masterAdmin = await _apiService.CheckMasterAdminAsync(email, password);
+
+            if (masterAdmin != null)
+            {
+                _session.CurrentUserEmail = masterAdmin.Email;
+                _session.DisplayName = "Administrator";
+                _session.UserRole = "Admin";
+                _session.UserId = 0;
+                _session.UserLimit = masterAdmin.UserLimit;
+                _session.ExpiryDate = masterAdmin.ExpiryDate;
+                _session.MemberSince = masterAdmin.MemberSince;
+                return true;
+            }
+
+            // 2. FALLBACK TO DATABASE (Local Staff)
             using IDbConnection db = _context.CreateConnection();
 
             string sql = "SELECT * FROM Users WHERE Email = @email AND IsActive = 1 LIMIT 1";
             var user = await db.QueryFirstOrDefaultAsync<User>(sql, new { email });
 
             if (user != null && BCrypt.Net.BCrypt.Verify(password, user.Password))
-            {                
-                return user;
+            {
+                _session.UserId = user.UserId;
+                _session.CurrentUserEmail = user.Email;
+                _session.DisplayName = user.FullName;
+                _session.CurrentUser = user.FullName;
+                _session.UserRole = user.Role;
+                _session.SeniorId = user.SeniorId;
+                return true;
             }
 
-            return null;
+            return false;
         }
 
         public async Task<bool> ResetPasswordAsync(string email)

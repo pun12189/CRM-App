@@ -33,10 +33,10 @@
 
                 <UniformGrid Columns="4" VerticalAlignment="Top">
                     <Button Style="{StaticResource SettingTileStyle}" Content="Staff" CommandParameter="Staff" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Content="Permissions" CommandParameter="Permissions" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Visibility="Collapsed" Content="Permissions" CommandParameter="Permissions" Command="{Binding NavigateToSettingCommand}"/>
                     <Button Style="{StaticResource SettingTileStyle}" Content="Departments" CommandParameter="Departments" Command="{Binding NavigateToSettingCommand}"/>
                     <Button Style="{StaticResource SettingTileStyle}" Content="Order Stages" CommandParameter="OrderStages" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Content="Fetch Inquiries" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Visibility="Collapsed" Content="Fetch Inquiries" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}"/>
                     <Button Style="{StaticResource SettingTileStyle}" Content="Login Logs" CommandParameter="Logs" Command="{Binding NavigateToSettingCommand}"/>
                     <Button Style="{StaticResource SettingTileStyle}" Content="Workflows" CommandParameter="Workflows" Command="{Binding NavigateToSettingCommand}"/>
                     <Button Style="{StaticResource SettingTileStyle}" Content="Company Profile" CommandParameter="CProfile" Command="{Binding NavigateToSettingCommand}"/>
@@ -49,11 +49,14 @@
                         <Expander Header="Lead Settings" IsExpanded="True" Background="#1794A1" Foreground="White">
                             <StackPanel Background="White">
                                 <Button Content="Add New Location" Style="{StaticResource SidebarLinkStyle}"/>
-                                <Button Content="Dead Reasons" Style="{StaticResource SidebarLinkStyle}"/>
-                                <Button Content="Followup Stages" Style="{StaticResource SidebarLinkStyle}"/>
-                                <Button Content="Mature Stages" Style="{StaticResource SidebarLinkStyle}"/>
+                                <Button Content="Dead Reasons" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Dead Reasons" Command="{Binding NavigateToSettingCommand}"/>
+                                <Button Content="Followup Stages" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Followup Stages" Command="{Binding NavigateToSettingCommand}"/>
+                                <Button Content="Mature Stages" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Mature Stages" Command="{Binding NavigateToSettingCommand}"/>
+                                <Button Content="Lead Tags" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Lead Tags" Command="{Binding NavigateToSettingCommand}"/>
+                                <Button Content="Custom Fields" Style="{StaticResource SidebarLinkStyle}"/>
+                                <Button Content="Lead Source" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Lead Source" Command="{Binding NavigateToSettingCommand}"/>
                                 <Separator/>
-                                <Button Content="Lead Label" Style="{StaticResource SidebarLinkStyle}"/>
+                                <Button Content="Lead Label" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Lead Labels" Command="{Binding NavigateToSettingCommand}"/>
                             </StackPanel>
                         </Expander>
                     </StackPanel>

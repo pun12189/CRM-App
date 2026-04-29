@@ -15,5 +15,6 @@ namespace CallMan.Interfaces
         Task<bool?> ShowGlobalNewOrderDialog();
         Task<DashboardFilter?> ShowFilterDialog();
         Task<bool?> ShowAddStaffWindow(User? userToEdit);
+        Task<string> ShowSingleInputDialog(string item, string? existingValue = null);
     }
 }

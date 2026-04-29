@@ -26,10 +26,9 @@ namespace CallMan.ViewModels
         [ObservableProperty] private bool _isLoginVisible = true;
         [ObservableProperty] private bool _isForgotVisible = false;
 
-        public LoginViewModel(IAuthService authService, IUserSession session) 
+        public LoginViewModel(IAuthService authService) 
         {
-            _authService = authService; 
-            _session = session;
+            _authService = authService;
         }
 
         [RelayCommand]
@@ -53,11 +52,10 @@ namespace CallMan.ViewModels
                 IsLoggingIn = true;
                 ErrorMessage = "";
 
-                var user = await _authService.AuthenticateByEmailAsync(Email, password);
+                bool success = await _authService.AuthenticateByEmailAsync(Email, password);
 
-                if (user != null)
-                {
-                    _session.CurrentUser = user.FullName;
+                if (success)
+                {                    
                     var mainWindow = App.ServiceProvider.GetRequiredService<MainWindow>();
                     mainWindow.Show();
 

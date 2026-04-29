@@ -1,0 +1,47 @@
+﻿<Window x:Class="CallMan.Dialogs.AddSettingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CallMan.Dialogs"
+        mc:Ignorable="d"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Manage Setting" Height="250" Width="400"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent">
+
+    <Border Background="White" CornerRadius="10" BorderThickness="1" BorderBrush="#DDD">
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Header -->
+                <RowDefinition Height="*"/>
+                <!-- Input -->
+                <RowDefinition Height="Auto"/>
+                <!-- Buttons -->
+            </Grid.RowDefinitions>
+
+            <!-- Dynamic Header (e.g., "Add New Dead Reason") -->
+            <TextBlock Grid.Row="0" Text="{Binding DialogTitle}" 
+                       FontSize="18" FontWeight="Bold" Foreground="#1794A1" Margin="0,0,0,20"/>
+
+            <!-- Value Input -->
+            <TextBox Grid.Row="1" Text="{Binding InputValue, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Enter Name..."
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     VerticalAlignment="Top" Margin="0,10,0,0">
+                <TextBox.InputBindings>
+                    <KeyBinding Key="Enter" Command="{Binding SaveCommand}"/>
+                </TextBox.InputBindings>
+            </TextBox>
+
+            <!-- Actions -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button Content="CANCEL" Click="Cancel_Click" 
+                        Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,10,0"/>
+                <Button Content="SAVE CHANGES" Command="{Binding SaveCommand}" 
+                        Background="#1794A1" BorderBrush="#1794A1" Width="130"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

@@ -9,7 +9,7 @@ namespace CallMan.Interfaces
 {
     public interface IAuthService
     {
-        Task<User?> AuthenticateByEmailAsync(string email, string password);
+        Task<bool> AuthenticateByEmailAsync(string email, string password);
         Task<bool> ResetPasswordAsync(string email);
     }
 }

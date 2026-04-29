@@ -39,11 +39,14 @@ namespace CallMan
             
             services.AddSingleton(new CrmDbContext(connectionString));
 
+            services.AddHttpClient<ApiService>();
+
             // 2. Register Services (They will now receive the DbContext)
             services.AddSingleton<IAuthService, AuthService>();
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IUserSession, UserSession>();
-            services.AddSingleton<LeadService>(); // Our Lead Management service
+            services.AddSingleton<LeadService>();// Our Lead Management service
+            services.AddSingleton<SettingService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();
@@ -53,6 +56,7 @@ namespace CallMan
             services.AddTransient<MaturedLeadsViewModel>(); 
             services.AddTransient<AllOrdersViewModel>();
             services.AddTransient<AdminSettingsViewModel>();
+            services.AddTransient<GenericSettingsViewModel>();
 
             services.AddTransient<UserManagementViewModel>();
             services.AddTransient<AddStaffDialogViewModel>();

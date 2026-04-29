@@ -3,6 +3,7 @@ using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -107,6 +108,30 @@ namespace CallMan.Services
             };
 
             return window.ShowDialog();
+        }
+
+        public async Task<string> ShowSingleInputDialog(string item, string? existingValue = null)
+        {
+            var viewModel = new AddSettingDialogViewModel();
+            viewModel.Initialize(item, existingValue);
+
+            var window = new AddSettingWindow
+            {
+                DataContext = viewModel,
+                Owner = App.Current.MainWindow
+            };
+
+            string? inputValue = "";
+            // Handle the close event
+            viewModel.RequestClose += (filterData) =>
+            {
+                inputValue = filterData;
+                window.DialogResult = string.IsNullOrEmpty(filterData);
+                window.Close();
+            };
+
+            window.ShowDialog();
+            return inputValue;
         }
     }
 }

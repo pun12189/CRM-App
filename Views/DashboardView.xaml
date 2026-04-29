@@ -20,7 +20,7 @@
         <DockPanel Grid.Row="0" Margin="20,10">
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="Dashboard" FontSize="20" FontWeight="Bold" Foreground="#333"/>
-                <TextBlock Text="Welcome to KlikCRM Dashboard" FontSize="12" Foreground="#888"/>
+                <TextBlock Text="Welcome to CallMan Dashboard" FontSize="12" Foreground="#888"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -65,11 +65,63 @@
                                 </StackPanel>
                             </Border>
 
+                            <Border Background="#1794A1" CornerRadius="8" Margin="5" Height="140">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding AllLeads}" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="OPEN" Foreground="White" FontSize="12" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1794A1" CornerRadius="8" Margin="5" Height="140">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding AllLeads}" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="FOLLOW UP" Foreground="White" FontSize="12" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1794A1" CornerRadius="8" Margin="5" Height="140">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding AllLeads}" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="NO FOLLOW UP" Foreground="White" FontSize="12" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="(Since 30 Days)" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#1794A1" CornerRadius="8" Margin="5" Height="140">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding AllLeads}" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="DEAD" Foreground="White" FontSize="12" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
                             <Border Background="#21B19C" CornerRadius="8" Margin="5" Height="140">
                                 <StackPanel VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Customers}" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
                                     <TextBlock Text="CUSTOMERS" Foreground="White" FontSize="12" HorizontalAlignment="Center"/>
                                     <TextBlock Text="(8.3%)" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                                </StackPanel>
+                            </Border>
+
+                            <Border Background="#21B19C" CornerRadius="8" Margin="5" Height="140">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Customers}" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="NO UPDATION" Foreground="White" FontSize="12" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="(Since 7 Days)" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                                </StackPanel>
+                            </Border>
+                            
+                            <Border Background="#21B19C" CornerRadius="8" Margin="5" Height="140">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Customers}" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="NO REPEAT ORDER" Foreground="White" FontSize="12" HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>                            
+
+                            <Border Background="#21B19C" CornerRadius="8" Margin="5" Height="140">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Customers}" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="NO ORDER" Foreground="White" FontSize="12" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="(Since 30 Days)" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
                                 </StackPanel>
                             </Border>
                         </UniformGrid>
@@ -108,9 +160,9 @@
             </TabItem>
 
             <TabItem Header="Team Analysis" />
-            <TabItem Header="Virtual Board" />
-            <TabItem Header="Attendance" />
-            <TabItem Header="Today's Reports" />
+            <!--<TabItem Header="Virtual Board" />
+            <TabItem Header="Attendance" />-->
+            <TabItem Header="Reports" />
         </TabControl>
     </Grid>
 </UserControl>

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace CallMan.ViewModels
 {
@@ -22,13 +23,27 @@ namespace CallMan.ViewModels
         }
 
         [RelayCommand]
-        private void NavigateToSetting(string settingType)
+        private async void NavigateToSetting(string settingType)
         {
             IsMainGridVisible = false;
             switch (settingType)
             {
                 case "Staff":
                     CurrentSettingView = _serviceProvider.GetRequiredService<UserManagementViewModel>();
+                    break;
+                case "Dead Reasons":                     
+                case "Followup Stages":                    
+                case "Mature Stages":                    
+                case "Lead Tags":                    
+                case "Lead Source":                    
+                case "Lead Labels":
+                    var genericVM = _serviceProvider.GetRequiredService<GenericSettingsViewModel>();
+
+                    // Initialize it for the specific type (e.g., "Dead Reasons")
+                    await genericVM.Initialize(settingType);
+
+                    // Set it as the current view
+                    CurrentSettingView = genericVM;
                     break;
                 case "Permissions":
                     // CurrentSettingView = _serviceProvider.GetRequiredService<PermissionsViewModel>();
@@ -45,6 +60,17 @@ namespace CallMan.ViewModels
         {
             CurrentSettingView = null;
             IsMainGridVisible = true;
+        }
+
+        private async void CommonNavigateGeneric(string name)
+        {
+            var genericVM = _serviceProvider.GetRequiredService<GenericSettingsViewModel>();
+
+            // Initialize it for the specific type (e.g., "Dead Reasons")
+            await genericVM.Initialize(name);
+
+            // Set it as the current view
+            CurrentSettingView = genericVM;
         }
     }
 }

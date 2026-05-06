@@ -99,7 +99,7 @@ namespace CallMan.ViewModels
                     // Pass a default history message for the first entry
                     string initialLog = $"Lead generated as '{NewLead.Status}' type.";
 
-                    await _leadService.SaveLeadAsync(NewLead, initialLog);
+                    await _leadService.SaveLeadAsync(NewLead, initialLog, _session.CurrentUser);
                 }               
 
                 // Close window with 'True' result

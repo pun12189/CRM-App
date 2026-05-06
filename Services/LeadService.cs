@@ -37,7 +37,7 @@ namespace CallMan.Services
             return leads;
         }
 
-        public async Task SaveLeadAsync(Lead lead, string initialLog)
+        public async Task SaveLeadAsync(Lead lead, string initialLog, string user)
         {
             using var db = _context.CreateConnection();
             // Serialize dynamic fields to JSON
@@ -52,7 +52,7 @@ namespace CallMan.Services
             int newId = await db.ExecuteScalarAsync<int>(sql, lead);
 
             // Save initial history entry
-            await AddHistoryAsync(newId, initialLog, null, "System");
+            await AddHistoryAsync(newId, initialLog, null, user);
         }
 
         public async Task AddHistoryAsync(int leadId, string message, DateTime? nextDate, string user)
@@ -117,7 +117,8 @@ namespace CallMan.Services
             string sql = @"
         SELECT 
             l.*, 
-            h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
+            (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
+h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
         FROM Leads l
         LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
         WHERE h.HistoryId = (
@@ -213,11 +214,11 @@ namespace CallMan.Services
             try
             {
                 // 1. Update Lead Status
-                await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured' WHERE LeadId = @LeadId", new { lead.LeadId }, trans);
+                //await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured' WHERE LeadId = @LeadId", new { lead.LeadId }, trans);
 
                 // 2. Create the Order
-                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, Status) 
-                            VALUES (@LeadId, @TotalAmount, @Description, 'Partially Paid');
+                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, Status, ProcessedBy) 
+                            VALUES (@LeadId, @TotalAmount, @Description, @Status, @ProcessedBy);
                             SELECT LAST_INSERT_ID();";
                 int newOrderId = await db.QuerySingleAsync<int>(orderSql, order, trans);
 
@@ -228,7 +229,9 @@ namespace CallMan.Services
                 await db.ExecuteAsync(paySql, payment, trans);
 
                 // 4. Add History Milestone
-                await db.ExecuteAsync("INSERT INTO LeadHistory (LeadId, Message, ActionType, FollowupStage) VALUES (@LeadId, @Message, 'System', 'Matured')", history, trans);
+                string hist2Sql = @"INSERT INTO LeadHistory (LeadId, Message, ActionType, NextFollowUpDate, FollowupStage, UpdatedBy, LogDate) 
+                            VALUES (@LeadId, @Message, @ActionType, @NextFollowUpDate, @FollowupStage, @UpdatedBy, NOW())";
+                await db.ExecuteAsync(hist2Sql, history, trans);
 
                 trans.Commit();
                 return true;
@@ -248,8 +251,8 @@ namespace CallMan.Services
                 await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured' WHERE LeadId = @LeadId", new { lead.LeadId }, trans);
 
                 // 2. Create the Order
-                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, Status) 
-                            VALUES (@LeadId, @TotalAmount, @Description, 'Partially Paid');
+                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, Status, ProcessedBy) 
+                            VALUES (@LeadId, @TotalAmount, @Description, @Status, @ProcessedBy);
                             SELECT LAST_INSERT_ID();";
                 int newOrderId = await db.QuerySingleAsync<int>(orderSql, order, trans);
 
@@ -490,6 +493,22 @@ namespace CallMan.Services
 
             int affected = await db.ExecuteAsync(sql, new { userId });
             return affected > 0;
+        }
+
+        public async Task<CustomerAnalytics> GetCustomerSummaryAsync(int leadId)
+        {
+            using var db = _context.CreateConnection();
+
+            // Fetching only the first and last order amounts
+            string sql = @"
+        SELECT 
+            (SELECT TotalAmount FROM Orders WHERE LeadId = @leadId ORDER BY OrderDate ASC LIMIT 1) as FirstOrderAmount,
+            (SELECT TotalAmount FROM Orders WHERE LeadId = @leadId ORDER BY OrderDate DESC LIMIT 1) as LastOrderAmount";
+
+            var result = await db.QuerySingleOrDefaultAsync<CustomerAnalytics>(sql, new { leadId });
+
+            // Ensure we return an object even if no orders exist yet
+            return result ?? new CustomerAnalytics { LeadId = leadId };
         }
     }
 }

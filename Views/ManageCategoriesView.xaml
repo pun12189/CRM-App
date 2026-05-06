@@ -1,0 +1,87 @@
+﻿<UserControl x:Class="CallMan.Views.ManageCategoriesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Entry Form -->
+            <RowDefinition Height="*"/>
+            <!-- Data Table -->
+        </Grid.RowDefinitions>
+
+        <!-- 1. ENTRY FORM -->
+        <materialDesign:Card Grid.Row="0" Padding="15" Margin="0,0,0,20">
+            <StackPanel>
+                <TextBlock Text="Add / Edit Category" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="0,0,0,15"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Category Name -->
+                    <TextBox Grid.Column="0" Text="{Binding NewCategoryName}" 
+                         materialDesign:HintAssist.Hint="Category Name (e.g., MTB, Tires)" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0"/>
+
+                    <!-- Parent Selection -->
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding AllCategories}" 
+                          SelectedItem="{Binding SelectedParent}"
+                          DisplayMemberPath="CategoryName"
+                          materialDesign:HintAssist.Hint="Parent Category (Leave blank for Main)" 
+                          materialDesign:TextFieldAssist.HasClearButton="True"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,10,0"/>
+
+                    <!-- Add Button -->
+                    <StackPanel Orientation="Horizontal" Grid.Column="2">
+                        <Button Command="{Binding SaveCategoryCommand}" Content="{Binding SubmitButtonContent}" Height="50" Width="150" Margin="0,0,10,0"/>
+
+                        <!-- Only shows up when editing to let the user "Escape" the edit state -->
+                        <Button Command="{Binding ClearFormCommand}" Content="CANCEL" Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="50" Width="100"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </materialDesign:Card>
+
+        <!-- 2. DATA TABLE -->
+        <DataGrid Grid.Row="1" ItemsSource="{Binding AllCategories}" 
+              AutoGenerateColumns="False" CanUserAddRows="False"
+              Style="{StaticResource MaterialDesignDataGrid}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Category Name" Binding="{Binding CategoryName}" Width="2*" IsReadOnly="True"/>
+
+                <!-- Shows the Parent Name instead of ParentId -->
+                <DataGridTextColumn Header="Parent Category" Binding="{Binding ParentName}" Width="2*" IsReadOnly="True"/>
+
+                <DataGridTemplateColumn Header="Actions" Width="0.5*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                    Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    CommandParameter="{Binding}" Foreground="Orange">
+                                    <materialDesign:PackIcon Kind="Edit" />
+                                </Button>
+                                <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                    Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    CommandParameter="{Binding}" Foreground="Red">
+                                    <materialDesign:PackIcon Kind="Delete" />
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

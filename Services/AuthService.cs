@@ -36,6 +36,7 @@ namespace CallMan.Services
             if (masterAdmin != null)
             {
                 _session.CurrentUserEmail = masterAdmin.Email;
+                _session.CurrentUser = "Admin";
                 _session.DisplayName = "Administrator";
                 _session.UserRole = "Admin";
                 _session.UserId = 0;

@@ -1,0 +1,106 @@
+﻿<UserControl x:Class="CallMan.Views.CompanyProfileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:converters="clr-namespace:CallMan.Converters"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid Margin="24">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320"/>
+            <!-- Branding Sidebar -->
+            <ColumnDefinition Width="*"/>
+            <!-- Form Area -->
+        </Grid.ColumnDefinitions>
+
+        <!-- LEFT COLUMN: BRANDING & LOGO -->
+        <materialDesign:Card Grid.Column="0" VerticalAlignment="Top" Padding="0" UniformCornerRadius="8" Margin="0,0,24,0">
+            <StackPanel>
+                <Border Background="#F5F5F5" Height="200" CornerRadius="8,8,0,0">
+                    <Grid>
+                        <!-- Logo Display with a subtle background -->
+                        <Image Source="{Binding CurrentProfile.LogoImage}" 
+                           Stretch="Uniform" Margin="20"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+
+                        <!-- Empty State Placeholder -->
+                        <materialDesign:PackIcon Kind="ImagePlus" Width="48" Height="48" 
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             Foreground="#BDBDBD"
+                                             Visibility="{Binding CurrentProfile.LogoImage, Converter={StaticResource NullToVisibilityConverter}}"/>
+                    </Grid>
+                </Border>
+
+                <StackPanel Margin="16">
+                    <TextBlock Text="Company Identity" Style="{StaticResource MaterialDesignHeadline6TextBlock}" FontSize="16"/>
+                    <TextBlock Text="This logo will appear on all PDFs and WhatsApp messages." 
+                           Style="{StaticResource MaterialDesignCaptionTextBlock}" Margin="0,4,0,16" TextWrapping="Wrap"/>
+
+                    <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+                        Command="{Binding SelectLogoCommand}"
+                        Content="UPDATE LOGO" 
+                        Height="35" FontSize="12"/>
+                </StackPanel>
+            </StackPanel>
+        </materialDesign:Card>
+
+        <!-- RIGHT COLUMN: BUSINESS DATA (Compact) -->
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,10,0">
+
+                <!-- SECTION 1: LEGAL & CONTACT -->
+                <TextBlock Text="General Information" FontWeight="Bold" Foreground="#1794A1" Margin="0,0,0,12"/>
+                <materialDesign:Card Padding="16" Margin="0,0,0,20">
+                    <UniformGrid Columns="2">
+                        <TextBox Text="{Binding CurrentProfile.CompanyName}" materialDesign:HintAssist.Hint="Company Name" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                        <TextBox Text="{Binding CurrentProfile.ProprietorName}" materialDesign:HintAssist.Hint="Proprietor Name" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                        <TextBox Text="{Binding CurrentProfile.GstNumber}" materialDesign:HintAssist.Hint="GST Number" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                        <TextBox Text="{Binding CurrentProfile.PanNumber}" materialDesign:HintAssist.Hint="PAN Number" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                        <TextBox Text="{Binding CurrentProfile.ContactNumber}" materialDesign:HintAssist.Hint="Contact Number" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                        <TextBox Text="{Binding CurrentProfile.OfficialEmail}" materialDesign:HintAssist.Hint="Official Email" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                    </UniformGrid>
+                </materialDesign:Card>
+
+                <!-- SECTION 2: BANKING & QR -->
+                <TextBlock Text="Financial &amp; Billing" FontWeight="Bold" Foreground="#1794A1" Margin="0,0,0,12"/>
+                <materialDesign:Card Padding="16" Margin="0,0,0,20">
+                    <StackPanel>
+                        <UniformGrid Columns="2">
+                            <TextBox Text="{Binding CurrentProfile.BankName}" materialDesign:HintAssist.Hint="Bank Name" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                            <TextBox Text="{Binding CurrentProfile.AccountNumber}" materialDesign:HintAssist.Hint="Account Number" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                            <TextBox Text="{Binding CurrentProfile.IfscCode}" materialDesign:HintAssist.Hint="IFSC Code" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                            <TextBox Text="{Binding CurrentProfile.UpiId}" materialDesign:HintAssist.Hint="UPI ID" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                        </UniformGrid>
+                        <Separator Margin="8,16" Background="#EEEEEE"/>
+                        <UniformGrid Columns="2">
+                            <TextBox Text="{Binding CurrentProfile.CompanyInitials}" materialDesign:HintAssist.Hint="Initials (PDF Naming)" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                            <TextBox Text="{Binding CurrentProfile.InvoiceStartNumber}" materialDesign:HintAssist.Hint="Starting Invoice #" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                        </UniformGrid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- SECTION 3: ADDRESS & TERMS -->
+                <materialDesign:Card Padding="16" Margin="0,0,0,10">
+                    <StackPanel>
+                        <TextBox Text="{Binding CurrentProfile.RegisteredAddress}" materialDesign:HintAssist.Hint="Registered Office Address" 
+                             AcceptsReturn="True" TextWrapping="Wrap" Height="60" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                        <TextBox Text="{Binding CurrentProfile.TermsAndConditions}" materialDesign:HintAssist.Hint="Terms &amp; Conditions (Footer)" 
+                             AcceptsReturn="True" TextWrapping="Wrap" Height="80" Margin="8,4" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- ACTION BUTTON -->
+                <Button Command="{Binding SaveProfileCommand}" 
+                    Content="SAVE SETTINGS" 
+                    Width="200" HorizontalAlignment="Right" Height="45" 
+                    Margin="0,10,8,30" Background="#1794A1" BorderBrush="#1794A1"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -68,5 +68,13 @@ namespace CallMan.Models
         // Navigation Properties (Optional, useful for deep loading)
         public ObservableCollection<Order> Orders { get; set; } = new();
         public ObservableCollection<PaymentEntry> Payments { get; set; } = new();
+
+        [ObservableProperty] private string? _workingArea; // New field for image_0d4f1a.png
+
+        // Calculated property for the Customer View (image_0d52a4.png)
+        public string Summary => $"{TotalMaturedAmount:C} | {OrderCount} orders";
+        public decimal TotalMaturedAmount { get; set; }
+        public int OrderCount { get; set; }
+        [ObservableProperty] private int _historyCount;
     }
 }

@@ -47,6 +47,12 @@ namespace CallMan
             services.AddSingleton<IUserSession, UserSession>();
             services.AddSingleton<LeadService>();// Our Lead Management service
             services.AddSingleton<SettingService>();
+            services.AddSingleton<CategoryService>();
+            services.AddSingleton<ProductService>();
+            services.AddSingleton<OrderService>();
+            services.AddSingleton<ProfileService>();
+            services.AddSingleton<OrderStageService>();
+            services.AddSingleton<DepartmentService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();
@@ -57,6 +63,11 @@ namespace CallMan
             services.AddTransient<AllOrdersViewModel>();
             services.AddTransient<AdminSettingsViewModel>();
             services.AddTransient<GenericSettingsViewModel>();
+            services.AddTransient<ManageCategoriesViewModel>();
+            services.AddTransient<InventoryViewModel>();
+            services.AddTransient<CompanyProfileViewModel>();
+            services.AddTransient<OrderStagesViewModel>();
+            services.AddTransient<DepartmentsViewModel>();
 
             services.AddTransient<UserManagementViewModel>();
             services.AddTransient<AddStaffDialogViewModel>();

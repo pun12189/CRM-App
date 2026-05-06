@@ -58,6 +58,7 @@
                                 </TextBlock>
                                 <ComboBox ItemsSource="{Binding DeadReasons}" 
                       SelectedItem="{Binding SelectedDeadReason}"
+                                          DisplayMemberPath="Name"
                       Style="{StaticResource MaterialDesignOutlinedComboBox}"
                       materialDesign:HintAssist.Hint="Select Reason"
                       Margin="0,0,0,15"/>
@@ -66,7 +67,7 @@
                             <StackPanel Visibility="{Binding IsDead, Converter={StaticResource InvertedVisibilityConverter}}">
                                 <StackPanel Visibility="{Binding IsFollowup, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <TextBlock Text="Followup Stages *" Foreground="#555"/>
-                                    <ComboBox ItemsSource="{Binding Stages}" SelectedItem="{Binding SelectedStage}" Margin="0,5,0,15"/>
+                                    <ComboBox ItemsSource="{Binding FollowupStages}" SelectedItem="{Binding SelectedStatus}" DisplayMemberPath="Name" Style="{StaticResource MaterialDesignOutlinedComboBox}" materialDesign:HintAssist.Hint="Select Reason" Margin="0,5,0,15"/>
                                 </StackPanel>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -75,7 +76,7 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Margin="0,0,10,0">
                                         <TextBlock Text="Next Followup Date *"/>
-                                        <DatePicker SelectedDate="{Binding NextFollowupDate}" Margin="0,5"/>
+                                        <DatePicker SelectedDate="{Binding NextFollowupDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayDateStart="{Binding MinDate}" Margin="0,5"/>
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Margin="10,0,0,0" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
 
@@ -96,8 +97,8 @@
                                 <CheckBox Content="Receive system notification"/>
                             </StackPanel>
 
-                            <TextBlock Text="Select Action" FontWeight="SemiBold" Margin="0,15,0,5"/>
-                            <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Select Action" FontWeight="SemiBold" Margin="0,15,0,5" Visibility="Collapsed"/>
+                            <StackPanel Orientation="Horizontal" Visibility="Collapsed">
                                 <RadioButton Content="Call" 
                  IsChecked="{Binding SelectedAction, Converter={StaticResource StringToBoolConverter}, ConverterParameter=Call}" 
                  Margin="0,0,15,0"/>

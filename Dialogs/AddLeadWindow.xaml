@@ -16,12 +16,47 @@
         <TextBlock Text="Email"/>
         <TextBox Text="{Binding NewLead.Email}" Margin="0,5,0,10"/>
 
-        <TextBlock Text="Lead Type (Status)"/>
+        <!--<TextBlock Text="Lead Type (Status)"/>
         <ComboBox SelectedValue="{Binding NewLead.Status}" Margin="0,5,0,10">
             <ComboBoxItem Content="New"/>
             <ComboBoxItem Content="Follow-up"/>
             <ComboBoxItem Content="Mature"/>
-        </ComboBox>
+        </ComboBox>-->
+
+        <TextBlock Text="Working Area">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding NewLead.Status}" Value="Matured">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding NewLead.Status}" Value="New">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding NewLead.Status}" Value="Followup">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+        <TextBox Text="{Binding NewLead.WorkingArea}" Margin="0,5,0,10">
+            <TextBox.Style>
+                <Style TargetType="TextBox">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding NewLead.Status}" Value="Matured">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding NewLead.Status}" Value="New">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding NewLead.Status}" Value="Followup">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBox.Style>
+        </TextBox>
 
         <GroupBox Header="Company &amp; Address (Optional)" Margin="0,10,0,0">
             <Grid Margin="5">

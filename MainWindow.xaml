@@ -34,6 +34,21 @@
         <DataTemplate DataType="{x:Type vm:GenericSettingsViewModel}">
             <views:GenericSettingsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ManageCategoriesViewModel}">
+            <views:ManageCategoriesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:InventoryViewModel}">
+            <views:ProductView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CompanyProfileViewModel}">
+            <views:CompanyProfileView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OrderStagesViewModel}">
+            <views:OrderStagesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DepartmentsViewModel}">
+            <views:DepartmentsView />
+        </DataTemplate>
         <Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -94,7 +109,7 @@
 
         <Border Grid.Row="1" Background="#2C3E50" Height="60" Effect="{DynamicResource MaterialDesignShadowDepth2}">
             <Grid VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Command="{Binding NavigateCommand}" 
                     CommandParameter="Dashboard"
                     Style="{StaticResource MaterialDesignFlatMidBgButton}"
@@ -132,6 +147,16 @@
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Handshake" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="CUSTOMERS" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding NavigateCommand}" 
+                    CommandParameter="Inventory"
+                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                    Foreground="White" Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Handshake" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="INVENTORY" VerticalAlignment="Center" FontWeight="SemiBold"/>
                         </StackPanel>
                     </Button>
 

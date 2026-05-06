@@ -1,4 +1,5 @@
 ﻿using CallMan.Dialogs;
+using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -19,6 +20,8 @@ namespace CallMan.ViewModels
     public partial class LeadViewModel : ObservableObject
     {
         private readonly LeadService _leadService;
+        private readonly SettingService _settingService;
+        private readonly IUserSession _session;
         private ICollectionView _leadsCollection;
 
         [ObservableProperty]
@@ -33,9 +36,11 @@ namespace CallMan.ViewModels
         [ObservableProperty]
         private Lead? _selectedLead;
 
-        public LeadViewModel(LeadService leadService)
+        public LeadViewModel(LeadService leadService, SettingService settingService, IUserSession session)
         {
             _leadService = leadService;
+            _settingService = settingService;
+            _session = session;
             LoadLeads();
         }
 
@@ -160,7 +165,7 @@ namespace CallMan.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            var profileVm = new LeadProfileViewModel(_leadService, selectedLead);
+            var profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead);
 
             // 2. Initialize the Window
             var profileWindow = new LeadProfileWindow();

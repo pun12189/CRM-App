@@ -1,4 +1,5 @@
-﻿using CallMan.Models;
+﻿using CallMan.Interfaces;
+using CallMan.Models;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -15,6 +16,8 @@ namespace CallMan.ViewModels
     public partial class LeadProfileViewModel : ObservableObject
     {
         private readonly LeadService _leadService;
+        private readonly SettingService _settingService;
+        private readonly IUserSession _session;
 
         [ObservableProperty] private Lead _selectedLead;
 
@@ -38,29 +41,24 @@ namespace CallMan.ViewModels
 
         // Followup Details
         [ObservableProperty] private string _message = "";
-        [ObservableProperty] private string _selectedStage;
         [ObservableProperty] private DateTime _nextFollowupDate = DateTime.Now.AddDays(1);
+        [ObservableProperty] private DateTime _minDate = DateTime.Today;
         [ObservableProperty] private string _selectedAction = "Call"; // Default
         [ObservableProperty] private bool _isPriority;
 
-        [ObservableProperty] private string? _selectedDeadReason;
+        [ObservableProperty] private ObservableCollection<SettingItem> _followupStages = new();
+        [ObservableProperty] private ObservableCollection<SettingItem> _deadReasons = new();
 
-        // Common reasons for your cycle business
-        public ObservableCollection<string> DeadReasons { get; } = new()
-    {
-        "Price too high",
-        "Bought from competitor",
-        "No longer interested",
-        "Stock unavailable",
-        "Wrong number/Contact issue"
-    };
+        [ObservableProperty] private SettingItem _selectedStatus;
+        [ObservableProperty] private SettingItem _selectedDeadReason;   
 
-        public ObservableCollection<string> Stages { get; } = new() { "Initial Contact", "Price Shared", "Negotiation", "Technical Discussion" };
-
-        public LeadProfileViewModel(LeadService service, Lead lead)
+        public LeadProfileViewModel(LeadService service, SettingService settingService, IUserSession session, Lead lead)
         {
             _leadService = service;
+            _settingService = settingService;
+            _session = session;
             _selectedLead = lead;
+            _ = LoadCollections();
         }
 
         // --- Logic for Dynamic Balance ---
@@ -70,6 +68,15 @@ namespace CallMan.ViewModels
         private void CalculateBalance()
         {
             BalancePayment = OrderValue - PaymentReceived;
+        }
+
+        private async Task LoadCollections()
+        {
+            var stages = await _settingService.GetSettingsAsync("LeadStatuses");
+            var reasons = await _settingService.GetSettingsAsync("DeadReasons");
+
+            FollowupStages = new ObservableCollection<SettingItem>(stages);
+            DeadReasons = new ObservableCollection<SettingItem>(reasons);
         }
 
         [RelayCommand]
@@ -89,11 +96,11 @@ namespace CallMan.ViewModels
                     {
                         LeadId = SelectedLead.LeadId,
                         // Prefix message with the reason for the timeline
-                        Message = $"[DEAD - {SelectedDeadReason}] {Message}",
+                        Message = $"[DEAD - {SelectedDeadReason.Name}] {Message}",
                         ActionType = SelectedAction,
                         NextFollowUpDate = null, // CRITICAL: Stop the reminders
                         FollowupStage = "Dead",
-                        UpdatedBy = "Admin"
+                        UpdatedBy = _session.CurrentUser
                     };
 
                     SelectedLead.LatestUpdate = history;
@@ -120,10 +127,10 @@ namespace CallMan.ViewModels
                         {
                             LeadId = SelectedLead.LeadId,
                             Message = Message,
-                            NextFollowUpDate = IsFollowup ? combinedDateTime : null,
-                            UpdatedBy = "Admin",
+                            NextFollowUpDate = combinedDateTime,
+                            UpdatedBy = _session.CurrentUser,
                             ActionType = SelectedAction,
-                            FollowupStage = SelectedStage
+                            FollowupStage = "Matured"
                         };
 
                         SelectedLead.LatestUpdate = history;
@@ -135,7 +142,9 @@ namespace CallMan.ViewModels
                                 LeadId = SelectedLead.LeadId,
                                 TotalAmount = OrderValue,
                                 Description = $"Initial Order: {Message}",
-                                OrderDate = DateTime.Now
+                                OrderDate = DateTime.Now,
+                                Status = BalancePayment == 0 ? "Paid" : "Partially Paid",
+                                ProcessedBy = _session.CurrentUser,
                             };
                             
                             var payment = new PaymentEntry

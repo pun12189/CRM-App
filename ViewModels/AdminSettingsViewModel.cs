@@ -31,6 +31,18 @@ namespace CallMan.ViewModels
                 case "Staff":
                     CurrentSettingView = _serviceProvider.GetRequiredService<UserManagementViewModel>();
                     break;
+                case "CProfile":
+                    CurrentSettingView = _serviceProvider.GetRequiredService<CompanyProfileViewModel>();
+                    break;
+                case "Category":
+                    CurrentSettingView = _serviceProvider.GetRequiredService<ManageCategoriesViewModel>();
+                    break;
+                case "OrderStages":
+                    CurrentSettingView = _serviceProvider.GetRequiredService<OrderStagesViewModel>();
+                    break;
+                case "Departments":
+                    CurrentSettingView = _serviceProvider.GetRequiredService<DepartmentsViewModel>();
+                    break;
                 case "Dead Reasons":                     
                 case "Followup Stages":                    
                 case "Mature Stages":                    

@@ -1,0 +1,60 @@
+﻿<Window x:Class="CallMan.Dialogs.ProductDetailWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CallMan.Dialogs"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="Product Details" Width="600" Height="Auto" SizeToContent="Height">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
+    <Grid Margin="20">
+        <StackPanel>
+            <TextBlock Text="Product Information" Style="{StaticResource MaterialDesignHeadline5TextBlock}" Margin="0,0,0,20"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBox Grid.Column="0" Text="{Binding NewProduct.Name}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Full Product Name" Margin="5"/>
+                <TextBox Grid.Column="1" Text="{Binding NewProduct.SKU}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="SKU / Barcode" Margin="5"/>
+                <TextBox Grid.Column="0" Grid.Row="1" Text="{Binding NewProduct.InitialStock}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Stock/Quantity" Margin="5"/>
+                <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding NewProduct.ShortName}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Short Name" Margin="5"/>
+            </Grid>
+
+            <!-- Category Fix: Using SelectedValue with fallback -->
+            <ComboBox ItemsSource="{Binding Categories}" 
+                      SelectedValue="{Binding NewProduct.CategoryId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                      SelectedValuePath="Id" 
+                      DisplayMemberPath="CategoryName"
+                      materialDesign:HintAssist.Hint="Select Category" Margin="5,15,5,5"/>
+
+            <CheckBox Content="Enable Advanced Cost Tracking" IsChecked="{Binding NewProduct.TrackCost}" Margin="5,10"/>
+
+            <GroupBox Header="Pricing &amp; Tax" Visibility="{Binding NewProduct.TrackCost, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <UniformGrid Columns="2">
+                    <TextBox Text="{Binding NewProduct.MRP}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="MRP" Margin="5"/>
+                    <TextBox Text="{Binding NewProduct.CostPrice}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Cost Price" Margin="5"/>
+                    <TextBox Text="{Binding NewProduct.SellingPrice}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Selling Price" Margin="5"/>
+                    <TextBox Text="{Binding NewProduct.GstPercent}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="GST %" Margin="5"/>
+                </UniformGrid>
+            </GroupBox>
+
+            <TextBlock Text="{Binding NewProduct.TotalCost, StringFormat='Calculated Total: ₹{0}'}" Visibility="{Binding NewProduct.TrackCost, Converter={StaticResource BooleanToVisibilityConverter}}"
+                       HorizontalAlignment="Right" FontSize="16" FontWeight="Bold" Foreground="#1794A1" Margin="0,10,5,0"/>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+                <Button Content="CANCEL" IsCancel="True" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0"/>
+                <Button Content="SAVE PRODUCT" Command="{Binding SaveCommand}" 
+                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

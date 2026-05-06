@@ -39,6 +39,7 @@
                     <Button Style="{StaticResource SettingTileStyle}" Visibility="Collapsed" Content="Fetch Inquiries" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}"/>
                     <Button Style="{StaticResource SettingTileStyle}" Content="Login Logs" CommandParameter="Logs" Command="{Binding NavigateToSettingCommand}"/>
                     <Button Style="{StaticResource SettingTileStyle}" Content="Workflows" CommandParameter="Workflows" Command="{Binding NavigateToSettingCommand}"/>
+                    <Button Style="{StaticResource SettingTileStyle}" Content="Categories" CommandParameter="Category" Command="{Binding NavigateToSettingCommand}"/>
                     <Button Style="{StaticResource SettingTileStyle}" Content="Company Profile" CommandParameter="CProfile" Command="{Binding NavigateToSettingCommand}"/>
                     <Button Style="{StaticResource SettingTileStyle}" Content="Connect Email" CommandParameter="Email" Command="{Binding NavigateToSettingCommand}"/>
                     <Button Style="{StaticResource SettingTileStyle}" Content="Connect Whatsapp" CommandParameter="Whatsapp" Command="{Binding NavigateToSettingCommand}"/>

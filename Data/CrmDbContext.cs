@@ -19,7 +19,18 @@ namespace CallMan.Data
 
         // Centralized method to get a connection
         public IDbConnection CreateConnection()
-            => new MySqlConnection(_connectionString);
+        {
+            var conn = new MySqlConnection(_connectionString);
+            conn.Open();
+
+            // Force the session to IST (India Standard Time)
+            using (var cmd = new MySqlCommand("SET time_zone = '+05:30';", conn))
+            {
+                cmd.ExecuteNonQuery();
+            }
+
+            return conn;
+        }
 
         // You can add common DB logic here later, 
         // like HealthChecks or Migrations.

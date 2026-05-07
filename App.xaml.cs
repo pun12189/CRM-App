@@ -23,7 +23,7 @@ namespace CallMan
 #if DEBUG
 
             //_connectionString = "DataSource=bahikitab-aws.c3s6wewcwox1.us-east-1.rds.amazonaws.com;Port=3306;Uid=admin;Pwd=Il6oOvguA2SB5IEQxWCJ;database=bahikitab";
-            string connectionString = "Server=82.29.166.165;Port=3306;Uid=root;Pwd=sofricdev;database=callmandev";
+            string connectionString = "Server=82.29.166.165;Port=3306;Uid=root;Pwd=sofricdev;database=callmandev;";
 #endif
 #if RELEASE
 
@@ -53,6 +53,7 @@ namespace CallMan
             services.AddSingleton<ProfileService>();
             services.AddSingleton<OrderStageService>();
             services.AddSingleton<DepartmentService>();
+            services.AddSingleton<LoginLogService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();
@@ -68,6 +69,7 @@ namespace CallMan
             services.AddTransient<CompanyProfileViewModel>();
             services.AddTransient<OrderStagesViewModel>();
             services.AddTransient<DepartmentsViewModel>();
+            services.AddTransient<LoginLogsViewModel>();
 
             services.AddTransient<UserManagementViewModel>();
             services.AddTransient<AddStaffDialogViewModel>();

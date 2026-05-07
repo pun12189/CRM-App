@@ -22,6 +22,7 @@ namespace CallMan.Models
         public DateTime? ExpiryDate { get; set; }
         public string? MemberSince { get; set; }
         public string? Phone { get; set; }
+        public int LogId { get; set; }
 
         public void Clear()
         {
@@ -30,6 +31,7 @@ namespace CallMan.Models
             DisplayName = string.Empty;
             UserRole = string.Empty;
             SeniorId = null;
+            LogId = 0;
         }
     }
 }

@@ -27,11 +27,11 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Orientation="Horizontal" Margin="16" HorizontalAlignment="Stretch">
-                    <TextBlock Text="Business Departments" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                    <Button Command="{Binding AddNewDepartmentCommand}" Content="ADD DEPARTMENT" 
+                <DockPanel Margin="16" HorizontalAlignment="Stretch">
+                    <TextBlock Text="Business Departments" Style="{StaticResource MaterialDesignHeadline6TextBlock}" HorizontalAlignment="Left"/>
+                    <Button Command="{Binding AddNewDepartmentCommand}" Content="ADD DEPARTMENT" HorizontalAlignment="Right"
                         Style="{StaticResource MaterialDesignRaisedButton}" Background="#1794A1"/>
-                </StackPanel>
+                </DockPanel>
 
                 <DataGrid Grid.Row="1" ItemsSource="{Binding Departments}" SelectedItem="{Binding SelectedDepartment}"
                       AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">

@@ -20,12 +20,14 @@ namespace CallMan.Services
         private readonly ApiService _apiService;
         private readonly CrmDbContext _context;
         private readonly IUserSession _session;
+        private readonly LoginLogService _logService;
 
-        public AuthService(ApiService apiService, CrmDbContext context, IUserSession session)
+        public AuthService(ApiService apiService, CrmDbContext context, IUserSession session, LoginLogService logService)
         {
             _apiService = apiService;
             _context = context;
             _session = session;
+            _logService = logService;
         }
 
         public async Task<bool> AuthenticateByEmailAsync(string email, string password)
@@ -43,6 +45,8 @@ namespace CallMan.Services
                 _session.UserLimit = masterAdmin.UserLimit;
                 _session.ExpiryDate = masterAdmin.ExpiryDate;
                 _session.MemberSince = masterAdmin.MemberSince;
+                var id = await _logService.RecordLoginAsync(0);
+                _session.LogId = id;
                 return true;
             }
 
@@ -60,6 +64,8 @@ namespace CallMan.Services
                 _session.CurrentUser = user.FullName;
                 _session.UserRole = user.Role;
                 _session.SeniorId = user.SeniorId;
+                var id = await _logService.RecordLoginAsync(user.UserId);
+                _session.LogId = id;
                 return true;
             }
 

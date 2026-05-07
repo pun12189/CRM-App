@@ -19,6 +19,7 @@ namespace CallMan.Interfaces
         string? MemberSince { get; set; }
         string? Phone { get; set; }
         bool IsAdmin { get; }
+        int LogId { get; set; }
         void Clear();
     }
 }

@@ -1,6 +1,7 @@
 ﻿using CallMan.Dialogs;
 using CallMan.Interfaces;
 using CallMan.Models;
+using CallMan.Models.Enums;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,6 +24,9 @@ namespace CallMan.ViewModels
         private readonly LeadService _leadService;
         private readonly SettingService _settingService;
         private readonly IUserSession _session;
+        private readonly IDialogService _dialogService;
+        private readonly ProductService _productService;
+        private readonly OrderService _orderService;
         private ICollectionView _leadsCollection;
 
         [ObservableProperty]
@@ -30,27 +35,49 @@ namespace CallMan.ViewModels
         // This is what the DataGrid actually binds to now
         public ICollectionView LeadsCollection => _leadsCollection;
 
+        [ObservableProperty] private LeadViewMode _currentMode = LeadViewMode.AllLeads;
+
         [ObservableProperty]
         private ObservableCollection<Lead> _leads = new();
 
         [ObservableProperty]
         private Lead? _selectedLead;
 
-        public LeadViewModel(LeadService leadService, SettingService settingService, IUserSession session)
+        public LeadViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService)
         {
             _leadService = leadService;
             _settingService = settingService;
             _session = session;
+            _dialogService = dialogService;
+            _productService = productService;
+            _orderService = orderService;
             LoadLeads();
         }
 
-        private async void LoadLeads()
+        public async Task InitializeAsync(LeadViewMode mode)
+        {
+            CurrentMode = mode;
+            await LoadLeads();
+        }
+
+        private async Task LoadLeads()
         {
             // 1. Call the new service method that joins Leads with their latest History
             var data = await _leadService.GetAllLeadsWithLatestUpdateAsync();
 
             // 2. Wrap the result in an ObservableCollection
             var list = new ObservableCollection<Lead>(data);
+
+            if (CurrentMode == LeadViewMode.MyLeads)
+            {
+                var userId = _session.CurrentUser;
+                list = new ObservableCollection<Lead>(list.Where(l => l.LeadHolder == userId));
+            }
+
+            if (CurrentMode == LeadViewMode.Dead)
+            {
+                list = new ObservableCollection<Lead>(list.Where(l => l.Status == "Dead"));
+            }
 
             // 3. Update the CollectionView (the actual source for your DataGrid)
             _leadsCollection = CollectionViewSource.GetDefaultView(list);
@@ -165,10 +192,20 @@ namespace CallMan.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            var profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead);
+            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead);
+
+            if (selectedLead.Status?.ToLower() == "matured")
+            {
+                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead);
+            }
 
             // 2. Initialize the Window
-            var profileWindow = new LeadProfileWindow();
+            Window profileWindow = new LeadProfileWindow();
+            if (selectedLead.Status?.ToLower() == "matured")
+            {
+                profileWindow = new CustomerProfileWindow();
+            }
+
             profileWindow.DataContext = profileVm;
 
             // 3. Set Ownership (Important so the dialog stays centered over your app)
@@ -176,17 +213,60 @@ namespace CallMan.ViewModels
 
             // 4. Handle Closure (If you want to refresh the grid after an update)
             // You can add a 'RequestClose' event in LeadProfileViewModel like we did for AddLead
-            profileVm.RequestClose += (bool isUpdated) =>
+            profileVm.RequestClose += (Action<bool>)(isUpdated =>
             {
                 profileWindow.DialogResult = isUpdated;
                 profileWindow.Close();
-            };
+            });            
 
             // 5. Open as Modal
             if (profileWindow.ShowDialog() == true)
             {
                 // If data was updated (e.g., status changed to Matured or Dead), refresh the grid
                 LoadLeads();
+            }
+        }
+
+        [RelayCommand]
+        private void Whatsapp(Lead selectedLead)
+        {
+            if (selectedLead != null)
+            {
+                if (!string.IsNullOrEmpty(selectedLead.Phone))
+                {
+                    // Phone number se extra characters (+, spaces, dashes) hatane ke liye
+                    string cleanNumber = new string(selectedLead.Phone.Where(char.IsDigit).ToArray());
+
+                    // Agar number 10 digit ka hai, toh country code (e.g., 91) add karna zaroori hai
+                    if (cleanNumber.Length == 10)
+                    {
+                        cleanNumber = "91" + cleanNumber;
+                    }
+
+                    string message = $"Hello {selectedLead.CustomerName} , \n\n" +
+                         $"Thanks for showing trust in us.\n" +
+                         $"Please feel free to contact us on this whatsapp \n" +
+                         $"_automated msg, sent from SofricERP_";
+
+                    string encodedMessage = Uri.EscapeDataString(message);
+
+                    // WhatsApp Web URL
+                    string url = $"https://web.whatsapp.com/send?phone={cleanNumber}&text={encodedMessage}";
+
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo
+                        {
+                            FileName = url,
+                            UseShellExecute = true
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        // Error handling agar browser open na ho sake
+                        Debug.WriteLine(ex.Message);
+                    }
+                }
             }
         }
     }

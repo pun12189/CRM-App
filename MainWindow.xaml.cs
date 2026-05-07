@@ -1,4 +1,5 @@
 ﻿using CallMan.ViewModels;
+using System.ComponentModel;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,6 +22,16 @@ namespace CallMan
         {
             InitializeComponent();
             this.DataContext = vm;
+        }
+
+        protected override async void OnClosing(CancelEventArgs e)
+        {
+            if (DataContext is MainViewModel vm)
+            {
+                // Trigger the logout command logic to save the timestamp
+                await vm.LogoutCommand.ExecuteAsync(null);
+            }
+            base.OnClosing(e);
         }
     }
 }

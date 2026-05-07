@@ -1,5 +1,6 @@
 ﻿using CallMan.Interfaces;
 using CallMan.Models;
+using CallMan.Services;
 using CallMan.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -15,8 +16,7 @@ namespace CallMan.ViewModels
 {
     public partial class LoginViewModel : ObservableObject
     {
-        private readonly IAuthService _authService;
-        private readonly IUserSession _session;
+        private readonly IAuthService _authService;        
 
         [ObservableProperty] private string _email = "";
         [ObservableProperty] private string _errorMessage = "";
@@ -24,7 +24,7 @@ namespace CallMan.ViewModels
         [ObservableProperty] private bool _isBusy;
         [ObservableProperty] private string _resetEmail;
         [ObservableProperty] private bool _isLoginVisible = true;
-        [ObservableProperty] private bool _isForgotVisible = false;
+        [ObservableProperty] private bool _isForgotVisible = false;        
 
         public LoginViewModel(IAuthService authService) 
         {

@@ -290,9 +290,33 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
             using var db = _context.CreateConnection();
             string sql = @"SELECT l.*, 
             (SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders WHERE LeadId = l.LeadId) as TotalOrderAmount,
-            (SELECT COALESCE(SUM(AmountReceived), 0) FROM Payments WHERE LeadId = l.LeadId) as TotalPaidAmount
-            FROM Leads l WHERE l.Status = 'Matured'";
-            return await db.QueryAsync<Lead>(sql);
+            (SELECT COALESCE(SUM(AmountReceived), 0) FROM Payments WHERE LeadId = l.LeadId) as TotalPaidAmount,
+(SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
+h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
+            FROM Leads l  LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+        WHERE l.Status = 'Matured' AND h.HistoryId = (
+            SELECT MAX(HistoryId) 
+            FROM LeadHistory 
+            WHERE LeadId = l.LeadId
+        ) OR h.HistoryId IS NULL -- In case lead has no history yet
+        ORDER BY l.LeadId DESC;";
+            var result = await db.QueryAsync<Lead, LeadHistoryEntry, Lead>(sql,
+                (lead, history) =>
+                {
+                    // Map the dynamic metadata as before
+                    if (!string.IsNullOrEmpty(lead.MetadataJson))
+                    {
+                        lead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(lead.MetadataJson)
+                                           ?? new Dictionary<string, string>();
+                    }
+
+                    // Assign the latest history entry to the calculated property
+                    lead.LatestUpdate = history;
+                    return lead;
+                },
+                splitOn: "HistoryId");
+
+            return result;
         }
 
         // Record a payment and auto-update Order status
@@ -406,7 +430,7 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
             if (filter.FromDate != null && filter.ToDate != null)
             {
                 // Filtering based on Lead Creation or Update date
-                whereClause += " AND CreatedDate BETWEEN @FromDate AND @ToDate ";
+                whereClause += " AND CreatedAt BETWEEN @FromDate AND @ToDate ";
                 parameters.Add("FromDate", filter.FromDate);
                 parameters.Add("ToDate", filter.ToDate);
             }
@@ -418,7 +442,7 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
             (SELECT COUNT(*) FROM Leads {whereClause} AND Status = 'Matured') as Customers,
             (SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Orders o 
                     INNER JOIN Leads l ON o.LeadId = l.LeadId 
-                    {whereClause.Replace("CreatedDate", "o.OrderDate")}) as TotalBusiness";
+                    {whereClause.Replace("CreatedAt", "o.OrderDate")}) as TotalBusiness";
 
             return await db.QuerySingleAsync<DashboardStats>(sql, parameters);
         }       

@@ -57,7 +57,7 @@
         </Border>
 
         <DataGrid Grid.Row="1" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" AlternationCount="9999" SelectedItem="{Binding SelectedLead}"
-          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single">
+          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single">            
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                     <!-- Bind Background to the 'Status' property of your Lead model -->
@@ -198,7 +198,7 @@
                 <DataGridTemplateColumn Header="Label" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border Background="#b6f9fa" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Border Background="#b6f9fa" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
                                 <TextBlock Text="bottle" FontSize="12" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
@@ -208,7 +208,7 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <StackPanel Orientation="Vertical">                                    
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">                                    
                                     <TextBlock Text="{Binding LeadHolder}" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Border>
@@ -218,7 +218,7 @@
                 <DataGridTemplateColumn Header="Status" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border Background="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter=dark}" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <Border Background="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter=dark}" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
                                 <TextBlock Text="{Binding Status}" FontSize="10" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
@@ -230,7 +230,7 @@
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="{Binding LatestUpdate.NextFollowUpDate}" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                                <Border Background="LightSkyBlue" CornerRadius="5" Margin="0,10,0,0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <Border Background="LightSkyBlue" CornerRadius="5" Margin="0,10,0,0" VerticalAlignment="Center" HorizontalAlignment="Left">
                                     <TextBlock Text="{Binding HistoryCount, StringFormat='{}{0} followup'}" FontSize="12" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                             </StackPanel>

@@ -27,10 +27,10 @@
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Orientation="Horizontal" Margin="16" HorizontalAlignment="Stretch">
+                <DockPanel Margin="16" HorizontalAlignment="Stretch">
                     <TextBlock Text="Order Pipeline Stages" Style="{StaticResource MaterialDesignHeadline6TextBlock}"/>
-                    <Button Command="{Binding AddNewStageCommand}" Content="ADD STAGE" Style="{StaticResource MaterialDesignFlatButton}"/>
-                </StackPanel>
+                    <Button Command="{Binding AddNewStageCommand}" HorizontalAlignment="Right" Content="ADD STAGE" Style="{StaticResource MaterialDesignRaisedButton}"/>
+                </DockPanel>
 
                 <DataGrid Grid.Row="1" ItemsSource="{Binding Stages}" SelectedItem="{Binding SelectedStage}"
                       AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Single"

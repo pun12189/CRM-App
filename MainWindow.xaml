@@ -49,26 +49,29 @@
         <DataTemplate DataType="{x:Type vm:DepartmentsViewModel}">
             <views:DepartmentsView />
         </DataTemplate>
-        <Style x:Key="MenuButtonStyle" TargetType="Button">
+        <DataTemplate DataType="{x:Type vm:LoginLogsViewModel}">
+            <views:LoginLogsView />
+        </DataTemplate>
+        <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="20,0"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <!--<Setter Property="Template">
+            --><!--<Setter Property="Template">
                 <ControlTemplate TargetType="Button">
                     <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
                         <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center"/>
                     </Border>
                 </ControlTemplate>
-            </Setter>-->
+            </Setter>--><!--
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Background" Value="#34495E"/>
                 </Trigger>
             </Style.Triggers>
-        </Style>
+        </Style>-->
     </Window.Resources>
     <Grid Background="#F0F2F5">
         <Grid.RowDefinitions>
@@ -96,18 +99,123 @@
                 </Border>
 
                 <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Cursor="Hand">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding UserName}" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="SemiBold"/>
-                        <Grid>
-                            <Ellipse Width="40" Height="40" Fill="#3498DB"/>
-                            <TextBlock Text="S" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold"/>
-                        </Grid>
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+
+                        <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                            <TextBlock Text="{Binding UserName}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                            <TextBlock Text="{Binding UserDepartment}" FontSize="10" Opacity="0.6" HorizontalAlignment="Right"/>
+                        </StackPanel>
+
+                        <materialDesign:PopupBox PlacementMode="BottomAndAlignRightEdges" StaysOpen="False">
+                            <materialDesign:PopupBox.ToggleContent>
+                                <materialDesign:Card UniformCornerRadius="20" Width="40" Height="40" Background="#F1C40F">
+                                    <materialDesign:PackIcon Kind="Account" Width="25" Height="25" 
+                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </materialDesign:Card>
+                            </materialDesign:PopupBox.ToggleContent>
+
+                            <StackPanel Width="150">
+                                <!--<Button Command="{Binding NavigateToProfileCommand}" Content="My Profile"/>
+                                <Button Command="{Binding NavigateToSettingsCommand}" Content="Settings"/>
+                                <Separator/>-->
+                                <Button Command="{Binding LogoutCommand}" Foreground="Red">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Logout" Margin="0,0,10,0"/>
+                                        <TextBlock Text="Logout"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </materialDesign:PopupBox>
                     </StackPanel>
                 </Button>
             </Grid>
         </Border>
+        <materialDesign:ColorZone Grid.Row="1" Mode="Custom" Background="#1794A1" Foreground="White">
+            <Menu x:Name="TopMenu" Background="Transparent" VerticalAlignment="Stretch">
+                <Menu.Resources>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
+                        <!--<Setter Property="Height" Value="55"/>-->
+                        <Setter Property="Padding" Value="10,0"/>
+                        <Setter Property="Foreground" Value="White"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="IsSubmenuOpen" Value="True"/>
+                                <Setter Property="Background" Value="#14838F"/>
+                            </Trigger>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter Property="Background" Value="White"/>
+                                <Setter Property="Foreground" Value="#1794A1"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
 
-        <Border Grid.Row="1" Background="#2C3E50" Height="60" Effect="{DynamicResource MaterialDesignShadowDepth2}">
+                    <Style TargetType="ContextMenu" BasedOn="{StaticResource MaterialDesignContextMenu}">
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="MinHeight" Value="0"/>
+                        <Setter Property="Background" Value="White"/>
+
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ContextMenu">
+                                    <materialDesign:Card UniformCornerRadius="2" 
+                                     Background="White"
+                                     Padding="0" 
+                                     Margin="4">
+                                        <ScrollViewer x:Name="SubMenuScrollViewer" 
+                                  Style="{DynamicResource {ComponentResourceKey ResourceId=MenuScrollViewer, TypeInTargetAssembly={x:Type FrameworkElement}}}">
+
+                                            <ItemsPresenter x:Name="ItemsPresenter" 
+                                        KeyboardNavigation.TabNavigation="Cycle" 
+                                        Margin="0" 
+                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                        </ScrollViewer>
+                                    </materialDesign:Card>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+
+                    <Style x:Key="SubItemStyle" TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">                       
+                        <Setter Property="Foreground" Value="#2D3436"/>
+                        <Setter Property="materialDesign:MenuItemAssist.HighlightedBackground" Value="White"/>
+
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="#1794A1"/>
+                            </Trigger>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter Property="Background" Value="White"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Menu.Resources>
+
+                <MenuItem Header="Dashboard" Icon="{materialDesign:PackIcon Kind=ViewDashboard}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"/>
+                <MenuItem Header="Follow Ups" Icon="{materialDesign:PackIcon Kind=Storage}">
+                    <MenuItem Header="Today's Followup" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="AddLead"/>
+                    <MenuItem Header="Future Followup" Style="{StaticResource SubItemStyle}"/>
+                </MenuItem>
+                <MenuItem Header="Leads" Icon="{materialDesign:PackIcon Kind=AccountGroup}">
+                    <MenuItem Header="All Leads" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Leads"/>
+                    <MenuItem Header="My Leads" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="MyLeads"/>
+                </MenuItem>
+                <MenuItem Header="Occupied Locations" Icon="{materialDesign:PackIcon Kind=LocalAreaNetwork}"/>
+                <MenuItem Header="Dead Leads" Icon="{materialDesign:PackIcon Kind=MedicalBag}">
+                    <MenuItem Header="Dead" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dead"/>
+                    <MenuItem Header="Winback Pool" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="WinbackPool"/>
+                </MenuItem>
+                <MenuItem Header="Purchase" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}"/>
+                <MenuItem Header="CRM" Icon="{materialDesign:PackIcon Kind=AccountGroup}">
+                    <MenuItem Header="Customers" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Customers"/>
+                    <MenuItem Header="Orders" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Orders"/>
+                    <MenuItem Header="Product List" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>
+                </MenuItem>
+                <MenuItem Header="Admin Settings" Icon="{materialDesign:PackIcon Kind=Settings}" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
+            </Menu>
+        </materialDesign:ColorZone>
+        <!--<Border Grid.Row="1" Background="#2C3E50" Height="60" Effect="{DynamicResource MaterialDesignShadowDepth2}">
             <Grid VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Command="{Binding NavigateCommand}" 
@@ -181,7 +289,7 @@
                     </Button>
                 </StackPanel>                
             </Grid>
-        </Border>
+        </Border>-->
 
         <ContentControl Grid.Row="2" Content="{Binding CurrentView}"/>
     </Grid>

@@ -120,17 +120,17 @@ namespace CallMan.ViewModels
             // 2. Clear session and return to Login Screen
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var loginView = App.ServiceProvider.GetRequiredService <LoginView>();
+                var loginView = App.ServiceProvider.GetRequiredService<LoginView>();
                 loginView.Show();
 
                 Application.Current.MainWindow = loginView;
 
                 // 4. Close the old dashboard window
                 // We find the specific window that belongs to this ViewModel
-                var oldWindow = Application.Current.Windows.OfType<Window>()
-                                .FirstOrDefault(w => w.DataContext == this);
+                var dashboardWindow = Application.Current.Windows.OfType<Window>()
+            .FirstOrDefault(w => w != loginView && w.IsVisible);
 
-                oldWindow?.Close();
+                dashboardWindow?.Close();
             });
         }
     }

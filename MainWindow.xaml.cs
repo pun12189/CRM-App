@@ -24,14 +24,14 @@ namespace CallMan
             this.DataContext = vm;
         }
 
-        protected override async void OnClosing(CancelEventArgs e)
+        protected override async void OnClosed(EventArgs e)
         {
             if (DataContext is MainViewModel vm)
             {
                 // Trigger the logout command logic to save the timestamp
                 await vm.LogoutCommand.ExecuteAsync(null);
             }
-            base.OnClosing(e);
+            base.OnClosed(e);
         }
     }
 }

@@ -54,6 +54,7 @@ namespace CallMan
             services.AddSingleton<OrderStageService>();
             services.AddSingleton<DepartmentService>();
             services.AddSingleton<LoginLogService>();
+            services.AddSingleton<EmailService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();
@@ -70,6 +71,7 @@ namespace CallMan
             services.AddTransient<OrderStagesViewModel>();
             services.AddTransient<DepartmentsViewModel>();
             services.AddTransient<LoginLogsViewModel>();
+            services.AddTransient<EmailSettingsViewModel>();
 
             services.AddTransient<UserManagementViewModel>();
             services.AddTransient<AddStaffDialogViewModel>();

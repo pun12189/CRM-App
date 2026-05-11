@@ -56,6 +56,7 @@
                     <Button Content="TEST CONNECTION" 
                         Style="{StaticResource MaterialDesignOutlinedButton}" 
                         Command="{Binding TestConnectionCommand}"
+                            CommandParameter="{Binding ElementName=SmtpPassword}"
                         Margin="0,0,10,0"/>
                     <Button Content="SAVE SETTINGS" 
                         Background="#1794A1" 

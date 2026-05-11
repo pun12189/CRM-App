@@ -20,7 +20,7 @@ namespace CallMan.Converters
                 return status switch
                 {
                     "new" => new SolidColorBrush(Colors.SkyBlue),      // Light Blue
-                    "followup" => new SolidColorBrush(Colors.PeachPuff), // Light Yellow
+                    "followup" => new SolidColorBrush(Colors.OrangeRed), // Light Yellow
                     "matured" => new SolidColorBrush(Colors.ForestGreen),  // Light Green
                     _ => Brushes.White
                 };

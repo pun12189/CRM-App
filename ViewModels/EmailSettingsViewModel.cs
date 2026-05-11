@@ -54,6 +54,16 @@ namespace CallMan.ViewModels
             try
             {
                 var password = ((PasswordBox)passwordContainer).Password;
+                if (string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(Settings.Password))
+                {
+                    password = Settings.Password; // Use the saved password if none is provided
+                }
+                else if (string.IsNullOrEmpty(password))
+                {
+                    MessageBox.Show("Please enter the email password to test the connection");
+                    return;
+                }
+
                 // Simple attempt to send a 'Hello' email to the sender's own address
                 await _emailService.SendEmailAsync(
                     Settings.EmailAddress,

@@ -1,28 +1,96 @@
-﻿<UserControl x:Class="CallMan.Views.MaturedLeadsView"
+﻿<UserControl x:Class="CallMan.Views.LeadFollowupView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:conv="clr-namespace:CallMan.Converters"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"             
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid>
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:LeadStatusToColorConverter x:Key="StatusToColorConverter"/>
+    </UserControl.Resources>
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <materialDesign:Card Background="#B71C1C" Foreground="White" Padding="15" Margin="10">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Total Market Outstanding: " VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding TotalOutstanding, StringFormat='₹ {0:N2}'}" FontSize="20" FontWeight="Bold" Margin="10,0,0,0"/>
-            </StackPanel>
-        </materialDesign:Card>
+        <Border Grid.Row="0" Margin="0,0,0,15" Padding="10" Background="White" CornerRadius="8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-        <DataGrid Grid.Row="1" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding MaturedLeads}" SelectedItem="{Binding SelectedLead}" AutoGenerateColumns="False" IsReadOnly="True" Margin="10">
+                <StackPanel Orientation="Horizontal" Grid.Column="0">
+                    <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="Gray"/>
+                    <Grid Width="250">
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                         VerticalContentAlignment="Center" Height="30"
+                         Padding="5,0"/>
+                        <TextBlock Text="Search by Name, City, Phone..." 
+                           IsHitTestVisible="False" VerticalAlignment="Center" 
+                           Margin="10,0" Foreground="LightGray">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SearchText}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </StackPanel>
+
+                <Button Grid.Column="2" Content="+ New Lead" 
+                Command="{Binding OpenAddLeadDialogCommand}"
+                Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Visibility="Collapsed"/>
+            </Grid>
+        </Border>
+
+        <DataGrid Grid.Row="1" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" AlternationCount="9999" SelectedItem="{Binding SelectedLead}"
+      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single">
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
+                    <!-- Bind Background to the 'Status' property of your Lead model -->
+                    <Setter Property="Background" Value="{Binding Status, Converter={StaticResource StatusToColorConverter}}"/>
+
+                    <!-- Optional: Hover effect -->
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#F5F5F5"/>
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
             <DataGrid.Columns>
+                <DataGridTextColumn Header="#" Width="50">
+                    <DataGridTextColumn.Binding>
+                        <Binding Path="(ItemsControl.AlternationIndex)" 
+                 RelativeSource="{RelativeSource AncestorType=DataGridRow}">
+                            <!-- We use a converter to start counting from 1 instead of 0 -->
+                            <Binding.Converter>
+                                <conv:IndexToNumberConverter/>
+                            </Binding.Converter>
+                        </Binding>
+                    </DataGridTextColumn.Binding>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Foreground" Value="Gray"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
                 <DataGridTemplateColumn Header="Name" MinWidth="170" Width="Auto" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -118,6 +186,15 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
+                <!--<DataGridTemplateColumn Header="Tags" Width="Auto">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <Border Background="DarkSlateGray" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding LeadHolder}" TextWrapping="Wrap" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>-->
                 <DataGridTemplateColumn Header="Label" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -143,83 +220,60 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
                                     <TextBlock Text="{Binding LeadHolder}" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Total Bills" Width="100">
+                <DataGridTemplateColumn Header="Status" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border Background="LightSkyBlue" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <TextBlock Text="{Binding TotalOrderAmount, StringFormat='₹ {0:N0}'}" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Border Background="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter=dark}" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <TextBlock Text="{Binding Status}" FontSize="10" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Paid" Width="100">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Background="Green" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <TextBlock Text="{Binding TotalPaidAmount, StringFormat='₹ {0:N0}'}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Balance" Width="100">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Background="Red" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <TextBlock Text="{Binding TotalBalanceDue, StringFormat='₹ {0:N0}'}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Followup Date/Time" Width="*">
+
+                <DataGridTemplateColumn Header="Followup" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding LatestUpdate.NextFollowUpDate}" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                                <Border Background="LightSkyBlue" CornerRadius="5" Margin="0,10,0,0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding LatestUpdate.NextFollowUpDate, StringFormat={}{0:dd-MM-yyyy hh:mm tt}}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                <Border Background="LightSkyBlue" CornerRadius="5" Margin="0,10,0,0" VerticalAlignment="Center" HorizontalAlignment="Left">
                                     <TextBlock Text="{Binding HistoryCount, StringFormat='{}{0} followup'}" FontSize="12" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="Manage Orders" Command="{Binding DataContext.OpenOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+
                 <DataGridTemplateColumn Header="Last Message" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Grid>
                                 <StackPanel>
                                     <TextBlock Text="{Binding LatestUpdate.Message}" 
-                               TextWrapping="Wrap" Height="40" FontSize="13" Foreground="#2C3E50"/>
+                                           TextWrapping="Wrap" Height="40" FontSize="13" Foreground="#2C3E50"/>
 
                                     <StackPanel Orientation="Vertical" Margin="0,5,0,0">
-                                        <TextBlock Text="{Binding LatestUpdate.LogDate, StringFormat=d}" TextWrapping="Wrap"
-                                   FontSize="11" Foreground="#7F8C8D" Margin="0,0,10,0"/>
+                                        <TextBlock Text="{Binding LatestUpdate.LogDate, StringFormat={}{0:dd-MM-yyyy}}" TextWrapping="Wrap"
+                                               FontSize="11" Foreground="#7F8C8D" Margin="0,0,10,0"/>
                                         <TextBlock Text="{Binding LatestUpdate.UpdatedBy}" TextWrapping="Wrap"
-                                   FontSize="11" Foreground="#7F8C8D" FontWeight="SemiBold"/>
+                                               FontSize="11" Foreground="#7F8C8D" FontWeight="SemiBold"/>
                                     </StackPanel>
 
                                     <Button Content="Lead History" 
-                            Margin="0,10,0,0" FontSize="10" Height="22"
-                            Background="#1794A1" Foreground="White" BorderThickness="0"
-                            Command="{Binding DataContext.ShowHistoryDialogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                            CommandParameter="{Binding}"/>
+                                        Margin="0,10,0,0" FontSize="10" Height="22"
+                                        Background="#1794A1" Foreground="White" BorderThickness="0"
+                                        Command="{Binding DataContext.ShowHistoryDialogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"/>
                                 </StackPanel>
 
                                 <TextBlock Text="No message yet" Visibility="Collapsed" 
-                           IsHitTestVisible="False" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                       IsHitTestVisible="False" VerticalAlignment="Center" HorizontalAlignment="Center">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Style.Triggers>

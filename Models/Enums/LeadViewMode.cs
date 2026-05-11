@@ -10,6 +10,8 @@ namespace CallMan.Models.Enums
     {
         AllLeads,
         MyLeads,
-        Dead
+        Dead,
+        TodayFollowUp,
+        FutureFollowUp,
     }
 }

@@ -4,146 +4,201 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CallMan.Dialogs"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Generate New Lead" Height="700" Width="400">
-    <StackPanel Margin="20">
-        <TextBlock Text="Customer Name"/>
-        <TextBox Text="{Binding NewLead.CustomerName}" Margin="0,5,0,10"/>
+        Title="Generate New Lead" Height="700" Width="900" WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-        <TextBlock Text="Phone"/>
-        <TextBox Text="{Binding NewLead.Phone}" Margin="0,5,0,10"/>
+        <TextBlock Text="GENERATE NEW LEAD" FontSize="20" FontWeight="Bold" 
+                   Foreground="#1794A1" Margin="15"/>
 
-        <TextBlock Text="Email"/>
-        <TextBox Text="{Binding NewLead.Email}" Margin="0,5,0,10"/>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="15,0">
+                <materialDesign:Card Padding="15" Margin="0,0,0,15">
+                    <StackPanel>
+                        <TextBlock Text="Primary Contact" FontWeight="SemiBold" Margin="0,0,0,15" Opacity="0.6"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
 
-        <!--<TextBlock Text="Lead Type (Status)"/>
-        <ComboBox SelectedValue="{Binding NewLead.Status}" Margin="0,5,0,10">
-            <ComboBoxItem Content="New"/>
-            <ComboBoxItem Content="Follow-up"/>
-            <ComboBoxItem Content="Mature"/>
-        </ComboBox>-->
+                            <TextBox Grid.Column="0" Text="{Binding NewLead.CustomerName}" 
+                                     materialDesign:HintAssist.Hint="Customer Name" Margin="5"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
-        <TextBlock Text="Working Area">
-            <TextBlock.Style>
-                <Style TargetType="TextBlock">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding NewLead.Status}" Value="Matured">
-                            <Setter Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding NewLead.Status}" Value="New">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding NewLead.Status}" Value="Followup">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </TextBlock.Style>
-        </TextBlock>
-        <TextBox Text="{Binding NewLead.WorkingArea}" Margin="0,5,0,10">
-            <TextBox.Style>
-                <Style TargetType="TextBox">
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding NewLead.Status}" Value="Matured">
-                            <Setter Property="Visibility" Value="Visible"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding NewLead.Status}" Value="New">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                        </DataTrigger>
-                        <DataTrigger Binding="{Binding NewLead.Status}" Value="Followup">
-                            <Setter Property="Visibility" Value="Collapsed"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </TextBox.Style>
-        </TextBox>
+                            <TextBox Grid.Column="1" Text="{Binding NewLead.Phone}" 
+                                     materialDesign:HintAssist.Hint="Phone Number" Margin="5"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
-        <GroupBox Header="Company &amp; Address (Optional)" Margin="0,10,0,0">
-            <Grid Margin="5">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,5">
-                    <TextBlock Text="Company Name"/>
-                    <TextBox Text="{Binding NewLead.CompanyName}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,5">
-                    <TextBlock Text="Address"/>
-                    <TextBox Text="{Binding NewLead.AddressLine}" Height="40" TextWrapping="Wrap"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,5,0">
-                    <TextBlock Text="Pincode"/>
-                    <TextBox Text="{Binding NewLead.Pincode}"/>
-                </StackPanel>
-                
-                <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,0,5,0">
-                    <TextBlock Text="City"/>
-                    <TextBox Text="{Binding NewLead.City}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,5,0">
-                    <TextBlock Text="State"/>
-                    <TextBox Text="{Binding NewLead.State}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="3" Grid.Column="1" Margin="0,0,5,0">
-                    <TextBlock Text="District"/>
-                    <TextBox Text="{Binding NewLead.District}"/>
-                </StackPanel>
-
-                <StackPanel Grid.Row="4" Grid.Column="0" Margin="0,0,5,0">
-                    <TextBlock Text="Country"/>
-                    <TextBox Text="{Binding NewLead.Country}"/>
-                </StackPanel>
-
-            </Grid>
-        </GroupBox>
-
-        <Separator Margin="0,10"/>
-        <TextBlock Text="Custom Information" FontWeight="Bold"/>
-
-        <Grid Margin="0,5">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-            <TextBox Text="{Binding TempFieldName}" Tag="Label (e.g. City)" Margin="0,0,5,0"/>
-            <TextBox Grid.Column="1" Text="{Binding TempFieldValue}" Tag="Value" Margin="0,0,5,0"/>
-            <Button Grid.Column="2" Content="Add" Command="{Binding AddCustomFieldCommand}" Width="50" Background="#EEE"/>
-        </Grid>
-
-        <ItemsControl ItemsSource="{Binding VisibleCustomFields}" Height="100">
-            <ItemsControl.Template>
-                <ControlTemplate>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <ItemsPresenter/>
-                    </ScrollViewer>
-                </ControlTemplate>
-            </ItemsControl.Template>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                        <TextBlock Text="{Binding Key}" FontWeight="SemiBold" Width="100"/>
-                        <TextBlock Text="→ " Foreground="Gray"/>
-                        <TextBlock Text="{Binding Value}"/>
+                            <TextBox Grid.Column="2" Text="{Binding NewLead.Email}" 
+                                     materialDesign:HintAssist.Hint="Email Address" Margin="5"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        </Grid>
                     </StackPanel>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                </materialDesign:Card>
 
-        <Button Content="Save Lead" Command="{Binding SaveLeadCommand}" 
-                Margin="0,20,0,0" Height="40" Background="#1794A1" Foreground="White"/>
-    </StackPanel>
+                <materialDesign:Card Padding="15" Margin="0,0,0,15" Background="#F9F9F9">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding SourceList}" 
+                                  DisplayMemberPath="Name" SelectedValuePath="Name"
+                                  SelectedValue="{Binding NewLead.LeadSource, UpdateSourceTrigger=PropertyChanged}"
+                                  materialDesign:HintAssist.Hint="Lead Source" Margin="5"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                        <ComboBox Grid.Column="1" ItemsSource="{Binding TagsList}" 
+                                  DisplayMemberPath="Name" SelectedValuePath="Name"
+                                  SelectedValue="{Binding NewLead.LeadTag, UpdateSourceTrigger=PropertyChanged}"
+                                  materialDesign:HintAssist.Hint="Lead Tags" Margin="5"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                        <StackPanel Grid.Column="2" Margin="5">
+                        <ComboBox Grid.Column="2" ItemsSource="{Binding LabelsList}" 
+                                  DisplayMemberPath="Name" SelectedValuePath="Name"
+                                  SelectedItem="{Binding SelectedLabelItem}"
+                                  materialDesign:HintAssist.Hint="Lead Labels" Margin="5"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                            <ItemsControl ItemsSource="{Binding NewLead.LeadLabels}" Margin="0,5,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <materialDesign:Chip Content="{Binding}" 
+                                     Margin="2"
+                                     IsDeletable="True"
+                                     DeleteCommand="{Binding DataContext.RemoveLabelCommand, 
+                                            RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                     DeleteCommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
+
+                <GroupBox Header="Company &amp; Address (Optional)" 
+                          Style="{StaticResource MaterialDesignCardGroupBox}"
+                          materialDesign:ColorZoneAssist.Mode="PrimaryMid" Margin="0,0,0,15">
+                    <Grid Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Row="0" Grid.ColumnSpan="2" Text="{Binding NewLead.CompanyName}"
+                                 materialDesign:HintAssist.Hint="Company Name" Margin="5"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                        <TextBox Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding NewLead.Address}"
+                                 materialDesign:HintAssist.Hint="Full Address" Margin="5"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                        <TextBox Grid.Row="2" Grid.Column="0" Text="{Binding NewLead.Pincode}"
+                                 materialDesign:HintAssist.Hint="Pincode" Margin="5"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                        <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding NewLead.City}"
+                                 materialDesign:HintAssist.Hint="City" Margin="5"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                    </Grid>
+                </GroupBox>
+
+                <materialDesign:Card Padding="15">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <TextBox Grid.Column="0" Text="{Binding NewLead.State}" 
+                                 materialDesign:HintAssist.Hint="State" Margin="5" 
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        <TextBox Grid.Column="1" Text="{Binding NewLead.District}" 
+                                 materialDesign:HintAssist.Hint="District" Margin="5"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        <TextBox Grid.Column="2" Text="{Binding NewLead.Country}" 
+                                 materialDesign:HintAssist.Hint="Country" Margin="5"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        <TextBox Grid.ColumnSpan="3" Grid.Row="1" Text="{Binding NewLead.WorkingArea}" materialDesign:HintAssist.Hint="Working Area" Margin="5">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding NewLead.Status}" Value="Matured">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding NewLead.Status}" Value="New">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding NewLead.Status}" Value="Followup">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                    </Grid>
+                </materialDesign:Card>
+
+                <Grid Margin="15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Text="{Binding TempFieldName}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Custom Field Name" Tag="Label (e.g. City)" Margin="0,0,5,0"/>
+                    <TextBox Grid.Column="1" Text="{Binding TempFieldValue}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Custom Field Value" Tag="Value" Margin="0,0,5,0"/>
+                    <Button Grid.Column="2" Content="Add" Command="{Binding AddCustomFieldCommand}" Width="100" Style="{StaticResource MaterialDesignFlatDarkButton}"/>
+                </Grid>
+
+                <ItemsControl Margin="15" ItemsSource="{Binding VisibleCustomFields}" Height="100">
+                    <ItemsControl.Template>
+                        <ControlTemplate>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsPresenter/>
+                            </ScrollViewer>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="0,2" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Key}" Style="{StaticResource MaterialDesignBody1TextBlock}" FontWeight="SemiBold"/>
+                                <TextBlock Text="---→ " Margin="5,0" Foreground="Gray" Style="{StaticResource MaterialDesignBody1TextBlock}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding Value}" Style="{StaticResource MaterialDesignBody1TextBlock}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="30">
+            <Button Content="CANCEL" Style="{StaticResource MaterialDesignFlatButton}" IsCancel="True" Margin="0,0,10,0"/>
+            <Button Content="SAVE LEAD" Style="{StaticResource MaterialDesignRaisedButton}" IsDefault="True"
+                    Command="{Binding SaveLeadCommand}" Width="150" Background="#673AB7" BorderBrush="#673AB7"/>
+        </StackPanel>
+    </Grid>
 </Window>

@@ -1,0 +1,110 @@
+﻿<UserControl x:Class="CallMan.Views.WorkflowView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Margin="20">
+        <materialDesign:Card Padding="10">
+            <TabControl Style="{StaticResource MaterialDesignTabControl}" 
+                    materialDesign:ColorZoneAssist.Mode="PrimaryLight">
+
+                <!-- TAB 1: CREATE WORKFLOW -->
+                <TabItem Header="CREATE WORKFLOW">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="30" MaxWidth="800" HorizontalAlignment="Stretch">
+                            <TextBlock Text="New Automation Rule" Style="{StaticResource MaterialDesignHeadline5TextBlock}" Margin="0,0,0,20"/>
+
+                            <TextBox Text="{Binding NewWorkflow.WorkflowName, UpdateSourceTrigger=PropertyChanged}"
+                     materialDesign:HintAssist.Hint="Workflow Name (e.g., 30 Day Service Reminder)" 
+                     Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
+                     Margin="0,0,0,20"
+                     FontSize="16"/>
+                            
+                            <!-- Event Selection -->
+                            <ComboBox ItemsSource="{Binding EventList}" 
+                                  SelectedItem="{Binding NewWorkflow.EventName}"
+                                  materialDesign:HintAssist.Hint="Select Trigger Event" 
+                                  Style="{StaticResource MaterialDesignFloatingHintComboBox}" 
+                                  Margin="0,0,0,20"/>
+
+                            <!-- Inactivity Logic (Only visible if applicable) -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <!-- Only Show if 'OnCustomerInactivity' is selected -->
+                                            <DataTrigger Binding="{Binding NewWorkflow.EventName}" Value="OnCustomerInactivity">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <materialDesign:PackIcon Kind="ClockOutline" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                <TextBox Text="{Binding NewWorkflow.InactivityDays}" 
+                                     materialDesign:HintAssist.Hint="Inactivity Days (e.g. 30)" 
+                                     Width="150" PreviewTextInput="NumberValidationTextBox"/>
+                                <TextBlock Text="days since last activity" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6"/>
+                            </StackPanel>
+
+                            <!-- Notification Channels -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                                <CheckBox Content="Send Email" IsChecked="{Binding NewWorkflow.SendEmail}" Margin="0,0,30,0"/>
+                                <CheckBox Content="Send WhatsApp" IsChecked="{Binding NewWorkflow.SendWhatsApp}"/>
+                            </StackPanel>
+
+                            <!-- Template Editor -->
+                            <Grid>
+                                <TextBox x:Name="TemplateBox"
+                                     Text="{Binding NewWorkflow.TemplateBody, UpdateSourceTrigger=PropertyChanged}"
+                                     AcceptsReturn="True" MinHeight="200" TextWrapping="Wrap"
+                                     materialDesign:HintAssist.Hint="Message Template (Type @ for tags)"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                     KeyUp="TemplateBox_KeyUp"/>
+
+                                <!-- Floating Tag Popup -->
+                                <Popup IsOpen="{Binding IsTagPopupOpen}" PlacementTarget="{Binding ElementName=TemplateBox}" StaysOpen="False">
+                                    <materialDesign:Card Width="200">
+                                        <ListBox ItemsSource="{Binding AvailableTags}" 
+                                             DisplayMemberPath="DisplayName"
+                                             SelectionChanged="TagList_SelectionChanged"/>
+                                    </materialDesign:Card>
+                                </Popup>
+                            </Grid>
+
+                            <Button Content="CREATE WORKFLOW" Command="{Binding SaveWorkflowCommand}" 
+                                Margin="0,20,0,0" HorizontalAlignment="Right" Background="#1794A1"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+
+                <!-- TAB 2: VIEW WORKFLOWS -->
+                <TabItem Header="VIEW WORKFLOWS">
+                    <DataGrid ItemsSource="{Binding Workflows}" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" AutoGenerateColumns="False" IsReadOnly="True" 
+                          CanUserAddRows="False" Margin="10">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Workflow Name" Binding="{Binding WorkflowName}" Width="*"/>
+                            <DataGridTextColumn Header="Event" Binding="{Binding EventName}" Width="150"/>
+                            <DataGridTextColumn Header="Inactivity" Binding="{Binding InactivityDays}" Width="100"/>
+                            <DataGridCheckBoxColumn Header="Email" Binding="{Binding SendEmail}" Width="80"/>
+                            <DataGridCheckBoxColumn Header="WhatsApp" Binding="{Binding SendWhatsApp}" Width="100"/>
+                            <DataGridTemplateColumn Header="Actions" Width="150">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource MaterialDesignFlatButton}" Content="DELETE" Foreground="Red"
+                                            Command="{Binding DataContext.DeleteWorkflowCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </TabItem>
+            </TabControl>
+        </materialDesign:Card>
+    </Grid>
+</UserControl>

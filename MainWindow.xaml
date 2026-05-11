@@ -55,6 +55,15 @@
         <DataTemplate DataType="{x:Type vm:EmailSettingsViewModel}">
             <views:EmailSettingsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:WorkflowViewModel}">
+            <views:WorkflowView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LeadFollowupViewModel}">
+            <views:LeadFollowupView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:OccupiedLocationViewModel}">
+            <views:OccupiedLocationView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -197,14 +206,14 @@
 
                 <MenuItem Header="Dashboard" Icon="{materialDesign:PackIcon Kind=ViewDashboard}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"/>
                 <MenuItem Header="Follow Ups" Icon="{materialDesign:PackIcon Kind=Storage}">
-                    <MenuItem Header="Today's Followup" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="AddLead"/>
-                    <MenuItem Header="Future Followup" Style="{StaticResource SubItemStyle}"/>
+                    <MenuItem Header="Today's Followup" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Today"/>
+                    <MenuItem Header="Future Followup" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Future"/>
                 </MenuItem>
                 <MenuItem Header="Leads" Icon="{materialDesign:PackIcon Kind=AccountGroup}">
                     <MenuItem Header="All Leads" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Leads"/>
                     <MenuItem Header="My Leads" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="MyLeads"/>
                 </MenuItem>
-                <MenuItem Header="Occupied Locations" Icon="{materialDesign:PackIcon Kind=LocalAreaNetwork}"/>
+                <MenuItem Header="Occupied Locations" Icon="{materialDesign:PackIcon Kind=LocalAreaNetwork}" Command="{Binding NavigateCommand}" CommandParameter="Location"/>
                 <MenuItem Header="Dead Leads" Icon="{materialDesign:PackIcon Kind=MedicalBag}">
                     <MenuItem Header="Dead" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dead"/>
                     <MenuItem Header="Winback Pool" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="WinbackPool"/>

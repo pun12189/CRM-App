@@ -1,0 +1,167 @@
+﻿<UserControl x:Class="CallMan.Views.OccupiedLocationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid Background="#F4F7F9">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="200"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Orientation="Horizontal" VerticalAlignment="Center">
+            <materialDesign:PackIcon Kind="LocationCircle" Width="24" Height="24" Foreground="#1794A1"/>
+            <TextBlock Text="Occupied Locations" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="10,0,0,0"/>
+        </StackPanel>
+
+        <!-- SIDEBAR: LOCATIONS -->
+        <materialDesign:Card Grid.Row="1" Grid.Column="0" Margin="15" VerticalAlignment="Stretch" UniformCornerRadius="5">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Top" Text="Locations" FontWeight="Bold" Margin="15,15,15,10" Opacity="0.7"/>
+                <ListBox ItemsSource="{Binding StateStats}" SelectedItem="{Binding SelectedState}" 
+                     BorderThickness="0" Background="Transparent">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding DisplayLabel}" Padding="10"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </materialDesign:Card>
+
+        <!-- MAIN CONTENT -->
+        <Grid Grid.Column="1" Grid.Row="1" Margin="0,15,15,15">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- SEARCH BAR -->
+            <materialDesign:Card Grid.Row="0" Margin="0,0,0,15" Padding="8,5">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <materialDesign:PackIcon Kind="Magnify" 
+                                 Grid.Column="0"
+                                 VerticalAlignment="Center" 
+                                 Margin="10,0" 
+                                 Width="20" Height="20"
+                                 Opacity="0.5"/>
+
+                    <TextBox Grid.Column="1"
+                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                 materialDesign:HintAssist.Hint="Live search by Name, Firm, Area, Pincode or Leadholder..." 
+                 materialDesign:TextFieldAssist.HasClearButton="True"
+                 VerticalAlignment="Center" 
+                 BorderThickness="0"
+                 FontSize="14"/>
+
+                    <!-- Optional: Total count indicator -->
+                    <TextBlock Grid.Column="2" 
+                   VerticalAlignment="Center" 
+                   Margin="10,0" 
+                   Opacity="0.5" 
+                   Text="{Binding Locations.Count, StringFormat='Showing {0} results'}"/>
+                </Grid>
+            </materialDesign:Card>
+
+            <!-- DATA TABLE -->
+            <materialDesign:Card Grid.Row="1" VerticalAlignment="Stretch">
+                <DataGrid ItemsSource="{Binding Locations}" AutoGenerateColumns="False" 
+                      CanUserAddRows="False" HeadersVisibility="All" Background="White">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="State" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding State}" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="11"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Distt | City" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <TextBlock Text="{Binding District}" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="11"/>
+                                        <TextBlock Text="|" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="11"/>
+                                        <TextBlock Text="{Binding City}" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="11"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Working Area" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding WorkingArea}" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="11"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Pincode" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Pincode}" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="11"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>                        
+
+                        <DataGridTemplateColumn Header="Working Customer" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="5,10">
+                                        <TextBlock><Run Text="Name: " Foreground="Gray"/><Run Text="{Binding CustomerName}" Foreground="#2196F3" FontWeight="SemiBold"/></TextBlock>
+                                        <TextBlock><Run Text="Firm name: " Foreground="Gray"/><Run Text="{Binding FirmName}"/></TextBlock>
+                                        <TextBlock><Run Text="Leadholder: " Foreground="Gray"/><Run Text="{Binding LeadHolder}"/></TextBlock>
+                                        <TextBlock><Run Text="Phone: " Foreground="Gray"/><Run Text="{Binding Phone}"/></TextBlock>
+                                        <TextBlock><Run Text="Senior: " Foreground="Gray"/><Run Text="{Binding Senior}"/></TextBlock>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Summary" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <Button Content="Summary" Background="#FF8C42" BorderBrush="#FF8C42" Height="30"
+                                            Command="{Binding DataContext.ShowSummaryCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"/>
+                                        <TextBlock Text="{Binding SummaryBrief}" FontSize="10" HorizontalAlignment="Center" Margin="0,5,0,0" Opacity="0.6"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <DataGridTemplateColumn Header="Action" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#FFB300" Width="30">
+                                            <materialDesign:PackIcon Kind="Pencil"/>
+                                        </Button>
+                                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#D32F2F" Width="30">
+                                            <materialDesign:PackIcon Kind="Delete"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </materialDesign:Card>
+        </Grid>
+    </Grid>
+</UserControl>

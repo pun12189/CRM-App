@@ -72,6 +72,9 @@ namespace CallMan.ViewModels
                 case "Inventory":
                     CurrentView = App.ServiceProvider.GetRequiredService<InventoryViewModel>();
                     break;
+                case "Location":
+                    CurrentView = App.ServiceProvider.GetRequiredService<OccupiedLocationViewModel>();
+                    break;
                 case "Dead":
                     var vm2 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
                     await vm2.InitializeAsync(Models.Enums.LeadViewMode.Dead);
@@ -81,6 +84,16 @@ namespace CallMan.ViewModels
                     var vm1 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
                     await vm1.InitializeAsync(Models.Enums.LeadViewMode.MyLeads);
                     CurrentView = vm1;
+                    break;
+                case "Today":
+                    var vm3 = App.ServiceProvider.GetRequiredService<LeadFollowupViewModel>();
+                    await vm3.InitializeAsync(Models.Enums.LeadViewMode.TodayFollowUp);
+                    CurrentView = vm3;
+                    break;
+                case "Future":
+                    var vm4 = App.ServiceProvider.GetRequiredService<LeadFollowupViewModel>();
+                    await vm4.InitializeAsync(Models.Enums.LeadViewMode.FutureFollowUp);
+                    CurrentView = vm4;
                     break;
                     // Add other cases as you build them
             }

@@ -1,9 +1,11 @@
 ﻿using CallMan.Data;
 using CallMan.Models;
+using CallMan.Models.Enums;
 using Dapper;
 using Mysqlx.Crud;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -32,27 +34,35 @@ namespace CallMan.Services
                     lead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(lead.MetadataJson)
                                        ?? new Dictionary<string, string>();
                 }
+
+                if (!string.IsNullOrEmpty(lead.LabelsJson))
+                {
+                    lead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(lead.LabelsJson)
+                                       ?? new ObservableCollection<string>();
+                }
             }
 
             return leads;
         }
 
-        public async Task SaveLeadAsync(Lead lead, string initialLog, string user)
+        public async Task<int> SaveLeadAsync(Lead lead, string initialLog, string user)
         {
             using var db = _context.CreateConnection();
             // Serialize dynamic fields to JSON
             lead.MetadataJson = JsonSerializer.Serialize(lead.CustomFields);
+            lead.LabelsJson = JsonSerializer.Serialize(lead.LeadLabels);
 
             string sql = @"INSERT INTO Leads (CustomerName, Email, Phone, Status, MetadataJson, 
-               CompanyName, AddressLine, City, District, State, Pincode, Country, CreatedAt, LeadHolder) 
+               CompanyName, AddressLine, City, District, State, Pincode, Country, CreatedAt, LeadHolder, WorkingArea, LeadSource, LeadTag, LabelsJson) 
                VALUES (@CustomerName, @Email, @Phone, @Status, @MetadataJson, 
-               @CompanyName, @AddressLine, @City, @District, @State, @Pincode, @Country, NOW(), @LeadHolder);
+               @CompanyName, @AddressLine, @City, @District, @State, @Pincode, @Country, NOW(), @LeadHolder, @WorkingArea, @LeadSource, @LeadTag, @LabelsJson);
             SELECT LAST_INSERT_ID();";
 
             int newId = await db.ExecuteScalarAsync<int>(sql, lead);
 
             // Save initial history entry
             await AddHistoryAsync(newId, initialLog, null, user);
+            return newId;
         }
 
         public async Task AddHistoryAsync(int leadId, string message, DateTime? nextDate, string user)
@@ -70,12 +80,13 @@ namespace CallMan.Services
 
             // Sync Dictionary to JSON before saving
             lead.MetadataJson = JsonSerializer.Serialize(lead.CustomFields);
+            lead.LabelsJson = JsonSerializer.Serialize(lead.LeadLabels);
 
             string sql = @"UPDATE Leads SET 
                     CustomerName = @CustomerName, Email = @Email, Phone = @Phone, 
                     Status = @Status, CompanyName = @CompanyName, AddressLine = @AddressLine, 
                     City = @City, District = @District, State = @State, 
-                    Pincode = @Pincode, MetadataJson = @MetadataJson, LeadHolder = @LeadHolder WHERE LeadId = @LeadId";
+                    Pincode = @Pincode, MetadataJson = @MetadataJson, LeadHolder = @LeadHolder, WorkingArea = @WorkingArea, LeadSource = @LeadSource, LeadTag = @LeadTag, LabelsJson = @LabelsJson WHERE LeadId = @LeadId";
 
             var rows = await db.ExecuteAsync(sql, lead);
             return rows > 0;
@@ -96,18 +107,7 @@ namespace CallMan.Services
             using var db = _context.CreateConnection();
             string sql = "SELECT * FROM LeadHistory WHERE LeadId = @leadId ORDER BY LogDate DESC";
             return await db.QueryAsync<LeadHistoryEntry>(sql, new { leadId });
-        }
-
-        public async Task AddFollowUpAsync(int leadId, string message, DateTime? nextDate)
-        {
-            using var db = _context.CreateConnection();
-            string sql = @"INSERT INTO LeadHistory (LeadId, Message, NextFollowUpDate, UpdatedBy) 
-                   VALUES (@leadId, @message, @nextDate, 'Admin')";
-            await db.ExecuteAsync(sql, new { leadId, message, nextDate });
-
-            // Also update the main Lead status to 'Follow-up' automatically
-            await db.ExecuteAsync("UPDATE Leads SET Status = 'Follow-up' WHERE LeadId = @leadId", new { leadId });
-        }
+        }        
 
         public async Task<IEnumerable<Lead>> GetAllLeadsWithLatestUpdateAsync()
         {
@@ -139,6 +139,12 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
                                            ?? new Dictionary<string, string>();
                     }
 
+                    if (!string.IsNullOrEmpty(lead.LabelsJson))
+                    {
+                        lead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(lead.LabelsJson)
+                                           ?? new ObservableCollection<string>();
+                    }
+
                     // Assign the latest history entry to the calculated property
                     lead.LatestUpdate = history;
                     return lead;
@@ -151,7 +157,6 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
         public async Task UpdateLeadFullAsync(Lead lead, LeadHistoryEntry history)
         {
             using var db = _context.CreateConnection();
-            db.Open();
             using var trans = db.BeginTransaction();
 
             try
@@ -178,7 +183,6 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
         public async Task UpdateMaturedLeadWithFollowupAsync(Lead lead, PaymentEntry payment, LeadHistoryEntry history)
         {
             using var db = _context.CreateConnection();
-            db.Open();
             using var trans = db.BeginTransaction();
 
             try
@@ -208,7 +212,6 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
         public async Task<bool> MatureWithOrderAndPaymentAsync(Lead lead, Models.Order order, PaymentEntry payment, LeadHistoryEntry history)
         {
             using var db = _context.CreateConnection();
-            db.Open();
             using var trans = db.BeginTransaction();
 
             try
@@ -242,7 +245,6 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
         public async Task<bool> MatureLeadWithDoubleHistoryAsync(Lead lead, Models.Order order, PaymentEntry payment, LeadHistoryEntry followUp)
         {
             using var db = _context.CreateConnection();
-            db.Open();
             using var trans = db.BeginTransaction();
 
             try
@@ -265,7 +267,7 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
                 // 3. ENTRY #1: The Maturity Milestone (System Entry)
                 string milestoneMsg = $"[MILESTONE] Lead Matured. Order Value: ₹{payment.TotalOrderValue}, Received: ₹{payment.AmountReceived}.";
                 string hist1Sql = @"INSERT INTO LeadHistory (LeadId, Message, ActionType, FollowupStage, UpdatedBy, LogDate) 
-                            VALUES (@LeadId, @Message, 'System', 'Matured', @UpdatedBy, NOW())";
+                            VALUES (@LeadId, @Message, 'Call', 'Matured', @UpdatedBy, NOW())";
                 await db.ExecuteAsync(hist1Sql, new { lead.LeadId, Message = milestoneMsg, UpdatedBy = followUp.UpdatedBy }, trans);
 
                 // 4. ENTRY #2: The User's Follow-up/Message
@@ -310,6 +312,12 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
                                            ?? new Dictionary<string, string>();
                     }
 
+                    if (!string.IsNullOrEmpty(lead.LabelsJson))
+                {
+                    lead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(lead.LabelsJson)
+                                       ?? new ObservableCollection<string>();
+                }
+
                     // Assign the latest history entry to the calculated property
                     lead.LatestUpdate = history;
                     return lead;
@@ -323,7 +331,6 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
         public async Task RecordPaymentAsync(PaymentEntry p)
         {
             using var db = _context.CreateConnection();
-            db.Open();
             using var trans = db.BeginTransaction();
             try
             {
@@ -533,6 +540,68 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
 
             // Ensure we return an object even if no orders exist yet
             return result ?? new CustomerAnalytics { LeadId = leadId };
+        }        
+
+        public async Task<IEnumerable<Lead>> GetAllFollowupLeadsAsync(LeadViewMode mode)
+        {
+            using var db = _context.CreateConnection();
+
+            // Complex query: Select Lead info, and join with ONLY the newest History entry
+            string sql = @"
+        SELECT 
+            l.*, 
+            (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
+h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
+        FROM Leads l
+        LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+        WHERE l.Status = 'Followup' AND h.NextFollowUpDate <= CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
+            SELECT MAX(HistoryId) 
+            FROM LeadHistory 
+            WHERE LeadId = l.LeadId
+        ) OR h.HistoryId IS NULL -- In case lead has no history yet
+        ORDER BY h.NextFollowUpDate ASC;";
+
+            if (mode == LeadViewMode.FutureFollowUp)
+            {
+                sql = @"
+        SELECT 
+            l.*, 
+            (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
+h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
+        FROM Leads l
+        LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+        WHERE l.Status = 'Followup' AND h.NextFollowUpDate > CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
+            SELECT MAX(HistoryId) 
+            FROM LeadHistory 
+            WHERE LeadId = l.LeadId
+        ) OR h.HistoryId IS NULL -- In case lead has no history yet
+        ORDER BY h.NextFollowUpDate ASC;";
+            }
+
+            // Use Dapper to map both objects (Lead and History)
+            var result = await db.QueryAsync<Lead, LeadHistoryEntry, Lead>(sql,
+                (lead, history) =>
+                {
+                    // Map the dynamic metadata as before
+                    if (!string.IsNullOrEmpty(lead.MetadataJson))
+                    {
+                        lead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(lead.MetadataJson)
+                                           ?? new Dictionary<string, string>();
+                    }
+
+                    if (!string.IsNullOrEmpty(lead.LabelsJson))
+                    {
+                        lead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(lead.LabelsJson)
+                                           ?? new ObservableCollection<string>();
+                    }
+
+                    // Assign the latest history entry to the calculated property
+                    lead.LatestUpdate = history;
+                    return lead;
+                },
+                splitOn: "HistoryId"); // Dapper splits the row mapping here
+
+            return result;
         }
     }
 }

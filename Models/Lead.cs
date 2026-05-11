@@ -27,6 +27,14 @@ namespace CallMan.Models
         public string? Pincode { get; set; }
         public string? Country { get; set; } = "India";
 
+        // Mapping Properties for Excel
+        [ObservableProperty] private string _leadSource;    // Maps to "Lead Source" column
+        [ObservableProperty] private string _leadTag;      // Maps to "Tags" (e.g. "New,Urgent")
+        [ObservableProperty] private ObservableCollection<string> _leadLabels = new();
+        // This is what you save to the DB as a string
+        public string LabelsJson { get; set; }
+
+
         // For Dynamic JSON
         public string? MetadataJson { get; set; }
 

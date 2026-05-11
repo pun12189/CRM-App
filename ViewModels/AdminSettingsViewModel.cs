@@ -49,6 +49,9 @@ namespace CallMan.ViewModels
                 case "Email":
                     CurrentSettingView = _serviceProvider.GetRequiredService<EmailSettingsViewModel>();
                     break;
+                case "Workflows":
+                    CurrentSettingView = _serviceProvider.GetRequiredService<WorkflowViewModel>();
+                    break;
                 case "Dead Reasons":                     
                 case "Followup Stages":                    
                 case "Mature Stages":                    

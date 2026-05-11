@@ -41,6 +41,8 @@ namespace CallMan
 
             services.AddHttpClient<ApiService>();
 
+            services.AddTransient<IWorkflowDataService, WorkflowDataService>();
+
             // 2. Register Services (They will now receive the DbContext)
             services.AddSingleton<IAuthService, AuthService>();
             services.AddSingleton<IDialogService, DialogService>();
@@ -55,6 +57,8 @@ namespace CallMan
             services.AddSingleton<DepartmentService>();
             services.AddSingleton<LoginLogService>();
             services.AddSingleton<EmailService>();
+            services.AddSingleton<OccupiedLocationService>();
+            services.AddSingleton<WorkflowEngine>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();
@@ -72,12 +76,16 @@ namespace CallMan
             services.AddTransient<DepartmentsViewModel>();
             services.AddTransient<LoginLogsViewModel>();
             services.AddTransient<EmailSettingsViewModel>();
+            services.AddTransient<LeadFollowupViewModel>();
+            services.AddTransient<OccupiedLocationViewModel>();
+            services.AddTransient<CustomerSummaryViewModel>();
 
             services.AddTransient<UserManagementViewModel>();
             services.AddTransient<AddStaffDialogViewModel>();
 
             // Views/Modules
             services.AddTransient<DashboardViewModel>();
+            services.AddTransient<WorkflowViewModel>();
 
             // 4. Register Views
             services.AddTransient<LoginView>();
@@ -86,10 +94,23 @@ namespace CallMan
             ServiceProvider = services.BuildServiceProvider();
         }
 
-        protected override void OnStartup(StartupEventArgs e)
+        protected override async void OnStartup(StartupEventArgs e)
         {
+            base.OnStartup(e);
+
             var loginView = ServiceProvider!.GetRequiredService<LoginView>();
             loginView.Show();
+
+            var engine = ServiceProvider!.GetService<WorkflowEngine>();
+
+            if (engine != null)
+            {
+                // 1. Process any missed events from when the app was closed
+                await engine.ProcessQueueAsync();
+
+                // 2. Run the inactivity check for old customers
+                await engine.CheckInactivityWorkflowsAsync();
+            }
         }
     }
 

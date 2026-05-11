@@ -99,7 +99,7 @@ namespace CallMan.ViewModels
                         Message = $"[DEAD - {SelectedDeadReason.Name}] {Message}",
                         ActionType = SelectedAction,
                         NextFollowUpDate = null, // CRITICAL: Stop the reminders
-                        FollowupStage = "Dead",
+                        FollowupStage = SelectedDeadReason.Name,
                         UpdatedBy = _session.CurrentUser
                     };
 
@@ -130,13 +130,14 @@ namespace CallMan.ViewModels
                             NextFollowUpDate = combinedDateTime,
                             UpdatedBy = _session.CurrentUser,
                             ActionType = SelectedAction,
-                            FollowupStage = "Matured"
+                            FollowupStage = SelectedStatus.Name
                         };
 
                         SelectedLead.LatestUpdate = history;
                         SelectedLead.Status = IsMatured ? "Matured" : (IsDead ? "Dead" : "Followup");
                         if (IsMatured)
                         {
+                            history.FollowupStage = "Matured";
                             var newOrder = new Order
                             {
                                 LeadId = SelectedLead.LeadId,

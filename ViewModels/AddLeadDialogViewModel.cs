@@ -16,6 +16,8 @@ namespace CallMan.ViewModels
     {
         private readonly LeadService _leadService;
         private readonly IUserSession _session;
+        private readonly WorkflowEngine _workflowEngine;
+        private readonly SettingService _settingService;    
 
         [ObservableProperty]
         private Lead _newLead = new();
@@ -38,15 +40,31 @@ namespace CallMan.ViewModels
         [ObservableProperty]
         private ObservableCollection<CustomFieldEntry> _visibleCustomFields = new();
 
-        public AddLeadDialogViewModel(LeadService leadService, IUserSession session)
+        [ObservableProperty]
+        private ObservableCollection<SettingItem> _tagsList = new();
+
+        [ObservableProperty]
+        private ObservableCollection<SettingItem> _labelsList = new();
+
+        [ObservableProperty]
+        private ObservableCollection<SettingItem> _sourceList = new();
+
+        [ObservableProperty]
+        private SettingItem _selectedLabelItem;
+
+        public AddLeadDialogViewModel(LeadService leadService, IUserSession session, WorkflowEngine workflowEngine, SettingService settingService)
         {
             _leadService = leadService;
             _session = session;
             _isEditMode = false;
+            _workflowEngine = workflowEngine;
+            _settingService = settingService;
             NewLead.Status = "New";
         // Initialize with default status
 
         NewLead.LeadHolder = _session.CurrentUser;
+
+            _ = LoadSettingsAsync();
         }
 
         public void Initialize(Lead? existingLead)
@@ -57,6 +75,18 @@ namespace CallMan.ViewModels
                 _isEditMode = true;
                 // Load address fields from existingLead if they aren't auto-bound
             }
+        }
+
+        private async Task LoadSettingsAsync()
+        {
+            // Assuming your DataService has methods to fetch these from Admin tables
+            var sources = await _settingService.GetSettingsAsync("LeadSources");
+            var tags = await _settingService.GetSettingsAsync("LeadTags");
+            var labels = await _settingService.GetSettingsAsync("LeadLabels");
+
+            SourceList = new ObservableCollection<SettingItem>(sources);
+            TagsList = new ObservableCollection<SettingItem>(tags);
+            LabelsList = new ObservableCollection<SettingItem>(labels);
         }
 
         [RelayCommand]
@@ -99,7 +129,8 @@ namespace CallMan.ViewModels
                     // Pass a default history message for the first entry
                     string initialLog = $"Lead generated as '{NewLead.Status}' type.";
 
-                    await _leadService.SaveLeadAsync(NewLead, initialLog, _session.CurrentUser);
+                    int newLeadId = await _leadService.SaveLeadAsync(NewLead, initialLog, _session.CurrentUser);
+                    await _workflowEngine.EnqueueEventAsync("OnLeadCreated", newLeadId, "Lead");
                 }               
 
                 // Close window with 'True' result
@@ -109,6 +140,22 @@ namespace CallMan.ViewModels
             {
                 // Handle DB errors here
             }
+        }
+
+        partial void OnSelectedLabelItemChanged(SettingItem value)
+        {
+            if (value != null && !NewLead.LeadLabels.Contains(value.Name))
+            {
+                NewLead.LeadLabels.Add(value.Name);
+                // Clear selection so the user can pick the same one again if they delete it
+                SelectedLabelItem = null;
+            }
+        }
+
+        [RelayCommand]
+        public void RemoveLabel(string labelName)
+        {
+            NewLead.LeadLabels.Remove(labelName);
         }
     }
 }

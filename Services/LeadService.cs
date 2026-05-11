@@ -45,6 +45,33 @@ namespace CallMan.Services
             return leads;
         }
 
+        // Fetch all leads for the DataGrid
+        public async Task<IEnumerable<Lead>> GetAllActiveLeadsAsync()
+        {
+            using var db = _context.CreateConnection();
+            string sql = "SELECT * FROM Leads WHERE Status NOT IN ('Dead') ORDER BY CreatedAt DESC";
+
+            var leads = await db.QueryAsync<Lead>(sql);
+
+            // Deserialize JSON metadata back into the Dictionary for each lead
+            foreach (var lead in leads)
+            {
+                if (!string.IsNullOrEmpty(lead.MetadataJson))
+                {
+                    lead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(lead.MetadataJson)
+                                       ?? new Dictionary<string, string>();
+                }
+
+                if (!string.IsNullOrEmpty(lead.LabelsJson))
+                {
+                    lead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(lead.LabelsJson)
+                                       ?? new ObservableCollection<string>();
+                }
+            }
+
+            return leads;
+        }
+
         public async Task<int> SaveLeadAsync(Lead lead, string initialLog, string user)
         {
             using var db = _context.CreateConnection();

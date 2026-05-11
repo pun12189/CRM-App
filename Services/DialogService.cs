@@ -56,7 +56,7 @@ namespace CallMan.Services
 
         public async Task<bool?> ShowGlobalNewOrderDialog()
         {
-            var vm = new GlobalNewOrderViewModel(_leadService);
+            var vm = App.ServiceProvider.GetRequiredService<GlobalNewOrderViewModel>();
             var win = new GlobalNewOrderWindow { DataContext = vm };
 
             vm.RequestClose += (res) => {

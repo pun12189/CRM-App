@@ -79,6 +79,7 @@ namespace CallMan
             services.AddTransient<LeadFollowupViewModel>();
             services.AddTransient<OccupiedLocationViewModel>();
             services.AddTransient<CustomerSummaryViewModel>();
+            services.AddTransient<GlobalNewOrderViewModel>();
 
             services.AddTransient<UserManagementViewModel>();
             services.AddTransient<AddStaffDialogViewModel>();

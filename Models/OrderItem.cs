@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CallMan.Models
 {
@@ -16,6 +17,8 @@ namespace CallMan.Models
         [ObservableProperty] private decimal _gstPercent;
 
         // Calculated Property
-        public decimal SubTotal => (UnitPrice * Quantity) + (UnitPrice * Quantity * (GstPercent / 100));
+        public decimal SubTotal => Quantity * UnitPrice;
+        public decimal GstAmount => SubTotal * (GstPercent / 100);
+        public decimal Total => SubTotal + GstAmount;
     }
 }

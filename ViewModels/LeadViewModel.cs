@@ -51,7 +51,7 @@ namespace CallMan.ViewModels
             _dialogService = dialogService;
             _productService = productService;
             _orderService = orderService;
-            LoadLeads();
+            _ = LoadLeads();
         }
 
         public async Task InitializeAsync(LeadViewMode mode)
@@ -109,11 +109,32 @@ namespace CallMan.ViewModels
                    (lead.District?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.Email?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.Status?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                   (lead.State?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false);
+                   (lead.State?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (lead.AssignedDivisions?.Any(d => d.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false);
         }
 
         [RelayCommand]
-        private void OpenAddLeadDialog()
+        private async Task OpenImportLeadsDialog()
+        {
+            var vm = App.ServiceProvider.GetRequiredService<ImportViewModel>();
+            await vm.InitializeAsync(ImportType.Lead);
+            var dialogWindow = new ImportView { DataContext = vm };
+            // No need for a close event here since the ImportViewModel can directly call LoadLeads() after a successful import
+            vm.RequestClose += (result) =>
+            {
+                dialogWindow.DialogResult = result;
+                dialogWindow.Close();
+            };
+
+            if (dialogWindow.ShowDialog() == true)
+            {
+                // Re-run the query to show the new lead in the DataGrid
+                await LoadLeads();
+            }
+        }
+
+        [RelayCommand]
+        private async Task OpenAddLeadDialog()
         {
             var vm = App.ServiceProvider.GetRequiredService<AddLeadDialogViewModel>();
             var dialogWindow = new AddLeadWindow { DataContext = vm };
@@ -128,12 +149,12 @@ namespace CallMan.ViewModels
             if (dialogWindow.ShowDialog() == true)
             {
                 // Re-run the query to show the new lead in the DataGrid
-                LoadLeads();
+                await LoadLeads();
             }
         }
 
         [RelayCommand]
-        private void EditLead(Lead leadToEdit)
+        private async Task EditLead(Lead leadToEdit)
         {
             if (leadToEdit == null) return;
 
@@ -149,7 +170,7 @@ namespace CallMan.ViewModels
 
             if (dialogWindow.ShowDialog() == true)
             {
-                LoadLeads(); // Refresh list after update
+                await LoadLeads(); // Refresh list after update
             }
         }
 
@@ -164,7 +185,7 @@ namespace CallMan.ViewModels
             if (confirm == MessageBoxResult.Yes)
             {
                 await _leadService.DeleteLeadAsync(leadToDelete.LeadId);
-                LoadLeads(); // Refresh list
+                await LoadLeads(); // Refresh list
             }
         }
 
@@ -223,7 +244,7 @@ namespace CallMan.ViewModels
             if (profileWindow.ShowDialog() == true)
             {
                 // If data was updated (e.g., status changed to Matured or Dead), refresh the grid
-                LoadLeads();
+                _ = LoadLeads();
             }
         }
 

@@ -13,45 +13,87 @@
     </UserControl.Resources>
     <Grid Margin="24">
         <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280"/>
             <ColumnDefinition Width="320"/>
             <!-- Branding Sidebar -->
             <ColumnDefinition Width="*"/>
             <!-- Form Area -->
         </Grid.ColumnDefinitions>
 
-        <!-- LEFT COLUMN: BRANDING & LOGO -->
-        <materialDesign:Card Grid.Column="0" VerticalAlignment="Top" Padding="0" UniformCornerRadius="8" Margin="0,0,24,0">
+        <materialDesign:Card Grid.Column="0" Margin="0,0,10,0" Padding="10" VerticalAlignment="Stretch">
             <StackPanel>
-                <Border Background="#F5F5F5" Height="200" CornerRadius="8,8,0,0">
-                    <Grid>
-                        <!-- Logo Display with a subtle background -->
-                        <Image Source="{Binding CurrentProfile.LogoImage}" 
-                           Stretch="Uniform" Margin="20"
-                           RenderOptions.BitmapScalingMode="HighQuality"/>
-
-                        <!-- Empty State Placeholder -->
-                        <materialDesign:PackIcon Kind="ImagePlus" Width="48" Height="48" 
-                                             HorizontalAlignment="Center" VerticalAlignment="Center"
-                                             Foreground="#BDBDBD"
-                                             Visibility="{Binding CurrentProfile.LogoImage, Converter={StaticResource NullToVisibilityConverter}}"/>
-                    </Grid>
-                </Border>
-
-                <StackPanel Margin="16">
-                    <TextBlock Text="Company Identity" Style="{StaticResource MaterialDesignHeadline6TextBlock}" FontSize="16"/>
-                    <TextBlock Text="This logo will appear on all PDFs and WhatsApp messages." 
-                           Style="{StaticResource MaterialDesignCaptionTextBlock}" Margin="0,4,0,16" TextWrapping="Wrap"/>
-
-                    <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
-                        Command="{Binding SelectLogoCommand}"
-                        Content="UPDATE LOGO" 
-                        Height="35" FontSize="12"/>
-                </StackPanel>
+                <TextBlock Text="DIVISIONS" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                <ListBox ItemsSource="{Binding Divisions}" SelectedItem="{Binding SelectedDivision}" DisplayMemberPath="Name"/>
+                <Button Content="+ NEW DIVISION" Margin="0,20,0,0" Command="{Binding AddDivisionCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
             </StackPanel>
         </materialDesign:Card>
 
-        <!-- RIGHT COLUMN: BUSINESS DATA (Compact) -->
         <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Orientation="Vertical">
+                <!-- LEFT COLUMN: BRANDING & LOGO -->
+                <materialDesign:Card VerticalAlignment="Top" Padding="0" UniformCornerRadius="8" Margin="0,0,24,0">
+                    <StackPanel>
+                        <Border Background="#F5F5F5" Height="200" CornerRadius="8,8,0,0">
+                            <Grid>
+                                <!-- Logo Display with a subtle background -->
+                                <Image Source="{Binding CurrentProfile.LogoImage}" 
+                           Stretch="Uniform" Margin="20"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+
+                                <!-- Empty State Placeholder -->
+                                <materialDesign:PackIcon Kind="ImagePlus" Width="48" Height="48" 
+                                             HorizontalAlignment="Center" VerticalAlignment="Center"
+                                             Foreground="#BDBDBD"
+                                             Visibility="{Binding CurrentProfile.LogoImage, Converter={StaticResource NullToVisibilityConverter}}"/>
+                            </Grid>
+                        </Border>
+
+                        <StackPanel Margin="16">
+                            <TextBlock Text="Company Identity" Style="{StaticResource MaterialDesignHeadline6TextBlock}" FontSize="16"/>
+                            <TextBlock Text="This logo will appear on all PDFs and WhatsApp messages." 
+                           Style="{StaticResource MaterialDesignCaptionTextBlock}" Margin="0,4,0,16" TextWrapping="Wrap"/>
+
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+                        Command="{Binding SelectLogoCommand}"
+                        Content="UPDATE LOGO" 
+                        Height="35" FontSize="12"/>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card VerticalAlignment="Top" Padding="0" UniformCornerRadius="8" Margin="0,0,24,20">
+                    <StackPanel>
+                        <Border Background="#F5F5F5" Height="200" CornerRadius="8,8,0,0">
+                            <Grid>
+                                <!-- Logo Display with a subtle background -->
+                                <Image Source="{Binding CurrentProfile.StampImage}" 
+               Stretch="Uniform" Margin="20"
+               RenderOptions.BitmapScalingMode="HighQuality"/>
+
+                                <!-- Empty State Placeholder -->
+                                <materialDesign:PackIcon Kind="ImagePlus" Width="48" Height="48" 
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                                 Foreground="#BDBDBD"
+                                 Visibility="{Binding CurrentProfile.StampImage, Converter={StaticResource NullToVisibilityConverter}}"/>
+                            </Grid>
+                        </Border>
+
+                        <StackPanel Margin="16">
+                            <TextBlock Text="Company Stamp" Style="{StaticResource MaterialDesignHeadline6TextBlock}" FontSize="16"/>
+                            <TextBlock Text="This stamp/e-signature will appear on all PDFs" 
+               Style="{StaticResource MaterialDesignCaptionTextBlock}" Margin="0,4,0,16" TextWrapping="Wrap"/>
+
+                            <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
+            Command="{Binding SelectStampCommand}"
+            Content="UPDATE STAMP" 
+            Height="35" FontSize="12"/>
+                        </StackPanel>
+                    </StackPanel>
+                </materialDesign:Card>
+            </StackPanel>
+        </ScrollViewer>
+        <!-- RIGHT COLUMN: BUSINESS DATA (Compact) -->
+        <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="0,0,10,0">
 
                 <!-- SECTION 1: LEGAL & CONTACT -->

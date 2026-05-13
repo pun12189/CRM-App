@@ -29,17 +29,19 @@
                 Style="{StaticResource MaterialDesignFlatButton}"/>
         </StackPanel>
 
-        <Button Grid.Row="0" HorizontalAlignment="Right"
-            Command="{Binding OpenAddProductCommand}"
+        <StackPanel Grid.Row="0" HorizontalAlignment="Right" Orientation="Horizontal">
+            <Button Content="IMPORT PRODUCTS" Command="{Binding OpenImportCommand}"  Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,10,15" Background="#1794A1" BorderBrush="#1794A1" Height="45" Padding="20,0"/>
+            <Button Command="{Binding OpenAddProductCommand}"
             Style="{StaticResource MaterialDesignRaisedButton}"
             Background="#1794A1" 
             BorderBrush="#1794A1"
             Height="45" Padding="20,0" Margin="0,0,0,15">
-            <StackPanel Orientation="Horizontal">
-                <materialDesign:PackIcon Kind="Plus" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                <TextBlock Text="ADD NEW PRODUCT" VerticalAlignment="Center" FontWeight="Bold"/>
-            </StackPanel>
-        </Button>
+                <StackPanel Orientation="Horizontal">
+                    <materialDesign:PackIcon Kind="Plus" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="ADD NEW PRODUCT" VerticalAlignment="Center" FontWeight="Bold"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
 
         <!-- 3. DATA LIST -->
         <DataGrid Grid.Row="2" ItemsSource="{Binding FilteredProducts}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">

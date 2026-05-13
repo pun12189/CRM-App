@@ -11,11 +11,18 @@ namespace CallMan.Models
     public partial class CompanyProfile : ObservableObject
     {
         public int Id { get; set; } = 1;
+        public int DivisionId { get; set; }
         // This is what Dapper maps to the BLOB column
         [ObservableProperty] private byte[] _logoData;
 
         // This is what the XAML Image control binds to
         [ObservableProperty] private BitmapSource _logoImage;
+
+        [ObservableProperty] private byte[] _stampData;
+
+        // This is what the XAML Image control binds to
+        [ObservableProperty] private BitmapSource _stampImage;
+
         [ObservableProperty] private string _companyName;
         [ObservableProperty] private string _proprietorName;
         [ObservableProperty] private string _gstNumber;

@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Dapper" Version="2.1.72" />
     <PackageReference Include="MahApps.Metro.IconPacks.BootstrapIcons" Version="6.2.1" />

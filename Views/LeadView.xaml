@@ -25,6 +25,7 @@
                     <ColumnDefinition Width="300"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" Grid.Column="0">
@@ -50,9 +51,13 @@
                     </Grid>
                 </StackPanel>
 
-                <Button Grid.Column="2" Content="+ New Lead" 
+                <Button Grid.Column="2" Content="Import Leads" 
+                    Command="{Binding OpenImportLeadsDialogCommand}"
+                    Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0"/>
+                
+                <Button Grid.Column="3" Content="+ New Lead" 
                     Command="{Binding OpenAddLeadDialogCommand}"
-                    Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold"/>
+                    Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0"/>
             </Grid>
         </Border>
 
@@ -213,6 +218,30 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Divisions" Width="Auto">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ItemsControl ItemsSource="{Binding AssignedDivisions}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#E1F5FE" CornerRadius="10" Padding="8,2" Margin="2">
+                                            <TextBlock Text="{Binding Name}" 
+                                       FontSize="10" 
+                                       Foreground="#0288D1" 
+                                       FontWeight="Bold"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

@@ -59,6 +59,7 @@ namespace CallMan
             services.AddSingleton<EmailService>();
             services.AddSingleton<OccupiedLocationService>();
             services.AddSingleton<WorkflowEngine>();
+            services.AddSingleton<IImportService, ImportService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();
@@ -80,6 +81,7 @@ namespace CallMan
             services.AddTransient<OccupiedLocationViewModel>();
             services.AddTransient<CustomerSummaryViewModel>();
             services.AddTransient<GlobalNewOrderViewModel>();
+            services.AddTransient<ImportViewModel>();
 
             services.AddTransient<UserManagementViewModel>();
             services.AddTransient<AddStaffDialogViewModel>();

@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace CallMan.Services
 {
@@ -87,6 +88,10 @@ namespace CallMan.Services
 
             int newId = await db.ExecuteScalarAsync<int>(sql, lead);
 
+            string linkSql = "INSERT INTO LeadDivisions (LeadId, DivisionId) VALUES (@LeadId, @DivId)";
+            var linkParams = lead.AssignedDivisions.Select(divId => new { LeadId = newId, DivId = divId });
+            await db.ExecuteAsync(linkSql, linkParams);
+
             // Save initial history entry
             await AddHistoryAsync(newId, initialLog, null, user);
             return newId;
@@ -116,6 +121,22 @@ namespace CallMan.Services
                     Pincode = @Pincode, MetadataJson = @MetadataJson, LeadHolder = @LeadHolder, WorkingArea = @WorkingArea, LeadSource = @LeadSource, LeadTag = @LeadTag, LabelsJson = @LabelsJson WHERE LeadId = @LeadId";
 
             var rows = await db.ExecuteAsync(sql, lead);
+
+            await DeleteLeadDivisionsAsync(lead.LeadId);
+
+            string linkSql = "INSERT INTO LeadDivisions (LeadId, DivisionId) VALUES (@LeadId, @DivId)";
+            var linkParams = lead.AssignedDivisions.Select(divId => new { LeadId = lead.LeadId, DivId = divId });
+            await db.ExecuteAsync(linkSql, linkParams);
+
+            return rows > 0;
+        }
+
+        public async Task<bool> DeleteLeadDivisionsAsync(int leadId)
+        {
+            using var db = _context.CreateConnection();
+            // Note: LeadHistory has a Foreign Key with ON DELETE CASCADE in our SQL schema
+            string sql = "DELETE FROM LeadDivisions WHERE LeadId = @leadId";
+            var rows = await db.ExecuteAsync(sql, new { leadId });
             return rows > 0;
         }
 
@@ -140,45 +161,65 @@ namespace CallMan.Services
         {
             using var db = _context.CreateConnection();
 
+            var leadMap = new Dictionary<int, Lead>();
+
             // Complex query: Select Lead info, and join with ONLY the newest History entry
             string sql = @"
         SELECT 
-            l.*, 
-            (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
-h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
-        FROM Leads l
-        LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
-        WHERE h.HistoryId = (
-            SELECT MAX(HistoryId) 
-            FROM LeadHistory 
-            WHERE LeadId = l.LeadId
-        ) OR h.HistoryId IS NULL -- In case lead has no history yet
-        ORDER BY l.LeadId DESC;";
+    l.*, 
+    (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,     
+    h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
+    FROM Leads l
+    LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+    LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId 
+    LEFT JOIN Divisions d ON ld.DivisionId = d.Id
+WHERE h.HistoryId = (
+    SELECT MAX(HistoryId) 
+    FROM LeadHistory 
+    WHERE LeadId = l.LeadId
+) OR h.HistoryId IS NULL -- In case lead has no history yet
+ORDER BY l.LeadId DESC;";
 
             // Use Dapper to map both objects (Lead and History)
-            var result = await db.QueryAsync<Lead, LeadHistoryEntry, Lead>(sql,
-                (lead, history) =>
+            var result = await db.QueryAsync<Lead, LeadHistoryEntry, Division, Lead>(sql,
+                (lead, history, division) =>
                 {
-                    // Map the dynamic metadata as before
-                    if (!string.IsNullOrEmpty(lead.MetadataJson))
+                    if (!leadMap.TryGetValue(lead.LeadId, out var currentLead))
                     {
-                        lead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(lead.MetadataJson)
-                                           ?? new Dictionary<string, string>();
-                    }
+                        // First time seeing this Lead - initialize and add to map
+                        currentLead = lead;
+                        currentLead.AssignedDivisions = new ObservableCollection<Division>();
+                        currentLead.LatestUpdate = history;
 
-                    if (!string.IsNullOrEmpty(lead.LabelsJson))
+                        // Handle your JSON deserialization here (only happens once)
+                        if (!string.IsNullOrEmpty(currentLead.MetadataJson))
+                        {
+                            currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson)
+                                               ?? new Dictionary<string, string>();
+                        }
+
+                        if (!string.IsNullOrEmpty(currentLead.LabelsJson))
+                        {
+                            currentLead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(currentLead.LabelsJson)
+                                               ?? new ObservableCollection<string>();
+                        }
+
+                        leadMap.Add(currentLead.LeadId, currentLead);
+                    }                    // Map the dynamic metadata as before
+
+
+                    if (division != null && !currentLead.AssignedDivisions.Any(x => x.Id == division.Id))
                     {
-                        lead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(lead.LabelsJson)
-                                           ?? new ObservableCollection<string>();
+                        currentLead.AssignedDivisions.Add(division);
                     }
 
                     // Assign the latest history entry to the calculated property
-                    lead.LatestUpdate = history;
-                    return lead;
+                    currentLead.LatestUpdate = history;
+                    return currentLead;
                 },
-                splitOn: "HistoryId"); // Dapper splits the row mapping here
+                splitOn: "HistoryId,Id"); // Dapper splits the row mapping here
 
-            return result;
+            return leadMap.Values;
         }
 
         public async Task UpdateLeadFullAsync(Lead lead, LeadHistoryEntry history)

@@ -12,6 +12,8 @@ namespace CallMan.Models
         [ObservableProperty]
         private int _paymentId;
 
+        [ObservableProperty] private int _divisionId;
+
         [ObservableProperty]
         private int _leadId;
 

@@ -1,8 +1,10 @@
 ﻿using CallMan.Dialogs;
 using CallMan.Models;
+using CallMan.Models.Enums;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -96,6 +98,26 @@ namespace CallMan.ViewModels
             if (window.ShowDialog() == true)
             {
                 await LoadInitialData(); // Refresh grid after save
+            }
+        }
+
+        [RelayCommand]
+        private async Task OpenImport()
+        {
+            var vm = App.ServiceProvider.GetRequiredService<ImportViewModel>();
+            await vm.InitializeAsync(ImportType.Product);
+            var dialogWindow = new ImportView { DataContext = vm };
+            // No need for a close event here since the ImportViewModel can directly call LoadLeads() after a successful import
+            vm.RequestClose += (result) =>
+            {
+                dialogWindow.DialogResult = result;
+                dialogWindow.Close();
+            };
+
+            if (dialogWindow.ShowDialog() == true)
+            {
+                // Re-run the query to show the new lead in the DataGrid
+                await LoadInitialData();
             }
         }
     }

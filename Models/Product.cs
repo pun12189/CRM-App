@@ -10,7 +10,7 @@ namespace CallMan.Models
     public partial class Product : ObservableObject
     {
         public int ProductId { get; set; }
-
+        public int DivisionId { get; set; }
         [ObservableProperty] private string _name = string.Empty;
         [ObservableProperty] private string _shortName = string.Empty;
         [ObservableProperty] private string _sKU = string.Empty;

@@ -12,6 +12,7 @@ namespace CallMan.Models
     public partial class Lead : ObservableObject
     {
         public int LeadId { get; set; }
+        public ObservableCollection<Division> AssignedDivisions { get; set; } = new();
         public string CustomerName { get; set; } = string.Empty;
         public string? Email { get; set; }
         public string? Phone { get; set; }

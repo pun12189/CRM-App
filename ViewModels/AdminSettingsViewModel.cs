@@ -17,6 +17,29 @@ namespace CallMan.ViewModels
         [ObservableProperty] private object? _currentSettingView;
         [ObservableProperty] private bool _isMainGridVisible = true;
 
+        private int _openExpanderIndex = -1; // -1 means all are closed
+
+        public int OpenExpanderIndex
+        {
+            get => _openExpanderIndex;
+            set
+            {
+                _openExpanderIndex = value;
+                OnPropertyChanged();
+                // Notify all expanders that the state has changed
+                OnPropertyChanged(nameof(IsExpander1Open));
+                OnPropertyChanged(nameof(IsExpander2Open));
+                OnPropertyChanged(nameof(IsExpander3Open));
+                OnPropertyChanged(nameof(IsExpander4Open));
+            }
+        }
+
+        // Helper properties for the View
+        public bool IsExpander1Open => OpenExpanderIndex == 1;
+        public bool IsExpander2Open => OpenExpanderIndex == 2;
+        public bool IsExpander3Open => OpenExpanderIndex == 3;
+        public bool IsExpander4Open => OpenExpanderIndex == 4;
+
         public AdminSettingsViewModel(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;

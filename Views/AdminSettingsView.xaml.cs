@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CallMan.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,18 @@ namespace CallMan.Views
         public AdminSettingsView()
         {
             InitializeComponent();
+        }
+
+        private void Expander_Expanded(object sender, RoutedEventArgs e)
+        {
+            var expandedExpander = sender as Expander;
+            if (expandedExpander != null && expandedExpander.Tag != null)
+            {
+                // Update the ViewModel with the Tag of the expander that was just opened
+                int index = int.Parse(expandedExpander.Tag.ToString());
+                var vm = (AdminSettingsViewModel)this.DataContext;
+                vm.OpenExpanderIndex = index;
+            }
         }
     }
 }

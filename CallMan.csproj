@@ -36,4 +36,16 @@
     </Resource>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="SetupFiles\BahiKitab-Icon.bmp">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="SetupFiles\BahiKitab-Icon.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="SetupFiles\eula.rtf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

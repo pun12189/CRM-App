@@ -10,7 +10,7 @@
 ;#define public Version "1.0.0.25"
 ;#endif
 ;#ifndef SourceFileDir
-;#define public SourceFileDir "C:\Users\Kishant\Source\Repos\KlikCRM\bin\Release\net6.0-windows\"
+;#define public SourceFileDir "C:\Users\Kishant\Source\Repos\SofricERP\bin\Release\net6.0-windows\"
 ;#endif
 
 #include "CodeDependencies.iss"
@@ -21,12 +21,12 @@ ChangesAssociations=yes
 ChangesEnvironment=yes
 PrivilegesRequired=admin
 DisableReadyPage=yes
-AppName=KlikCRM      
+AppName=SofricERP      
 ;DefaultDialogFontName=Segoe UI     
 ;repeat name of application. (otherwise you get
 ;multiple entries in add/remove programs)
-AppVerName=KlikCRM
-AppId=KlikCRM
+AppVerName=SofricERP
+AppId=SofricERP
 AppCopyright=Copyright © 2024
 ;app publisher name
 AppPublisher=sofric.com
@@ -38,10 +38,10 @@ AppSupportURL=https://sofric.com/support
 AppUpdatesURL=https://sofric.com/download
 ;default directory {pf} is a constant for
 ;program files. See INNO help for all constants
-DefaultDirName={autopf}\KlikCRM
+DefaultDirName={autopf}\SofricERP
 ;default group name in the programs
 ; section of the start menu
-DefaultGroupName=KlikCRM
+DefaultGroupName=SofricERP
 ;Boolean to disable allowing user to customize
 ;start menu entry during installation
 DisableProgramGroupPage=yes
@@ -64,7 +64,7 @@ LicenseFile={#SourceFileDir}SetupFiles\eula.rtf
 WizardImageFile={#SourceFileDir}SetupFiles\BahiKitab-Icon.bmp
 WizardSmallImageFile={#SourceFileDir}SetupFiles\BahiKitab-Icon.bmp
 ;I use whatever my apps icon is                               
-;UninstallDisplayIcon={app}\BahiKitab.exe
+;UninstallDisplayIcon={app}\CallMan.exe
 ;Version number of your installer (not your app)
 VersionInfoVersion={#Version}
 AppVersion={#Version}
@@ -72,7 +72,7 @@ AppVersion={#Version}
 ArchitecturesAllowed = x86compatible and x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 ;without the framework included
-OutputBaseFilename=KlikCRM
+OutputBaseFilename=SofricERP
 ;Directory where setup.exe will be compiled to
 ;OutputDir="C:\Users\Kishant\OneDrive\Desktop\setup"
 WizardStyle=modern
@@ -120,15 +120,15 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 
 
    [Dirs]
- Name: "{app}\de"
- Name: "{commonappdata}\KlikCRM"; Permissions: everyone-modify
- Name: "{app}\TxtFile"
+ ;Name: "{app}\Assets"
+ Name: "{commonappdata}\SofricERP"; Permissions: everyone-modify
+ ;Name: "{app}\TxtFile"
  Name: "{app}\runtimes"
 [Files]
-   Source: {#SourceFileDir}\de\*;  DestDir: "{app}\de"; Flags:ignoreversion recursesubdirs
+   ;Source: {#SourceFileDir}\Assets\*;  DestDir: "{app}\Assets"; Flags:ignoreversion recursesubdirs
    Source: {#SourceFileDir}\runtimes\*;  DestDir: "{app}\runtimes"; Flags:ignoreversion recursesubdirs
-   Source: {#SourceFileDir}\TxtFile\*;  DestDir: "{app}\TxtFile"; Flags:ignoreversion recursesubdirs
-   Source: {#SourceFileDir}\BahiKitab.exe;  DestDir: "{app}"; Flags:ignoreversion recursesubdirs
+   ;Source: {#SourceFileDir}\TxtFile\*;  DestDir: "{app}\TxtFile"; Flags:ignoreversion recursesubdirs
+   Source: {#SourceFileDir}\CallMan.exe;  DestDir: "{app}"; Flags:ignoreversion recursesubdirs
    Source: {#SourceFileDir}\*.dll;  DestDir: "{app}"; Flags:ignoreversion
    Source: {#SourceFileDir}\*.pdb;  DestDir: "{app}"; Flags:ignoreversion
    Source: {#SourceFileDir}\*.json;  DestDir: "{app}"; Flags:ignoreversion
@@ -256,7 +256,7 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 InstallingDependencies=Installing Dependencies
 viewhelpfile = View Help File
 optimizingperformance = Optimizing performance
-launchtemplatetoaster = Launch KlikCRM
+launchtemplatetoaster = Launch SofricERP
 settingpermission = Setting Program Access Permissions
 
 ;da.StandardVersion=Standard Edition
@@ -405,17 +405,17 @@ settingpermission = Setting Program Access Permissions
 ;uk.StandardVersion=стандарт версія
 ;uk.StarterVersion=стартер версія
 [icons]
-Name: {group}\KlikCRM; Filename: {app}\BahiKitab.exe; WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico";
+Name: {group}\SofricERP; Filename: {app}\CallMan.exe; WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico";
 Name: "{group}\Help"; Filename: "http://sofric.com/"; 
 Name: {group}\Uninstall; Filename: {uninstallexe};  WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico";
-Name: {commondesktop}\KlikCRM;  Filename: {app}\BahiKitab.exe; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico"; Tasks: desktopicon
+Name: {commondesktop}\SofricERP;  Filename: {app}\CallMan.exe; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"
 
 [Run]
 ;Filename: "{tmp}\net8runtime.exe"; Parameters: "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"; Flags: runhidden waituntilterminated
-Filename: "{app}\BahiKitab.exe"; Description: "{cm:launchtemplatetoaster}"; Flags: nowait skipifsilent postinstall ; 
+Filename: "{app}\CallMan.exe"; Description: "{cm:launchtemplatetoaster}"; Flags: nowait skipifsilent postinstall ; 
 Filename: explorer.exe; Parameters: "http://sofric.com/"; Description: "{cm:viewhelpfile}"; Flags: Shellexec skipifsilent  postinstall unchecked; 
 
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v Edition /t REG_SZ /d ""Starter"" /f"; Flags: runasoriginaluser; Tasks: starterversion
@@ -425,20 +425,20 @@ Filename: explorer.exe; Parameters: "http://sofric.com/"; Description: "{cm:view
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v Edition /t REG_SZ /d ""Professional"" /f"; Flags: runasoriginaluser runhidden;  Tasks: professionalversion
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v installpath /t REG_SZ /d ""{app}"" /f"; Flags: runasoriginaluser;
 
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v BahiKitab.exe /t REG_DWORD /d ""8000"" /f"; Check : IsCompatibleIExplorerVersion('7');
-Filename: Reg.exe; Parameters: "add ""HKLM\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v BahiKitab.exe /t REG_DWORD /d ""8000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('7');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""8000"" /f"; Check : IsCompatibleIExplorerVersion('7');
+Filename: Reg.exe; Parameters: "add ""HKLM\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""8000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('7');
 
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v BahiKitab.exe /t REG_DWORD /d ""8000"" /f"; Check : IsCompatibleIExplorerVersion('8');
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v BahiKitab.exe /t REG_DWORD /d ""8000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('8');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""8000"" /f"; Check : IsCompatibleIExplorerVersion('8');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""8000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('8');
 
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v BahiKitab.exe /t REG_DWORD /d ""9000"" /f"; Check : IsCompatibleIExplorerVersion('9');
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v BahiKitab.exe /t REG_DWORD /d ""9000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('9');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""9000"" /f"; Check : IsCompatibleIExplorerVersion('9');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""9000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('9');
 
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v BahiKitab.exe /t REG_DWORD /d ""10000"" /f"; Check : IsCompatibleIExplorerVersion('10');
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v BahiKitab.exe /t REG_DWORD /d ""10000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('10');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""10000"" /f"; Check : IsCompatibleIExplorerVersion('10');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""10000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('10');
 
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v BahiKitab.exe /t REG_DWORD /d ""11000"" /f"; Check : IsCompatibleIExplorerVersion('11');
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v BahiKitab.exe /t REG_DWORD /d ""11000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('11');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""11000"" /f"; Check : IsCompatibleIExplorerVersion('11');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""11000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('11');
 
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v Language /t REG_SZ /d ""en"" /f"; Flags: runasoriginaluser runhidden;  Languages: en
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v Language /t REG_SZ /d ""da"" /f"; Flags: runasoriginaluser runhidden;  Languages: da
@@ -487,18 +487,18 @@ Type: filesandordirs; Name: "{app}\Resources";
     
 Type: filesandordirs; Name: "{app}"
 Type: filesandordirs; Name: "{app}\Resources"
-Type:files;  Name:{commondesktop}\KlikCRM
+Type:files;  Name:{commondesktop}\SofricERP
 [UninstallRun]
-;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""KlikCRM"""; Flags: skipifdoesntexist runhidden;
-;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""KlikCRM"""; Flags: skipifdoesntexist runhidden;
+;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""SofricERP"""; Flags: skipifdoesntexist runhidden;
+;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""SofricERP"""; Flags: skipifdoesntexist runhidden;
 ;Filename: {app}\Deactivator.exe; 
 ;Filename: "https://templatetoaster.com/survey5/survey.php/?v={# Version}"; Flags: shellexec  waituntilterminated
 
 [Registry]
-Root: HKCR; Subkey: ".ttr"; ValueType: string; ValueName: ""; ValueData: "KlikCRM"; Flags: uninsdeletevalue 
-Root: HKCR; Subkey: "KlikCRM"; ValueType: string; ValueName: ""; ValueData: "KlikCRM"; Flags: uninsdeletekey 
-Root: HKCR; Subkey: "KlikCRM\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\BahiKitab.exe,1" 
-Root: HKCR; Subkey: "KlikCRM\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\BahiKitab.exe"" ""%1""" 
+Root: HKCR; Subkey: ".ttr"; ValueType: string; ValueName: ""; ValueData: "SofricERP"; Flags: uninsdeletevalue 
+Root: HKCR; Subkey: "SofricERP"; ValueType: string; ValueName: ""; ValueData: "SofricERP"; Flags: uninsdeletekey 
+Root: HKCR; Subkey: "SofricERP\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\CallMan.exe,1" 
+Root: HKCR; Subkey: "SofricERP\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\CallMan.exe"" ""%1""" 
 ;Root: HKLM; Subkey: "SOFTWARE\Platform\Brand"; ValueType: string; ValueName: "Colours7"; ValueData:  "{code:RegisteredUser}"; 
  [Code]
    
@@ -590,7 +590,7 @@ function RegisteredUser(Param: String): string;
   FilePath: string;
   begin
    
-    FilePath := ExpandConstant('{app}')+'\BahiKitab.exe'  ;
+    FilePath := ExpandConstant('{app}')+'\CallMan.exe'  ;
     Result := GetSHA1OfFile(FilePath);
 end;
 
@@ -870,8 +870,8 @@ end;
        
     //if NeedsFramework() then 
     //begin
-      //  if MsgBox('KlikCRM requires Microsoft .NET 6 Desktop Runtime.'#13#13
-        //    'Please download this file to run KlikCRM. Click Yes to download it.',  mbConfirmation, MB_YESNO) = IDYES
+      //  if MsgBox('SofricERP requires Microsoft .NET 6 Desktop Runtime.'#13#13
+        //    'Please download this file to run SofricERP. Click Yes to download it.',  mbConfirmation, MB_YESNO) = IDYES
           //  then 
     //ShellExec('open', 'https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.36-windows-x64-installer',
       //'', '', SW_SHOW, ewNoWait, ErrCode);
@@ -934,12 +934,12 @@ begin
 
 if ((CurStep = ssInstall) and IsWin64) then 
    begin
-    DelTree(ExpandConstant('{autopf}\KlikCRM'), True, True, True);
+    DelTree(ExpandConstant('{autopf}\SofricERP'), True, True, True);
 end;
 
 if CurStep = ssInstall then 
    begin
-    DelTree(ExpandConstant('{app}\KlikCRM\Resources'), True, True, True);
+    DelTree(ExpandConstant('{app}\SofricERP\Resources'), True, True, True);
 end;
 
 //if CurStep = ssPostInstall then 
@@ -954,7 +954,7 @@ end;
     //end;
     // Not necessary, already created in DIRS section with full permissions.
 	// if not DirExists(ExpandConstant('{commonappdata}\TemplateToaster')) then begin CreateDir(ExpandConstant('{commonappdata}\TemplateToaster')); end;    
-    //FilePath := ExpandConstant('{app}\BahiKitab.exe');
+    //FilePath := ExpandConstant('{app}\CallMan.exe');
     //Res := GetSHA1OfFile(FilePath);
     //SaveStringToFile(ExpandConstant('{commonappdata}\TemplateToaster\Colours7.txt'), '{#SetupSetting("AppVersion")}' + ':  ' + Res + #13#10, True);
   //finally

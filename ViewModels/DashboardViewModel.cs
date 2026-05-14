@@ -18,17 +18,13 @@ namespace CallMan.ViewModels
         private readonly IDialogService _dialog;
 
         [ObservableProperty] private object? _selectedTabContent;
-        [ObservableProperty] private decimal _totalBusiness;
 
         [ObservableProperty] private bool _isLoading;
         [ObservableProperty] private string _lastUpdatedStatus = "Last Updated: Just Now";
+        [ObservableProperty] private string _dataUpdatedStatus = "All Time Data";
 
-        // Counters
-        [ObservableProperty] private int _allLeads;
-        [ObservableProperty] private int _newLeads;
-        [ObservableProperty] private int _customers;
-        [ObservableProperty] private int _untouched;
-        [ObservableProperty] private int _dead;
+        // Stats Counters
+        [ObservableProperty] private DashboardStats _stats;
 
         // Financial Summaries for Expanders
         [ObservableProperty] private ObservableCollection<PaymentReminder> _reminders = new();
@@ -47,13 +43,7 @@ namespace CallMan.ViewModels
             try
             {
                 // 1. Fetch Stats for Tiles
-                var stats = await _service.GetDashboardStatsAsync();
-                AllLeads = stats.AllLeads;
-                NewLeads = stats.NewLeads;
-                Untouched = stats.Untouched;
-                Dead = stats.Dead;
-                Customers = stats.Customers;
-                TotalBusiness = stats.TotalBusiness;
+                Stats = await _service.GetDashboardStatsAsync();               
 
                 // 2. Fetch Payment Reminders for the Right Sidebar
                 var remindersData = await _service.GetPaymentRemindersAsync();
@@ -81,21 +71,23 @@ namespace CallMan.ViewModels
             }
         }
 
+        [RelayCommand]
+        private async Task ClearFilter()
+        {
+            await Refresh();
+            DataUpdatedStatus = "All Time Data";
+        }
+
         private async Task RefreshDashboardWithFilter(DashboardFilter filter)
         {
             IsLoading = true;
             try
             {
-                var stats = await _service.GetDashboardStatsFilteredAsync(filter);
-
-                // Update the UI properties
-                AllLeads = stats.AllLeads;
-                NewLeads = stats.NewLeads;
-                Customers = stats.Customers;
-                TotalBusiness = stats.TotalBusiness;
+                Stats = await _service.GetDashboardStatsFilteredAsync(filter);                
 
                 // Optional: Update 'Last Updated' timestamp
                 LastUpdatedStatus = $"Filtered by {filter.LeadHolder ?? "All"} ({filter.PresetRange})";
+                DataUpdatedStatus = $"All Time Data: Filtered by {filter.LeadHolder ?? "All "} ({filter.PresetRange})";
             }
             finally
             {

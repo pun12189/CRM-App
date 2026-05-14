@@ -17,34 +17,7 @@ namespace CallMan.Services
     public class LeadService
     {
         private readonly CrmDbContext _context;
-        public LeadService(CrmDbContext context) => _context = context;
-
-        // Fetch all leads for the DataGrid
-        public async Task<IEnumerable<Lead>> GetAllLeadsAsync()
-        {
-            using var db = _context.CreateConnection();
-            string sql = "SELECT * FROM Leads ORDER BY CreatedAt DESC";
-
-            var leads = await db.QueryAsync<Lead>(sql);
-
-            // Deserialize JSON metadata back into the Dictionary for each lead
-            foreach (var lead in leads)
-            {
-                if (!string.IsNullOrEmpty(lead.MetadataJson))
-                {
-                    lead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(lead.MetadataJson)
-                                       ?? new Dictionary<string, string>();
-                }
-
-                if (!string.IsNullOrEmpty(lead.LabelsJson))
-                {
-                    lead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(lead.LabelsJson)
-                                       ?? new ObservableCollection<string>();
-                }
-            }
-
-            return leads;
-        }
+        public LeadService(CrmDbContext context) => _context = context;        
 
         // Fetch all leads for the DataGrid
         public async Task<IEnumerable<Lead>> GetAllActiveLeadsAsync()
@@ -358,41 +331,50 @@ ORDER BY l.LeadId DESC;";
         public async Task<IEnumerable<Lead>> GetMaturedLedgerAsync()
         {
             using var db = _context.CreateConnection();
+            var leadMap = new Dictionary<int, Lead>();
+
             string sql = @"SELECT l.*, 
             (SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders WHERE LeadId = l.LeadId) as TotalOrderAmount,
             (SELECT COALESCE(SUM(AmountReceived), 0) FROM Payments WHERE LeadId = l.LeadId) as TotalPaidAmount,
 (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
-h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
-            FROM Leads l  LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
+            FROM Leads l  
+LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
+LEFT JOIN Divisions d ON ld.DivisionId = d.Id
         WHERE l.Status = 'Matured' AND h.HistoryId = (
             SELECT MAX(HistoryId) 
             FROM LeadHistory 
             WHERE LeadId = l.LeadId
-        ) OR h.HistoryId IS NULL -- In case lead has no history yet
-        ORDER BY l.LeadId DESC;";
-            var result = await db.QueryAsync<Lead, LeadHistoryEntry, Lead>(sql,
-                (lead, history) =>
+        ) ORDER BY l.LeadId DESC;";
+            await db.QueryAsync<Lead, LeadHistoryEntry, Division, Lead>(sql, (lead, history, division) =>
+            {
+                // 1. If lead isn't in our map, add it
+                if (!leadMap.TryGetValue(lead.LeadId, out var currentLead))
                 {
-                    // Map the dynamic metadata as before
-                    if (!string.IsNullOrEmpty(lead.MetadataJson))
+                    currentLead = lead;
+                    currentLead.AssignedDivisions = new ObservableCollection<Division>();
+                    currentLead.LatestUpdate = history;
+
+                    // Deserialize JSON metadata if present
+                    if (!string.IsNullOrEmpty(currentLead.MetadataJson))
                     {
-                        lead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(lead.MetadataJson)
-                                           ?? new Dictionary<string, string>();
+                        currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson);
                     }
 
-                    if (!string.IsNullOrEmpty(lead.LabelsJson))
-                {
-                    lead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(lead.LabelsJson)
-                                       ?? new ObservableCollection<string>();
+                    leadMap.Add(currentLead.LeadId, currentLead);
                 }
 
-                    // Assign the latest history entry to the calculated property
-                    lead.LatestUpdate = history;
-                    return lead;
-                },
-                splitOn: "HistoryId");
+                // 2. Add the division from this specific row to the existing lead's collection
+                if (division != null && !currentLead.AssignedDivisions.Any(x => x.Id == division.Id))
+                {
+                    currentLead.AssignedDivisions.Add(division);
+                }
 
-            return result;
+                return currentLead;
+            }, splitOn: "HistoryId,Id");
+
+            return leadMap.Values;
         }
 
         // Record a payment and auto-update Order status
@@ -441,9 +423,32 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
 
         public async Task<Lead> GetLeadByIdAsync(int leadId)
         {
-            using var db = _context.CreateConnection();
-            string sql = "SELECT * FROM Leads WHERE LeadId = @leadId";
-            return await db.QuerySingleOrDefaultAsync<Lead>(sql, new { leadId });
+            using var conn = _context.CreateConnection();
+            Lead resultLead = null;
+
+            string sql = @"
+        SELECT l.*, d.Id, d.Name 
+        FROM Leads l
+        LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
+        LEFT JOIN Divisions d ON ld.DivisionId = d.Id
+        WHERE l.LeadId = @Id";
+
+            await conn.QueryAsync<Lead, Division, Lead>(sql, (lead, division) =>
+            {
+                if (resultLead == null)
+                {
+                    resultLead = lead;
+                    resultLead.AssignedDivisions = new ObservableCollection<Division>();
+                }
+
+                if (division != null)
+                {
+                    resultLead.AssignedDivisions.Add(division);
+                }
+                return lead;
+            }, new { Id = leadId }, splitOn: "Id");
+
+            return resultLead;
         }
 
         public async Task<DashboardStats> GetDashboardStatsAsync()
@@ -455,9 +460,25 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
         SELECT 
             (SELECT COUNT(*) FROM Leads) as AllLeads,
             (SELECT COUNT(*) FROM Leads WHERE Status = 'New') as NewLeads,
-            (SELECT COUNT(*) FROM Leads WHERE Status = 'Untouched') as Untouched,
+            (SELECT COUNT(*) FROM Leads WHERE Status = 'Followup') as FollowupLeads,
+            (SELECT COUNT(*) FROM Leads l WHERE Status = 'Followup' AND (SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoFollowupLeads,
             (SELECT COUNT(*) FROM Leads WHERE Status = 'Dead') as Dead,
+
             (SELECT COUNT(*) FROM Leads WHERE Status = 'Matured') as Customers,
+(SELECT 
+    COUNT(DISTINCT l.LeadId) AS NoUpdation7Days
+FROM Leads l
+WHERE l.Status = 'Matured'
+AND (
+    SELECT GREATEST(
+        l.CreatedAt,
+        IFNULL((SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId), '1900-01-01'),
+        IFNULL((SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId), '1900-01-01'),
+        IFNULL((SELECT MAX(PaymentDate) FROM Payments WHERE LeadId = l.LeadId), '1900-01-01')
+    )
+) < DATE_SUB(NOW(), INTERVAL 7 DAY)) AS NoUpdation7Days,
+            (SELECT COUNT(*) FROM Leads l WHERE Status = 'Matured' AND (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) <= 1) as NoRepeatOrder,
+            (SELECT COUNT(*) FROM Leads l WHERE Status = 'Matured' AND (SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoOrder,
             (SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders) as TotalBusiness";
 
             return await db.QuerySingleAsync<DashboardStats>(sql);
@@ -491,14 +512,86 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
         public async Task<DashboardStats> GetDashboardStatsFilteredAsync(DashboardFilter filter)
         {
             using var db = _context.CreateConnection();
+            var parameters = new DynamicParameters();
+
+            // 1. Unified LeadHolder Filter
+            string holderFilter = "";
+            if (!string.IsNullOrEmpty(filter.LeadHolder))
+            {
+                holderFilter = " AND LeadHolder = @Holder ";
+                parameters.Add("Holder", filter.LeadHolder);
+            }
+
+            // 2. Date Parameters
+            parameters.Add("From", filter.FromDate);
+            parameters.Add("To", filter.ToDate);
+
+            // Helper logic for Date Filtering
+            string dateRange = (filter.FromDate != null) ? " BETWEEN @From AND @To " : null;
+
+            string sql = $@"
+    SELECT 
+        /* ALL LEADS: Counted by Creation Date */
+        (SELECT COUNT(*) FROM Leads 
+         WHERE 1=1 {holderFilter} 
+         {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}) as AllLeads,
+
+        /* NEW LEADS: Created in this range */
+        (SELECT COUNT(*) FROM Leads 
+         WHERE Status = 'New' {holderFilter} 
+         {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}) as NewLeads,
+
+        /* FOLLOWUP LEADS: Filtered by the LATEST Activity Date (History Log) */
+        (SELECT COUNT(DISTINCT l.LeadId) FROM Leads l
+         INNER JOIN LeadHistory h ON l.LeadId = h.LeadId
+         WHERE l.Status = 'Followup' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
+         {(dateRange != null ? $" AND h.LogDate {dateRange}" : "")}) as FollowupLeads,
+
+        /* NO FOLLOWUP (30 Days): Stale leads within the filtered group */
+        (SELECT COUNT(*) FROM Leads l 
+         WHERE Status = 'Followup' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
+         {(dateRange != null ? $" AND l.CreatedAt {dateRange}" : "")}
+         AND (SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoFollowupLeads,
+
+        /* NO UPDATION (7 Days): Based on GREATEST of all activities */
+        (SELECT COUNT(DISTINCT l.LeadId) FROM Leads l
+         WHERE l.Status = 'Matured' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
+         {(dateRange != null ? $" AND l.CreatedAt {dateRange}" : "")}
+         AND (SELECT GREATEST(l.CreatedAt, 
+                IFNULL((SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId), '1900-01-01'),
+                IFNULL((SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId), '1900-01-01'),
+                IFNULL((SELECT MAX(PaymentDate) FROM Payments WHERE LeadId = l.LeadId), '1900-01-01'))
+             ) < DATE_SUB(NOW(), INTERVAL 7 DAY)) as NoUpdation7Days,
+
+        /* TOTAL BUSINESS: Filtered by ORDER DATE, not Lead Creation Date */
+        (SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Orders o 
+         INNER JOIN Leads l ON o.LeadId = l.LeadId
+         WHERE 1=1 {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
+         {(dateRange != null ? $" AND o.OrderDate {dateRange}" : "")}) as TotalBusiness,
+
+        /* CUSTOMERS: Matured leads in this period */
+        (SELECT COUNT(*) FROM Leads WHERE Status = 'Matured' {holderFilter}
+         {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}) as Customers";
+
+            var stats = await db.QuerySingleAsync<DashboardStats>(sql, parameters);
+
+            // 4. Calculate Percentages in the ViewModel/Service after retrieval
+            return stats;
+        }
+
+        /*public async Task<DashboardStats> GetDashboardStatsFilteredAsync(DashboardFilter filter)
+        {
+            using var db = _context.CreateConnection();
 
             // Base WHERE clause logic
             string whereClause = " WHERE 1=1 ";
+            string whereClause2 = " WHERE 1=1 ";
             var parameters = new DynamicParameters();
 
             if (!string.IsNullOrEmpty(filter.LeadHolder))
             {
                 whereClause += " AND LeadHolder = @LeadHolder ";
+                whereClause2 += " AND l.LeadHolder = @LeadHolder ";
                 parameters.Add("LeadHolder", filter.LeadHolder);
             }
 
@@ -506,6 +599,7 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
             {
                 // Filtering based on Lead Creation or Update date
                 whereClause += " AND CreatedAt BETWEEN @FromDate AND @ToDate ";
+                whereClause2 += " AND l.CreatedAt BETWEEN @FromDate AND @ToDate ";
                 parameters.Add("FromDate", filter.FromDate);
                 parameters.Add("ToDate", filter.ToDate);
             }
@@ -514,13 +608,30 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
         SELECT 
             (SELECT COUNT(*) FROM Leads {whereClause}) as AllLeads,
             (SELECT COUNT(*) FROM Leads {whereClause} AND Status = 'New') as NewLeads,
+            (SELECT COUNT(*) FROM Leads {whereClause} AND Status = 'Followup') as FollowupLeads,
+            (SELECT COUNT(*) FROM Leads l {whereClause2} AND Status = 'Followup' AND (SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoFollowupLeads,
+            (SELECT COUNT(*) FROM Leads {whereClause} AND Status = 'Dead') as Dead,
+(SELECT 
+    COUNT(DISTINCT l.LeadId) AS NoUpdation7Days
+FROM Leads l
+{whereClause2} AND l.Status = 'Matured'
+AND (
+    SELECT GREATEST(
+        l.CreatedAt,
+        IFNULL((SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId), '1900-01-01'),
+        IFNULL((SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId), '1900-01-01'),
+        IFNULL((SELECT MAX(PaymentDate) FROM Payments WHERE LeadId = l.LeadId), '1900-01-01')
+    )
+) < DATE_SUB(NOW(), INTERVAL 7 DAY)) AS NoUpdation7Days,
             (SELECT COUNT(*) FROM Leads {whereClause} AND Status = 'Matured') as Customers,
+            (SELECT COUNT(*) FROM Leads l {whereClause} AND Status = 'Matured' AND (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) <= 1) as NoRepeatOrder,
+            (SELECT COUNT(*) FROM Leads l {whereClause} AND Status = 'Matured' AND (SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoOrder,
             (SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Orders o 
                     INNER JOIN Leads l ON o.LeadId = l.LeadId 
                     {whereClause.Replace("CreatedAt", "o.OrderDate")}) as TotalBusiness";
 
             return await db.QuerySingleAsync<DashboardStats>(sql, parameters);
-        }       
+        }  */     
 
         // --- USER MANAGEMENT METHODS ---
 
@@ -613,15 +724,18 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
         public async Task<IEnumerable<Lead>> GetAllFollowupLeadsAsync(LeadViewMode mode)
         {
             using var db = _context.CreateConnection();
+            var leadMap = new Dictionary<int, Lead>();
 
             // Complex query: Select Lead info, and join with ONLY the newest History entry
             string sql = @"
         SELECT 
             l.*, 
             (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
-h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
+h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
         FROM Leads l
         LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+        LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
+        LEFT JOIN Divisions d ON ld.DivisionId = d.Id
         WHERE l.Status = 'Followup' AND h.NextFollowUpDate <= CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
             SELECT MAX(HistoryId) 
             FROM LeadHistory 
@@ -635,9 +749,11 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
         SELECT 
             l.*, 
             (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
-h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
+h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
         FROM Leads l
         LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+        LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
+        LEFT JOIN Divisions d ON ld.DivisionId = d.Id
         WHERE l.Status = 'Followup' AND h.NextFollowUpDate > CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
             SELECT MAX(HistoryId) 
             FROM LeadHistory 
@@ -647,29 +763,34 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy
             }
 
             // Use Dapper to map both objects (Lead and History)
-            var result = await db.QueryAsync<Lead, LeadHistoryEntry, Lead>(sql,
-                (lead, history) =>
+            await db.QueryAsync<Lead, LeadHistoryEntry, Division, Lead>(sql, (lead, history, division) =>
+            {
+                // 1. If lead isn't in our map, add it
+                if (!leadMap.TryGetValue(lead.LeadId, out var currentLead))
                 {
-                    // Map the dynamic metadata as before
-                    if (!string.IsNullOrEmpty(lead.MetadataJson))
+                    currentLead = lead;
+                    currentLead.AssignedDivisions = new ObservableCollection<Division>();
+                    currentLead.LatestUpdate = history;
+
+                    // Deserialize JSON metadata if present
+                    if (!string.IsNullOrEmpty(currentLead.MetadataJson))
                     {
-                        lead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(lead.MetadataJson)
-                                           ?? new Dictionary<string, string>();
+                        currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson);
                     }
 
-                    if (!string.IsNullOrEmpty(lead.LabelsJson))
-                    {
-                        lead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(lead.LabelsJson)
-                                           ?? new ObservableCollection<string>();
-                    }
+                    leadMap.Add(currentLead.LeadId, currentLead);
+                }
 
-                    // Assign the latest history entry to the calculated property
-                    lead.LatestUpdate = history;
-                    return lead;
-                },
-                splitOn: "HistoryId"); // Dapper splits the row mapping here
+                // 2. Add the division from this specific row to the existing lead's collection
+                if (division != null && !currentLead.AssignedDivisions.Any(x => x.Id == division.Id))
+                {
+                    currentLead.AssignedDivisions.Add(division);
+                }
 
-            return result;
+                return currentLead;
+            }, splitOn: "HistoryId,Id"); // Dapper splits the row mapping here
+
+            return leadMap.Values;
         }
     }
 }

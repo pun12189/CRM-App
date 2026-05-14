@@ -29,7 +29,7 @@ namespace CallMan.ViewModels
             _dialogService = dialogService;
             _productService = productService;
             _orderService = orderService;
-            LoadData();
+            _ = LoadData();
         }
 
         [RelayCommand]

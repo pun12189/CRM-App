@@ -48,6 +48,7 @@
                     <Button Content="Today" Command="{Binding SetPresetCommand}" CommandParameter="Today" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Foreground="{Binding SelectedPreset, Converter={StaticResource PresetToColorConverter}, ConverterParameter=Today}"/>
                     <Button Content="Yesterday" Command="{Binding SetPresetCommand}" CommandParameter="Yesterday" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left"/>
                     <Button Content="This Week" Command="{Binding SetPresetCommand}" CommandParameter="This Week" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left"/>
+                    <Button Content="Last Week" Command="{Binding SetPresetCommand}" CommandParameter="Last Week" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left"/>
                     <Button Content="This Month" Command="{Binding SetPresetCommand}" CommandParameter="This Month" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left"/>
                     <Button Content="Last Month" Command="{Binding SetPresetCommand}" CommandParameter="Last Month" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left"/>
 

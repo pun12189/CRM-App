@@ -1,12 +1,7 @@
 ﻿using CallMan.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CallMan.ViewModels
 {
@@ -28,13 +23,15 @@ namespace CallMan.ViewModels
         [RelayCommand]
         private void SetPreset(string preset)
         {
-            SelectedPreset = preset;
+            SelectedPreset = preset + ": ";
             switch (preset)
             {
-                case "Today": StartDate = EndDate = DateTime.Today; break;
-                case "Yesterday": StartDate = EndDate = DateTime.Today.AddDays(-1); break;
-                case "This Week": StartDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek); EndDate = DateTime.Today; break;
-                case "This Month": StartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); EndDate = DateTime.Today; break;
+                case "Today": StartDate = EndDate = DateTime.Today; SelectedPreset += StartDate.ToShortDateString(); break;
+                case "Yesterday": StartDate = EndDate = DateTime.Today.AddDays(-1); SelectedPreset += StartDate.ToShortDateString();  break;
+                case "This Week": StartDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek); EndDate = DateTime.Today; SelectedPreset += $"{StartDate.ToShortDateString()} - {EndDate.ToShortDateString()}"; break;
+                case "Last Week": StartDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek - 7); EndDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek - 1); SelectedPreset += $"{StartDate.ToShortDateString()} - {EndDate.ToShortDateString()}"; break;
+                case "This Month": StartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); EndDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month)); SelectedPreset += $"{StartDate.ToShortDateString()} - {EndDate.ToShortDateString()}"; break;
+                case "Last Month": StartDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month - 1, 1); EndDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month - 1, DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month - 1)); SelectedPreset += $"{StartDate.ToShortDateString()} - {EndDate.ToShortDateString()}"; break;
             }
         }
 

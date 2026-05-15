@@ -17,7 +17,7 @@ namespace CallMan.ViewModels
         [ObservableProperty] private object? _currentSettingView;
         [ObservableProperty] private bool _isMainGridVisible = true;
 
-        private int _openExpanderIndex = -1; // -1 means all are closed
+        private int _openExpanderIndex = 1; // -1 means all are closed
 
         public int OpenExpanderIndex
         {

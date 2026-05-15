@@ -120,7 +120,7 @@
 
                         <materialDesign:PopupBox PlacementMode="BottomAndAlignRightEdges" StaysOpen="False">
                             <materialDesign:PopupBox.ToggleContent>
-                                <materialDesign:Card UniformCornerRadius="20" Width="40" Height="40" Background="#F1C40F">
+                                <materialDesign:Card UniformCornerRadius="20" Background="#F1C40F">
                                     <materialDesign:PackIcon Kind="Account" Width="25" Height="25" 
                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </materialDesign:Card>
@@ -227,82 +227,93 @@
                 <MenuItem Header="Admin Settings" Icon="{materialDesign:PackIcon Kind=Settings}" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
             </Menu>
         </materialDesign:ColorZone>
-        <!--<Border Grid.Row="1" Background="#2C3E50" Height="60" Effect="{DynamicResource MaterialDesignShadowDepth2}">
-            <Grid VerticalAlignment="Center">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Command="{Binding NavigateCommand}" 
-                    CommandParameter="Dashboard"
-                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                    Foreground="White" Margin="0,0,10,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="ViewDashboard" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="DASHBOARD" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding NavigateCommand}" 
-                    CommandParameter="Leads"
-                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                    Foreground="White" Margin="0,0,10,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountFilter" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="LEADS" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding NavigateCommand}" 
-                    CommandParameter="Leads"
-                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                    Foreground="White" Margin="0,0,10,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="AccountFilter" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="OCCUPIED LOCATIONS" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding NavigateCommand}" 
-                    CommandParameter="Customers"
-                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                    Foreground="White" Margin="0,0,10,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Handshake" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="CUSTOMERS" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding NavigateCommand}" 
-                    CommandParameter="Inventory"
-                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                    Foreground="White" Margin="0,0,10,0">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Handshake" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="INVENTORY" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding NavigateCommand}" 
-                    CommandParameter="Orders"
-                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                    Foreground="White" Margin="0,0,10,0">   
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Handshake" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="ORDERS" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button Command="{Binding NavigateCommand}" 
-                    CommandParameter="Admin"
-                    Style="{StaticResource MaterialDesignFlatMidBgButton}"
-                    Foreground="White" >
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Cog" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBlock Text="ADMIN SETTINGS" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>                
-            </Grid>
-        </Border>-->
-
         <ContentControl Grid.Row="2" Content="{Binding CurrentView}"/>
+        <materialDesign:DrawerHost Grid.RowSpan="3" IsRightDrawerOpen="{Binding IsAdminMenuOpen, Mode=TwoWay}">
+
+            <materialDesign:DrawerHost.RightDrawerContent>
+                <Grid Width="300" Background="{DynamicResource MaterialDesignPaper}" Margin="20,40">
+                    <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,20,0,0">
+
+                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch" Height="50" Margin="0,0,0,12" Padding="8,0">
+                            <Grid HorizontalAlignment="Stretch" Width="280">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" TextWrapping="Wrap" Text="Lead Management System (LMS)" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13" Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                                <ToggleButton Grid.Column="1" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch" Height="50" Margin="0,0,0,12" Padding="8,0">
+                            <Grid HorizontalAlignment="Stretch" Width="280">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" TextWrapping="Wrap" Text="Customer Relationship Management (CRM)" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13" Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                                <ToggleButton Grid.Column="1" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch" Height="50" Margin="0,0,0,12" Padding="8,0">
+                            <Grid HorizontalAlignment="Stretch" Width="280">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" TextWrapping="Wrap" Text="Customer Relationship Management (CRM-Pro)" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13" Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                                <ToggleButton Grid.Column="1" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+
+                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch" Height="50" Margin="0,0,0,12" Padding="8,0">
+                            <Grid HorizontalAlignment="Stretch" Width="280">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" TextWrapping="Wrap" Text="Enterprise Resource Planning (ERP)" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13" Foreground="{DynamicResource MaterialDesignBody}"/>
+
+                                <ToggleButton Grid.Column="1" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </materialDesign:DrawerHost.RightDrawerContent>
+
+            <Grid>
+                <Button HorizontalAlignment="Right" 
+                VerticalAlignment="Bottom"
+                Width="100" 
+                Height="100"                
+                Click="SecretButton_Click">
+                    <Button.Style>
+                        <Style TargetType="Button">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderBrush" Value="Transparent"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="{TemplateBinding Background}"/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+        </materialDesign:DrawerHost>
     </Grid>
 </Window>

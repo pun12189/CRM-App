@@ -32,6 +32,17 @@ namespace CallMan.ViewModels
         private readonly IUserSession _session;
         private readonly LoginLogService _logService;
 
+        private bool _isAdminMenuOpen;
+        public bool IsAdminMenuOpen
+        {
+            get => _isAdminMenuOpen;
+            set
+            {
+                _isAdminMenuOpen = value;
+                OnPropertyChanged();
+            }
+        }
+
         // These are injected via DI when the app starts
         public MainViewModel(LeadService leadService, IDialogService dialogService, IUserSession session, LoginLogService logService)
         {

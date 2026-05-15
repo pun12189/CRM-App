@@ -60,6 +60,45 @@ namespace CallMan.ViewModels
             await LoadLeads();
         }
 
+        [RelayCommand]
+        private void ToggleSelectAll(bool? isChecked)
+        {
+            if (isChecked == null || LeadsCollection == null) return;
+
+            // Cast the elements of the view to your specific Lead model
+            foreach (var item in LeadsCollection.Cast<Lead>())
+            {
+                item.IsSelectedForAction = isChecked.Value;
+            }
+        }
+
+        [RelayCommand]
+        private async Task BulkDelete()
+        {
+            // 1. Grab all rows where the checkbox is checked
+            var selectedLeads = LeadsCollection.Cast<Lead>().Where(l => l.IsSelectedForAction).ToList();
+
+            if (!selectedLeads.Any())
+            {
+                MessageBox.Show("Please select at least one lead to delete.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // 2. Extract the IDs for your database operation
+            List<int> leadIdsToProcess = selectedLeads.Select(l => l.LeadId).ToList();
+
+            var confirm = MessageBox.Show($"Are you sure you want to delete {leadIdsToProcess.Count} selected leads?",
+                                         "Confirm Bulk Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (confirm != MessageBoxResult.Yes) return;
+
+            // 3. Pass the IDs list to your service layer
+            await _leadService.BulkDeleteLeadsAsync(leadIdsToProcess);
+
+            // 4. Refresh your grid data
+            await LoadLeads();
+        }
+
         private async Task LoadLeads()
         {
             // 1. Call the new service method that joins Leads with their latest History
@@ -101,7 +140,8 @@ namespace CallMan.ViewModels
                    (lead.District?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.Email?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.Status?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                   (lead.State?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false);
+                   (lead.State?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (lead.AssignedDivisions?.Any(d => d.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false);
         }
 
         [RelayCommand]

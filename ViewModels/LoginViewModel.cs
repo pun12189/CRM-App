@@ -54,7 +54,7 @@ namespace CallMan.ViewModels
 
                 bool success = await _authService.AuthenticateByEmailAsync(Email, password);
 
-                if (true)
+                if (success)
                 {                    
                     var mainWindow = App.ServiceProvider.GetRequiredService<MainWindow>();
                     mainWindow.Show();

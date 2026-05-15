@@ -96,10 +96,10 @@ namespace CallMan.ViewModels
                     {
                         LeadId = SelectedLead.LeadId,
                         // Prefix message with the reason for the timeline
-                        Message = $"[DEAD - {SelectedDeadReason.Name}] {Message}",
+                        Message = $"[DEAD] {Message}",
                         ActionType = SelectedAction,
                         NextFollowUpDate = null, // CRITICAL: Stop the reminders
-                        FollowupStage = SelectedDeadReason.Name,
+                        FollowupStage = SelectedDeadReason?.Name,
                         UpdatedBy = _session.CurrentUser
                     };
 
@@ -137,12 +137,12 @@ namespace CallMan.ViewModels
                         SelectedLead.Status = IsMatured ? "Matured" : (IsDead ? "Dead" : "Followup");
                         if (IsMatured)
                         {
-                            history.FollowupStage = "Matured";
+                            history.FollowupStage = "First Order Recieved";
                             var newOrder = new Order
                             {
                                 LeadId = SelectedLead.LeadId,
                                 TotalAmount = OrderValue,
-                                Description = $"Initial Order: {Message}",
+                                Description = $"First Order: {Message}",
                                 OrderDate = DateTime.Now,
                                 Status = BalancePayment == 0 ? "Paid" : "Partially Paid",
                                 ProcessedBy = _session.CurrentUser,

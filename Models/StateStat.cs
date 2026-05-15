@@ -13,6 +13,6 @@ namespace CallMan.Models
         public int TotalLeads { get; set; }
 
         // Formatted for the Sidebar Display
-        public string DisplayLabel => $"{State} ({MaturedCount}/{TotalLeads})";
+        public string DisplayLabel => $"{(string.IsNullOrWhiteSpace(State) ? "Unknown" : State)} ({MaturedCount}/{TotalLeads})";
     }
 }

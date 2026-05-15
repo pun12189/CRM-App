@@ -12,6 +12,7 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <conv:LeadStatusToColorConverter x:Key="StatusToColorConverter"/>
+        <conv:IndexToNumberConverter x:Key="IndexToNumberConverter"/>
     </UserControl.Resources>
     <Grid Margin="20">
         <Grid.RowDefinitions>
@@ -53,6 +54,9 @@
                 <Button Grid.Column="2" Content="+ New Lead" 
                 Command="{Binding OpenAddLeadDialogCommand}"
                 Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Visibility="Collapsed"/>
+                <Button Grid.Column="2" Content="Bulk Delete" 
+                Command="{Binding BulkDeleteCommand}"
+                Padding="20,5" Background="IndianRed" Foreground="White" FontWeight="Bold" Margin="5,0"/>
             </Grid>
         </Border>
 
@@ -72,25 +76,60 @@
                 </Style>
             </DataGrid.RowStyle>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="#" Width="50">
-                    <DataGridTextColumn.Binding>
-                        <Binding Path="(ItemsControl.AlternationIndex)" 
-                 RelativeSource="{RelativeSource AncestorType=DataGridRow}">
-                            <!-- We use a converter to start counting from 1 instead of 0 -->
-                            <Binding.Converter>
-                                <conv:IndexToNumberConverter/>
-                            </Binding.Converter>
-                        </Binding>
-                    </DataGridTextColumn.Binding>
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Foreground" Value="Gray"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+                <DataGridTemplateColumn Width="60">
+                    <DataGridTemplateColumn.Header>
+                        <CheckBox Command="{Binding DataContext.ToggleSelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+              CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                    </DataGridTemplateColumn.Header>
+
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="Transparent" VerticalAlignment="Center" HorizontalAlignment="Center" >
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" SharedSizeGroup="SrNoGroup"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock x:Name="TxtSerialNumber" 
+   VerticalAlignment="Center" 
+   HorizontalAlignment="Center"                                   
+   Foreground="DarkSlateGray">
+                                    <TextBlock.Text>
+                                        <Binding RelativeSource="{RelativeSource AncestorType=DataGridRow}" 
+         Path="(DataGrid.AlternationIndex)" 
+         Converter="{StaticResource IndexToNumberConverter}"/>
+                                    </TextBlock.Text>
+                                </TextBlock>
+
+                                <CheckBox Grid.Row="1" 
+  IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}"
+  HorizontalAlignment="Center" 
+  VerticalAlignment="Center"/>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <!--<DataGridTextColumn Header="#" Width="50">
+        <DataGridTextColumn.Binding>
+            <Binding Path="(ItemsControl.AlternationIndex)" 
+         RelativeSource="{RelativeSource AncestorType=DataGridRow}">
+                -->
+                <!-- We use a converter to start counting from 1 instead of 0 -->
+                <!--
+                <Binding.Converter>
+                    <conv:IndexToNumberConverter/>
+                </Binding.Converter>
+            </Binding>
+        </DataGridTextColumn.Binding>
+        <DataGridTextColumn.ElementStyle>
+            <Style TargetType="TextBlock">
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="FontWeight" Value="Bold"/>
+                <Setter Property="Foreground" Value="Gray"/>
+            </Style>
+        </DataGridTextColumn.ElementStyle>
+    </DataGridTextColumn>-->
                 <DataGridTemplateColumn Header="Name" MinWidth="170" Width="Auto" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -108,7 +147,7 @@
                                         <icon:BootstrapIcons Kind="Trash3Fill"/>
                                     </Button>
                                 </StackPanel>
-
+                                <TextBlock VerticalAlignment="Bottom" Text="{Binding CreatedAt, StringFormat={}Added: {0:dd/MM/yyyy}}" FontSize="10" HorizontalAlignment="Center" Margin="0,5,0,5"/>
                                 <!--<TextBlock HorizontalAlignment="Center" Text="{Binding Id, StringFormat=ID: {0}}" FontWeight="Bold" Margin="0,0,0,10"/>-->
                             </StackPanel>
                         </DataTemplate>
@@ -175,33 +214,33 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Source | Tag" Width="*">
+                <DataGridTemplateColumn Header="Info" Width="150">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding LeadSource}" TextWrapping="Wrap" Foreground="Black" FontSize="12" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding LeadTag}" TextWrapping="Wrap" Foreground="Black" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock VerticalAlignment="Bottom" Text="{Binding CreatedAt, StringFormat={}Added: {0:dd/MM/yyyy}}" FontSize="10" Margin="0,5,0,5"/>
+                                <TextBlock Text="{Binding LeadSource, StringFormat='{}Source: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding LeadTag, StringFormat='{}Tag: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding LeadHolder, StringFormat='{}LeadHolder: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <!--<DataGridTemplateColumn Header="Tags" Width="Auto">
-                <DataGridTemplateColumn.CellTemplate>
-                    <DataTemplate>
-                        <Border Background="DarkSlateGray" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding LeadHolder}" TextWrapping="Wrap" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                    </DataTemplate>
-                </DataGridTemplateColumn.CellTemplate>
-            </DataGridTemplateColumn>-->
-                <DataGridTemplateColumn Header="Label" Width="*">
+        <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+                <Border Background="DarkSlateGray" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding LeadHolder}" TextWrapping="Wrap" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+            </DataTemplate>
+        </DataGridTemplateColumn.CellTemplate>
+    </DataGridTemplateColumn>-->
+                <DataGridTemplateColumn Header="Label" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ItemsControl ItemsSource="{Binding LeadLabels}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal"/>
+                                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
@@ -216,23 +255,50 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Lead Holder" Width="*">
+                <DataGridTemplateColumn Header="Divisions" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
-                                    <TextBlock Text="{Binding LeadHolder}" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Border>
+                            <ItemsControl ItemsSource="{Binding AssignedDivisions}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#E1F5FE" CornerRadius="10" Padding="8,2" Margin="2">
+                                            <TextBlock Text="{Binding Name}" 
+                           FontSize="10" 
+                           Foreground="#0288D1" 
+                           FontWeight="Bold"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
+                <!--<DataGridTemplateColumn Header="Lead Holder" Width="*">
+        <DataGridTemplateColumn.CellTemplate>
+            <DataTemplate>
+                <Border CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">                                    
+                        <TextBlock Text="{Binding LeadHolder}" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </DataTemplate>
+        </DataGridTemplateColumn.CellTemplate>
+    </DataGridTemplateColumn>-->
                 <DataGridTemplateColumn Header="Status" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border Background="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter=dark}" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <TextBlock Text="{Binding Status}" FontSize="10" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
+                                <Border Background="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter=dark}" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                    <TextBlock Text="{Binding Status}" FontSize="10" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="{Binding LatestUpdate.FollowupStage}" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,15,0,0"/>
+                            </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -256,24 +322,24 @@
                             <Grid>
                                 <StackPanel>
                                     <TextBlock Text="{Binding LatestUpdate.Message}" 
-                                           TextWrapping="Wrap" Height="40" FontSize="13" Foreground="#2C3E50"/>
+                                   TextWrapping="Wrap" Height="40" FontSize="13" Foreground="#2C3E50"/>
 
                                     <StackPanel Orientation="Vertical" Margin="0,5,0,0">
                                         <TextBlock Text="{Binding LatestUpdate.LogDate, StringFormat={}{0:dd-MM-yyyy}}" TextWrapping="Wrap"
-                                               FontSize="11" Foreground="#7F8C8D" Margin="0,0,10,0"/>
+                                       FontSize="11" Foreground="#7F8C8D" Margin="0,0,10,0"/>
                                         <TextBlock Text="{Binding LatestUpdate.UpdatedBy}" TextWrapping="Wrap"
-                                               FontSize="11" Foreground="#7F8C8D" FontWeight="SemiBold"/>
+                                       FontSize="11" Foreground="#7F8C8D" FontWeight="SemiBold"/>
                                     </StackPanel>
 
                                     <Button Content="Lead History" 
-                                        Margin="0,10,0,0" FontSize="10" Height="22"
-                                        Background="#1794A1" Foreground="White" BorderThickness="0"
-                                        Command="{Binding DataContext.ShowHistoryDialogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"/>
+                                Margin="0,10,0,0" FontSize="10" Height="22"
+                                Background="#1794A1" Foreground="White" BorderThickness="0"
+                                Command="{Binding DataContext.ShowHistoryDialogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}"/>
                                 </StackPanel>
 
                                 <TextBlock Text="No message yet" Visibility="Collapsed" 
-                                       IsHitTestVisible="False" VerticalAlignment="Center" HorizontalAlignment="Center">
+                               IsHitTestVisible="False" VerticalAlignment="Center" HorizontalAlignment="Center">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Style.Triggers>

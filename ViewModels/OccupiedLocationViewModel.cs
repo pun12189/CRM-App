@@ -29,12 +29,15 @@ namespace CallMan.ViewModels
         private async Task LoadData()
         {
             var stats = await _service.GetStateStatsAsync();
-            StateStats = new ObservableCollection<StateStat>(stats.Select(s => new StateStat
-            {
-                State = s.State,
-                MaturedCount = (int)s.MaturedCount,
-                TotalLeads = (int)s.TotalLeads
-            }));
+            StateStats = new ObservableCollection<StateStat>(
+            stats.Where(s => s.MaturedCount > 0) // Filters out any state with 0 matured leads
+         .Select(s => new StateStat
+         {
+             State = s.State,
+             MaturedCount = (int)s.MaturedCount,
+             TotalLeads = (int)s.TotalLeads
+         })
+);
         }
 
         // The logic that runs automatically on every keystroke

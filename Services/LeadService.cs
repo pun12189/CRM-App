@@ -150,8 +150,9 @@ namespace CallMan.Services
             string sql = @"
         SELECT 
     l.*, 
-    (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,     
-    h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
+    (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,  
+(SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) as OrderCount,
+    h.*, d.*
     FROM Leads l
     LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
     LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId 
@@ -347,7 +348,8 @@ ORDER BY l.LeadId DESC;";
             (SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders WHERE LeadId = l.LeadId) as TotalOrderAmount,
             (SELECT COALESCE(SUM(AmountReceived), 0) FROM Payments WHERE LeadId = l.LeadId) as TotalPaidAmount,
 (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
-h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
+(SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) as OrderCount,
+h.*, d.*
             FROM Leads l  
 LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
 LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
@@ -741,7 +743,8 @@ AND (
         SELECT 
             l.*, 
             (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
-h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
+            (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) as OrderCount,
+            h.*, d.*
         FROM Leads l
         LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
         LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
@@ -759,7 +762,8 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
         SELECT 
             l.*, 
             (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
-h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
+            (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) as OrderCount,
+            h.*, d.*
         FROM Leads l
         LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
         LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
@@ -815,6 +819,7 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
             WITH CustomerOrderStats AS (
                 SELECT 
                     LeadId,
+                    OrderId,
                     TotalAmount,
                     ROW_NUMBER() OVER (PARTITION BY LeadId ORDER BY OrderDate ASC, OrderId ASC) as OrderSequence
                 FROM Orders                
@@ -828,6 +833,7 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
             )
             SELECT 
                 COUNT(DISTINCT o.LeadId) AS TotalCustomers,
+                COUNT(o.OrderId) AS TotalOrders,
                 IFNULL(SUM(CASE WHEN o.OrderSequence = 1 THEN o.TotalAmount ELSE 0 END), 0) AS TotalFirstOrders,
                 IFNULL(SUM(CASE WHEN o.OrderSequence > 1 THEN o.TotalAmount ELSE 0 END), 0) AS TotalOtherOrders,
                 IFNULL(SUM(o.TotalAmount), 0) AS TotalBusiness,

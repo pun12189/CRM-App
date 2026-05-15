@@ -2,6 +2,7 @@
 using CallMan.Models;
 using CallMan.Models.Enums;
 using Dapper;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Mysqlx.Crud;
 using System;
 using System.Collections.Generic;
@@ -121,6 +122,15 @@ namespace CallMan.Services
             string sql = "DELETE FROM Leads WHERE LeadId = @leadId";
             var rows = await db.ExecuteAsync(sql, new { leadId });
             return rows > 0;
+        }
+
+        public async Task<bool> BulkDeleteLeadsAsync(IEnumerable<int> leadIds)
+        {
+            using var conn = _context.CreateConnection();
+            string sql = "DELETE FROM Leads WHERE LeadId IN @Ids";
+
+            int affected = await conn.ExecuteAsync(sql, new { Ids = leadIds });
+            return affected > 0;
         }
 
         public async Task<IEnumerable<LeadHistoryEntry>> GetHistoryByLeadIdAsync(int leadId)
@@ -791,6 +801,53 @@ h.HistoryId, h.LogDate, h.Message, h.NextFollowUpDate, h.UpdatedBy, d.*
             }, splitOn: "HistoryId,Id"); // Dapper splits the row mapping here
 
             return leadMap.Values;
+        }
+
+        /// <summary>
+        /// Fetches the comprehensive financial summary for a given division context.
+        /// </summary>
+        /// <param name="divisionId">The active division registry filter ID.</param>
+        /// <returns>A populated CustomerStats object.</returns>
+        public async Task<CustomerStats> GetCustomerFinancialSummaryAsync(int divisionId)
+        {
+            // WHERE DivisionId = @DivId
+            const string sql = @"
+            WITH CustomerOrderStats AS (
+                SELECT 
+                    LeadId,
+                    TotalAmount,
+                    ROW_NUMBER() OVER (PARTITION BY LeadId ORDER BY OrderDate ASC, OrderId ASC) as OrderSequence
+                FROM Orders                
+            ),
+            PaymentStats AS (
+                SELECT 
+                    LeadId,
+                    SUM(AmountReceived) AS TotalPaid
+                FROM Payments                
+                GROUP BY LeadId
+            )
+            SELECT 
+                COUNT(DISTINCT o.LeadId) AS TotalCustomers,
+                IFNULL(SUM(CASE WHEN o.OrderSequence = 1 THEN o.TotalAmount ELSE 0 END), 0) AS TotalFirstOrders,
+                IFNULL(SUM(CASE WHEN o.OrderSequence > 1 THEN o.TotalAmount ELSE 0 END), 0) AS TotalOtherOrders,
+                IFNULL(SUM(o.TotalAmount), 0) AS TotalBusiness,
+                IFNULL(SUM(o.TotalAmount), 0) - IFNULL((SELECT SUM(TotalPaid) FROM PaymentStats), 0) AS TotalOutstanding
+            FROM CustomerOrderStats o;";
+
+            try
+            {
+                using var conn = _context.CreateConnection();
+
+                // QueryFirstOrDefaultAsync safely returns a default fallback object if no rows exist
+                var result = await conn.QueryFirstOrDefaultAsync<CustomerStats>(sql, new { DivId = divisionId });
+
+                return result ?? new CustomerStats();
+            }
+            catch (Exception ex)
+            {
+                // Log exception here according to SofricONE logging standards (e.g., Sentry)
+                throw new InvalidOperationException("Failed to retrieve customer financial metrics.", ex);
+            }
         }
     }
 }

@@ -5,24 +5,135 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CallMan.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:conv="clr-namespace:CallMan.Converters"
              xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"             
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <conv:IndexToNumberConverter x:Key="IndexToNumberConverter"/>
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <materialDesign:Card Background="#B71C1C" Foreground="White" Padding="15" Margin="10">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="Total Market Outstanding: " VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding TotalOutstanding, StringFormat='₹ {0:N2}'}" FontSize="20" FontWeight="Bold" Margin="10,0,0,0"/>
-            </StackPanel>
+        <Border Grid.Row="0" Margin="0,0,0,15" Padding="10" Background="White" CornerRadius="8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Grid.Column="0">
+                    <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="Gray"/>
+                    <Grid Width="250">
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                     VerticalContentAlignment="Center" Height="30"
+                     Padding="5,0"/>
+                        <TextBlock Text="Search by Name, City, Phone..." 
+                       IsHitTestVisible="False" VerticalAlignment="Center" 
+                       Margin="10,0" Foreground="LightGray">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SearchText}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </StackPanel>
+
+                <Button Grid.Column="2" Content="Import Leads" 
+            Command="{Binding OpenImportLeadsDialogCommand}"
+            Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0"/>
+                <Button Grid.Column="3" Content="Bulk Delete" 
+                    Command="{Binding BulkDeleteCommand}"
+                    Padding="20,5" Background="IndianRed" Foreground="White" FontWeight="Bold" Margin="5,0"/>
+            </Grid>
+        </Border>
+
+        <materialDesign:Card Background="Goldenrod" Grid.Row="1" Foreground="White" Padding="15" Margin="10">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                    <materialDesign:PackIcon Kind="AccountGroup" Foreground="SaddleBrown" Width="22" Height="22" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                    <TextBlock Foreground="SaddleBrown" FontSize="20" FontWeight="Bold" VerticalAlignment="Center">
+            <Run Text="{Binding CustomerStats.TotalCustomers, Mode=OneWay}"/>
+            <Run Text=" | "/>
+            <Run Text="{Binding CustomerStats.TotalFirstOrders, StringFormat=C2, ConverterCulture=en-IN}"/>
+            <Run Text=" + "/>
+            <Run Text="{Binding CustomerStats.TotalOtherOrders, StringFormat=C2, ConverterCulture=en-IN}"/>
+            <Run Text=" = "/>
+            <Run Text="{Binding CustomerStats.TotalBusiness, StringFormat=C2, ConverterCulture=en-IN}"/>            
+                    </TextBlock>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <TextBlock Text="Market Outstanding: " Foreground="Brown" FontSize="16" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding CustomerStats.TotalOutstanding, StringFormat='₹ {0:N2}'}" Foreground="Brown" FontSize="20" FontWeight="Bold" Margin="10,0,0,0"/>
+                </StackPanel>
+            </DockPanel>
         </materialDesign:Card>
 
-        <DataGrid Grid.Row="1" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding MaturedLeads}" SelectedItem="{Binding SelectedLead}" AutoGenerateColumns="False" IsReadOnly="True" Margin="10">
+        <DataGrid Grid.Row="2" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" SelectedItem="{Binding SelectedLead}" AlternationCount="9999" AutoGenerateColumns="False" IsReadOnly="True" Margin="10">
             <DataGrid.Columns>
+                <DataGridTemplateColumn Width="60">
+                    <DataGridTemplateColumn.Header>
+                        <CheckBox Command="{Binding DataContext.ToggleSelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                    </DataGridTemplateColumn.Header>
+
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="Transparent" VerticalAlignment="Center" HorizontalAlignment="Center" >
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" SharedSizeGroup="SrNoGroup"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock x:Name="TxtSerialNumber" 
+                                   VerticalAlignment="Center" 
+                                   HorizontalAlignment="Center"                                   
+                                   Foreground="DarkSlateGray">
+                                    <TextBlock.Text>
+                                        <Binding RelativeSource="{RelativeSource AncestorType=DataGridRow}" 
+                                         Path="(DataGrid.AlternationIndex)" 
+                                         Converter="{StaticResource IndexToNumberConverter}"/>
+                                    </TextBlock.Text>
+                                </TextBlock>
+
+                                <CheckBox Grid.Row="1" 
+                                  IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}"
+                                  HorizontalAlignment="Center" 
+                                  VerticalAlignment="Center"/>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <!--<DataGridTextColumn Header="#" Width="50">
+                    <DataGridTextColumn.Binding>
+                        <Binding Path="(ItemsControl.AlternationIndex)" RelativeSource="{RelativeSource AncestorType=DataGridRow}">
+                            --><!-- We use a converter to start counting from 1 instead of 0 --><!--
+                            <Binding.Converter>
+                                <conv:IndexToNumberConverter/>
+                            </Binding.Converter>
+                        </Binding>
+                    </DataGridTextColumn.Binding>
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="FontWeight" Value="Bold"/>
+                            <Setter Property="Foreground" Value="Gray"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>-->
                 <DataGridTemplateColumn Header="Name" MinWidth="170" Width="Auto" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -40,7 +151,7 @@
                                         <icon:BootstrapIcons Kind="Trash3Fill"/>
                                     </Button>
                                 </StackPanel>
-
+                                <TextBlock VerticalAlignment="Bottom" HorizontalAlignment="Center" Text="{Binding CreatedAt, StringFormat={}Added: {0:dd/MM/yyyy}}" FontSize="10" Margin="0,5,0,5"/>
                                 <!--<TextBlock HorizontalAlignment="Center" Text="{Binding Id, StringFormat=ID: {0}}" FontWeight="Bold" Margin="0,0,0,10"/>-->
                             </StackPanel>
                         </DataTemplate>
@@ -107,24 +218,23 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Source | Tag" Width="*">
+                <DataGridTemplateColumn Header="Source | Tag" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="{Binding LeadSource}" TextWrapping="Wrap" Foreground="Black" FontSize="12" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding LeadTag}" TextWrapping="Wrap" Foreground="Black" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock VerticalAlignment="Bottom" Text="{Binding CreatedAt, StringFormat={}Added: {0:dd/MM/yyyy}}" FontSize="10" Margin="0,5,0,5"/>
+                                <TextBlock Text="{Binding LeadTag}" TextWrapping="Wrap" Foreground="Black" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>                                
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Label" Width="*">
+                <DataGridTemplateColumn Header="Label" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ItemsControl ItemsSource="{Binding LeadLabels}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal"/>
+                                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
@@ -139,6 +249,27 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
+                <DataGridTemplateColumn Header="Divisions" Width="100">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <ItemsControl ItemsSource="{Binding AssignedDivisions}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#E1F5FE" CornerRadius="5" Padding="8,2" Margin="2">
+                                            <TextBlock Text="{Binding Name}" FontSize="10" Foreground="#0288D1" FontWeight="Bold"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTemplateColumn Header="Lead Holder" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -150,38 +281,23 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Total Bills" Width="100">
+                <DataGridTemplateColumn Header="Summary" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border Background="LightSkyBlue" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <TextBlock Text="{Binding TotalOrderAmount, StringFormat='₹ {0:N0}'}" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                <TextBlock Text="{Binding TotalOrderAmount, StringFormat='₹ {0:N0}'}" Foreground="DarkSlateGray" FontWeight="DemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding TotalPaidAmount, StringFormat='₹ {0:N0}'}" Foreground="ForestGreen" FontWeight="DemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding TotalBalanceDue, StringFormat='₹ {0:N0}'}" Foreground="DarkRed" FontWeight="DemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding TotalOrders, StringFormat='{}{0} orders'}" TextWrapping="Wrap" FontSize="12" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Paid" Width="100">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Background="Green" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <TextBlock Text="{Binding TotalPaidAmount, StringFormat='₹ {0:N0}'}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Balance" Width="100">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border Background="Red" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <TextBlock Text="{Binding TotalBalanceDue, StringFormat='₹ {0:N0}'}" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                </DataGridTemplateColumn>                
                 <DataGridTemplateColumn Header="Followup Date/Time" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding LatestUpdate.NextFollowUpDate}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding LatestUpdate.NextFollowUpDate, StringFormat={}{0:dd-MM-yyyy hh:mm tt}}" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 <Border Background="LightSkyBlue" CornerRadius="5" Margin="0,10,0,0" VerticalAlignment="Center" HorizontalAlignment="Center">
                                     <TextBlock Text="{Binding HistoryCount, StringFormat='{}{0} followup'}" FontSize="12" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
@@ -189,13 +305,13 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Width="120">
+                <!--<DataGridTemplateColumn Width="120">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Content="Manage Orders" Command="{Binding DataContext.OpenOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                </DataGridTemplateColumn>-->
                 <DataGridTemplateColumn Header="Last Message" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>

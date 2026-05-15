@@ -130,7 +130,7 @@ namespace CallMan.ViewModels
                             NextFollowUpDate = combinedDateTime,
                             UpdatedBy = _session.CurrentUser,
                             ActionType = SelectedAction,
-                            FollowupStage = SelectedStatus.Name
+                            FollowupStage = SelectedStatus?.Name
                         };
 
                         SelectedLead.LatestUpdate = history;

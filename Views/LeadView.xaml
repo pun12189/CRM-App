@@ -12,6 +12,7 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <conv:LeadStatusToColorConverter x:Key="StatusToColorConverter"/>
+        <conv:IndexToNumberConverter x:Key="IndexToNumberConverter"/>
     </UserControl.Resources>
     <Grid Margin="20">
         <Grid.RowDefinitions>
@@ -24,6 +25,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="300"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -54,7 +56,9 @@
                 <Button Grid.Column="2" Content="Import Leads" 
                     Command="{Binding OpenImportLeadsDialogCommand}"
                     Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0"/>
-                
+                <Button Grid.Column="4" Content="Bulk Delete" 
+                    Command="{Binding BulkDeleteCommand}"
+                    Padding="20,5" Background="IndianRed" Foreground="White" FontWeight="Bold" Margin="5,0"/>
                 <Button Grid.Column="3" Content="+ New Lead" 
                     Command="{Binding OpenAddLeadDialogCommand}"
                     Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0"/>
@@ -62,7 +66,7 @@
         </Border>
 
         <DataGrid Grid.Row="1" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" AlternationCount="9999" SelectedItem="{Binding SelectedLead}"
-          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single">            
+          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionUnit="FullRow">            
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                     <!-- Bind Background to the 'Status' property of your Lead model -->
@@ -77,11 +81,44 @@
                 </Style>
             </DataGrid.RowStyle>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="#" Width="50">
+                <DataGridTemplateColumn Width="60">
+                    <DataGridTemplateColumn.Header>
+                        <CheckBox Command="{Binding DataContext.ToggleSelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                          CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                    </DataGridTemplateColumn.Header>
+
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Grid Background="Transparent" VerticalAlignment="Center" HorizontalAlignment="Center" >
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" SharedSizeGroup="SrNoGroup"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock x:Name="TxtSerialNumber" 
+               VerticalAlignment="Center" 
+               HorizontalAlignment="Center"                                   
+               Foreground="DarkSlateGray">
+                                    <TextBlock.Text>
+                                        <Binding RelativeSource="{RelativeSource AncestorType=DataGridRow}" 
+                     Path="(DataGrid.AlternationIndex)" 
+                     Converter="{StaticResource IndexToNumberConverter}"/>
+                                    </TextBlock.Text>
+                                </TextBlock>
+
+                                <CheckBox Grid.Row="1" 
+              IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}"
+              HorizontalAlignment="Center" 
+              VerticalAlignment="Center"/>
+                            </Grid>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <!--<DataGridTextColumn Header="#" Width="50">
                     <DataGridTextColumn.Binding>
                         <Binding Path="(ItemsControl.AlternationIndex)" 
                      RelativeSource="{RelativeSource AncestorType=DataGridRow}">
-                            <!-- We use a converter to start counting from 1 instead of 0 -->
+                            --><!-- We use a converter to start counting from 1 instead of 0 --><!--
                             <Binding.Converter>
                                 <conv:IndexToNumberConverter/>
                             </Binding.Converter>
@@ -95,7 +132,7 @@
                             <Setter Property="Foreground" Value="Gray"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
+                </DataGridTextColumn>-->
                 <DataGridTemplateColumn Header="Name" MinWidth="170" Width="Auto" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -113,7 +150,7 @@
                                         <icon:BootstrapIcons Kind="Trash3Fill"/>
                                     </Button>
                                 </StackPanel>
-                                
+                                <TextBlock VerticalAlignment="Bottom" Text="{Binding CreatedAt, StringFormat={}Added: {0:dd/MM/yyyy}}" FontSize="10" HorizontalAlignment="Center" Margin="0,5,0,5"/>
                                 <!--<TextBlock HorizontalAlignment="Center" Text="{Binding Id, StringFormat=ID: {0}}" FontWeight="Bold" Margin="0,0,0,10"/>-->
                             </StackPanel>
                         </DataTemplate>
@@ -185,8 +222,7 @@
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="{Binding LeadSource}" TextWrapping="Wrap" Foreground="Black" FontSize="12" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding LeadTag}" TextWrapping="Wrap" Foreground="Black" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock VerticalAlignment="Bottom" Text="{Binding CreatedAt, StringFormat={}Added: {0:dd/MM/yyyy}}" FontSize="10" Margin="0,5,0,5"/>
+                                <TextBlock Text="{Binding LeadTag}" TextWrapping="Wrap" Foreground="Black" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>                                
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -200,13 +236,13 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>-->
-                <DataGridTemplateColumn Header="Label" Width="*">
+                <DataGridTemplateColumn Header="Label" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ItemsControl ItemsSource="{Binding LeadLabels}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal"/>
+                                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
@@ -221,13 +257,13 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Divisions" Width="Auto">
+                <DataGridTemplateColumn Header="Divisions" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <ItemsControl ItemsSource="{Binding AssignedDivisions}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal" />
+                                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                     </ItemsPanelTemplate>
                                 </ItemsControl.ItemsPanel>
 

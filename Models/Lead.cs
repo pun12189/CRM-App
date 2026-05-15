@@ -11,6 +11,8 @@ namespace CallMan.Models
 {
     public partial class Lead : ObservableObject
     {
+        [ObservableProperty] private bool _isSelectedForAction;
+
         public int LeadId { get; set; }
         public ObservableCollection<Division> AssignedDivisions { get; set; } = new();
         public string CustomerName { get; set; } = string.Empty;

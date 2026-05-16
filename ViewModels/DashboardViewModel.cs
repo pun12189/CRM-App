@@ -26,6 +26,9 @@ namespace CallMan.ViewModels
         // Stats Counters
         [ObservableProperty] private DashboardStats _stats;
 
+        // This property controls the button's visibility
+        [ObservableProperty] private bool _isFilterActive;
+
         // Financial Summaries for Expanders
         [ObservableProperty] private ObservableCollection<PaymentReminder> _reminders = new();
 
@@ -68,6 +71,7 @@ namespace CallMan.ViewModels
             {
                 // 2. Call the filtered service method
                 await RefreshDashboardWithFilter(filterResult);
+                IsFilterActive = true;
             }
         }
 
@@ -76,6 +80,7 @@ namespace CallMan.ViewModels
         {
             await Refresh();
             DataUpdatedStatus = "All Time Data";
+            IsFilterActive = false;
         }
 
         private async Task RefreshDashboardWithFilter(DashboardFilter filter)

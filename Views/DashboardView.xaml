@@ -57,8 +57,8 @@
                                     <materialDesign:ButtonAssist.CornerRadius>5</materialDesign:ButtonAssist.CornerRadius>
                                 </Button>
                                 <Button Command="{Binding ClearFilterCommand}" 
-                                Content="Clear Filter" Background="#998A3D" BorderBrush="#998A3D"
-                                HorizontalAlignment="Right" Height="25" FontSize="11" Margin="5,0,0,0">
+                                Content="Clear Filter" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#C62828"
+                                HorizontalAlignment="Right" Height="25" FontSize="11" Margin="5,0,0,0" Visibility="{Binding IsFilterActive, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <materialDesign:ButtonAssist.CornerRadius>5</materialDesign:ButtonAssist.CornerRadius>
                                 </Button>
                             </StackPanel>

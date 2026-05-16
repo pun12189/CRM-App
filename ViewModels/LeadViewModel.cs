@@ -25,6 +25,7 @@ namespace CallMan.ViewModels
         private readonly SettingService _settingService;
         private readonly IUserSession _session;
         private readonly IDialogService _dialogService;
+        private readonly OccupiedLocationService _locationService;
         private readonly ProductService _productService;
         private readonly OrderService _orderService;
         private ICollectionView _leadsCollection;
@@ -43,12 +44,13 @@ namespace CallMan.ViewModels
         [ObservableProperty]
         private Lead? _selectedLead;
 
-        public LeadViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService)
+        public LeadViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService)
         {
             _leadService = leadService;
             _settingService = settingService;
             _session = session;
             _dialogService = dialogService;
+            _locationService = locationService;
             _productService = productService;
             _orderService = orderService;
             _ = LoadLeads();
@@ -252,11 +254,11 @@ namespace CallMan.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead);
+            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService);
 
             if (selectedLead.Status?.ToLower() == "matured")
             {
-                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead);
+                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead, _locationService);
             }
 
             // 2. Initialize the Window

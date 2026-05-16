@@ -22,6 +22,7 @@ namespace CallMan.ViewModels
         private readonly IDialogService _dialogService;
         private readonly ProductService _productService;
         private readonly OrderService _orderService;
+        private readonly OccupiedLocationService _locationService;
         [ObservableProperty] private ObservableCollection<Lead> _maturedLeads = new();
         [ObservableProperty] private decimal _totalOutstanding;
         [ObservableProperty] private CustomerStats _customerStats = new();
@@ -34,7 +35,7 @@ namespace CallMan.ViewModels
         // This is what the DataGrid actually binds to now
         public ICollectionView LeadsCollection => _leadsCollection;
 
-        public MaturedLeadsViewModel(LeadService service, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService)
+        public MaturedLeadsViewModel(LeadService service, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService)
         {
             _service = service;
             _settingService = settingService;
@@ -42,6 +43,7 @@ namespace CallMan.ViewModels
             _dialogService = dialogService;
             _productService = productService;
             _orderService = orderService;
+            _locationService = locationService;
             _ = LoadData();
         }
 
@@ -201,7 +203,7 @@ namespace CallMan.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            var profileVm = new CustomerProfileViewModel(_service, _session, _settingService, _productService, _orderService, selectedLead);
+            var profileVm = new CustomerProfileViewModel(_service, _session, _settingService, _productService, _orderService, selectedLead, _locationService);
 
             // 2. Initialize the Window
             var profileWindow = new CustomerProfileWindow();

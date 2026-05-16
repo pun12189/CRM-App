@@ -16,8 +16,67 @@
     </Window.Resources>
 
     <Grid Background="#F5F7F9">
-        <TabControl Margin="10" Background="Transparent" BorderThickness="0">
-            <TabItem Header="Info"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Details Card -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <!-- Tabs & Data -->
+        <materialDesign:Card Grid.Row="0" Padding="20" Background="#F5F5F5" Visibility="{Binding IsInfoTabSelected, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="1.5*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Column 1: Contact -->
+                <StackPanel Grid.Column="0">
+                    <TextBlock><Run Text="Firm name: " FontWeight="Bold"/><Run Text="{Binding SelectedLead.CompanyName}"/></TextBlock>
+                    <TextBlock Margin="0,5"><Run Text="Email: " FontWeight="Bold"/><Run Text="{Binding SelectedLead.Email}" Foreground="#2196F3"/></TextBlock>
+                    <TextBlock><Run Text="Phone: " FontWeight="Bold"/><Run Text="{Binding SelectedLead.Phone}"/></TextBlock>
+                    <TextBlock Margin="0,5"><Run Text="Location: " FontWeight="Bold"/><Run Text="{Binding SelectedLead.State}"/></TextBlock>
+                </StackPanel>
+
+                <!-- Column 2: Status -->
+                <StackPanel Grid.Column="1">
+                    <TextBlock><Run Text="Customer Since: " FontWeight="Bold"/><Run Text="{Binding Metrics.CustomerSince}"/></TextBlock>
+                    <TextBlock Margin="0,5"><Run Text="Last 3 months billing: " FontWeight="Bold"/><Run Text="{Binding Metrics.Last3MonthsBilling}"/></TextBlock>
+                    <TextBlock><Run Text="Last order date: " FontWeight="Bold"/><Run Text="{Binding Metrics.LastOrderDate}"/></TextBlock>
+                    <TextBlock Margin="0,5"><Run Text="Outstanding: " FontWeight="Bold"/><Run Text="{Binding Metrics.OutstandingAmount}" Foreground="Red"/></TextBlock>
+                </StackPanel>
+
+                <!-- Column 3: Business/Target -->
+                <Border Grid.Column="2" BorderBrush="Gray" BorderThickness="1" Padding="10">
+                    <StackPanel>
+                        <TextBlock Text="Business Done/Target" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,5"/>
+                        <TextBlock><Run Text="Monthly: " Foreground="Red"/><Run Text="{Binding Metrics.MonthlyBusiness}"/></TextBlock>
+                        <TextBlock><Run Text="Last 3 Months: " Foreground="Red"/><Run Text="{Binding Metrics.Last3MonthsBusiness}"/></TextBlock>
+                        <TextBlock><Run Text="Overall: " Foreground="#2196F3"/><Run Text="{Binding Metrics.OverallBusiness}"/></TextBlock>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </materialDesign:Card>
+        <TabControl Grid.Row="1" Margin="10" Background="Transparent" BorderThickness="0" SelectedIndex="{Binding SelectedTabWorkspaceIndex, UpdateSourceTrigger=PropertyChanged}">
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Margin="0,0,4,0" VerticalAlignment="Center">
+                            <materialDesign:PackIcon.Style>
+                                <Style TargetType="materialDesign:PackIcon">
+                                    <Setter Property="Kind" Value="ArrowDown" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsInfoTabSelected, RelativeSource={RelativeSource AncestorType=TabControl}}" Value="True">
+                                            <Setter Property="Kind" Value="ArrowUp"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </materialDesign:PackIcon.Style>
+                        </materialDesign:PackIcon>
+                        <TextBlock Text="Info"/>
+                    </StackPanel>
+                </TabItem.Header>
+            </TabItem>
             <TabItem Header="Profile"/>
 
             <TabItem Header="Update Here" IsSelected="True">

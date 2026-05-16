@@ -18,8 +18,12 @@ namespace CallMan.ViewModels
         private readonly LeadService _leadService;
         private readonly SettingService _settingService;
         private readonly IUserSession _session;
+        private readonly OccupiedLocationService _locationService;
 
         [ObservableProperty] private Lead _selectedLead;
+        [ObservableProperty] private int _selectedTabWorkspaceIndex = 2;
+        [ObservableProperty] private bool _isInfoTabSelected;
+        [ObservableProperty] private CustomerSummaryMetrics _metrics;
 
         [ObservableProperty]
         private DateTime? _selectedTime = DateTime.Now;
@@ -52,11 +56,12 @@ namespace CallMan.ViewModels
         [ObservableProperty] private SettingItem _selectedStatus;
         [ObservableProperty] private SettingItem _selectedDeadReason;   
 
-        public LeadProfileViewModel(LeadService service, SettingService settingService, IUserSession session, Lead lead)
+        public LeadProfileViewModel(LeadService service, SettingService settingService, IUserSession session, Lead lead, OccupiedLocationService locationService)
         {
             _leadService = service;
             _settingService = settingService;
             _session = session;
+            _locationService = locationService; 
             _selectedLead = lead;
             _ = LoadCollections();
         }
@@ -64,6 +69,23 @@ namespace CallMan.ViewModels
         // --- Logic for Dynamic Balance ---
         partial void OnOrderValueChanged(decimal value) => CalculateBalance();
         partial void OnPaymentReceivedChanged(decimal value) => CalculateBalance();
+
+        partial void OnSelectedTabWorkspaceIndexChanged(int value)
+        {
+            if (value == 0)
+            {
+                // Info Tab clicked: Keep the top panel open
+                IsInfoTabSelected = true;
+
+                // OPTIONAL UI TRICK: Flip index back to previous working tab if you want 
+                // the lower tab body contents to stay visible while info is shown!
+            }
+            else
+            {
+                // Any other functional tab item clicked: Collapse the drawer overlay
+                IsInfoTabSelected = false;
+            }
+        }
 
         private void CalculateBalance()
         {
@@ -74,7 +96,7 @@ namespace CallMan.ViewModels
         {
             var stages = await _settingService.GetSettingsAsync("LeadStatuses");
             var reasons = await _settingService.GetSettingsAsync("DeadReasons");
-
+            Metrics = await _locationService.GetSummaryMetricsAsync(SelectedLead.LeadId);
             FollowupStages = new ObservableCollection<SettingItem>(stages);
             DeadReasons = new ObservableCollection<SettingItem>(reasons);
         }

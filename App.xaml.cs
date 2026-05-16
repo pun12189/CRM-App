@@ -35,6 +35,11 @@ namespace CallMan
             //_connectionString = "DataSource=bahikitab-aws.c3s6wewcwox1.us-east-1.rds.amazonaws.com;Port=3306;Uid=admin;Pwd=Il6oOvguA2SB5IEQxWCJ;database=bahikitab";
             string connectionString = "Server=82.29.166.165;Port=3306;Uid=root;Pwd=sofricdev;database=callmandev";
 #endif
+#if RAVI
+
+            //_connectionString = "DataSource=bahikitab-aws.c3s6wewcwox1.us-east-1.rds.amazonaws.com;Port=3306;Uid=admin;Pwd=Il6oOvguA2SB5IEQxWCJ;database=bahikitab";
+            string connectionString = "Server=82.29.166.165;Port=3308;Uid=root;Pwd=sofricraviprod;database=callmandev";
+#endif
             var services = new ServiceCollection();
             
             services.AddSingleton(new CrmDbContext(connectionString));

@@ -33,7 +33,7 @@ namespace CallMan.Services
         public async Task<bool> AuthenticateByEmailAsync(string email, string password)
         {
             // 1. CALL THE API SERVICE FIRST (Master Admin)
-            var masterAdmin = await _apiService.CheckMasterAdminAsync(email, password);
+            /*var masterAdmin = await _apiService.CheckMasterAdminAsync(email, password);
 
             if (masterAdmin != null)
             {
@@ -48,7 +48,7 @@ namespace CallMan.Services
                 var id = await _logService.RecordLoginAsync(0);
                 _session.LogId = id;
                 return true;
-            }
+            }*/
 
             // 2. FALLBACK TO DATABASE (Local Staff)
             using IDbConnection db = _context.CreateConnection();

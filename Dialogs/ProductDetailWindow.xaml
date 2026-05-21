@@ -10,51 +10,129 @@
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>
-    <Grid Margin="20">
-        <StackPanel>
-            <TextBlock Text="Product Information" Style="{StaticResource MaterialDesignHeadline5TextBlock}" Margin="0,0,0,20"/>
-
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Border Padding="16" Background="#F5F5F5">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBox Grid.Column="0" Text="{Binding NewProduct.Name}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Full Product Name" Margin="5"/>
-                <TextBox Grid.Column="1" Text="{Binding NewProduct.SKU}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="SKU / Barcode" Margin="5"/>
-                <TextBox Grid.Column="0" Grid.Row="1" Text="{Binding NewProduct.InitialStock}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Stock/Quantity" Margin="5"/>
-                <TextBox Grid.Column="1" Grid.Row="1" Text="{Binding NewProduct.ShortName}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Short Name" Margin="5"/>
+
+                <TextBlock Grid.Row="0" Text="Add New Product Entry" 
+                           FontSize="20" FontWeight="Bold" Foreground="#333333" Margin="5,0,5,15"/>
+
+                <materialDesign:Card Grid.Row="1" Margin="5" Padding="12" UniformCornerRadius="4">
+                    <StackPanel>
+                        <TextBlock Text="Core Specifications" FontSize="14" FontWeight="SemiBold" Foreground="#1794A1" Margin="0,0,0,10"/>
+
+                        <UniformGrid Columns="3">
+                            <TextBox materialDesign:HintAssist.Hint="Product Name *" 
+                                     Text="{Binding NewProduct.Name, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+
+                            <TextBox materialDesign:HintAssist.Hint="Short Name (Auto-Generated) *" 
+                                     Text="{Binding NewProduct.ShortName, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"
+                                     ToolTip="Must be completely unique across your catalogue."/>
+
+                            <TextBox materialDesign:HintAssist.Hint="SKU (Stock Keeping Unit) *" 
+                                     Text="{Binding NewProduct.SKU, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"
+                                     ToolTip="Used to send low-stock notification alerts."/>
+
+                            <ComboBox materialDesign:HintAssist.Hint="Measurement Unit *" 
+                                      SelectedValue="{Binding NewProduct.Unit, UpdateSourceTrigger=PropertyChanged}"
+                                        SelectedValuePath="Content"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="5">
+                                <ComboBoxItem Content="Pcs"/>
+                                <ComboBoxItem Content="Litres"/>
+                                <ComboBoxItem Content="Boxes"/>
+                                <ComboBoxItem Content="Meters"/>
+                                <ComboBoxItem Content="Kgs"/>
+                            </ComboBox>
+
+                            <ComboBox materialDesign:HintAssist.Hint="Category Selection *" 
+                                      ItemsSource="{Binding Categories}"
+                                      SelectedValue="{Binding NewProduct.CategoryId}"
+                                      SelectedValuePath="Id" DisplayMemberPath="CategoryName"
+                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="5"/>
+
+                            <TextBox materialDesign:HintAssist.Hint="Brand Name (Optional)" 
+                                     Text="{Binding NewProduct.BrandName}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+
+                            <TextBox materialDesign:HintAssist.Hint="Manufacturer (Optional)" 
+                                     Text="{Binding NewProduct.Manufacturer}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+
+                            <TextBox materialDesign:HintAssist.Hint="Packaging Configuration (Optional)" 
+                                     Text="{Binding NewProduct.Packaging}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"
+                                     ToolTip="e.g., Pack of 10, Bottle of 500ml"/>
+                        </UniformGrid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <materialDesign:Card Grid.Row="2" Margin="5,15,5,5" Padding="12" UniformCornerRadius="4">
+                    <StackPanel>
+                        <TextBlock Text="Initial Batch Setup &amp; Pricing Metrics" FontSize="14" FontWeight="SemiBold" Foreground="#1794A1" Margin="0,0,0,10"/>
+
+                        <UniformGrid Columns="3">
+                            <TextBox materialDesign:HintAssist.Hint="Batch Number/Lot Code *" 
+                                     Text="{Binding TargetBatch.BatchNumber, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"
+                                     ToolTip="Validation: System flags an error immediately if this batch exists."/>
+
+                            <TextBox materialDesign:HintAssist.Hint="Initial Batch Quantity Received *" 
+                                     Text="{Binding TargetBatch.QuantityReceived, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+
+                            <TextBox materialDesign:HintAssist.Hint="Purchase Price (Min Selling Price) *" 
+                                     Text="{Binding TargetBatch.MinimumSellingPrice, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+
+                            <TextBox materialDesign:HintAssist.Hint="Maximum Retail Price (MRP) *" 
+                                     Text="{Binding NewProduct.MRP, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+
+                            <TextBox materialDesign:HintAssist.Hint="Standard Outbound Selling Price *" 
+                                     Text="{Binding NewProduct.SellingPrice, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+
+                            <TextBox materialDesign:HintAssist.Hint="GST Percent (%)" 
+                                     Text="{Binding NewProduct.GstPercent, UpdateSourceTrigger=PropertyChanged}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+
+                            <DatePicker materialDesign:HintAssist.Hint="Manufacturing Date (Mfg)" 
+                                        SelectedDate="{Binding TargetBatch.MfgDate}"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="5"/>
+
+                            <DatePicker materialDesign:HintAssist.Hint="Expiration Date (Expiry)" 
+                                        SelectedDate="{Binding TargetBatch.ExpiryDate}"
+                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="5"/>
+                        </UniformGrid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5,20,5,5">
+                    <TextBlock Text="{Binding ValidationErrorMessage}" 
+                               Foreground="#C62828" FontWeight="SemiBold" 
+                               VerticalAlignment="Center" Margin="0,0,15,0"
+                               Visibility="{Binding IsValidationErrorVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                    <Button Content="Reset Fields" 
+                            Command="{Binding ClearFormCommand}"
+                            Style="{StaticResource MaterialDesignOutlinedButton}" 
+                            Width="120" Margin="0,0,10,0"/>
+
+                    <Button Content="Save Product" 
+                            Command="{Binding SaveProductAssemblyCommand}"
+                            Background="#1794A1" BorderBrush="#1794A1" Foreground="White"
+                            Width="200"/>
+                </StackPanel>
             </Grid>
-
-            <!-- Category Fix: Using SelectedValue with fallback -->
-            <ComboBox ItemsSource="{Binding Categories}" 
-                      SelectedValue="{Binding NewProduct.CategoryId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                      SelectedValuePath="Id" 
-                      DisplayMemberPath="CategoryName"
-                      materialDesign:HintAssist.Hint="Select Category" Margin="5,15,5,5"/>
-
-            <CheckBox Content="Enable Advanced Cost Tracking" IsChecked="{Binding NewProduct.TrackCost}" Margin="5,10"/>
-
-            <GroupBox Header="Pricing &amp; Tax" Visibility="{Binding NewProduct.TrackCost, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <UniformGrid Columns="2">
-                    <TextBox Text="{Binding NewProduct.MRP}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="MRP" Margin="5"/>
-                    <TextBox Text="{Binding NewProduct.CostPrice}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Cost Price" Margin="5"/>
-                    <TextBox Text="{Binding NewProduct.SellingPrice}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Selling Price" Margin="5"/>
-                    <TextBox Text="{Binding NewProduct.GstPercent}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="GST %" Margin="5"/>
-                </UniformGrid>
-            </GroupBox>
-
-            <TextBlock Text="{Binding NewProduct.TotalCost, StringFormat='Calculated Total: ₹{0}'}" Visibility="{Binding NewProduct.TrackCost, Converter={StaticResource BooleanToVisibilityConverter}}"
-                       HorizontalAlignment="Right" FontSize="16" FontWeight="Bold" Foreground="#1794A1" Margin="0,10,5,0"/>
-
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-                <Button Content="CANCEL" IsCancel="True" Style="{StaticResource MaterialDesignOutlinedButton}" Margin="0,0,10,0"/>
-                <Button Content="SAVE PRODUCT" Command="{Binding SaveCommand}" 
-                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
-            </StackPanel>
-        </StackPanel>
-    </Grid>
+        </Border>
+    </ScrollViewer>
 </Window>

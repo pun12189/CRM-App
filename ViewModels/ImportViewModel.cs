@@ -132,7 +132,15 @@ namespace CallMan.ViewModels
             Mappings.Clear();
 
             // Using Reflection to get all public properties of your Lead model
-            var properties = typeof(Lead).GetProperties();
+            var properties = typeof(Order).GetProperties();
+            if (CurrentType == ImportType.Product)
+            {
+                properties = typeof(Product).GetProperties();
+            }
+            else if (CurrentType == ImportType.Lead)
+            {
+                properties = typeof(Lead).GetProperties();
+            }
 
             foreach (var prop in properties)
             {

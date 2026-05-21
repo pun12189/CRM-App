@@ -1,8 +1,11 @@
-﻿using CallMan.Interfaces;
+﻿using CallMan.Dialogs;
+using CallMan.Interfaces;
 using CallMan.Models;
+using CallMan.Models.Enums;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,6 +27,11 @@ namespace CallMan.ViewModels
         [ObservableProperty] private decimal _totalOrderVolume;
         [ObservableProperty] private int _totalOrderCount;
 
+        [ObservableProperty] private decimal _totalSalesRevenue;
+        [ObservableProperty] private decimal _totalCostOfGoodsSold;
+        [ObservableProperty] private decimal _netProfitLossAmount;
+        [ObservableProperty] private bool _isOverallProfitable = true;
+
         public AllOrdersViewModel(LeadService service, IDialogService dialogService)
         {
             _service = service;
@@ -43,6 +51,7 @@ namespace CallMan.ViewModels
 
                 // Update collection on UI thread
                 AllOrders = new ObservableCollection<Order>(data);
+                RecalculateLedgerAnalytics(AllOrders); // Recalculate analytics whenever orders are loaded
 
                 // Calculate Summaries
                 TotalOrderCount = AllOrders.Count;
@@ -86,6 +95,39 @@ namespace CallMan.ViewModels
         private async Task RefreshData()
         {
             await LoadAllOrdersAsync();
+        }
+
+        [RelayCommand]
+        private async Task ImportOrders()
+        {
+            var vm = App.ServiceProvider.GetRequiredService<ImportViewModel>();
+            await vm.InitializeAsync(ImportType.Order);
+            var dialogWindow = new ImportView { DataContext = vm };
+            // No need for a close event here since the ImportViewModel can directly call LoadOrders() after a successful import
+            vm.RequestClose += (result) =>
+            {
+                dialogWindow.DialogResult = result;
+                dialogWindow.Close();
+            };
+
+            if (dialogWindow.ShowDialog() == true)
+            {
+                // Re-run the query to show the new lead in the DataGrid
+                await LoadAllOrdersAsync();
+            }
+        }
+
+        /// <summary>
+        /// Call this routine every time you reload your orders ledger list from the database
+        /// </summary>
+        private void RecalculateLedgerAnalytics(IEnumerable<Order> ordersList)
+        {
+            TotalSalesRevenue = ordersList.Sum(o => o.TotalAmount); // Base pre-tax sales value
+            TotalCostOfGoodsSold = ordersList.Sum(o => o.TotalCostAmount); // Historical accumulated cost footprint
+
+            // Net profit = Revenue - COGS
+            NetProfitLossAmount = TotalSalesRevenue - TotalCostOfGoodsSold;
+            IsOverallProfitable = NetProfitLossAmount >= 0;
         }
     }
 }

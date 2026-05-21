@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:conv="clr-namespace:CallMan.Converters"
+        xmlns:models="clr-namespace:CallMan.Models"
         mc:Ignorable="d" x:Name="win"
         Title="Create Global Order" Height="700" Width="1024"
         WindowStartupLocation="CenterScreen">
@@ -63,19 +64,108 @@
                             <RowDefinition/>
                             <RowDefinition Height="5"/>
                             <RowDefinition/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <ComboBox Grid.Row="2" ItemsSource="{Binding AllProducts}" SelectedItem="{Binding SelectedProduct}" 
-                      DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Select Product" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                        <ComboBox Grid.Row="2" x:Name="ProductSelectionCombo"
+                              ItemsSource="{Binding ProductsLookupCollection}"
+                              SelectedItem="{Binding SelectedLookupRow}"
+                              TextSearch.TextPath="DisplayText"
+                              materialDesign:HintAssist.Hint="Select Product or Specific Batch"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              IsEditable="True"
+                              VerticalAlignment="Center">
 
-                        <TextBox Grid.Column="1" Grid.Row="2" Margin="10,0" Text="{Binding Quantity}" materialDesign:HintAssist.Hint="Quantity" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
-                        <TextBox Grid.Column="2" Grid.Row="2" Margin="10,0" Text="{Binding Rate}" materialDesign:HintAssist.Hint="Rate" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type models:OrderProductLookupItem}">
+                                    <StackPanel x:Name="ItemRowContainer" Orientation="Horizontal" Margin="4,2">
+                                        <materialDesign:PackIcon x:Name="RowIcon" Kind="PackageVariant" Margin="0,0,6,0" VerticalAlignment="Center" Width="16" Height="16"/>
+                                        <TextBlock x:Name="RowText" Text="{Binding DisplayText}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsBatchRow}" Value="True">
+                                            <Setter TargetName="ItemRowContainer" Property="Margin" Value="20,0,0,0"/>
+                                            <Setter TargetName="RowIcon" Property="Kind" Value="ArrowRightBottom"/>
+                                            <Setter TargetName="RowIcon" Property="Foreground" Value="#1794A1"/>
+                                            <Setter TargetName="RowText" Property="Opacity" Value="0.85"/>
+                                        </DataTrigger>
+                                </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBox Grid.Column="1" Grid.Row="2" Margin="10,0" Text="{Binding Quantity}" materialDesign:HintAssist.Hint="Quantity">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+                                    <Setter Property="BorderBrush" Value="#E5E7EB"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsQuantityValid}" Value="False">
+                                            <Setter Property="BorderBrush" Value="#EF4444"/>
+                                            <Setter Property="BorderThickness" Value="2"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsQuantityValid}" Value="True">
+                                            <Setter Property="BorderBrush" Value="#10B981"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                        
+                        <TextBox Grid.Column="2" Grid.Row="2" Margin="10,0" x:Name="RateTextBox" Text="{Binding Rate, UpdateSourceTrigger=PropertyChanged, StringFormat=N2}" materialDesign:HintAssist.Hint="Rate (Per Unit)">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+                                    <Setter Property="BorderBrush" Value="#E5E7EB"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPriceProfitable}" Value="False">
+                                            <Setter Property="BorderBrush" Value="#EF4444"/>
+                                            <Setter Property="BorderThickness" Value="2"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsPriceProfitable}" Value="True">
+                                            <Setter Property="BorderBrush" Value="#10B981"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
 
                         <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding CurrentStock, StringFormat='Stock: {0}'}" Margin="10,0" FontSize="11" Opacity="0.6"/>
-                        <!--<TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding SelectedProduct.MinPrice, StringFormat='Min price: {0}'}" Margin="10,0" FontSize="11" Opacity="0.6"/>-->
+                        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding MinimumAllowedPrice, StringFormat='Min price: {0}'}" Margin="10,0" FontSize="11" Opacity="0.6"/>
 
                         <ComboBox Grid.Column="3" Grid.Row="2" ItemsSource="{Binding GstRates}" SelectedItem="{Binding GstPercent}" 
                       materialDesign:HintAssist.Hint="GST" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                        <TextBlock Grid.Column="1" Grid.Row="3" Margin="10,0" TextWrapping="Wrap"
+                               Text="{Binding QuantityStatusText}" 
+                               FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Left">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#EF4444"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsQuantityValid}" Value="True">
+                                            <Setter Property="Foreground" Value="#10B981"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        
+                        <TextBlock Grid.Column="2" Grid.Row="3" Margin="10,0" Text="{Binding PriceStatusText}" 
+                               FontSize="11" FontWeight="SemiBold" TextWrapping="Wrap"
+                               HorizontalAlignment="Left">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#4B5563"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsPriceProfitable}" Value="False">
+                                            <Setter Property="Foreground" Value="#EF4444"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsPriceProfitable}" Value="True">
+                                            <Setter Property="Foreground" Value="#10B981"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
 
                         <Button Grid.Column="4" Grid.Row="2" Content="Add to Cart" Command="{Binding AddToCartCommand}" 
                     Background="#1B8756" BorderBrush="#1B8756" Margin="10,0,0,0"/>
@@ -84,24 +174,83 @@
 
                 <DataGrid Margin="0,10" ItemsSource="{Binding CartItems}" MaxHeight="150" AutoGenerateColumns="False" CanUserAddRows="False">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Name" Binding="{Binding ProductName}" Width="2*"/>
-                        <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity}" Width="*"/>
-                        <DataGridTextColumn Header="Rate" Binding="{Binding UnitPrice}" Width="*"/>
-                        <DataGridTextColumn Header="Subtotal" Binding="{Binding SubTotal}" Width="*"/>
-                        <DataGridTextColumn Header="GST" Binding="{Binding GstAmount, StringFormat='({0:N2})'}" Width="*"/>
-                        <DataGridTextColumn Header="Total" Binding="{Binding Total}" FontWeight="Bold" Width="*"/>
+                        <DataGridTextColumn Header="Name" Binding="{Binding ProductName}" Width="Auto">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Foreground" Value="ForestGreen"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Batch / Lot No" Binding="{Binding BatchNumber}" Width="1.2*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Foreground" Value="#1794A1"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Quantity" Binding="{Binding Quantity}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Rate" Binding="{Binding UnitPrice}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Subtotal" Binding="{Binding SubTotal}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="GST" Binding="{Binding GstAmount, StringFormat='({0:N2})'}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=N2}" FontWeight="Bold" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
 
                         <DataGridTemplateColumn Header="Action" Width="*">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#2196F3">
-                                            <materialDesign:PackIcon Kind="Pencil"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                        <Button Style="{StaticResource MaterialDesignIconButton}" Height="28" Width="28" Foreground="#2196F3">
+                                            <materialDesign:PackIcon Kind="Pencil" Height="20" Width="20"/>
                                         </Button>
-                                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#F44336"
+                                        <Button Style="{StaticResource MaterialDesignIconButton}" Height="28" Width="28" Foreground="#F44336"
                                 Command="{Binding DataContext.RemoveFromCartCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                 CommandParameter="{Binding}">
-                                            <materialDesign:PackIcon Kind="Delete"/>
+                                            <materialDesign:PackIcon Kind="Delete" Height="20" Width="20"/>
                                         </Button>
                                     </StackPanel>
                                 </DataTemplate>
@@ -115,7 +264,7 @@
             </StackPanel>
             <ScrollViewer Height="550">
                 <StackPanel Visibility="{Binding CurrentStep, Converter={StaticResource IntToVisibility}, ConverterParameter=2}">
-                    <TextBlock Text="{Binding OrderValue, Mode=OneWay, StringFormat='Order Value: {0}'}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding OrderValue, Mode=OneWay, StringFormat='Order Value: {0:N2}'}" FontWeight="Bold"/>
                     <materialDesign:ColorZone Mode="Standard" Padding="10" CornerRadius="3" Background="#E0E0E0">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ArrowDown" Margin="0,0,10,0"/>

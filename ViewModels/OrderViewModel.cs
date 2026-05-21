@@ -19,7 +19,7 @@ namespace CallMan.ViewModels
 
         [ObservableProperty] private Lead _currentCustomer;
         [ObservableProperty] private ObservableCollection<Order> _ordersList = new();
-        [ObservableProperty] private Order? _selectedOrder;
+        [ObservableProperty] private Order? _selectedOrder;        
 
         public OrderViewModel(Lead customer, LeadService service, IDialogService dialogService)
         {
@@ -65,6 +65,6 @@ namespace CallMan.ViewModels
             {
                 await LoadOrders(); // Refresh to see updated "Fully Paid" or "Partially Paid" status
             }
-        }
+        }        
     }
 }

@@ -14,26 +14,89 @@
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         
         <materialDesign:Card Padding="15" Margin="0,0,0,20" Background="#F5F5F5">
             <DockPanel>
-                <TextBlock Text="GLOBAL ORDER's" FontSize="20" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center"/>
+                <TextBlock Text="ORDER's" FontSize="20" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="IMPORT ORDER's" Command="{Binding ImportOrdersCommand}" 
+Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0"/>
                     <Button Content="NEW ORDER" Command="{Binding AddNewOrderCommand}" 
                 Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32"/>
                 </StackPanel>
             </DockPanel>
         </materialDesign:Card>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding AllOrders}" AutoGenerateColumns="False" IsReadOnly="True">
+        <Border Background="#D9A426" Grid.Row="1"
+        CornerRadius="6" 
+        Padding="15,12" 
+        Margin="0,0,0,15"
+        Effect="{DynamicResource MaterialDesignShadowDepth1}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="TrendingUp" Width="18" Height="18" Foreground="#422800" VerticalAlignment="Center"/>
+                    <TextBlock Text="Ledger Performance Metrics:" FontSize="13" FontWeight="Bold" Foreground="#422800" Margin="6,0,15,0" VerticalAlignment="Center"/>
+
+                    <TextBlock Text="Total Revenue: " FontSize="13" Foreground="#5E3A00" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding TotalSalesRevenue, StringFormat=C2, ConverterCulture=en-IN}" FontSize="14" FontWeight="Bold" Foreground="#5E3A00" VerticalAlignment="Center"/>
+
+                    <TextBlock Text="  -  " FontSize="14" FontWeight="Bold" Foreground="#784C00" VerticalAlignment="Center"/>
+
+                    <TextBlock Text="Cost of Goods Sold (WAC): " FontSize="13" Foreground="#5E3A00" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding TotalCostOfGoodsSold, StringFormat=C2, ConverterCulture=en-IN}" FontSize="14" FontWeight="Bold" Foreground="#5E3A00" VerticalAlignment="Center"/>
+
+                    <TextBlock Text="  =  " FontSize="14" FontWeight="Bold" Foreground="#784C00" VerticalAlignment="Center"/>
+
+                    <TextBlock Text="Net Margin: " FontSize="13" Foreground="#422800" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding NetProfitLossAmount, StringFormat=C2, ConverterCulture=en-IN}" FontSize="15" FontWeight="Black" VerticalAlignment="Center">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#004D1A"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsOverallProfitable}" Value="False">
+                                        <Setter Property="Foreground" Value="#800000"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,5,0">
+                    <TextBlock Text="Status: " FontSize="13" FontWeight="SemiBold" Foreground="#5E3A00" VerticalAlignment="Center"/>
+                    <TextBlock FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Margin="3,0,0,0">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="PROFITABLE BUSINESS OPERATIONS"/>
+                                <Setter Property="Foreground" Value="#004D1A"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsOverallProfitable}" Value="False">
+                                        <Setter Property="Text" Value="NET TRADING MARGIN LOSS ALERT"/>
+                                        <Setter Property="Foreground" Value="#800000"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </Border>
+        
+        <DataGrid Grid.Row="2" ItemsSource="{Binding AllOrders}" AutoGenerateColumns="False" IsReadOnly="True">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Order ID" Binding="{Binding OrderId}" Width="150"/>
                 
                 <DataGridTextColumn Header="Order Date" Binding="{Binding OrderDate, StringFormat='dd-MM-yyyy HH:mm'}" Width="150"/>
 
-                <DataGridTextColumn Header="Customer / Shop" Binding="{Binding CustomerName}" Width="*" FontWeight="Bold"/>
+                <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="*" FontWeight="Bold"/>
 
                 <DataGridTextColumn Header="Items / Description" Binding="{Binding Description}" Width="2*"/>
 

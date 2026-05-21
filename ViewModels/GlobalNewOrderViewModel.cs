@@ -3,13 +3,8 @@ using CallMan.Models;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Windows;
 
 namespace CallMan.ViewModels
 {
@@ -31,6 +26,14 @@ namespace CallMan.ViewModels
         [ObservableProperty] private decimal _totalAmount;
         [ObservableProperty] private string _description = string.Empty;
 
+        [ObservableProperty] private decimal _minimumAllowedPrice;
+        [ObservableProperty] private string _priceStatusText;
+        [ObservableProperty] private bool _isPriceProfitable = true; // Highlighting color trigger flag
+
+        [ObservableProperty] private int _maxAvailableStock;
+        [ObservableProperty] private string _quantityStatusText;
+        [ObservableProperty] private bool _isQuantityValid = true;
+
         #region Step Management
         [ObservableProperty] private int _currentStep = 1;
 
@@ -50,6 +53,7 @@ namespace CallMan.ViewModels
         [ObservableProperty] private decimal _gstPercent;
         [ObservableProperty] private ObservableCollection<decimal> _gstRates = new() { 0, 5, 12, 18, 28 };
         [ObservableProperty] private ObservableCollection<OrderItem> _cartItems = new();
+        [ObservableProperty] private ObservableCollection<OrderProductLookupItem> _productsLookupCollection = new();
         [ObservableProperty] private decimal _orderValue;        
 
         [ObservableProperty] private string _billTo;
@@ -63,12 +67,17 @@ namespace CallMan.ViewModels
 
         [ObservableProperty] private string _currentUser = "Admin"; // Placeholder, replace with actual user context
 
+        [ObservableProperty] private List<Product> _allMasterProducts = new();
+
+        // --- FORM SELECTION FIELDS ---
+        [ObservableProperty] private OrderProductLookupItem? _selectedLookupRow;
+
         public decimal CalculatedGrandValue
         {
             get
             {
                 decimal chargesTotal = OtherCharges.Sum(x => x.TotalCharge);
-                return OrderValue + chargesTotal;
+                return Math.Round(OrderValue + chargesTotal, 2);
             }
         }
 
@@ -107,8 +116,110 @@ namespace CallMan.ViewModels
                 OrderDate = DateTime.Now
             };
 
-            await _service.CreateOrderAsync(order);
+            await _orderService.SaveCompleteOrderAsync(this);
             RequestClose?.Invoke(true);
+        }
+
+        /// <summary>
+        /// Fires automatically whenever the user types or modifies the custom Rate input box.
+        /// </summary>
+        partial void OnRateChanged(decimal value)
+        {
+            EvaluatePriceProfitability(value);
+        }
+
+        /// <summary>
+        /// Fires automatically whenever the user types or alters the value in the Quantity input box.
+        /// </summary>
+        partial void OnQuantityChanged(int value)
+        {
+            EvaluateQuantitySafety(value);
+        }
+
+        /// <summary>
+        /// TRICK 1: Automatically triggered whenever a user highlights a choice inside the dropdown menu.
+        /// Updates the form's entry fields (Rate, GST, and maximum stock safety labels) instantly.
+        /// </summary>
+        partial void OnSelectedLookupRowChanged(OrderProductLookupItem? value)
+        {
+            if (value == null)
+            {
+                MaxAvailableStock = 0;
+                QuantityStatusText = "";
+                MinimumAllowedPrice = 0;
+                PriceStatusText = "";
+                return;
+            }
+
+            var parentProduct = AllMasterProducts.FirstOrDefault(p => p.ProductId == value.ProductId);
+            if (parentProduct == null) return;
+
+            GstPercent = parentProduct.GstPercent;
+            Rate = parentProduct.SellingPrice; // Default to Standard Selling Price
+            MaxAvailableStock = value.AvailableStock;           // 
+            // DETERMINATION RULE:
+            // If they picked a specific batch lot, use that batch's specific purchase cost footprint.
+            // If they picked the parent product wide option, fall back to the global Weighted Average Cost (WAC).
+            if (value.IsBatchRow && value.BatchId.HasValue)
+            {
+                var specificBatch = parentProduct.InnerBatchesCollection.FirstOrDefault(b => b.BatchId == value.BatchId.Value);
+                MinimumAllowedPrice = specificBatch?.MinimumSellingPrice ?? parentProduct.CostPrice;
+                CurrentStock = specificBatch?.CurrentStock ?? parentProduct.RemainingStock; // Override stock to batch-specific level for safety display
+            }
+            else
+            {
+                MinimumAllowedPrice = parentProduct.CostPrice; // True WAC cost price reference line
+                CurrentStock = parentProduct.RemainingStock;
+            }
+
+            EvaluateQuantitySafety(Quantity);
+            EvaluatePriceProfitability(Rate);
+        }
+
+        private void EvaluateQuantitySafety(int currentInputQty)
+        {
+            if (SelectedLookupRow == null) return;
+
+            if (currentInputQty <= 0)
+            {
+                IsQuantityValid = false;
+                QuantityStatusText = "❌ Quantity must be greater than 0";
+            }
+            else if (currentInputQty > MaxAvailableStock)
+            {
+                IsQuantityValid = false;
+                int shortBy = currentInputQty - MaxAvailableStock;
+                QuantityStatusText = $"❌ Stock Deficit: Exceeds limit by {shortBy} unit(s) (Max Available: {MaxAvailableStock})";
+            }
+            else
+            {
+                IsQuantityValid = true;
+                int remainingOnShelf = MaxAvailableStock - currentInputQty;
+                QuantityStatusText = $"✅ In Stock: Ready to allocate ({remainingOnShelf} units left on shelf)";
+            }
+        }
+
+        private void EvaluatePriceProfitability(decimal currentInputRate)
+        {
+            if (SelectedLookupRow == null) return;
+
+            if (currentInputRate < MinimumAllowedPrice)
+            {
+                IsPriceProfitable = false;
+                decimal lossPerUnit = MinimumAllowedPrice - currentInputRate;
+                PriceStatusText = $"⚠️ Net Loss: Below base cost price of ₹{MinimumAllowedPrice:N2} (-₹{lossPerUnit:N2}/unit)";
+            }
+            else if (currentInputRate == MinimumAllowedPrice)
+            {
+                IsPriceProfitable = true;
+                PriceStatusText = $"ℹ️ No Margin: Selling exactly at base cost price (₹{MinimumAllowedPrice:N2})";
+            }
+            else
+            {
+                IsPriceProfitable = true;
+                decimal profitPerUnit = currentInputRate - MinimumAllowedPrice;
+                PriceStatusText = $"✅ Profitable: Above base cost price (+₹{profitPerUnit:N2}/unit)";
+            }
         }
 
         partial void OnSelectedProductChanged(Product value)
@@ -124,21 +235,120 @@ namespace CallMan.ViewModels
         [RelayCommand]
         private void AddToCart()
         {
-            if (SelectedProduct == null || Quantity <= 0) return;
-
-            var newItem = new OrderItem
+            if (SelectedLookupRow == null) return;
+            if (Quantity <= 0)
             {
-                ProductId = SelectedProduct.ProductId,
-                ProductName = SelectedProduct.Name,
-                Quantity = Quantity,
-                UnitPrice = Rate,
-                GstPercent = GstPercent
-            };
+                MessageBox.Show("Please enter a valid quantity greater than zero.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-            CartItems.Add(newItem);
+            if (!IsPriceProfitable)
+            {
+                var result = MessageBox.Show("This item rate results in a loss! Are you sure you have manager clearance to bypass pricing restrictions?",
+                                             "Margin Loss Validation Alert", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                if (result == MessageBoxResult.No)
+                {
+                    return; // Terminate execution block path safely
+                }
+            }
 
-            // Reset entry fields
+            if (!IsQuantityValid)
+            {
+                MessageBox.Show("Cannot add item to cart. The requested quantity exceeds available physical batch stock limits.",
+                                "Inventory Allocation Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return; // Terminates execution immediately, protecting stock data integrity
+            }
+
+            // Fetch the fresh actual stock data arrays from memory/db to verify current real-time state bounds
+            var productDetails = AllMasterProducts.FirstOrDefault(p => p.ProductId == SelectedLookupRow.ProductId);
+            if (productDetails == null) return;
+
+            // ----------------------------------------------------
+            // MODE A: MANUAL BATCH-WISE SELECTION TRACKING LOCK
+            // ----------------------------------------------------
+            if (SelectedLookupRow.IsBatchRow)
+            {
+                var targetBatch = productDetails.InnerBatchesCollection.FirstOrDefault(b => b.BatchId == SelectedLookupRow.BatchId);
+
+                if (targetBatch == null || targetBatch.CurrentStock < Quantity)
+                {
+                    MessageBox.Show($"Insufficient Stock! Batch '{SelectedLookupRow.DisplayText.Split('(')[0].Trim()}' only has {targetBatch?.CurrentStock ?? 0} units available.",
+                                    "Stock Deficit Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Add line item mapped directly to this single batch lot segment container footprint
+                AddOrUpdateCartItemsList(productDetails, targetBatch, Quantity);
+            }
+
+            // ----------------------------------------------------
+            // MODE B: PRODUCT-WISE SELECTION (AUTOMATIC FEFO)
+            // ----------------------------------------------------
+            else
+            {
+                if (productDetails.RemainingStock < Quantity)
+                {
+                    MessageBox.Show($"Insufficient Overall Stock! Total available across all batches is {productDetails.RemainingStock} units.",
+                                    "Stock Deficit Alert", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Execute FEFO Core: Sort unexpired active inventory batches by closest Expiry Date first
+                var fefoSortedBatches = productDetails.InnerBatchesCollection
+                    .Where(b => b.CurrentStock > 0 && b.ExpiryDate > DateTime.Today)
+                    .OrderBy(b => b.ExpiryDate)
+                    .ToList();
+
+                int remainingToAllocate = Quantity;
+
+                foreach (var batch in fefoSortedBatches)
+                {
+                    if (remainingToAllocate <= 0) break;
+
+                    // Determine how much this batch can fulfill
+                    int takeQuantity = Math.Min(batch.CurrentStock, remainingToAllocate);
+
+                    // Add or split into distinct cart lines based on batch breakdown paths
+                    AddOrUpdateCartItemsList(productDetails, batch, takeQuantity);
+
+                    remainingToAllocate -= takeQuantity;
+                }
+            }
+
+            // Reset Input Box UI Values variables state safely
             Quantity = 1;
+        }
+
+        private void AddOrUpdateCartItemsList(Product product, ProductBatch batch, int quantity)
+        {
+            // Look for existing item matching BOTH ProductId and BatchId in your active shopping cart container
+            var existingCartLine = CartItems.FirstOrDefault(x => x.ProductId == product.ProductId && x.BatchId == batch.BatchId);
+
+            if (existingCartLine != null)
+            {
+                // Enforce combined stock checking boundary safeguards
+                if (existingCartLine.Quantity + quantity > batch.CurrentStock)
+                {
+                    MessageBox.Show($"Cannot add more items. Combined cart total exceeds active lot capacity restrictions.", "Limit Exceeded", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                existingCartLine.Quantity += quantity;
+            }
+            else
+            {
+                CartItems.Add(new OrderItem
+                {
+                    ProductId = product.ProductId,
+                    BatchId = batch.BatchId,
+                    ProductName = product.Name,
+                    BatchNumber = batch.BatchNumber,
+                    Quantity = quantity,
+                    UnitPrice = Rate, // Default standard selling baseline counter
+                    GstPercent = product.GstPercent
+                });
+            }
+
+            // Refresh layout calculations parameters summary panels
             OnPropertyChanged(nameof(OrderValue));
             OnPropertyChanged(nameof(CalculatedGrandValue));
         }
@@ -194,8 +404,41 @@ namespace CallMan.ViewModels
             var customers = await _service.GetAllActiveLeadsAsync();
             MaturedCustomers = new ObservableCollection<Lead>(customers);
 
-            var products = await _productService.GetAllProductsAsync();
-            AllProducts = new ObservableCollection<Product>(products);
+            ProductsLookupCollection.Clear();
+
+            // 1. Fetch raw master arrays directly out of your database service layers
+            var productsFromDb = await _productService.GetProductsWithBatchesAsync(1);
+            AllMasterProducts = productsFromDb.ToList();
+
+            // 2. Transform and flatten data trees into the ComboBox representation structure
+            foreach (var prod in AllMasterProducts)
+            {
+                // Create Parent Product Summary Anchor
+                ProductsLookupCollection.Add(new OrderProductLookupItem
+                {
+                    ProductId = prod.ProductId,
+                    BatchId = null,
+                    IsBatchRow = false,
+                    DisplayText = $"{prod.Name} ({prod.InnerBatchesCollection.Count} Batches) (Stock: {prod.RemainingStock}) (Avg Price: ₹{prod.CostPrice:N2})",
+                    AvailableStock = prod.RemainingStock,
+                    Price = prod.SellingPrice
+                });
+
+                // Append Child Lots sequentially right under their parent node anchor location
+                var activeBatches = prod.InnerBatchesCollection.Where(b => b.CurrentStock > 0).OrderBy(b => b.ExpiryDate);
+                foreach (var batch in activeBatches)
+                {
+                    ProductsLookupCollection.Add(new OrderProductLookupItem
+                    {
+                        ProductId = prod.ProductId,
+                        BatchId = batch.BatchId,
+                        IsBatchRow = true,
+                        DisplayText = $"-> {batch.BatchNumber} (Exp: {batch.ExpiryDate:dd-MM-yyyy}) (Stock: {batch.CurrentStock}) (Price: ₹{batch.MinimumSellingPrice:N2})",
+                        AvailableStock = batch.CurrentStock,
+                        Price = prod.SellingPrice
+                    });
+                }
+            }
         }
     }
 }

@@ -9,6 +9,7 @@ namespace CallMan.Models.Enums
     public enum ImportType
     {
         Product,
-        Lead
+        Lead,
+        Order
     }
 }

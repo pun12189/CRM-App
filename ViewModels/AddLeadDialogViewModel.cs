@@ -126,10 +126,18 @@ namespace CallMan.ViewModels
                 }
                 else
                 {
-                    // Pass a default history message for the first entry
-                    string initialLog = $"Lead generated as '{NewLead.Status}' type.";
+                    var historyEntry = new LeadHistoryEntry
+                    {
+                        Message = "New Lead Added",
+                        Content = $"Lead '{NewLead.CustomerName}' created.",
+                        UpdatedByContent = "added a new lead",
+                        NextFollowUpDate = DateTime.Now,
+                        UpdatedBy = _session.CurrentUser,
+                        LogDate = DateTime.Now,
+                        IsPriority = true
+                    };
 
-                    int newLeadId = await _leadService.SaveLeadAsync(NewLead, initialLog, _session.CurrentUser);
+                    int newLeadId = await _leadService.SaveLeadAsync(NewLead, historyEntry, _session.CurrentUser);
                     await _workflowEngine.EnqueueEventAsync("OnLeadCreated", newLeadId, "Lead");
                 }               
 

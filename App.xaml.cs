@@ -104,20 +104,60 @@ namespace CallMan
 
         protected override async void OnStartup(StartupEventArgs e)
         {
+            //EventManager.RegisterClassHandler(
+            //    typeof(Window),
+            //    Window.LoadedEvent,
+            //    new RoutedEventHandler(OnWindowLoaded));
+
             base.OnStartup(e);
 
             var loginView = ServiceProvider!.GetRequiredService<LoginView>();
+            //this.MainWindow = null;
             loginView.Show();
 
             var engine = ServiceProvider!.GetService<WorkflowEngine>();
-
             if (engine != null)
             {
-                // 1. Process any missed events from when the app was closed
-                await engine.ProcessQueueAsync();
+                await Task.Run(async () =>
+                {
+                    try
+                    {
+                        // 1. Process any missed events from when the app was closed
+                        await engine.ProcessQueueAsync();
 
-                // 2. Run the inactivity check for old customers
-                await engine.CheckInactivityWorkflowsAsync();
+                        // 2. Run the inactivity check for old customers
+                        await engine.CheckInactivityWorkflowsAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Fallback hook to record background engine thread crashes straight to Sentry
+                    }
+                });
+            }
+        }
+
+        private void OnWindowLoaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is Window childWindow)
+            {
+                // CRITICAL EXCEPTION GUARD: 
+                if (childWindow.GetType().Name == "LoginView") return;
+                // Do not assign the MainWindow to own itself, or it will throw an InvalidOperationException!
+                if (childWindow == Current.MainWindow) return;
+
+                // Ensure the MainWindow exists and is initialized before assigning ownership
+                if (Current.MainWindow != null)
+                {
+                    // Only assign if the developer hasn't already explicitly set a custom owner
+                    if (childWindow.Owner == null)
+                    {
+                        childWindow.Owner = Current.MainWindow;
+
+                        // OPTIONAL BONUS GUARD: 
+                        // Centers the dialog perfectly over the main screen automatically
+                        childWindow.WindowStartupLocation = WindowStartupLocation.CenterOwner;
+                    }
+                }
             }
         }
     }

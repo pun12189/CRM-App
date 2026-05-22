@@ -352,14 +352,34 @@
                   Style="{StaticResource MaterialDesignFilterChipPrimaryCheckBox}"/>
                         </StackPanel>
 
-                        <StackPanel Grid.Column="2">
-                            <TextBlock Text="Remarks" Opacity="0.6" Margin="0,0,0,5"/>
-                            <TextBox Text="{Binding Remarks}" 
+                        <StackPanel Orientation="Vertical" Grid.Column="2">
+                            <StackPanel>
+                                <TextBlock Text="Remarks" Opacity="0.6" Margin="0,0,0,5"/>
+                                <TextBox Text="{Binding Remarks}" 
                  AcceptsReturn="True" 
                  Height="100" 
                  VerticalContentAlignment="Top"
                  materialDesign:HintAssist.Hint="Add internal notes here..." 
                  Style="{StaticResource MaterialDesignFilledTextBox}"/>
+                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,10,0">
+                                    <TextBlock Text="Next Followup Date *"/>
+                                    <DatePicker SelectedDate="{Binding NextFollowupDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayDateStart="{Binding MinDate}" Margin="0,5"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Margin="10,0,0,0" xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+                                    <TextBlock Text="Next Followup Time" Foreground="#555" Margin="0,0,0,5"/>
+
+                                    <materialDesign:TimePicker SelectedTime="{Binding SelectedTime}" Is24Hours="False" materialDesign:HintAssist.Hint="Pick Time" materialDesign:TextFieldAssist.HasClearButton="True" VerticalAlignment="Center" xml:lang="en-IN" />
+
+                                    <TextBlock Text="Clock icon appears on hover/focus" FontSize="10" FontStyle="Italic" Foreground="Gray" Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </Grid>
 

@@ -63,6 +63,8 @@ namespace CallMan.ViewModels
         [ObservableProperty] private bool _sendEmail = true;
         [ObservableProperty] private string _remarks;
         [ObservableProperty] private string _orderStatus;
+        [ObservableProperty] private DateTime _selectedTime = DateTime.Now;
+        [ObservableProperty] private DateTime _nextFollowupDate = DateTime.Now.AddDays(1);
         [ObservableProperty] private ObservableCollection<ExtraCharge> _otherCharges = new();
 
         [ObservableProperty] private string _currentUser = "Admin"; // Placeholder, replace with actual user context
@@ -71,6 +73,15 @@ namespace CallMan.ViewModels
 
         // --- FORM SELECTION FIELDS ---
         [ObservableProperty] private OrderProductLookupItem? _selectedLookupRow;
+
+        public DateTime CombinedDateTime => new DateTime(
+                        NextFollowupDate.Year,
+                        NextFollowupDate.Month,
+                        NextFollowupDate.Day,
+                        SelectedTime.Value.Hour,
+                        SelectedTime.Value.Minute,
+                        0
+                    );
 
         public decimal CalculatedGrandValue
         {

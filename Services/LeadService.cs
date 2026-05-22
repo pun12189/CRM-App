@@ -47,7 +47,7 @@ namespace CallMan.Services
             return leads;
         }
 
-        public async Task<int> SaveLeadAsync(Lead lead, string initialLog, string user)
+        public async Task<int> SaveLeadAsync(Lead lead, LeadHistoryEntry initialHistoryEntry, string user)
         {
             using var db = _context.CreateConnection();
             // Serialize dynamic fields to JSON
@@ -67,16 +67,25 @@ namespace CallMan.Services
             await db.ExecuteAsync(linkSql, linkParams);
 
             // Save initial history entry
-            await AddHistoryAsync(newId, initialLog, null, user);
+            await AddHistoryAsync(newId, initialHistoryEntry);
             return newId;
         }
 
-        public async Task AddHistoryAsync(int leadId, string message, DateTime? nextDate, string user)
+        public async Task AddHistoryAsync(int leadId, LeadHistoryEntry historyEntry)
         {
             using var db = _context.CreateConnection();
-            string sql = @"INSERT INTO LeadHistory (LeadId, Message, NextFollowUpDate, UpdatedBy) 
-                       VALUES (@leadId, @message, @nextDate, @user)";
-            await db.ExecuteAsync(sql, new { leadId, message, nextDate, user });
+            string sql = @"INSERT INTO LeadHistory (LeadId, Message, NextFollowUpDate, UpdatedBy, UpdatedByContent, LogDate, IsPriority) 
+                       VALUES (@leadId, @message, @nextDate, @user, @updatedByContent, @logDate, @isPriority)";
+            await db.ExecuteAsync(sql, new
+            {
+                leadId,
+                message = historyEntry.Message,
+                nextDate = historyEntry.NextFollowUpDate,
+                user = historyEntry.UpdatedBy,
+                updatedByContent = historyEntry.UpdatedByContent,
+                logDate = historyEntry.LogDate,
+                isPriority = historyEntry.IsPriority
+            });
         }
 
         // Update an existing lead
@@ -219,8 +228,8 @@ ORDER BY l.LeadId DESC;";
 
                 // 2. Insert into History
                 string insertHistory = @"INSERT INTO LeadHistory 
-            (LeadId, Message, NextFollowUpDate, ActionType, FollowupStage, UpdatedBy) 
-            VALUES (@LeadId, @Message, @NextFollowUpDate, @ActionType, @FollowupStage, @UpdatedBy)";
+            (LeadId, Message, Content, UpdatedByContent, NextFollowUpDate, UpdatedBy, ActionType, FollowupStage, IsPriority) 
+            VALUES (@LeadId, @Message, @Content, @UpdatedByContent, @NextFollowUpDate, @UpdatedBy, @ActionType, @FollowupStage, @IsPriority)";
                 await db.ExecuteAsync(insertHistory, history, trans);
 
                 trans.Commit();
@@ -230,36 +239,7 @@ ORDER BY l.LeadId DESC;";
                 trans.Rollback();
                 throw;
             }
-        }
-
-        public async Task UpdateMaturedLeadWithFollowupAsync(Lead lead, PaymentEntry payment, LeadHistoryEntry history)
-        {
-            using var db = _context.CreateConnection();
-            using var trans = db.BeginTransaction();
-
-            try
-            {
-                // Update main Lead status
-                await db.ExecuteAsync("UPDATE Leads SET Status = @Status WHERE LeadId = @LeadId", lead, trans);
-
-                // Insert financial record
-                string paySql = @"INSERT INTO Payments (LeadId, TotalOrderValue, AmountReceived, Remarks, PaymentDate) 
-                          VALUES (@LeadId, @TotalOrderValue, @AmountReceived, @Remarks, NOW())";
-                await db.ExecuteAsync(paySql, payment, trans);
-
-                // Insert history with follow-up scheduling
-                string histSql = @"INSERT INTO LeadHistory (LeadId, Message, ActionType, NextFollowUpDate, FollowupStage, UpdatedBy) 
-                           VALUES (@LeadId, @Message, @ActionType, @NextFollowUpDate, @FollowupStage, @UpdatedBy)";
-                await db.ExecuteAsync(histSql, history, trans);
-
-                trans.Commit();
-            }
-            catch
-            {
-                trans.Rollback();
-                throw;
-            }
-        }
+        }        
 
         public async Task<bool> MatureWithOrderAndPaymentAsync(Lead lead, Models.Order order, PaymentEntry payment, LeadHistoryEntry history)
         {
@@ -272,8 +252,8 @@ ORDER BY l.LeadId DESC;";
                 //await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured' WHERE LeadId = @LeadId", new { lead.LeadId }, trans);
 
                 // 2. Create the Order
-                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, PaymentStatus, ProcessedBy, AmountPaid) 
-                            VALUES (@LeadId, @TotalAmount, @Description, @PaymentStatus, @ProcessedBy, @AmountPaid);
+                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, PaymentStatus, ProcessedBy, AmountPaid, Status) 
+                            VALUES (@LeadId, @TotalAmount, @Description, @PaymentStatus, @ProcessedBy, @AmountPaid, @Status);
                             SELECT LAST_INSERT_ID();";
                 int newOrderId = await db.QuerySingleAsync<int>(orderSql, order, trans);
 
@@ -284,9 +264,10 @@ ORDER BY l.LeadId DESC;";
                 await db.ExecuteAsync(paySql, payment, trans);
 
                 // 4. Add History Milestone
-                string hist2Sql = @"INSERT INTO LeadHistory (LeadId, Message, ActionType, NextFollowUpDate, FollowupStage, UpdatedBy, LogDate) 
-                            VALUES (@LeadId, @Message, @ActionType, @NextFollowUpDate, @FollowupStage, @UpdatedBy, NOW())";
-                await db.ExecuteAsync(hist2Sql, history, trans);
+                string hist1Sql = @"INSERT INTO LeadHistory 
+            (LeadId, Message, Content, UpdatedByContent, NextFollowUpDate, UpdatedBy, ActionType, FollowupStage, IsPriority) 
+            VALUES (@LeadId, @Message, @Content, @UpdatedByContent, @NextFollowUpDate, @UpdatedBy, @ActionType, @FollowupStage, @IsPriority)";
+                await db.ExecuteAsync(hist1Sql, history, trans);
 
                 trans.Commit();
                 return true;
@@ -305,8 +286,8 @@ ORDER BY l.LeadId DESC;";
                 await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured' WHERE LeadId = @LeadId", new { lead.LeadId }, trans);
 
                 // 2. Create the Order
-                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, PaymentStatus, ProcessedBy, AmountPaid) 
-                            VALUES (@LeadId, @TotalAmount, @Description, @PaymentStatus, @ProcessedBy, @AmountPaid);
+                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, PaymentStatus, ProcessedBy, AmountPaid, Status) 
+                            VALUES (@LeadId, @TotalAmount, @Description, @PaymentStatus, @ProcessedBy, @AmountPaid, @Status);
                             SELECT LAST_INSERT_ID();";
                 int newOrderId = await db.QuerySingleAsync<int>(orderSql, order, trans);
 
@@ -316,16 +297,11 @@ ORDER BY l.LeadId DESC;";
                           VALUES (@LeadId, @OrderId, @TotalOrderValue, @AmountReceived, @Remarks)";
                 await db.ExecuteAsync(paySql, payment, trans);
 
-                // 3. ENTRY #1: The Maturity Milestone (System Entry)
-                string milestoneMsg = $"Lead Matured. Order Value: ₹{payment.TotalOrderValue}, Received: ₹{payment.AmountReceived}.";
-                string hist1Sql = @"INSERT INTO LeadHistory (LeadId, Message, ActionType, FollowupStage, UpdatedBy, LogDate) 
-                            VALUES (@LeadId, @Message, 'Call', 'Matured', @UpdatedBy, NOW())";
-                await db.ExecuteAsync(hist1Sql, new { lead.LeadId, Message = milestoneMsg, UpdatedBy = followUp.UpdatedBy }, trans);
-
-                // 4. ENTRY #2: The User's Follow-up/Message
-                string hist2Sql = @"INSERT INTO LeadHistory (LeadId, Message, ActionType, NextFollowUpDate, FollowupStage, UpdatedBy, LogDate) 
-                            VALUES (@LeadId, @Message, @ActionType, @NextFollowUpDate, 'Matured', @UpdatedBy, DATE_ADD(NOW(), INTERVAL 1 SECOND))";
-                await db.ExecuteAsync(hist2Sql, followUp, trans);
+                // 3. ENTRY #1: The Maturity Milestone (System Entry)                
+                string hist1Sql = @"INSERT INTO LeadHistory 
+            (LeadId, Message, Content, UpdatedByContent, NextFollowUpDate, UpdatedBy, ActionType, FollowupStage, IsPriority) 
+            VALUES (@LeadId, @Message, @Content, @UpdatedByContent, @NextFollowUpDate, @UpdatedBy, @ActionType, @FollowupStage, @IsPriority)";
+                await db.ExecuteAsync(hist1Sql, followUp, trans);                
 
                 trans.Commit();
                 return true;
@@ -390,7 +366,7 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
         }
 
         // Record a payment and auto-update Order status
-        public async Task RecordPaymentAsync(PaymentEntry p)
+        public async Task RecordPaymentAsync(PaymentEntry p, LeadHistoryEntry initialHistoryEntry)
         {
             using var db = _context.CreateConnection();
             using var trans = db.BeginTransaction();
@@ -399,6 +375,9 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
                 await db.ExecuteAsync("INSERT INTO Payments (OrderId, LeadId, AmountReceived, PaymentMethod, Remarks) VALUES (@OrderId, @LeadId, @AmountReceived, @PaymentMethod, @Remarks)", p, trans);
                 string updateOrder = "UPDATE Orders o SET PaymentStatus = IF((SELECT SUM(AmountReceived) FROM Payments WHERE OrderId = o.OrderId) >= o.TotalAmount, 'Paid', 'Partially Paid'), AmountPaid = (SELECT SUM(AmountReceived) FROM Payments WHERE OrderId = o.OrderId) WHERE OrderId = @OrderId";
                 await db.ExecuteAsync(updateOrder, new { p.OrderId }, trans);
+
+                await AddHistoryAsync(p.LeadId, initialHistoryEntry);
+
                 trans.Commit();
             }
             catch { trans.Rollback(); throw; }

@@ -16,6 +16,12 @@ namespace CallMan.Models
         private string _message = string.Empty;
 
         [ObservableProperty]
+        private string _content = string.Empty;
+
+        [ObservableProperty]
+        private string _updatedByContent = string.Empty;
+
+        [ObservableProperty]
         private string? _actionType; // Call, WhatsApp, Meeting, etc.
 
         [ObservableProperty]

@@ -4,18 +4,115 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CallMan.Dialogs"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="Lead Timeline &amp; Audits" 
-        Height="500" Width="400" WindowStartupLocation="CenterOwner">
+        Height="650" Width="950" WindowStartupLocation="CenterScreen">
     <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="Complete Audit Trail" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
+        <TextBlock Grid.Row="0" Text="Lead History" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="10">
+            <ItemsControl ItemsSource="{Binding HistoryItems}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Margin="0,0,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Rectangle Grid.Column="0" 
+                               Fill="#D1D5DB" 
+                               Width="2" 
+                               HorizontalAlignment="Center" 
+                               Margin="0,20,0,-20"/>
+
+                            <Border Grid.Column="0" 
+                            Background="#A12E2E" 
+                            Width="24" Height="24" 
+                            CornerRadius="12" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Top" 
+                            Margin="0,14,0,0"
+                            Effect="{DynamicResource MaterialDesignShadowDepth1}">
+                                <materialDesign:PackIcon Kind="Plus" 
+                                                 Width="14" Height="14" 
+                                                 Foreground="White" 
+                                                 HorizontalAlignment="Center" 
+                                                 VerticalAlignment="Center"/>
+                            </Border>
+
+                            <Border Grid.Column="1" 
+                            Background="#F3F4F6" 
+                            BorderBrush="#E5E7EB" 
+                            BorderThickness="1" 
+                            CornerRadius="4" 
+                            Padding="16,12" 
+                            Margin="5,0,0,16"
+                            Effect="{DynamicResource MaterialDesignShadowDepth1}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                            <TextBlock Text="Message: " FontWeight="Bold" FontSize="14" Foreground="#4B5563"/>
+                                            <TextBlock Text="{Binding Message}" FontWeight="Bold" FontSize="14" Foreground="#4B5563"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="CalendarMonth" Width="14" Height="14" Foreground="#6B7280" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding LogDate, StringFormat='\{0:dd-MM-yyyy hh:mm tt\}'}" 
+                                               FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" 
+                                               Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <StackPanel Grid.Row="1" Margin="0,0,0,12">
+                                        <TextBlock Text="{Binding Content}" 
+                                           FontSize="13" 
+                                           LineHeight="22"
+                                           Foreground="#1F2937" 
+                                           TextWrapping="Wrap"/>
+                                    </StackPanel>
+
+                                    <Border Grid.Row="1" VerticalAlignment="Bottom" BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Margin="0,0,0,8"/>
+
+                                    <StackPanel Grid.Row="2" Orientation="Vertical">
+                                        <StackPanel Orientation="Horizontal" Margin="0,2">
+                                            <TextBlock Text="{Binding UpdatedBy}" FontWeight="SemiBold" Foreground="#2563EB" FontSize="13"/>
+                                            <TextBlock Text="{Binding UpdatedByContent}" Foreground="#991B1B" FontSize="13" Margin="4,0,0,0"/>
+                                            <!--<TextBlock Text="{Binding FollowupStage, StringFormat=({0})}" Foreground="#991B1B" FontSize="13" Margin="4,0,0,0"/>-->
+                                            <!--<TextBlock Text="{Binding NextFollowUpDisplay}" Foreground="#991B1B" FontSize="13" Margin="4,0,0,0"/>-->
+                                        </StackPanel>
+
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <TextBlock Text="Notification sent to: " FontWeight="SemiBold" Foreground="#4B5563" FontSize="13"/>
+                                            <!--<TextBlock Text="Customer" Foreground="#4B5563" FontSize="13"/>-->
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!--<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <ItemsControl ItemsSource="{Binding HistoryItems}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
@@ -38,6 +135,6 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-        </ScrollViewer>
+        </ScrollViewer>-->
     </Grid>
 </Window>

@@ -89,10 +89,10 @@ namespace CallMan.Services
                 // 1. Insert into Orders Table (Include DivisionId multi-tenant scoping context)
                 string orderSql = @"
             INSERT INTO Orders (
-                DivisionId, LeadId, OrderDate, TotalAmount, AmountPaid, LeadHolder, TotalCostAmount, OrderType, GrandTotal, InvoiceNumber, 
+                DivisionId, LeadId, OrderDate, TotalAmount, AmountPaid, LeadHolder, TotalCostAmount, GrandTotal, InvoiceNumber, 
                 PaymentStatus, Status, Description, ProcessedBy, PreferedTransport, Remarks
             ) VALUES (
-                @DivisionId, @LeadId, NOW(), @TotalAmount, @AmountPaid, @LeadHolder, @TotalCostAmount, @OrderType, @GrandTotal, @InvoiceNumber, 
+                @DivisionId, @LeadId, NOW(), @TotalAmount, @AmountPaid, @LeadHolder, @TotalCostAmount, @GrandTotal, @InvoiceNumber, 
                 @PaymentStatus, @Status, @Description, @ProcessedBy, @Transport, @Remarks
             );
             SELECT LAST_INSERT_ID();";
@@ -105,6 +105,7 @@ namespace CallMan.Services
                 {
                     DivisionId = activeDivisionId,
                     LeadId = vm.SelectedCustomer?.LeadId,
+                    AmountPaid = Math.Round(vm.AmountReceived, 2),
                     TotalAmount = Math.Round(vm.OrderValue, 2),
                     TotalCostAmount = Math.Round(totalOrderCostFootprint, 2), // <-- SAVED VALUE
                     GrandTotal = Math.Round(vm.CalculatedGrandValue, 2),
@@ -112,19 +113,24 @@ namespace CallMan.Services
                     Description = $"Order for {vm.CartItems.Count} items",
                     ProcessedBy = vm.CurrentUser,
                     Transport = vm.PreferedTransport,
+                    Status = "Pending",
                     LeadHolder = vm.SelectedCustomer?.LeadHolder,
                     PaymentStatus = (vm.CalculatedGrandValue - vm.AmountReceived <= 0) ? "Paid" : (vm.AmountReceived > 0 ? "Partially Paid" : "Pending"),
                     vm.Remarks
                 }, transaction);
 
-                string sql = @"INSERT INTO LeadHistory (LeadId, Message, UpdatedBy, FollowupStage) 
-                       VALUES (@LeadId, @Message, @UpdatedBy, @FollowupStage)";
+                string sql = @"INSERT INTO LeadHistory (LeadId, Message, Content, NextFollowUpDate, UpdatedBy, UpdatedByContent, LogDate, IsPriority) 
+                       VALUES (@LeadId, @Message, @Content, @NextFollowUpDate, @UpdatedBy, @UpdatedByContent, @LogDate, @IsPriority)";
                 await conn.ExecuteAsync(sql, new
                 {
                     LeadId = vm.SelectedCustomer?.LeadId,
-                    Message = $"Order Update \r\n Order ID: {orderId}\r\n Order Value: {vm.CalculatedGrandValue} \r\n Payment Received: {vm.AmountReceived}",
+                    Message = "Order Created",
+                    Content = $"Order Update \r\n Order ID: {orderId}\r\n Order Value: {vm.CalculatedGrandValue} \r\n Payment Received: {vm.AmountReceived}",
                     UpdatedBy = vm.CurrentUser,
-                    FollowupStage = "Matured"
+                    NextFollowUpDate = vm.CombinedDateTime, // Example: set next follow-up date 7 days from now
+                    UpdatedByContent = $" create an order and schedule next follow-up on {vm.CombinedDateTime:G}",
+                    LogDate = DateTime.Now,
+                    IsPriority = false
                 }, transaction);
 
                 // 2. Insert Order Items (with BatchId context) & Update Batch Stocks

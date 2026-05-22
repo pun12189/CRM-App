@@ -3,6 +3,7 @@ using CallMan.Models;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DocumentFormat.OpenXml.Bibliography;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -117,9 +118,11 @@ namespace CallMan.ViewModels
                     var history = new LeadHistoryEntry
                     {
                         LeadId = SelectedLead.LeadId,
+                        Message = Message,
                         // Prefix message with the reason for the timeline
-                        Message = $"[DEAD] {Message}",
+                        Content = $"[DEAD] {SelectedLead.CustomerName}\r\n Company: {SelectedLead.CompanyName}",
                         ActionType = SelectedAction,
+                        UpdatedByContent = $" marked as Dead due to {SelectedDeadReason?.Name}",
                         NextFollowUpDate = null, // CRITICAL: Stop the reminders
                         FollowupStage = SelectedDeadReason?.Name,
                         UpdatedBy = _session.CurrentUser
@@ -149,6 +152,8 @@ namespace CallMan.ViewModels
                         {
                             LeadId = SelectedLead.LeadId,
                             Message = Message,
+                            Content = $"[FOLLOWUP] {SelectedLead?.CustomerName}\r\n Company: {SelectedLead?.CompanyName}",
+                            UpdatedByContent = $"scheduled a follow-up ({SelectedStatus?.Name}) on {combinedDateTime:G}",
                             NextFollowUpDate = combinedDateTime,
                             UpdatedBy = _session.CurrentUser,
                             ActionType = SelectedAction,
@@ -159,14 +164,15 @@ namespace CallMan.ViewModels
                         SelectedLead.Status = IsMatured ? "Matured" : (IsDead ? "Dead" : "Followup");
                         if (IsMatured)
                         {
-                            history.FollowupStage = "First Order Recieved";
                             var newOrder = new Order
                             {
                                 LeadId = SelectedLead.LeadId,
                                 TotalAmount = OrderValue,
+                                AmountPaid = PaymentReceived,
                                 Description = $"First Order: {Message}",
                                 OrderDate = DateTime.Now,
-                                Status = BalancePayment == 0 ? "Paid" : "Partially Paid",
+                                PaymentStatus = BalancePayment == 0 ? "Paid" : "Partially Paid",
+                                Status = "Pending",
                                 ProcessedBy = _session.CurrentUser,
                             };
                             
@@ -176,6 +182,18 @@ namespace CallMan.ViewModels
                                 TotalOrderValue = OrderValue,
                                 AmountReceived = PaymentReceived,
                                 Remarks = $"Payment Entry for Order. Balance: {BalancePayment}"
+                            };
+
+                            history = new LeadHistoryEntry
+                            {
+                                LeadId = SelectedLead.LeadId,
+                                Message = Message,
+                                Content = $"{SelectedLead.CustomerName} placed an order worth {OrderValue:C}\r\n with an initial payment of {PaymentReceived:C}.\r\n Balance: {BalancePayment:C}",
+                                UpdatedByContent = $"matured this lead on {combinedDateTime:G}",
+                                NextFollowUpDate = combinedDateTime,
+                                UpdatedBy = _session.CurrentUser,
+                                ActionType = SelectedAction,
+                                FollowupStage = "First Order Recieved"
                             };
 
                             // Use the service method that handles the transaction

@@ -122,9 +122,12 @@ namespace CallMan.ViewModels
                 var history = new LeadHistoryEntry
                 {
                     LeadId = SelectedLead.LeadId,
+
                     // Prefix message with the reason for the timeline
-                    Message = $"[MATURE DEAD] {Message}",
+                    Message = Message,
+                    Content = $"[MATURE DEAD] {SelectedLead.CustomerName}\r\n Company: {SelectedLead.CompanyName}",
                     ActionType = "Call",
+                    UpdatedByContent = $" marked as Dead due to {SelectedDeadStage}",
                     NextFollowUpDate = null, // CRITICAL: Stop the reminders
                     FollowupStage = SelectedDeadStage,
                     UpdatedBy = _session.CurrentUser
@@ -155,6 +158,8 @@ namespace CallMan.ViewModels
                     {
                         LeadId = SelectedLead.LeadId,
                         Message = Message,
+                        Content = $"[MATURED FOLLOWUP] {SelectedLead.CustomerName}\r\n Company: {SelectedLead.CompanyName}",
+                        UpdatedByContent = $" scheduled a matured follow-up ({SelectedMatureStage}) on {combinedDateTime:G}",
                         NextFollowUpDate = combinedDateTime,
                         UpdatedBy = _session.CurrentUser,
                         ActionType = "Call",
@@ -167,10 +172,12 @@ namespace CallMan.ViewModels
                         var newOrder = new Order
                         {
                             LeadId = SelectedLead.LeadId,
+                            AmountPaid = PaymentReceived,
                             TotalAmount = OrderValue,
                             Description = $"Repeat Order: {Message}",
                             OrderDate = DateTime.Now,
-                            Status = BalancePayment == 0 ? "Paid" : "Partially Paid",
+                            PaymentStatus = BalancePayment == 0 ? "Paid" : "Partially Paid",
+                            Status = "Pending",
                             ProcessedBy = _session.CurrentUser,
                         };
 
@@ -180,6 +187,18 @@ namespace CallMan.ViewModels
                             TotalOrderValue = OrderValue,
                             AmountReceived = PaymentReceived,
                             Remarks = $"Payment Entry for Order. Balance: {BalancePayment}"
+                        };
+
+                        history = new LeadHistoryEntry
+                        {
+                            LeadId = SelectedLead.LeadId,
+                            Message = Message,
+                            Content = $"{_session.CurrentUser} created an order \r\n {OrderValue:C}\r\n with an initial payment of {PaymentReceived:C}.\r\n Balance: {BalancePayment:C}",
+                            UpdatedByContent = $" scheduled a matured follow-up ({SelectedMatureStage}) on {combinedDateTime:G}",
+                            NextFollowUpDate = combinedDateTime,
+                            UpdatedBy = _session.CurrentUser,
+                            ActionType = "Call",
+                            FollowupStage = SelectedMatureStage
                         };
 
                         await _service.MatureWithOrderAndPaymentAsync(SelectedLead, newOrder, payment, history);

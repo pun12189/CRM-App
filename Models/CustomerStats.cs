@@ -13,6 +13,10 @@ namespace CallMan.Models
         public int TotalOrders { get; set; }
         public decimal TotalFirstOrders { get; set; }
         public decimal TotalOtherOrders { get; set; }
+        public decimal TotalFirstOrderAmountPaid { get; set; }
+        public decimal TotalFirstOrderOutstanding { get; set; }
+        public decimal TotalOtherOrderAmountPaid { get; set; }
+        public decimal TotalOtherOrderOutstanding { get; set; }
         public decimal TotalBusiness { get; set; }
         public decimal TotalOutstanding { get; set; }
 

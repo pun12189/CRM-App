@@ -85,6 +85,7 @@ namespace CallMan.Models
         // Calculated property for the Customer View (image_0d52a4.png)
         public string Summary => $"{TotalMaturedAmount:C} | {OrderCount} orders";
         public decimal TotalMaturedAmount { get; set; }
+        public decimal MonthlyTarget { get; set; }
         public int OrderCount { get; set; }
         [ObservableProperty] private int _historyCount;
     }

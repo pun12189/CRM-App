@@ -135,6 +135,14 @@
                                     <TextBlock Text="(Since 30 Days)" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
                                 </StackPanel>
                             </Border>
+
+                            <Border Background="#21B19C" CornerRadius="8" Margin="5" Height="140">
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Stats.NoOrder}" FontSize="36" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="BELOW TARGET" Foreground="White" FontSize="12" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="(Last Month)" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                                </StackPanel>
+                            </Border>
                         </UniformGrid>
                     </StackPanel>
 

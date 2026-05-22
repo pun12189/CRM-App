@@ -17,6 +17,7 @@ namespace CallMan.Models
         public int Dead { get; set; }
         public int Customers { get; set; }
         public int NoUpdation7Days { get; set; }
+        public int BelowTarget { get; set; }
         public decimal TotalBusiness { get; set; }
 
         public double NewLeadsPercentage => AllLeads > 0 ? Math.Round((double)NewLeads / AllLeads * 100, 1) : 0;

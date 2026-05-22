@@ -21,10 +21,17 @@ namespace CallMan.Models
         [ObservableProperty] private string _status = "Pending"; // Pending, Partially Paid, Fully Paid
         [ObservableProperty] private string? _description;
         [ObservableProperty] private string? _customerName;
+        [ObservableProperty] private string? _firmName;
         [ObservableProperty] private string? _processedBy;
         [ObservableProperty] private string? _proformaNumber;
         [ObservableProperty] private string? _invoiceNumber;
         [ObservableProperty] private decimal _totalCostAmount;
+
+        // --- NEW FIELDS ADDED FOR MATRICES DISPLAY ---
+        [ObservableProperty] private string _orderType = "New"; // New or Repeat
+        [ObservableProperty] private string _paymentStatus = "Unpaid"; // Paid, Unpaid, Partially paid
+        [ObservableProperty] private decimal _amountPaid;
+        [ObservableProperty] private string _leadHolder; // e.g., "Arun"
 
         // Sub-Collections
         [ObservableProperty] private ObservableCollection<OrderItem> _items = new();
@@ -47,6 +54,12 @@ namespace CallMan.Models
                 return itemsSum + chargesSum;
             }
         }
+
+        // NEW: Live balance calculations mapping 
+        public decimal OrderBalance => Math.Max(0, TotalAmount - AmountPaid);
+
+        // NEW: Generates format alphanumeric mask e.g. "ORD00001067"
+        public string FormattedOrderId => $"ORD{OrderId:D8}";
 
         public string OrderSummary => $"Order #{OrderId} - {OrderDate:dd MMM yyyy}";
 

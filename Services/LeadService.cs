@@ -55,9 +55,9 @@ namespace CallMan.Services
             lead.LabelsJson = JsonSerializer.Serialize(lead.LeadLabels);
 
             string sql = @"INSERT INTO Leads (CustomerName, Email, Phone, Status, MetadataJson, 
-               CompanyName, AddressLine, City, District, State, Pincode, Country, CreatedAt, LeadHolder, WorkingArea, LeadSource, LeadTag, LabelsJson) 
+               CompanyName, AddressLine, City, District, State, Pincode, Country, CreatedAt, LeadHolder, WorkingArea, LeadSource, LeadTag, LabelsJson, MonthlyTarget) 
                VALUES (@CustomerName, @Email, @Phone, @Status, @MetadataJson, 
-               @CompanyName, @AddressLine, @City, @District, @State, @Pincode, @Country, NOW(), @LeadHolder, @WorkingArea, @LeadSource, @LeadTag, @LabelsJson);
+               @CompanyName, @AddressLine, @City, @District, @State, @Pincode, @Country, NOW(), @LeadHolder, @WorkingArea, @LeadSource, @LeadTag, @LabelsJson, @MonthlyTarget);
             SELECT LAST_INSERT_ID();";
 
             int newId = await db.ExecuteScalarAsync<int>(sql, lead);
@@ -92,7 +92,7 @@ namespace CallMan.Services
                     CustomerName = @CustomerName, Email = @Email, Phone = @Phone, 
                     Status = @Status, CompanyName = @CompanyName, AddressLine = @AddressLine, 
                     City = @City, District = @District, State = @State, 
-                    Pincode = @Pincode, MetadataJson = @MetadataJson, LeadHolder = @LeadHolder, WorkingArea = @WorkingArea, LeadSource = @LeadSource, LeadTag = @LeadTag, LabelsJson = @LabelsJson WHERE LeadId = @LeadId";
+                    Pincode = @Pincode, MetadataJson = @MetadataJson, LeadHolder = @LeadHolder, WorkingArea = @WorkingArea, LeadSource = @LeadSource, LeadTag = @LeadTag, LabelsJson = @LabelsJson, MonthlyTarget = @MonthlyTarget WHERE LeadId = @LeadId";
 
             var rows = await db.ExecuteAsync(sql, lead);
 
@@ -272,8 +272,8 @@ ORDER BY l.LeadId DESC;";
                 //await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured' WHERE LeadId = @LeadId", new { lead.LeadId }, trans);
 
                 // 2. Create the Order
-                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, Status, ProcessedBy) 
-                            VALUES (@LeadId, @TotalAmount, @Description, @Status, @ProcessedBy);
+                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, PaymentStatus, ProcessedBy, AmountPaid) 
+                            VALUES (@LeadId, @TotalAmount, @Description, @PaymentStatus, @ProcessedBy, @AmountPaid);
                             SELECT LAST_INSERT_ID();";
                 int newOrderId = await db.QuerySingleAsync<int>(orderSql, order, trans);
 
@@ -305,8 +305,8 @@ ORDER BY l.LeadId DESC;";
                 await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured' WHERE LeadId = @LeadId", new { lead.LeadId }, trans);
 
                 // 2. Create the Order
-                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, Status, ProcessedBy) 
-                            VALUES (@LeadId, @TotalAmount, @Description, @Status, @ProcessedBy);
+                string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, PaymentStatus, ProcessedBy, AmountPaid) 
+                            VALUES (@LeadId, @TotalAmount, @Description, @PaymentStatus, @ProcessedBy, @AmountPaid);
                             SELECT LAST_INSERT_ID();";
                 int newOrderId = await db.QuerySingleAsync<int>(orderSql, order, trans);
 
@@ -317,7 +317,7 @@ ORDER BY l.LeadId DESC;";
                 await db.ExecuteAsync(paySql, payment, trans);
 
                 // 3. ENTRY #1: The Maturity Milestone (System Entry)
-                string milestoneMsg = $"[MILESTONE] Lead Matured. Order Value: ₹{payment.TotalOrderValue}, Received: ₹{payment.AmountReceived}.";
+                string milestoneMsg = $"Lead Matured. Order Value: ₹{payment.TotalOrderValue}, Received: ₹{payment.AmountReceived}.";
                 string hist1Sql = @"INSERT INTO LeadHistory (LeadId, Message, ActionType, FollowupStage, UpdatedBy, LogDate) 
                             VALUES (@LeadId, @Message, 'Call', 'Matured', @UpdatedBy, NOW())";
                 await db.ExecuteAsync(hist1Sql, new { lead.LeadId, Message = milestoneMsg, UpdatedBy = followUp.UpdatedBy }, trans);
@@ -397,7 +397,7 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
             try
             {
                 await db.ExecuteAsync("INSERT INTO Payments (OrderId, LeadId, AmountReceived, PaymentMethod, Remarks) VALUES (@OrderId, @LeadId, @AmountReceived, @PaymentMethod, @Remarks)", p, trans);
-                string updateOrder = "UPDATE Orders o SET Status = IF((SELECT SUM(AmountReceived) FROM Payments WHERE OrderId = o.OrderId) >= o.TotalAmount, 'Fully Paid', 'Partially Paid') WHERE OrderId = @OrderId";
+                string updateOrder = "UPDATE Orders o SET PaymentStatus = IF((SELECT SUM(AmountReceived) FROM Payments WHERE OrderId = o.OrderId) >= o.TotalAmount, 'Paid', 'Partially Paid'), AmountPaid = (SELECT SUM(AmountReceived) FROM Payments WHERE OrderId = o.OrderId) WHERE OrderId = @OrderId";
                 await db.ExecuteAsync(updateOrder, new { p.OrderId }, trans);
                 trans.Commit();
             }
@@ -416,7 +416,7 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
         public async Task CreateOrderAsync(Models.Order order)
         {
             using var db = _context.CreateConnection();
-            string sql = "INSERT INTO Orders (LeadId, TotalAmount, Description, Status) VALUES (@LeadId, @TotalAmount, @Description, 'Partially Paid')";
+            string sql = "INSERT INTO Orders (LeadId, TotalAmount, Description, PaymentStatus, AmountPaid) VALUES (@LeadId, @TotalAmount, @Description, @PaymentStatus, @AmountPaid)";
             await db.ExecuteAsync(sql, order);
         }
 
@@ -425,7 +425,7 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
             using var db = _context.CreateConnection();
             // Join Orders with Leads to get the CustomerName for each order
             string sql = @"
-        SELECT o.*, l.CustomerName 
+        SELECT o.*, l.CustomerName , l.CompanyName as FirmName
         FROM Orders o
         INNER JOIN Leads l ON o.LeadId = l.LeadId
         ORDER BY o.OrderDate DESC";
@@ -749,11 +749,11 @@ AND (
         LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
         LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
         LEFT JOIN Divisions d ON ld.DivisionId = d.Id
-        WHERE l.Status = 'Followup' AND h.NextFollowUpDate <= CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
+        WHERE h.NextFollowUpDate <= CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
             SELECT MAX(HistoryId) 
             FROM LeadHistory 
             WHERE LeadId = l.LeadId
-        ) OR h.HistoryId IS NULL -- In case lead has no history yet
+        ) AND h.HistoryId IS NOT NULL -- In case lead has no history yet
         ORDER BY h.NextFollowUpDate ASC;";
 
             if (mode == LeadViewMode.FutureFollowUp)
@@ -768,11 +768,11 @@ AND (
         LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
         LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
         LEFT JOIN Divisions d ON ld.DivisionId = d.Id
-        WHERE l.Status = 'Followup' AND h.NextFollowUpDate > CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
+        WHERE h.NextFollowUpDate > CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
             SELECT MAX(HistoryId) 
             FROM LeadHistory 
             WHERE LeadId = l.LeadId
-        ) OR h.HistoryId IS NULL -- In case lead has no history yet
+        ) AND h.HistoryId IS NOT NULL -- In case lead has no history yet
         ORDER BY h.NextFollowUpDate ASC;";
             }
 
@@ -816,29 +816,38 @@ AND (
         {
             // WHERE DivisionId = @DivId
             const string sql = @"
-            WITH CustomerOrderStats AS (
-                SELECT 
-                    LeadId,
-                    OrderId,
-                    TotalAmount,
-                    ROW_NUMBER() OVER (PARTITION BY LeadId ORDER BY OrderDate ASC, OrderId ASC) as OrderSequence
-                FROM Orders                
-            ),
-            PaymentStats AS (
-                SELECT 
-                    LeadId,
-                    SUM(AmountReceived) AS TotalPaid
-                FROM Payments                
-                GROUP BY LeadId
-            )
-            SELECT 
-                COUNT(DISTINCT o.LeadId) AS TotalCustomers,
-                COUNT(o.OrderId) AS TotalOrders,
-                IFNULL(SUM(CASE WHEN o.OrderSequence = 1 THEN o.TotalAmount ELSE 0 END), 0) AS TotalFirstOrders,
-                IFNULL(SUM(CASE WHEN o.OrderSequence > 1 THEN o.TotalAmount ELSE 0 END), 0) AS TotalOtherOrders,
-                IFNULL(SUM(o.TotalAmount), 0) AS TotalBusiness,
-                IFNULL(SUM(o.TotalAmount), 0) - IFNULL((SELECT SUM(TotalPaid) FROM PaymentStats), 0) AS TotalOutstanding
-            FROM CustomerOrderStats o;";
+    WITH CustomerOrderStats AS (
+        SELECT 
+            LeadId,
+            OrderId,
+            TotalAmount,
+            AmountPaid,
+            -- DYNAMIC CALCULATION: Subtraction replaces the missing column footprint
+            (TotalAmount - AmountPaid) AS CalculatedOrderBalance,
+            ROW_NUMBER() OVER (PARTITION BY LeadId ORDER BY OrderDate ASC, OrderId ASC) AS OrderSequence
+        FROM Orders
+        WHERE DivisionId = @DivId OR DivisionId IS NULL
+    )
+    SELECT 
+        COUNT(DISTINCT o.LeadId) AS TotalCustomers,
+        COUNT(o.OrderId) AS TotalOrders,
+        
+        -- Business Value Aggregations
+        IFNULL(SUM(CASE WHEN o.OrderSequence = 1 THEN o.TotalAmount ELSE 0 END), 0.00) AS TotalFirstOrders,
+        IFNULL(SUM(CASE WHEN o.OrderSequence > 1 THEN o.TotalAmount ELSE 0 END), 0.00) AS TotalOtherOrders,
+        IFNULL(SUM(o.TotalAmount), 0.00) AS TotalBusiness,
+        
+        -- First Order Financial Breakdowns
+        IFNULL(SUM(CASE WHEN o.OrderSequence = 1 THEN o.AmountPaid ELSE 0 END), 0.00) AS TotalFirstOrderAmountPaid,
+        IFNULL(SUM(CASE WHEN o.OrderSequence = 1 THEN o.CalculatedOrderBalance ELSE 0 END), 0.00) AS TotalFirstOrderOutstanding,
+        
+        -- Other (Repeat) Order Financial Breakdowns
+        IFNULL(SUM(CASE WHEN o.OrderSequence > 1 THEN o.AmountPaid ELSE 0 END), 0.00) AS TotalOtherOrderAmountPaid,
+        IFNULL(SUM(CASE WHEN o.OrderSequence > 1 THEN o.CalculatedOrderBalance ELSE 0 END), 0.00) AS TotalOtherOrderOutstanding,
+        
+        -- Global Outstanding Target
+        IFNULL(SUM(o.CalculatedOrderBalance), 0.00) AS TotalOutstanding
+    FROM CustomerOrderStats o;";
 
             try
             {

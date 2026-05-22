@@ -138,7 +138,23 @@
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <TextBlock HorizontalAlignment="Center" Text="{Binding CompanyName, StringFormat=({0})}" FontSize="14" Margin="0,5,0,0"/>
+                                <TextBlock HorizontalAlignment="Center" FontSize="14" Margin="0,5,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                            <Setter Property="Text" Value="{Binding CompanyName, StringFormat=({0})}"/>
+
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CompanyName}" Value="">
+                                                    <Setter Property="Text" Value=""/>
+                                                </DataTrigger>
+
+                                                <DataTrigger Binding="{Binding CompanyName}" Value="{x:Null}">
+                                                    <Setter Property="Text" Value=""/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                                 <TextBlock Text="{Binding CustomerName}" TextWrapping="Wrap" Foreground="CadetBlue" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center"/>
                                 <StackPanel Margin="0,5" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <Button BorderThickness="0" Padding="8" Margin="2" ToolTip="Update Info" Command="{Binding DataContext.OpenLeadProfileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Green" Foreground="White" FontWeight="Bold">

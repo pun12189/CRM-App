@@ -25,8 +25,8 @@ namespace CallMan.Services
             try
             {
                 // 1. Save the main Proforma record
-                string orderSql = @"INSERT INTO Orders (CustomerId, TotalAmount, Status, ProformaNumber) 
-                            VALUES (@CustomerId, @GrandTotal, 'Proforma', @ProformaNumber); 
+                string orderSql = @"INSERT INTO Orders (CustomerId, TotalAmount, PaymentStatus, AmountPaid, ProformaNumber) 
+                            VALUES (@CustomerId, @GrandTotal, 'Proforma', 0, @ProformaNumber); 
                             SELECT LAST_INSERT_ID();";
 
                 int orderId = await db.QuerySingleAsync<int>(orderSql,
@@ -89,11 +89,11 @@ namespace CallMan.Services
                 // 1. Insert into Orders Table (Include DivisionId multi-tenant scoping context)
                 string orderSql = @"
             INSERT INTO Orders (
-                DivisionId, LeadId, OrderDate, TotalAmount, TotalCostAmount, GrandTotal, InvoiceNumber, 
-                Status, Description, ProcessedBy, PreferedTransport, Remarks
+                DivisionId, LeadId, OrderDate, TotalAmount, AmountPaid, LeadHolder, TotalCostAmount, OrderType, GrandTotal, InvoiceNumber, 
+                PaymentStatus, Status, Description, ProcessedBy, PreferedTransport, Remarks
             ) VALUES (
-                @DivisionId, @LeadId, NOW(), @TotalAmount, @TotalCostAmount, @GrandTotal, @InvoiceNumber, 
-                @Status, @Description, @ProcessedBy, @Transport, @Remarks
+                @DivisionId, @LeadId, NOW(), @TotalAmount, @AmountPaid, @LeadHolder, @TotalCostAmount, @OrderType, @GrandTotal, @InvoiceNumber, 
+                @PaymentStatus, @Status, @Description, @ProcessedBy, @Transport, @Remarks
             );
             SELECT LAST_INSERT_ID();";
 
@@ -112,7 +112,8 @@ namespace CallMan.Services
                     Description = $"Order for {vm.CartItems.Count} items",
                     ProcessedBy = vm.CurrentUser,
                     Transport = vm.PreferedTransport,
-                    Status = (vm.CalculatedGrandValue - vm.AmountReceived <= 0) ? "Fully Paid" : (vm.AmountReceived > 0 ? "Partially Paid" : "Pending"),
+                    LeadHolder = vm.SelectedCustomer?.LeadHolder,
+                    PaymentStatus = (vm.CalculatedGrandValue - vm.AmountReceived <= 0) ? "Paid" : (vm.AmountReceived > 0 ? "Partially Paid" : "Pending"),
                     vm.Remarks
                 }, transaction);
 

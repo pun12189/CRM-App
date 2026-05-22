@@ -110,7 +110,10 @@ namespace CallMan.ViewModels
             var list = new ObservableCollection<Lead>(data);
 
             var userId = _session.CurrentUser;
-            list = new ObservableCollection<Lead>(list.Where(l => l.LeadHolder == userId));
+            if (userId.ToLower() != "admin")
+            {
+                list = new ObservableCollection<Lead>(list.Where(l => l.LeadHolder == userId));
+            }            
 
             // 3. Update the CollectionView (the actual source for your DataGrid)
             _leadsCollection = CollectionViewSource.GetDefaultView(list);

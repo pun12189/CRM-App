@@ -78,8 +78,8 @@ namespace CallMan.ViewModels
                         NextFollowupDate.Year,
                         NextFollowupDate.Month,
                         NextFollowupDate.Day,
-                        SelectedTime.Value.Hour,
-                        SelectedTime.Value.Minute,
+                        SelectedTime.Hour,
+                        SelectedTime.Minute,
                         0
                     );
 

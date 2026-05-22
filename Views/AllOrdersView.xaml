@@ -301,7 +301,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTemplateColumn Header="Order Type" Width="*">
+                <DataGridTemplateColumn Header="Order Type" Width="80">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border x:Name="TypeBadge" CornerRadius="4" Padding="6,3" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#16A34A">
@@ -316,7 +316,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Status" Width="*">
+                <DataGridTemplateColumn Header="Status" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Border x:Name="StatusBadge" CornerRadius="4" Padding="8,4" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#D97706">
@@ -391,7 +391,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn Header="Created at" Binding="{Binding OrderDate, StringFormat='dd-MM-yyyy HH:mm:ss'}" Width="120">
+                <DataGridTextColumn Header="Created at" Binding="{Binding OrderDate, StringFormat='dd-MM-yyyy HH:mm:ss'}" Width="100">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -410,7 +410,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>-->
 
-                <DataGridTemplateColumn Header="Action" Width="*">
+                <DataGridTemplateColumn Header="Action" Width="80">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">

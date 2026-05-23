@@ -55,10 +55,14 @@ namespace CallMan.ViewModels
             }
 
             var filtered = _allLoadedLocations.Where(l =>
-                l.CustomerName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                l.FirmName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                l.Pincode.Contains(SearchText) ||
-                l.WorkingArea.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
+                l.CustomerName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true ||
+                l.FirmName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true ||
+                l.Pincode?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true ||
+                l.WorkingArea?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true ||
+                                l.Phone?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true ||
+                                l.LeadHolder?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true ||
+                                l.Senior?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true ||
+                                l.AssignedDivisions.Any(d => d.Name?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) == true)
             ).ToList();
 
             Locations = new ObservableCollection<OccupiedLocation>(filtered);

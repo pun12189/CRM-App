@@ -36,16 +36,42 @@ namespace CallMan.Services
             SELECT 
                 l.LeadId AS Id, l.State, l.District, l.City, l.WorkingArea, l.Pincode,
                 l.CustomerName, l.CompanyName AS FirmName,
-                l.LeadHolder, u1.Phone, u2.FullName AS Senior,
+                l.LeadHolder, u1.Phone, u2.FullName AS Senior, d.*,
                 (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) AS TotalOrders,
                 (SELECT IFNULL(SUM(TotalOrderValue), 0) FROM Payments WHERE LeadId = l.LeadId) AS TotalPayments
             FROM Leads l
             LEFT JOIN Users u1 ON l.LeadHolder = u1.FullName
             LEFT JOIN Users u2 ON u1.SeniorId = u2.UserId
+            LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId 
+            LEFT JOIN Divisions d ON ld.DivisionId = d.Id
             WHERE l.Status = 'Matured' 
             {stateCondition} ORDER BY l.State ASC;";
 
-            return await conn.QueryAsync<OccupiedLocation>(sql, new { State = stateFilter });
+            var locationLookup = new Dictionary<int, OccupiedLocation>();
+
+            var locations = await conn.QueryAsync<OccupiedLocation, Division, OccupiedLocation>(
+                sql,
+                (location, division) =>
+                {
+                    if (!locationLookup.TryGetValue(location.Id, out var existingLocation))
+                    {
+                        existingLocation = location;
+                        locationLookup.Add(existingLocation.Id, existingLocation);
+                    }
+
+                    // Append the child division instance natively to the ObservableCollection structure
+                    if (division != null && !existingLocation.AssignedDivisions.Any(x => x.Id == division.Id))
+                    {
+                        existingLocation.AssignedDivisions.Add(division);
+                    }
+
+                    return existingLocation;
+                },
+                new { State = stateFilter },
+                splitOn: "Id"
+            );
+
+            return locationLookup.Values;
         }
 
         public async Task<IEnumerable<StateStat>> GetStateStatsAsync()

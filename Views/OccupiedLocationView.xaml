@@ -79,10 +79,53 @@
 
             <!-- DATA TABLE -->
             <materialDesign:Card Grid.Row="1" VerticalAlignment="Stretch">
-                <DataGrid ItemsSource="{Binding Locations}" AutoGenerateColumns="False" 
-                      CanUserAddRows="False" HeadersVisibility="All" Background="White">
+                <DataGrid ItemsSource="{Binding Locations}" AutoGenerateColumns="False" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black"
+                      CanUserAddRows="False" Background="White">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
+                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                            <Setter Property="Padding" Value="6,10"/>
+                            <Setter Property="ContentTemplate">
+                                <Setter.Value>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap" TextAlignment="Center" FontWeight="Bold"/>
+                                    </DataTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
                     <DataGrid.Columns>
-                        <DataGridTemplateColumn Header="State" Width="100">
+                        <DataGridTemplateColumn Header="Info" MinWidth="160">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="6,4" VerticalAlignment="Center">
+                                        <!-- State Display Line -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                            <materialDesign:PackIcon Kind="LocalAreaNetwork" Width="14" Height="14" Foreground="#6B7280" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding District}" FontWeight="Bold" Foreground="#1F2937" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                            <materialDesign:PackIcon Kind="City" Width="14" Height="14" Foreground="#6B7280" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding City}" FontWeight="Bold" Foreground="#1F2937" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                            <materialDesign:PackIcon Kind="MapMarker" Width="14" Height="14" Foreground="#6B7280" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding State}" FontWeight="Bold" Foreground="#1F2937" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <!-- Post Code Badge Footer Wrap -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                            <materialDesign:PackIcon Kind="PostageStamp" Width="12" Height="12" Foreground="Gray" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Pincode}" FontWeight="Bold" Foreground="#1F2937" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!--<DataGridTemplateColumn Header="State" Width="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding State}" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="11"/>
@@ -100,23 +143,48 @@
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                        </DataGridTemplateColumn>-->
 
                         <DataGridTemplateColumn Header="Working Area" Width="*">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBlock Text="{Binding WorkingArea}" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="11"/>
+                                    <TextBlock Text="{Binding WorkingArea}" TextWrapping="Wrap" FontWeight="DemiBold" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="14"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="Pincode" Width="100">
+                        <DataGridTemplateColumn Header="Divisions" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ItemsControl ItemsSource="{Binding AssignedDivisions}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#E1F5FE" CornerRadius="10" Padding="8,2" Margin="2">
+                                                    <TextBlock Text="{Binding Name}" 
+                        FontSize="10" 
+                        Foreground="#0288D1" 
+                        FontWeight="Bold"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+
+                        <!--<DataGridTemplateColumn Header="Pincode" Width="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBlock Text="{Binding Pincode}" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="11"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>                        
+                        </DataGridTemplateColumn>-->                        
 
                         <DataGridTemplateColumn Header="Working Customer" Width="*">
                             <DataGridTemplateColumn.CellTemplate>
@@ -145,15 +213,15 @@
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="Action" Width="*">
+                        <DataGridTemplateColumn Header="Action" Width="100">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#FFB300" Width="30">
-                                            <materialDesign:PackIcon Kind="Pencil"/>
+                                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#FFB300" Height="24" Width="24">
+                                            <materialDesign:PackIcon Kind="Pencil" Height="18" Width="18"/>
                                         </Button>
-                                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#D32F2F" Width="30">
-                                            <materialDesign:PackIcon Kind="Delete"/>
+                                        <Button Style="{StaticResource MaterialDesignIconButton}" Foreground="#D32F2F" Height="24" Width="24">
+                                            <materialDesign:PackIcon Kind="Delete" Height="18" Width="18"/>
                                         </Button>
                                     </StackPanel>
                                 </DataTemplate>

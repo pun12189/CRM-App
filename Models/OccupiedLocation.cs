@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,8 @@ namespace CallMan.Models
         // Summary Totals (Calculated via SQL)
         public int TotalOrders { get; set; }
         public decimal TotalPayments { get; set; }
+
+        public ObservableCollection<Division> AssignedDivisions { get; set; } = new();
 
         // UI Formatted Summary
         public string SummaryBrief => $"Orders: {TotalOrders} | Recv: ₹{TotalPayments:N0}";

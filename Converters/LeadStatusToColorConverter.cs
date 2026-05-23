@@ -22,7 +22,8 @@ namespace CallMan.Converters
                     "new" => new SolidColorBrush(Colors.SkyBlue),      // Light Blue
                     "followup" => new SolidColorBrush(Colors.OrangeRed), // Light Yellow
                     "matured" => new SolidColorBrush(Colors.ForestGreen),
-                    "dead" => new SolidColorBrush(Colors.Red),// Light Green
+                    "dead" => new SolidColorBrush(Colors.Red),
+                    "winback pool" => new SolidColorBrush(Colors.DarkRed),// Light Green
                     _ => Brushes.White
                 };
             }
@@ -32,7 +33,8 @@ namespace CallMan.Converters
                 "new" => new SolidColorBrush(Color.FromArgb(150, 215, 237, 254)),      // Light Blue
                 "followup" => new SolidColorBrush(Color.FromArgb(150, 209, 209, 209)), // Light Yellow
                 "matured" => new SolidColorBrush(Color.FromArgb(150, 133, 225, 137)),
-                "dead" => new SolidColorBrush(Color.FromRgb(214, 191, 191)),// Light Green
+                "dead" => new SolidColorBrush(Color.FromRgb(214, 191, 191)),
+                "winback pool" => new SolidColorBrush(Color.FromRgb(255, 191, 191)),// Light Green
                 _ => Brushes.White
             };
         }

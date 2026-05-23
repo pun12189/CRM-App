@@ -117,7 +117,12 @@ namespace CallMan.ViewModels
 
             if (CurrentMode == LeadViewMode.Dead)
             {
-                list = new ObservableCollection<Lead>(list.Where(l => l.Status == "Dead"));
+                list = new ObservableCollection<Lead>(list.Where(l => l.Status.ToLower() == "dead".ToLower()));
+            }
+
+            if (CurrentMode == LeadViewMode.WinbackPool)
+            {
+                list = new ObservableCollection<Lead>(list.Where(l => l.Status.ToLower() == "winback pool".ToLower()));
             }
 
             // 3. Update the CollectionView (the actual source for your DataGrid)

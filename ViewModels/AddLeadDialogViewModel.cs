@@ -52,6 +52,12 @@ namespace CallMan.ViewModels
         [ObservableProperty]
         private SettingItem _selectedLabelItem;
 
+        [ObservableProperty]
+        private int? _leadSourceId;
+
+        [ObservableProperty]
+        private int? _leadTagId;
+
         public AddLeadDialogViewModel(LeadService leadService, IUserSession session, WorkflowEngine workflowEngine, SettingService settingService)
         {
             _leadService = leadService;
@@ -60,9 +66,9 @@ namespace CallMan.ViewModels
             _workflowEngine = workflowEngine;
             _settingService = settingService;
             NewLead.Status = "New";
-        // Initialize with default status
+            // Initialize with default status
 
-        NewLead.LeadHolder = _session.CurrentUser;
+            NewLead.LeadHolder = _session.CurrentUser;
 
             _ = LoadSettingsAsync();
         }
@@ -150,7 +156,7 @@ namespace CallMan.ViewModels
             }
         }
 
-        partial void OnSelectedLabelItemChanged(SettingItem value)
+        partial void OnSelectedLabelItemChanged(SettingItem value) 
         {
             if (value != null && !NewLead.LeadLabels.Contains(value.Name))
             {
@@ -158,6 +164,33 @@ namespace CallMan.ViewModels
                 // Clear selection so the user can pick the same one again if they delete it
                 SelectedLabelItem = null;
             }
+        }
+
+        partial void OnLeadSourceIdChanged(int? value)
+        {
+            // Find the item in the list matching the newly selected ID
+            if (value == null || value == 0)
+            {
+                NewLead.LeadSource = string.Empty;
+                return;
+            }
+
+            var selectedItem = SourceList.FirstOrDefault(x => x.Id == value);
+            NewLead.LeadSourceId = value.Value;
+            NewLead.LeadSource = selectedItem?.Name ?? string.Empty;
+        }
+
+        partial void OnLeadTagIdChanged(int? value)
+        {
+            if (value == null || value == 0)
+            {
+                NewLead.LeadTag = string.Empty;
+                return;
+            }
+
+            var selectedItem = TagsList.FirstOrDefault(x => x.Id == value);
+            NewLead.LeadTagId = value.Value;
+            NewLead.LeadTag = selectedItem?.Name ?? string.Empty;
         }
 
         [RelayCommand]

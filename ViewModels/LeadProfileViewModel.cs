@@ -130,6 +130,7 @@ namespace CallMan.ViewModels
 
                     SelectedLead.LatestUpdate = history;
                     SelectedLead.Status = "Dead";
+                    SelectedLead.DeadReasonId = SelectedDeadReason?.Id ?? 0;
                     // Status is updated to 'Dead' in the Leads table
                     await _leadService.UpdateLeadFullAsync(SelectedLead, history);
                     RequestClose?.Invoke(true);
@@ -162,6 +163,7 @@ namespace CallMan.ViewModels
 
                         SelectedLead.LatestUpdate = history;
                         SelectedLead.Status = IsMatured ? "Matured" : (IsDead ? "Dead" : "Followup");
+                        SelectedLead.StatusId = SelectedStatus?.Id ?? 0;
                         if (IsMatured)
                         {
                             var newOrder = new Order
@@ -195,6 +197,8 @@ namespace CallMan.ViewModels
                                 ActionType = SelectedAction,
                                 FollowupStage = "First Order Recieved"
                             };
+
+                            SelectedLead.MatureStageId = 0; // Reset any previous stage
 
                             // Use the service method that handles the transaction
                             await _leadService.MatureLeadWithDoubleHistoryAsync(SelectedLead, newOrder, payment, history);

@@ -126,7 +126,7 @@
                             <StackPanel Visibility="{Binding IsDead, Converter={StaticResource InvertedVisibilityConverter}}">
                                 <StackPanel Visibility="{Binding IsFollowup, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <TextBlock Text="Followup Stages *" Foreground="#555"/>
-                                    <ComboBox ItemsSource="{Binding FollowupStages}" SelectedItem="{Binding SelectedStatus}" DisplayMemberPath="Name" Style="{StaticResource MaterialDesignOutlinedComboBox}" materialDesign:HintAssist.Hint="Select Reason" Margin="0,5,0,15"/>
+                                    <ComboBox ItemsSource="{Binding FollowupStages}" SelectedItem="{Binding SelectedStatus}" DisplayMemberPath="Name" Style="{StaticResource MaterialDesignOutlinedComboBox}" materialDesign:HintAssist.Hint="Select Stage" Margin="0,5,0,15"/>
                                 </StackPanel>
                                 <Grid>
                                     <Grid.ColumnDefinitions>

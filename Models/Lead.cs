@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -88,5 +89,11 @@ namespace CallMan.Models
         public decimal MonthlyTarget { get; set; }
         public int OrderCount { get; set; }
         [ObservableProperty] private int _historyCount;
+
+        [ObservableProperty] private int? _statusId;
+        [ObservableProperty] private int? _deadReasonId;
+        [ObservableProperty] private int? _matureStageId;
+        [ObservableProperty] private int? _leadSourceId;    // To replace raw text matching if needed
+        [ObservableProperty] private int? _leadTagId;
     }
 }

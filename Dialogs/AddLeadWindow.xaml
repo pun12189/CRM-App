@@ -53,14 +53,14 @@
                         </Grid.ColumnDefinitions>
 
                         <ComboBox Grid.Column="0" ItemsSource="{Binding SourceList}" 
-                                  DisplayMemberPath="Name" SelectedValuePath="Name"
-                                  SelectedValue="{Binding NewLead.LeadSource, UpdateSourceTrigger=PropertyChanged}"
+                                  DisplayMemberPath="Name" SelectedValuePath="Id"
+                                  SelectedValue="{Binding LeadSourceId, UpdateSourceTrigger=PropertyChanged}"                                  
                                   materialDesign:HintAssist.Hint="Lead Source" Margin="5"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
                         <ComboBox Grid.Column="1" ItemsSource="{Binding TagsList}" 
-                                  DisplayMemberPath="Name" SelectedValuePath="Name"
-                                  SelectedValue="{Binding NewLead.LeadTag, UpdateSourceTrigger=PropertyChanged}"
+                                  DisplayMemberPath="Name" SelectedValuePath="Id"
+                                  SelectedValue="{Binding LeadTagId, UpdateSourceTrigger=PropertyChanged}"                                  
                                   materialDesign:HintAssist.Hint="Lead Tags" Margin="5"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 

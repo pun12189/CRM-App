@@ -99,7 +99,8 @@ namespace CallMan.Services
 
             string sql = @"UPDATE Leads SET 
                     CustomerName = @CustomerName, Email = @Email, Phone = @Phone, 
-                    Status = @Status, CompanyName = @CompanyName, AddressLine = @AddressLine, 
+                    Status = @Status, StatusId = @StatusId, DeadReasonId = @DeadReasonId, MatureStageId = @MatureStageId, LeadSourceId = @LeadSourceId, LeadTagId = @LeadTagId,
+                    CompanyName = @CompanyName, AddressLine = @AddressLine, 
                     City = @City, District = @District, State = @State, 
                     Pincode = @Pincode, MetadataJson = @MetadataJson, LeadHolder = @LeadHolder, WorkingArea = @WorkingArea, LeadSource = @LeadSource, LeadTag = @LeadTag, LabelsJson = @LabelsJson, MonthlyTarget = @MonthlyTarget WHERE LeadId = @LeadId";
 
@@ -223,7 +224,7 @@ ORDER BY l.LeadId DESC;";
             try
             {
                 // 1. Update main lead status
-                string updateLead = "UPDATE Leads SET Status = @Status WHERE LeadId = @LeadId";
+                string updateLead = "UPDATE Leads SET Status = @Status, StatusId = @StatusId, DeadReasonId = @DeadReasonId, MatureStageId = @MatureStageId WHERE LeadId = @LeadId";
                 await db.ExecuteAsync(updateLead, lead, trans);
 
                 // 2. Insert into History
@@ -249,7 +250,7 @@ ORDER BY l.LeadId DESC;";
             try
             {
                 // 1. Update Lead Status
-                //await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured' WHERE LeadId = @LeadId", new { lead.LeadId }, trans);
+                await db.ExecuteAsync("UPDATE Leads SET Status = @Status, StatusId = @StatusId, DeadReasonId = @DeadReasonId, MatureStageId = @MatureStageId WHERE LeadId = @LeadId", lead, trans);
 
                 // 2. Create the Order
                 string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, PaymentStatus, ProcessedBy, AmountPaid, Status) 
@@ -283,7 +284,7 @@ ORDER BY l.LeadId DESC;";
             try
             {
                 // 1. Update Lead Status
-                await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured' WHERE LeadId = @LeadId", new { lead.LeadId }, trans);
+                await db.ExecuteAsync("UPDATE Leads SET Status = 'Matured', StatusId = @StatusId, DeadReasonId = @DeadReasonId, MatureStageId = @MatureStageId WHERE LeadId = @LeadId", new { lead.LeadId, lead.StatusId, lead.DeadReasonId, lead.MatureStageId  }, trans);
 
                 // 2. Create the Order
                 string orderSql = @"INSERT INTO Orders (LeadId, TotalAmount, Description, PaymentStatus, ProcessedBy, AmountPaid, Status) 

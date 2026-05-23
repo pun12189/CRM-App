@@ -106,13 +106,13 @@
 
                         <StackPanel Margin="0,0,0,15" Visibility="{Binding IsMaturedDead, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <TextBlock Text="Dead Reason *" Foreground="#555"/>
-                            <ComboBox ItemsSource="{Binding DeadStages}" Margin="0,5,0,0" SelectedItem="{Binding SelectedDeadStage}" materialDesign:HintAssist.Hint="Dead Reasons *" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                            <ComboBox ItemsSource="{Binding DeadStages}" Margin="0,5,0,0" SelectedItem="{Binding SelectedDeadStage}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Dead Reasons *" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,0,15" Visibility="{Binding IsMaturedFollowup, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel>
                                 <TextBlock Text="Mature Stages *" Foreground="#555"/>
-                                <ComboBox ItemsSource="{Binding MatureStages}" SelectedItem="{Binding SelectedMatureStage}" materialDesign:HintAssist.Hint="Mature Stages *" Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,5,0,15"/>
+                                <ComboBox ItemsSource="{Binding MatureStages}" SelectedItem="{Binding SelectedMatureStage}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Mature Stages *" Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,5,0,15"/>
                             </StackPanel>
                             <StackPanel Margin="0,0,0,15">
                                 <CheckBox Content="I have received an order" IsChecked="{Binding IsOrderReceived}" Margin="0,0,0,10"/>

@@ -13,5 +13,6 @@ namespace CallMan.Models.Enums
         Dead,
         TodayFollowUp,
         FutureFollowUp,
+        WinbackPool
     }
 }

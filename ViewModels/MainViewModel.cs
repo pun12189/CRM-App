@@ -91,6 +91,11 @@ namespace CallMan.ViewModels
                     await vm2.InitializeAsync(Models.Enums.LeadViewMode.Dead);
                     CurrentView = vm2;
                     break;
+                case "WinbackPool":
+                    var vm5 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
+                    await vm5.InitializeAsync(Models.Enums.LeadViewMode.WinbackPool);
+                    CurrentView = vm5;
+                    break;
                 case "MyLeads":
                     var vm1 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
                     await vm1.InitializeAsync(Models.Enums.LeadViewMode.MyLeads);

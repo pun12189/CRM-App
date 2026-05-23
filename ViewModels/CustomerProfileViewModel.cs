@@ -49,14 +49,14 @@ namespace CallMan.ViewModels
         [ObservableProperty] private decimal _paymentReceived;
         [ObservableProperty] private decimal _balancePayment;
         [ObservableProperty] private string _message = string.Empty;
-        [ObservableProperty] private string _selectedMatureStage;
-        [ObservableProperty] private string _selectedDeadStage;
+        [ObservableProperty] private SettingItem _selectedMatureStage;
+        [ObservableProperty] private SettingItem _selectedDeadStage;
         [ObservableProperty] private DateTime? _selectedTime = DateTime.Now;
         [ObservableProperty] private DateTime _nextFollowupDate = DateTime.Now.AddDays(1);
         [ObservableProperty] private DateTime _minDate = DateTime.Today;
 
-        [ObservableProperty] private ObservableCollection<string> _matureStages = new();
-        [ObservableProperty] private ObservableCollection<string> _deadStages = new();
+        [ObservableProperty] private ObservableCollection<SettingItem> _matureStages = new();
+        [ObservableProperty] private ObservableCollection<SettingItem> _deadStages = new();
 
         public CustomerProfileViewModel(LeadService service, IUserSession session, SettingService settingService, ProductService productService, OrderService orderService, Lead lead, OccupiedLocationService locationService)
         {
@@ -108,8 +108,8 @@ namespace CallMan.ViewModels
             // Load the string-based mature stages
             var stages = await _settingService.GetSettingsAsync("MatureStages");
             var reasons = await _settingService.GetSettingsAsync("DeadReasons");
-            MatureStages = new ObservableCollection<string>(stages.Select(s => s.Name));
-            DeadStages = new ObservableCollection<string>(reasons.Select(s => s.Name));
+            MatureStages = new ObservableCollection<SettingItem>(stages);
+            DeadStages = new ObservableCollection<SettingItem>(reasons);
 
             Metrics = await _locationService.GetSummaryMetricsAsync(SelectedLead.LeadId);
         }
@@ -127,14 +127,15 @@ namespace CallMan.ViewModels
                     Message = Message,
                     Content = $"[MATURE DEAD] {SelectedLead.CustomerName}\r\n Company: {SelectedLead.CompanyName}",
                     ActionType = "Call",
-                    UpdatedByContent = $" marked as Dead due to {SelectedDeadStage}",
+                    UpdatedByContent = $" marked as Dead due to {SelectedDeadStage?.Name}",
                     NextFollowUpDate = null, // CRITICAL: Stop the reminders
-                    FollowupStage = SelectedDeadStage,
+                    FollowupStage = SelectedDeadStage?.Name,
                     UpdatedBy = _session.CurrentUser
                 };
 
                 SelectedLead.LatestUpdate = history;
-                SelectedLead.Status = "Dead";
+                SelectedLead.Status = "Winback Pool";
+                SelectedLead.DeadReasonId = SelectedDeadStage?.Id ?? 0;
                 // Status is updated to 'Dead' in the Leads table
                 await _service.UpdateLeadFullAsync(SelectedLead, history);
                 RequestClose?.Invoke(true);
@@ -159,14 +160,15 @@ namespace CallMan.ViewModels
                         LeadId = SelectedLead.LeadId,
                         Message = Message,
                         Content = $"[MATURED FOLLOWUP] {SelectedLead.CustomerName}\r\n Company: {SelectedLead.CompanyName}",
-                        UpdatedByContent = $" scheduled a matured follow-up ({SelectedMatureStage}) on {combinedDateTime:G}",
+                        UpdatedByContent = $" scheduled a matured follow-up ({SelectedMatureStage?.Name}) on {combinedDateTime:G}",
                         NextFollowUpDate = combinedDateTime,
                         UpdatedBy = _session.CurrentUser,
                         ActionType = "Call",
-                        FollowupStage = SelectedMatureStage
+                        FollowupStage = SelectedMatureStage?.Name
                     };
 
                     SelectedLead.LatestUpdate = history;
+                    SelectedLead.MatureStageId = SelectedMatureStage?.Id ?? 0;
                     if (IsOrderReceived)
                     {
                         var newOrder = new Order
@@ -198,7 +200,7 @@ namespace CallMan.ViewModels
                             NextFollowUpDate = combinedDateTime,
                             UpdatedBy = _session.CurrentUser,
                             ActionType = "Call",
-                            FollowupStage = SelectedMatureStage
+                            FollowupStage = SelectedMatureStage?.Name
                         };
 
                         await _service.MatureWithOrderAndPaymentAsync(SelectedLead, newOrder, payment, history);

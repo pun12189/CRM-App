@@ -15,22 +15,22 @@ namespace CallMan.Models
         [ObservableProperty] private bool _isSelectedForAction;
 
         public int LeadId { get; set; }
-        public ObservableCollection<Division> AssignedDivisions { get; set; } = new();
-        public string CustomerName { get; set; } = string.Empty;
-        public string? Email { get; set; }
-        public string? Phone { get; set; }
+        [ObservableProperty] private ObservableCollection<Division> _assignedDivisions = new();
+        [ObservableProperty] private string _customerName = string.Empty;
+        [ObservableProperty] private string? _email;
+        [ObservableProperty] private string? _phone;
+        [ObservableProperty] private string? _altPhone;
         [ObservableProperty] private string _status = "New";
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
         // Structured Address Fields
-        public string? CompanyName { get; set; }
-        public string? AddressLine { get; set; }
-        public string? City { get; set; }
-        public string? District { get; set; }
-        public string? State { get; set; }
-        public string? Pincode { get; set; }
-        public string? Country { get; set; } = "India";
-
+        [ObservableProperty] private string? _companyName;
+        [ObservableProperty] private string? _addressLine;
+        [ObservableProperty] private string? _city;
+        [ObservableProperty] private string? _district;
+        [ObservableProperty] private string? _state;
+        [ObservableProperty] private string? _pincode;
+        [ObservableProperty] private string? _country = "India";
         // Mapping Properties for Excel
         [ObservableProperty] private string _leadSource;    // Maps to "Lead Source" column
         [ObservableProperty] private string _leadTag;      // Maps to "Tags" (e.g. "New,Urgent")

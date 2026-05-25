@@ -109,7 +109,7 @@ namespace CallMan.Services
             await DeleteLeadDivisionsAsync(lead.LeadId);
 
             string linkSql = "INSERT INTO LeadDivisions (LeadId, DivisionId) VALUES (@LeadId, @DivId)";
-            var linkParams = lead.AssignedDivisions.Select(divId => new { LeadId = lead.LeadId, DivId = divId });
+            var linkParams = lead.AssignedDivisions.Select(divId => new { LeadId = lead.LeadId, DivId = divId.Id });
             await db.ExecuteAsync(linkSql, linkParams);
 
             return rows > 0;

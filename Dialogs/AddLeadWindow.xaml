@@ -7,7 +7,222 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="Generate New Lead" Height="700" Width="900" WindowStartupLocation="CenterScreen">
-    <Grid>
+    <Grid Background="#F9FAFB">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- TITLE HEADER MODULE -->
+        <TextBlock Text="GENERATE NEW LEAD" FontSize="22" FontWeight="Bold" 
+               Foreground="#1794A1" Margin="24,20,24,10"/>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="15">
+            <StackPanel Margin="10,0">
+
+                <!-- SECTION 1: PRIMARY CONTACT & PIPELINE INFRASTRUCTURE -->
+                <materialDesign:Card Padding="20" Margin="0,0,0,16" Background="White" UniformCornerRadius="6">
+                    <StackPanel>
+                        <TextBlock Text="Primary Contact &amp; Classification" FontWeight="Bold" FontSize="14" Margin="5,0,0,15" Foreground="#374151"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Column 0: Customer Name -->
+                            <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding NewLead.CustomerName}" 
+                                 materialDesign:HintAssist.Hint="Customer Name" Margin="5"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                            <!-- Column 1: Cleaned Single Phone TextBox Entry -->
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding LeadPhone, UpdateSourceTrigger=LostFocus}" 
+                                 materialDesign:HintAssist.Hint="Phone Number (e.g. +91...)" Margin="5"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                            <!-- Column 2: Cleaned Single Alternate Phone TextBox Entry -->
+                            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding LeadAltPhone, UpdateSourceTrigger=LostFocus}" 
+                                 materialDesign:HintAssist.Hint="Alternate Number" Margin="5"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                            <!-- Column 3: Email Address -->
+                            <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding NewLead.Email}" 
+                                 materialDesign:HintAssist.Hint="Email Address" Margin="5"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                            <!-- Row 2, Column 0: Lead Source -->
+                            <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding SourceList}" 
+                                  DisplayMemberPath="Name" SelectedValuePath="Id"
+                                  SelectedValue="{Binding NewLead.LeadSourceId, UpdateSourceTrigger=PropertyChanged}"                        
+                                  materialDesign:HintAssist.Hint="Lead Source" Margin="5"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                            <!-- Row 2, Column 1: Lead Tags -->
+                            <ComboBox Grid.Row="2" Grid.Column="3" ItemsSource="{Binding TagsList}" 
+                                  DisplayMemberPath="Name" SelectedValuePath="Id"
+                                  SelectedValue="{Binding NewLead.LeadTagId, UpdateSourceTrigger=PropertyChanged}"                        
+                                  materialDesign:HintAssist.Hint="Lead Tags" Margin="5"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                            <ItemsControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding NewLead.AssignedDivisions}" Margin="0,0,0,4">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <materialDesign:Chip Content="{Binding Name}" Margin="2" IsDeletable="True"
+                                            DeleteCommand="{Binding DataContext.RemoveDivisionCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            DeleteCommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <!-- Row 2, Column 2: Multi-Select Lead Divisions -->
+                            <ComboBox Grid.Row="2" Grid.Column="0" Margin="5" ItemsSource="{Binding DivisionList}" DisplayMemberPath="Name"
+                                      SelectedItem="{Binding SelectedDivisionItem, UpdateSourceTrigger=PropertyChanged}"
+                                      materialDesign:HintAssist.Hint="Select Divisions" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                            <ItemsControl Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" ItemsSource="{Binding NewLead.LeadLabels}" Margin="0,0,0,4">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <materialDesign:Chip Content="{Binding}" Margin="2" IsDeletable="True"
+                                            DeleteCommand="{Binding DataContext.RemoveLabelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            DeleteCommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <!-- Row 2, Column 3: Lead Labels -->
+                                <ComboBox Grid.Row="2" Grid.Column="2" Margin="5" ItemsSource="{Binding LabelsList}" DisplayMemberPath="Name" SelectedValuePath="Name"
+                                      SelectedItem="{Binding SelectedLabelItem}" materialDesign:HintAssist.Hint="Lead Labels" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>                                
+                            
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- SECTION 2: INTEGRATED COMPANY, ADDRESS & AUTONOMOUS API LOCATION -->
+                <materialDesign:Card Padding="20" Margin="0,0,0,16" Background="White" UniformCornerRadius="6">
+                    <StackPanel>
+                        <TextBlock Text="Company &amp; Address Footprint" FontWeight="Bold" FontSize="14" Margin="5,0,0,15" Foreground="#374151"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Text="{Binding NewLead.CompanyName}" materialDesign:HintAssist.Hint="Company Name (Optional)" Margin="5" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            <TextBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding NewLead.Address}" materialDesign:HintAssist.Hint="Full Street Address / Area" Margin="5" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            <TextBox Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Text="{Binding LeadPincode, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Pincode" Margin="5" FontWeight="SemiBold" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            <TextBox Grid.Row="2" Grid.Column="0" Text="{Binding NewLead.City, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" materialDesign:HintAssist.Hint="City" Margin="5" Background="#F3F4F6" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding NewLead.District, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" materialDesign:HintAssist.Hint="District" Margin="5" Background="#F3F4F6" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding NewLead.State, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" materialDesign:HintAssist.Hint="State" Margin="5" Background="#F3F4F6" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding NewLead.Country, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" materialDesign:HintAssist.Hint="Country" Margin="5" Background="#F3F4F6" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- SECTION 3: CONDITIONAL OPERATIONAL TARGETS -->
+                <materialDesign:Card Padding="20" Margin="0,0,0,16" Background="White" UniformCornerRadius="6">
+                    <materialDesign:Card.Style>
+                        <Style TargetType="materialDesign:Card">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding NewLead.Status}" Value="Matured">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding NewLead.Status}" Value="New">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding NewLead.Status}" Value="Followup">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </materialDesign:Card.Style>
+                    <StackPanel>
+                        <TextBlock Text="Target Specifications" FontWeight="Bold" FontSize="14" Margin="5,0,0,15" Foreground="#374151"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding NewLead.WorkingArea}" materialDesign:HintAssist.Hint="Working Area" Margin="5" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                            <TextBox Grid.Column="2" Grid.ColumnSpan="2" Text="{Binding NewLead.MonthlyTarget}" materialDesign:HintAssist.Hint="Monthly Target" Margin="5" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>                            
+                        </Grid>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- SECTION 4: CUSTOM FIELDS ENGINE -->
+                <materialDesign:Card Padding="20" Margin="0,0,0,16" Background="White" UniformCornerRadius="6">
+                    <StackPanel>
+                        <TextBlock Text="Custom Parameter Attributes" FontWeight="Bold" FontSize="14" Margin="5,0,0,15" Foreground="#374151"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="1.5*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox Grid.Column="0" Text="{Binding TempFieldName}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Custom Field Name" Margin="5"/>
+                            <TextBox Grid.Column="1" Text="{Binding TempFieldValue}" Style="{StaticResource MaterialDesignOutlinedTextBox}" materialDesign:HintAssist.Hint="Custom Field Value" Margin="5"/>
+                            <Button Grid.Column="2" Content="ADD" Command="{Binding AddCustomFieldCommand}" Width="100" Margin="5" Style="{StaticResource MaterialDesignRaisedDarkButton}" Background="#1794A1" BorderBrush="#1794A1"/>
+                        </Grid>
+                        <ItemsControl Margin="5,10,5,5" ItemsSource="{Binding VisibleCustomFields}" Height="Auto" MaxHeight="120">
+                            <ItemsControl.Template>
+                                <ControlTemplate>
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </ControlTemplate>
+                            </ItemsControl.Template>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#F3F4F6" BorderThickness="0,0,0,1" Padding="8,4">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <materialDesign:PackIcon Kind="LabelVariantOutline" Width="14" Height="14" Foreground="Gray" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Key}" FontWeight="SemiBold" Foreground="#374151" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text=" →  " Foreground="DarkGray" Margin="4,0" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding Value}" Foreground="#1F2937" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </materialDesign:Card>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- SECTION 5: MASTER ACTIONS PANEL ROW -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="24,10,24,20">
+            <Button Content="CANCEL" Style="{StaticResource MaterialDesignFlatButton}" IsCancel="True" Margin="0,0,12,0" Foreground="#6B7280"/>
+            <Button Content="SAVE LEAD" Style="{StaticResource MaterialDesignRaisedButton}" IsDefault="True"
+                Command="{Binding SaveLeadCommand}" Width="160" Background="#673AB7" BorderBrush="#673AB7" Height="40"/>
+        </StackPanel>
+    </Grid>
+    <!--<Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -203,7 +418,7 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Margin="0,2" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding Key}" Style="{StaticResource MaterialDesignBody1TextBlock}" FontWeight="SemiBold"/>
-                                <TextBlock Text="---→ " Margin="5,0" Foreground="Gray" Style="{StaticResource MaterialDesignBody1TextBlock}" HorizontalAlignment="Center"/>
+                                <TextBlock Text="-→ " Margin="5,0" Foreground="Gray" Style="{StaticResource MaterialDesignBody1TextBlock}" HorizontalAlignment="Center"/>
                                 <TextBlock Text="{Binding Value}" Style="{StaticResource MaterialDesignBody1TextBlock}"/>
                             </StackPanel>
                         </DataTemplate>
@@ -217,5 +432,5 @@
             <Button Content="SAVE LEAD" Style="{StaticResource MaterialDesignRaisedButton}" IsDefault="True"
                     Command="{Binding SaveLeadCommand}" Width="150" Background="#673AB7" BorderBrush="#673AB7"/>
         </StackPanel>
-    </Grid>
+    </Grid>-->
 </Window>

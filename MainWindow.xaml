@@ -64,6 +64,9 @@
         <DataTemplate DataType="{x:Type vm:OccupiedLocationViewModel}">
             <views:OccupiedLocationView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:E2EReportsDashboardViewModel}">
+            <views:E2EReportsView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -218,13 +221,14 @@
                     <MenuItem Header="Dead" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dead"/>
                     <MenuItem Header="Winback Pool" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="WinbackPool"/>
                 </MenuItem>
-                <MenuItem Header="Purchase" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}"/>
+                <MenuItem Header="Purchase" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}" IsEnabled="False"/>
                 <MenuItem Header="CRM" Icon="{materialDesign:PackIcon Kind=AccountGroup}">
                     <MenuItem Header="Customers" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Customers"/>
                     <MenuItem Header="Orders" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Orders"/>
                     <MenuItem Header="Product List" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>
                 </MenuItem>
                 <MenuItem Header="Admin Settings" Icon="{materialDesign:PackIcon Kind=Settings}" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
+                <MenuItem Header="e2e Reports" HorizontalAlignment="Right" Icon="{materialDesign:PackIcon Kind=FileDocument}" Command="{Binding NavigateCommand}" CommandParameter="Reports"/>
             </Menu>
         </materialDesign:ColorZone>
         <ContentControl Grid.Row="2" Content="{Binding CurrentView}"/>

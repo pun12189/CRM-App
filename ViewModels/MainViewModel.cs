@@ -86,6 +86,9 @@ namespace CallMan.ViewModels
                 case "Location":
                     CurrentView = App.ServiceProvider.GetRequiredService<OccupiedLocationViewModel>();
                     break;
+                case "Reports":
+                    CurrentView = App.ServiceProvider.GetRequiredService<E2EReportsDashboardViewModel>();
+                    break;
                 case "Dead":
                     var vm2 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
                     await vm2.InitializeAsync(Models.Enums.LeadViewMode.Dead);

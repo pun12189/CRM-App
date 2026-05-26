@@ -8,6 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Configuration;
 using System.Data;
 using System.Windows;
+using ToastNotifications;
+using ToastNotifications.Position;
+using ToastNotifications.Lifetime;
 
 namespace CallMan
 {
@@ -17,6 +20,8 @@ namespace CallMan
     public partial class App : Application
     {
         public static IServiceProvider? ServiceProvider { get; private set; }
+        // Expose a globally accessible static notifier handle
+        public static Notifier Toaster { get; private set; } = null!;
 
         public App()
         {
@@ -34,6 +39,11 @@ namespace CallMan
 
             //_connectionString = "DataSource=bahikitab-aws.c3s6wewcwox1.us-east-1.rds.amazonaws.com;Port=3306;Uid=admin;Pwd=Il6oOvguA2SB5IEQxWCJ;database=bahikitab";
             string connectionString = "Server=82.29.166.165;Port=3306;Uid=root;Pwd=sofricdev;database=callmandev";
+#endif
+#if SUBODH
+
+            //_connectionString = "DataSource=bahikitab-aws.c3s6wewcwox1.us-east-1.rds.amazonaws.com;Port=3306;Uid=admin;Pwd=Il6oOvguA2SB5IEQxWCJ;database=bahikitab";
+            string connectionString = "Server=127.0.0.1;Port=3306;Uid=root;Pwd=Sofric@123;database=callmandev";
 #endif
 #if RAVI
 
@@ -87,6 +97,7 @@ namespace CallMan
             services.AddTransient<CustomerSummaryViewModel>();
             services.AddTransient<GlobalNewOrderViewModel>();
             services.AddTransient<ImportViewModel>();
+            services.AddTransient<E2EReportsDashboardViewModel>();
 
             services.AddTransient<UserManagementViewModel>();
             services.AddTransient<AddStaffDialogViewModel>();
@@ -110,6 +121,21 @@ namespace CallMan
             //    new RoutedEventHandler(OnWindowLoaded));
 
             base.OnStartup(e);
+
+            Toaster = new Notifier(cfg =>
+            {
+                cfg.PositionProvider = new WindowPositionProvider(
+                    parentWindow: Application.Current.MainWindow,
+                    corner: Corner.BottomRight,
+                    offsetX: 15,
+                    offsetY: 15);
+
+                cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
+                    notificationLifetime: TimeSpan.FromSeconds(3),
+                    maximumNotificationCount: MaximumNotificationCount.FromCount(5));
+
+                cfg.Dispatcher = Application.Current.Dispatcher;
+            });
 
             var loginView = ServiceProvider!.GetRequiredService<LoginView>();
             //this.MainWindow = null;

@@ -36,6 +36,8 @@ namespace CallMan.ViewModels
         // This is what the DataGrid actually binds to now
         public ICollectionView LeadsCollection => _leadsCollection;
 
+        [ObservableProperty] private ObservableCollection<SettingItem> _leadTags = new();
+
         [ObservableProperty] private LeadViewMode _currentMode = LeadViewMode.AllLeads;
 
         [ObservableProperty]
@@ -43,6 +45,12 @@ namespace CallMan.ViewModels
 
         [ObservableProperty]
         private Lead? _selectedLead;
+
+        [ObservableProperty]
+        private SettingItem? _selectedLeadTag;
+
+        [ObservableProperty]
+        private bool _isFuture;
 
         public LeadFollowupViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService)
         {
@@ -59,6 +67,15 @@ namespace CallMan.ViewModels
         public async Task InitializeAsync(LeadViewMode mode)
         {
             CurrentMode = mode;
+            if (mode == LeadViewMode.FutureFollowUp)
+            {
+                IsFuture = true;
+            }
+            else
+            {
+                IsFuture = false;
+            }
+
             await LoadLeads();
         }
 
@@ -123,6 +140,8 @@ namespace CallMan.ViewModels
 
             // 5. Notify the UI to refresh the table
             OnPropertyChanged(nameof(LeadsCollection));
+
+            LeadTags = new ObservableCollection<SettingItem>(await _settingService.GetSettingsAsync("LeadTags"));
         }
 
         // This logic runs every time SearchText changes
@@ -139,14 +158,21 @@ namespace CallMan.ViewModels
             // Search across multiple fields: Name, Phone, City, and Company
             return lead.CustomerName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                    (lead.Phone?.Contains(SearchText) ?? false) ||
+                   (lead.AltPhone?.Contains(SearchText) ?? false) ||
                    (lead.City?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.CompanyName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.LeadHolder?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (lead.Pincode?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.District?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.Email?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.Status?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.State?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                   (lead.AssignedDivisions?.Any(d => d.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false);
+                   (lead.AssignedDivisions?.Any(d => d.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false) ||
+                   (lead.LeadLabels?.Any(label => label.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false) ||
+                   (lead.CustomFields?.Any(cf => cf.Value.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false) ||
+                   (lead.CustomFields?.Any(cf => cf.Key.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false) ||
+                   (lead.LeadSource?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (lead.LeadTag?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false);
         }
 
         [RelayCommand]
@@ -305,6 +331,69 @@ namespace CallMan.ViewModels
                     }
                 }
             }
+        }
+
+        [RelayCommand]
+        private async Task RefreshLeads(LeadViewMode viewMode)
+        {
+            // 1. Call the new service method that joins Leads with their latest History
+            var data = await _leadService.GetAllFollowupTodayPendingAsync(viewMode);
+
+            // 2. Wrap the result in an ObservableCollection
+            var list = new ObservableCollection<Lead>(data);
+
+            var userId = _session.CurrentUser;
+            if (userId.ToLower() != "admin")
+            {
+                list = new ObservableCollection<Lead>(list.Where(l => l.LeadHolder == userId));
+            }
+
+            // 3. Update the CollectionView (the actual source for your DataGrid)
+            _leadsCollection = CollectionViewSource.GetDefaultView(list);
+
+            // 4. Re-apply your search filter logic
+            _leadsCollection.Filter = FilterLeads;
+
+            // 5. Notify the UI to refresh the table
+            OnPropertyChanged(nameof(LeadsCollection));
+
+            this.SelectedLeadTag = null;
+        }
+
+        partial void OnSelectedLeadTagChanged(SettingItem? value)
+        {
+            if (value == null)
+            {
+                _ = LoadLeads(); // If no tag is selected, show all leads
+            }
+            else
+            {
+                _ = LoadLeadTags(value.Id); // Load leads filtered by the selected tag
+            }
+        }
+
+        private async Task LoadLeadTags(int id)
+        {
+            // 1. Call the new service method that joins Leads with their latest History
+            var data = await _leadService.GetAllLeadsWithLeadTagsAsync(id);
+
+            // 2. Wrap the result in an ObservableCollection
+            var list = new ObservableCollection<Lead>(data);
+
+            var userId = _session.CurrentUser;
+            if (userId.ToLower() != "admin")
+            {
+                list = new ObservableCollection<Lead>(list.Where(l => l.LeadHolder == userId));
+            }
+
+            // 3. Update the CollectionView (the actual source for your DataGrid)
+            _leadsCollection = CollectionViewSource.GetDefaultView(list);
+
+            // 4. Re-apply your search filter logic
+            _leadsCollection.Filter = FilterLeads;
+
+            // 5. Notify the UI to refresh the table
+            OnPropertyChanged(nameof(LeadsCollection));
         }
     }
 }

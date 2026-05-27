@@ -105,7 +105,7 @@
                         <Button Content="Dead Reasons" Style="{StaticResource SettingTileStyle}" CommandParameter="Dead Reasons" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Content="Followup Stages" Style="{StaticResource SettingTileStyle}" CommandParameter="Followup Stages" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Content="Mature Stages" Style="{StaticResource SettingTileStyle}" CommandParameter="Mature Stages" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Content="Lead Tags" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Tags" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Content="Lead Categories" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Tags" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Content="Custom Fields" Style="{StaticResource SettingTileStyle}" IsEnabled="False"/>
                         <Button Content="Lead Source" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Source" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Content="Lead Label" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Labels" Command="{Binding NavigateToSettingCommand}"/>

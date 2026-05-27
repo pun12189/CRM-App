@@ -149,14 +149,21 @@ namespace CallMan.ViewModels
             // Search across multiple fields: Name, Phone, City, and Company
             return lead.CustomerName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                    (lead.Phone?.Contains(SearchText) ?? false) ||
+                   (lead.AltPhone?.Contains(SearchText) ?? false) ||
                    (lead.City?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.CompanyName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.LeadHolder?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (lead.Pincode?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.District?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.Email?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.Status?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.State?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
-                   (lead.AssignedDivisions?.Any(d => d.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false);
+                   (lead.AssignedDivisions?.Any(d => d.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false) ||
+                   (lead.LeadLabels?.Any(label => label.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false) ||
+                   (lead.CustomFields?.Any(cf => cf.Value.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false)||
+                   (lead.CustomFields?.Any(cf => cf.Key.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false) ||
+                   (lead.LeadSource?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (lead.LeadTag?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false);
         }
 
         [RelayCommand]

@@ -46,7 +46,7 @@
 
                             <!-- Column 1: Cleaned Single Phone TextBox Entry -->
                             <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding LeadPhone, UpdateSourceTrigger=LostFocus}" 
-                                 materialDesign:HintAssist.Hint="Phone Number (e.g. +91...)" Margin="5"
+                                 materialDesign:HintAssist.Hint="Phone Number" Margin="5"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
                             <!-- Column 2: Cleaned Single Alternate Phone TextBox Entry -->
@@ -62,14 +62,14 @@
                             <!-- Row 2, Column 0: Lead Source -->
                             <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding SourceList}" 
                                   DisplayMemberPath="Name" SelectedValuePath="Id"
-                                  SelectedValue="{Binding NewLead.LeadSourceId, UpdateSourceTrigger=PropertyChanged}"                        
+                                  SelectedValue="{Binding LeadSourceId, UpdateSourceTrigger=PropertyChanged}"                        
                                   materialDesign:HintAssist.Hint="Lead Source" Margin="5"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
                             <!-- Row 2, Column 1: Lead Tags -->
                             <ComboBox Grid.Row="2" Grid.Column="3" ItemsSource="{Binding TagsList}" 
                                   DisplayMemberPath="Name" SelectedValuePath="Id"
-                                  SelectedValue="{Binding NewLead.LeadTagId, UpdateSourceTrigger=PropertyChanged}"                        
+                                  SelectedValue="{Binding LeadTagId, UpdateSourceTrigger=PropertyChanged}"                        
                                   materialDesign:HintAssist.Hint="Lead Tags" Margin="5"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 

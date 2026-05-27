@@ -210,9 +210,12 @@ namespace CallMan.ViewModels
                 return;
             }
 
-            var selectedItem = SourceList.FirstOrDefault(x => x.Id == value);
-            NewLead.LeadSourceId = value.Value;
-            NewLead.LeadSource = selectedItem?.Name ?? string.Empty;
+            if (value != null && value.Value != NewLead.LeadSourceId)
+            {
+                var selectedItem = SourceList.FirstOrDefault(x => x.Id == value);
+                NewLead.LeadSourceId = value.Value;
+                NewLead.LeadSource = selectedItem?.Name ?? string.Empty;
+            }           
         }
 
         partial void OnLeadTagIdChanged(int? value)
@@ -223,9 +226,12 @@ namespace CallMan.ViewModels
                 return;
             }
 
-            var selectedItem = TagsList.FirstOrDefault(x => x.Id == value);
-            NewLead.LeadTagId = value.Value;
-            NewLead.LeadTag = selectedItem?.Name ?? string.Empty;
+            if (value != null && value.Value != NewLead.LeadTagId)
+            {
+                var selectedItem = TagsList.FirstOrDefault(x => x.Id == value);
+                NewLead.LeadTagId = value.Value;
+                NewLead.LeadTag = selectedItem?.Name ?? string.Empty;
+            }
         }
 
         partial void OnLeadPincodeChanged(string value)

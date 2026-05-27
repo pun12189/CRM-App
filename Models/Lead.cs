@@ -64,7 +64,7 @@ namespace CallMan.Models
 
         // Helper to display dynamic info in the Grid
         [NotMapped]
-        public string CustomInfoSummary => string.Join(", ", CustomFields.Select(x => $"{x.Key} : {x.Value}"));
+        public string CustomInfoSummary => string.Join(Environment.NewLine, CustomFields.Select(x => $"{x.Key} : {x.Value}"));
 
         [NotMapped]
         public Dictionary<string, string> CustomFields { get; set; } = new();

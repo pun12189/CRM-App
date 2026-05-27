@@ -94,11 +94,11 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <TextBox Grid.Column="0" Text="{Binding Data.FirstOrderAmount, StringFormat='C', Mode=OneWay}"
+                            <TextBox Grid.Column="0" Text="{Binding Data.FirstOrderAmount, StringFormat={}{0:C2}, ConverterCulture=en-IN, Mode=OneWay}"
                                  materialDesign:HintAssist.Hint="First Order Amount" IsReadOnly="True"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
-                            <TextBox Grid.Column="2" Text="{Binding Data.LastOrderAmount, StringFormat='C', Mode=OneWay}"
+                            <TextBox Grid.Column="2" Text="{Binding Data.LastOrderAmount, StringFormat={}{0:C2}, ConverterCulture=en-IN, Mode=OneWay}"
                                  materialDesign:HintAssist.Hint="Last Order Amount" IsReadOnly="True"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                             <!-- Subtext for last order date/time would go here -->
@@ -110,7 +110,7 @@
                         </StackPanel>
 
                         <StackPanel Margin="0,0,0,15" Visibility="{Binding IsMaturedFollowup, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <StackPanel>
+                            <StackPanel Visibility="{Binding IsOrderReceived, Converter={StaticResource InvertedVisibilityConverter}}">
                                 <TextBlock Text="Mature Stages *" Foreground="#555"/>
                                 <ComboBox ItemsSource="{Binding MatureStages}" SelectedItem="{Binding SelectedMatureStage}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Mature Stages *" Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,5,0,15"/>
                             </StackPanel>

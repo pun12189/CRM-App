@@ -135,7 +135,7 @@ namespace CallMan.ViewModels
 
                 SelectedLead.LatestUpdate = history;
                 SelectedLead.Status = "Winback Pool";
-                SelectedLead.DeadReasonId = SelectedDeadStage?.Id ?? 0;
+                SelectedLead.DeadReasonId = SelectedDeadStage?.Id ?? null;
                 // Status is updated to 'Dead' in the Leads table
                 await _service.UpdateLeadFullAsync(SelectedLead, history);
                 RequestClose?.Invoke(true);
@@ -168,7 +168,7 @@ namespace CallMan.ViewModels
                     };
 
                     SelectedLead.LatestUpdate = history;
-                    SelectedLead.MatureStageId = SelectedMatureStage?.Id ?? 0;
+                    SelectedLead.MatureStageId = SelectedMatureStage?.Id ?? null;
                     if (IsOrderReceived)
                     {
                         var newOrder = new Order

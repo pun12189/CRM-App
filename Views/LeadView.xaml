@@ -196,6 +196,12 @@
                                         <materialDesign:PackIcon Kind="Whatsapp"/>
                                     </Button>
                                 </StackPanel>
+                                <StackPanel x:Name="WhatsApp1" Grid.Row="1" Grid.Column="2" Orientation="Horizontal">
+                                    <TextBlock Text="{Binding AltPhone}" TextWrapping="Wrap" FontSize="12" Margin="0" VerticalAlignment="Center"/>
+                                    <Button BorderThickness="0" Command="{Binding DataContext.WhatsappCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" Margin="5,0" Padding="5" Foreground="Green">
+                                        <materialDesign:PackIcon Kind="Whatsapp"/>
+                                    </Button>
+                                </StackPanel>
                                 <TextBlock x:Name="Email" Text="{Binding Email}" Grid.Row="2" Grid.Column="2" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"/>
                                 <StackPanel x:Name="Map" Orientation="Vertical" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
@@ -217,6 +223,12 @@
                                 <DataTrigger Binding="{Binding Phone}" Value="">
                                     <Setter TargetName="WhatsApp" Property="Visibility" Value="Collapsed"/>
                                 </DataTrigger>
+                                <DataTrigger Binding="{Binding AltPhone}" Value="{x:Null}">
+                                    <Setter TargetName="WhatsApp1" Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding AltPhone}" Value="">
+                                    <Setter TargetName="WhatsApp1" Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
                                 <DataTrigger Binding="{Binding Email}" Value="{x:Null}">
                                     <Setter TargetName="Email" Property="Visibility" Value="Collapsed"/>
                                 </DataTrigger>
@@ -233,12 +245,12 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Info" Width="150">
+                <DataGridTemplateColumn Header="Lead Info" Width="150">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="{Binding LeadSource, StringFormat='{}Source: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding LeadTag, StringFormat='{}Tag: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding LeadTag, StringFormat='{}Category: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                                 <TextBlock Text="{Binding LeadHolder, StringFormat='{}LeadHolder: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                             </StackPanel>
                         </DataTemplate>

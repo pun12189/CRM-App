@@ -63,7 +63,7 @@ namespace CallMan.Services
             int newId = await db.ExecuteScalarAsync<int>(sql, lead);
 
             string linkSql = "INSERT INTO LeadDivisions (LeadId, DivisionId) VALUES (@LeadId, @DivId)";
-            var linkParams = lead.AssignedDivisions.Select(divId => new { LeadId = newId, DivId = divId });
+            var linkParams = lead.AssignedDivisions.Select(divId => new { LeadId = newId, DivId = divId.Id });
             await db.ExecuteAsync(linkSql, linkParams);
 
             // Save initial history entry
@@ -216,6 +216,71 @@ ORDER BY l.LeadId DESC;";
             return leadMap.Values;
         }
 
+        public async Task<IEnumerable<Lead>> GetAllLeadsWithLeadTagsAsync(int id)
+        {
+            using var db = _context.CreateConnection();
+
+            var leadMap = new Dictionary<int, Lead>();
+
+            // Complex query: Select Lead info, and join with ONLY the newest History entry
+            string sql = @"
+        SELECT 
+    l.*, 
+    (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,  
+(SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) as OrderCount,
+    h.*, d.*
+    FROM Leads l
+    LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+    LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId 
+    LEFT JOIN Divisions d ON ld.DivisionId = d.Id
+WHERE l.LeadTagId = @LeadTagId AND (h.HistoryId = (
+    SELECT MAX(HistoryId) 
+    FROM LeadHistory 
+    WHERE LeadId = l.LeadId
+) OR h.HistoryId IS NULL) -- In case lead has no history yet
+ORDER BY l.LeadId DESC;";
+
+            // Use Dapper to map both objects (Lead and History)
+            var result = await db.QueryAsync<Lead, LeadHistoryEntry, Division, Lead>(sql,
+                (lead, history, division) =>
+                {
+                    if (!leadMap.TryGetValue(lead.LeadId, out var currentLead))
+                    {
+                        // First time seeing this Lead - initialize and add to map
+                        currentLead = lead;
+                        currentLead.AssignedDivisions = new ObservableCollection<Division>();
+                        currentLead.LatestUpdate = history;
+
+                        // Handle your JSON deserialization here (only happens once)
+                        if (!string.IsNullOrEmpty(currentLead.MetadataJson))
+                        {
+                            currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson)
+                                               ?? new Dictionary<string, string>();
+                        }
+
+                        if (!string.IsNullOrEmpty(currentLead.LabelsJson))
+                        {
+                            currentLead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(currentLead.LabelsJson)
+                                               ?? new ObservableCollection<string>();
+                        }
+
+                        leadMap.Add(currentLead.LeadId, currentLead);
+                    }                    // Map the dynamic metadata as before
+
+
+                    if (division != null && !currentLead.AssignedDivisions.Any(x => x.Id == division.Id))
+                    {
+                        currentLead.AssignedDivisions.Add(division);
+                    }
+
+                    // Assign the latest history entry to the calculated property
+                    currentLead.LatestUpdate = history;
+                    return currentLead;
+                }, new {LeadTagId = id}, splitOn: "HistoryId,Id"); // Dapper splits the row mapping here
+
+            return leadMap.Values;
+        }
+
         public async Task UpdateLeadFullAsync(Lead lead, LeadHistoryEntry history)
         {
             using var db = _context.CreateConnection();
@@ -349,6 +414,12 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
                     if (!string.IsNullOrEmpty(currentLead.MetadataJson))
                     {
                         currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson);
+                    }
+
+                    if (!string.IsNullOrEmpty(currentLead.LabelsJson))
+                    {
+                        currentLead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(currentLead.LabelsJson)
+                                           ?? new ObservableCollection<string>();
                     }
 
                     leadMap.Add(currentLead.LeadId, currentLead);
@@ -749,6 +820,80 @@ AND (
         LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
         LEFT JOIN Divisions d ON ld.DivisionId = d.Id
         WHERE h.NextFollowUpDate > CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
+            SELECT MAX(HistoryId) 
+            FROM LeadHistory 
+            WHERE LeadId = l.LeadId
+        ) AND h.HistoryId IS NOT NULL -- In case lead has no history yet
+        ORDER BY h.NextFollowUpDate ASC;";
+            }
+
+            // Use Dapper to map both objects (Lead and History)
+            await db.QueryAsync<Lead, LeadHistoryEntry, Division, Lead>(sql, (lead, history, division) =>
+            {
+                // 1. If lead isn't in our map, add it
+                if (!leadMap.TryGetValue(lead.LeadId, out var currentLead))
+                {
+                    currentLead = lead;
+                    currentLead.AssignedDivisions = new ObservableCollection<Division>();
+                    currentLead.LatestUpdate = history;
+
+                    // Deserialize JSON metadata if present
+                    if (!string.IsNullOrEmpty(currentLead.MetadataJson))
+                    {
+                        currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson);
+                    }
+
+                    leadMap.Add(currentLead.LeadId, currentLead);
+                }
+
+                // 2. Add the division from this specific row to the existing lead's collection
+                if (division != null && !currentLead.AssignedDivisions.Any(x => x.Id == division.Id))
+                {
+                    currentLead.AssignedDivisions.Add(division);
+                }
+
+                return currentLead;
+            }, splitOn: "HistoryId,Id"); // Dapper splits the row mapping here
+
+            return leadMap.Values;
+        }
+
+        public async Task<IEnumerable<Lead>> GetAllFollowupTodayPendingAsync(LeadViewMode mode)
+        {
+            using var db = _context.CreateConnection();
+            var leadMap = new Dictionary<int, Lead>();
+
+            // Complex query: Select Lead info, and join with ONLY the newest History entry
+            string sql = @"
+        SELECT 
+            l.*, 
+            (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
+            (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) as OrderCount,
+            h.*, d.*
+        FROM Leads l
+        LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+        LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
+        LEFT JOIN Divisions d ON ld.DivisionId = d.Id
+        WHERE h.NextFollowUpDate = CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
+            SELECT MAX(HistoryId) 
+            FROM LeadHistory 
+            WHERE LeadId = l.LeadId
+        ) AND h.HistoryId IS NOT NULL -- In case lead has no history yet
+        ORDER BY h.NextFollowUpDate ASC;";
+
+            if (mode == LeadViewMode.Missed)
+            {
+                sql = @"
+        SELECT 
+            l.*, 
+            (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
+            (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) as OrderCount,
+            h.*, d.*
+        FROM Leads l
+        LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+        LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
+        LEFT JOIN Divisions d ON ld.DivisionId = d.Id
+        WHERE h.NextFollowUpDate < CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
             SELECT MAX(HistoryId) 
             FROM LeadHistory 
             WHERE LeadId = l.LeadId

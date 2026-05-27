@@ -54,8 +54,24 @@
 
             <ContentControl x:Key="ErrorIcon">
                 <materialDesign:PackIcon Kind="CloseCircle" Foreground="#DC2626" Width="24" Height="24" VerticalAlignment="Center"/>
-            </ContentControl>           
+            </ContentControl>
 
+            <ContentControl x:Key="CloseIcon">
+                <materialDesign:PackIcon Kind="CloseCircle" Foreground="#DC2626" Width="24" Height="24" VerticalAlignment="Center"/>
+            </ContentControl>
+
+            <Style x:Key="CloseButtonIcon" TargetType="Shape">
+                <Setter Property="Width" Value="14"/>
+                <Setter Property="Height" Value="14"/>
+                <Setter Property="Fill" Value="#9CA3AF"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="Fill">
+                    <Setter.Value>
+                        <VisualBrush Visual="{materialDesign:PackIcon Kind=Close}" Stretch="Uniform"/>
+                    </Setter.Value>
+                </Setter>
+            </Style>
             <Style x:Key="NotificationText" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignBody1TextBlock}">
                 <Setter Property="FontSize" Value="13"/>
                 <Setter Property="FontWeight" Value="Normal"/>

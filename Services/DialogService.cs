@@ -135,5 +135,21 @@ namespace CallMan.Services
             window.ShowDialog();
             return inputValue;
         }
+
+        public async Task ShowHistoryDialog(int leadId)
+        {
+            if (leadId == 0) return;
+
+            // Use DI or a Factory to create the Window
+            var historyWindow = new LeadTimelineWindow();
+
+            // Create the ViewModel, inject the service and the selected Lead ID
+            var historyVm = new LeadTimelineViewModel(_leadService, leadId);
+            historyVm.RequestClose += () => historyWindow.Close();
+
+            historyWindow.DataContext = historyVm;
+            historyWindow.Owner = App.Current.MainWindow; // Set parent window
+            historyWindow.ShowDialog();
+        }
     }
 }

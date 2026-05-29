@@ -40,88 +40,32 @@
                 <Setter Property="FontWeight" Value="Bold" />
             </Style>
 
-            <ContentControl x:Key="InformationIcon">
-                <materialDesign:PackIcon Kind="Information" Foreground="#1794A1" Width="24" Height="24" VerticalAlignment="Center"/>
-            </ContentControl>
-
-            <ContentControl x:Key="SuccessIcon">
-                <materialDesign:PackIcon Kind="CheckCircle" Foreground="#16A34A" Width="24" Height="24" VerticalAlignment="Center"/>
-            </ContentControl>
-
-            <ContentControl x:Key="WarningIcon">
-                <materialDesign:PackIcon Kind="Alert" Foreground="#D97706" Width="24" Height="24" VerticalAlignment="Center"/>
-            </ContentControl>
-
-            <ContentControl x:Key="ErrorIcon">
-                <materialDesign:PackIcon Kind="CloseCircle" Foreground="#DC2626" Width="24" Height="24" VerticalAlignment="Center"/>
-            </ContentControl>
-
-            <ContentControl x:Key="CloseIcon">
-                <materialDesign:PackIcon Kind="CloseCircle" Foreground="#DC2626" Width="24" Height="24" VerticalAlignment="Center"/>
-            </ContentControl>
-
-            <Style x:Key="CloseButtonIcon" TargetType="Shape">
-                <Setter Property="Width" Value="14"/>
-                <Setter Property="Height" Value="14"/>
-                <Setter Property="Fill" Value="#9CA3AF"/>
-                <Setter Property="VerticalAlignment" Value="Center"/>
-                <Setter Property="HorizontalAlignment" Value="Center"/>
-                <Setter Property="Fill">
-                    <Setter.Value>
-                        <VisualBrush Visual="{materialDesign:PackIcon Kind=Close}" Stretch="Uniform"/>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-            <Style x:Key="NotificationText" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignBody1TextBlock}">
-                <Setter Property="FontSize" Value="13"/>
-                <Setter Property="FontWeight" Value="Normal"/>
-                <Setter Property="Foreground" Value="#374151"/>
-                <Setter Property="TextWrapping" Value="Wrap"/>
-                <Setter Property="VerticalAlignment" Value="Center"/>
-                <Setter Property="Margin" Value="10,2,5,2"/>
-            </Style>
-
-            <Style x:Key="NotificationTitle" TargetType="TextBlock" BasedOn="{StaticResource MaterialDesignSubtitle1TextBlock}">
-                <Setter Property="FontSize" Value="14"/>
-                <Setter Property="FontWeight" Value="Bold"/>
-                <Setter Property="Foreground" Value="#111827"/>
-                <Setter Property="TextWrapping" Value="Wrap"/>
-                <Setter Property="Margin" Value="10,2,5,0"/>
-            </Style>
-
-            <Style x:Key="NotificationCloseButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
-                <Setter Property="Width" Value="24"/>
-                <Setter Property="Height" Value="24"/>
-                <Setter Property="Padding" Value="0"/>
-                <Setter Property="Margin" Value="5,0,0,0"/>
-                <Setter Property="VerticalAlignment" Value="Top"/>
-                <Setter Property="HorizontalAlignment" Value="Right"/>
-                <Setter Property="Focusable" Value="False"/>
-                <Setter Property="Content">
-                    <Setter.Value>
-                        <materialDesign:PackIcon Kind="Close" Width="16" Height="16" Foreground="#9CA3AF"/>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
-            <Style x:Key="NotificationWindow" TargetType="Window">
-                <Setter Property="AllowsTransparency" Value="True"/>
+            <Style x:Key="MaterialToastWindowStyle" TargetType="Window">
                 <Setter Property="WindowStyle" Value="None"/>
+                <Setter Property="AllowsTransparency" Value="True"/>
+                <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="ShowInTaskbar" Value="False"/>
                 <Setter Property="Topmost" Value="True"/>
-                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+                <Setter Property="ResizeMode" Value="NoResize"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Window">
-                            <materialDesign:Card Background="White" UniformCornerRadius="6" Margin="8" Padding="12" 
-                                                 materialDesign:ElevationAssist.Elevation="Dp4" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <materialDesign:Card Width="350" 
+                                     Margin="12" 
+                                     Padding="16" 
+                                     UniformCornerRadius="8"
+                                     Background="White" 
+                                     materialDesign:ElevationAssist.Elevation="Dp3"
+                                     BorderBrush="#E5E7EB" 
+                                     BorderThickness="1">
                                 <ContentPresenter />
                             </materialDesign:Card>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
             </Style>
-            
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

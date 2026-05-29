@@ -12,6 +12,7 @@ namespace CallMan.Interfaces
         Task<bool?> ShowNewOrderDialog(int leadId);
         Task<bool?> ShowAddPaymentDialog(Order order);
         void ShowOrderWindow(Lead selectedLead);
+        Task ShowHistoryDialog(int leadId);
         Task<bool?> ShowGlobalNewOrderDialog();
         Task<DashboardFilter?> ShowFilterDialog();
         Task<bool?> ShowAddStaffWindow(User? userToEdit);

@@ -113,36 +113,102 @@
                     </Grid>
                 </Border>
 
-                <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Cursor="Hand">
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
 
-                        <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
-                            <TextBlock Text="{Binding UserName}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                            <TextBlock Text="{Binding UserDepartment}" FontSize="10" Opacity="0.6" HorizontalAlignment="Right"/>
-                        </StackPanel>
+                    <materialDesign:PopupBox PlacementMode="BottomAndAlignRightEdges"
+                         ToolTip="System Reminders &amp; Notification History"
+                         Margin="0,0,24,0"
+                         ToggleCheckedContentCommand="Close"
+                         VerticalAlignment="Center"
+                         Background="Transparent"
+                         BorderBrush="Transparent"
+                         Focusable="False">
+                        
+                        <materialDesign:PopupBox.ToggleContent>
+                            <materialDesign:Badged Badge="{Binding HistoryService.UnreadCount}" 
+                                           BadgeColorZoneMode="SecondaryLight">
+                                <materialDesign:PackIcon Kind="Bell" Width="24" Height="24" Foreground="White" Cursor="Hand"/>
+                            </materialDesign:Badged>
+                        </materialDesign:PopupBox.ToggleContent>
 
-                        <materialDesign:PopupBox PlacementMode="BottomAndAlignRightEdges" StaysOpen="False">
-                            <materialDesign:PopupBox.ToggleContent>
-                                <materialDesign:Card UniformCornerRadius="20" Background="#F1C40F">
-                                    <materialDesign:PackIcon Kind="Account" Width="25" Height="25" 
-                                         HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </materialDesign:Card>
-                            </materialDesign:PopupBox.ToggleContent>
+                        <Border Width="340" Background="White" CornerRadius="8" BorderBrush="#E5E7EB" BorderThickness="1">
+                            <StackPanel>
+                                <Grid Background="#F3F4F6" Margin="14,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Recent Notifications" FontWeight="Bold" FontSize="13" Foreground="#111827"/>
+                                    <materialDesign:PackIcon Grid.Column="1" Kind="LanConnect" Foreground="#15803D" Width="18" Height="18"/>
+                                </Grid>
 
-                            <StackPanel Width="150">
-                                <!--<Button Command="{Binding NavigateToProfileCommand}" Content="My Profile"/>
-                                <Button Command="{Binding NavigateToSettingsCommand}" Content="Settings"/>
-                                <Separator/>-->
-                                <Button Command="{Binding LogoutCommand}" Foreground="Red">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Logout" Margin="0,0,10,0"/>
-                                        <TextBlock Text="Logout"/>
-                                    </StackPanel>
-                                </Button>
+                                <Separator Style="{StaticResource MaterialDesignLightSeparator}" Margin="0"/>
+
+                                <ListBox ItemsSource="{Binding HistoryService.ActiveNotifications}" 
+                                     MaxHeight="300" 
+                                     ScrollViewer.CanContentScroll="True"
+                                     HorizontalContentAlignment="Stretch"
+                                     SelectionChanged="NotificationListBox_SelectionChanged">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="#F3F4F6" BorderThickness="0,0,0,1" Padding="4,10" Background="Transparent" Cursor="Hand">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <materialDesign:PackIcon Kind="AlertCircle" Foreground="#D97706" Width="20" Height="20" Margin="0,2,10,0" VerticalAlignment="Top"/>
+
+                                                    <StackPanel Grid.Column="1">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding ReminderType}" HorizontalAlignment="Left" VerticalAlignment="Center" FontWeight="Bold" FontSize="12" Foreground="#374151"/>
+
+                                                            <TextBlock Grid.Column="1" Text="{Binding FormattedTime}" Margin="10,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="11" Foreground="#9CA3AF" FontWeight="Normal"/>
+                                                        </Grid>
+
+                                                        <TextBlock Text="{Binding MessageText}" FontSize="12" Foreground="#6B7280" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
                             </StackPanel>
-                        </materialDesign:PopupBox>
-                    </StackPanel>
-                </Button>
+                        </Border>
+                    </materialDesign:PopupBox>
+
+                    <Button Background="Transparent" BorderThickness="0" Cursor="Hand" Padding="0" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                                <TextBlock Text="{Binding UserName}" Foreground="White" materialDesign:HintAssist.IsFloating="False" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{Binding UserDepartment}" Foreground="White" FontSize="10" Opacity="0.6" HorizontalAlignment="Right"/>
+                            </StackPanel>
+
+                            <materialDesign:PopupBox PlacementMode="BottomAndAlignRightEdges" StaysOpen="False" VerticalAlignment="Center">
+                                <materialDesign:PopupBox.ToggleContent>
+                                    <materialDesign:Card UniformCornerRadius="20" Width="36" Height="36" Background="#F1C40F">
+                                        <materialDesign:PackIcon Kind="Account" Width="25" Height="25" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Black"/>
+                                    </materialDesign:Card>
+                                </materialDesign:PopupBox.ToggleContent>
+
+                                <StackPanel Width="150">
+                                    <Button Command="{Binding LogoutCommand}" Foreground="Red">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="Logout" Margin="0,0,10,0"/>
+                                            <TextBlock Text="Logout"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </materialDesign:PopupBox>
+                        </StackPanel>
+                    </Button>
+
+                </StackPanel>
             </Grid>
         </Border>
         <materialDesign:ColorZone Grid.Row="1" Mode="Custom" Background="#1794A1" Foreground="White">
@@ -318,6 +384,6 @@
                     </Button.Style>
                 </Button>
             </Grid>
-        </materialDesign:DrawerHost>
+        </materialDesign:DrawerHost>        
     </Grid>
 </Window>

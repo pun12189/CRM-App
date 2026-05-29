@@ -28,6 +28,7 @@ namespace CallMan.ViewModels
         private readonly ProductService _productService;
         private readonly OrderService _orderService;
         private readonly OccupiedLocationService _locationService;
+        private readonly NotificationRoutingService _routingService;
         private ICollectionView _leadsCollection;
 
         [ObservableProperty]
@@ -52,7 +53,7 @@ namespace CallMan.ViewModels
         [ObservableProperty]
         private bool _isFuture;
 
-        public LeadFollowupViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService)
+        public LeadFollowupViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService)
         {
             _leadService = leadService;
             _settingService = settingService;
@@ -61,6 +62,7 @@ namespace CallMan.ViewModels
             _productService = productService;
             _orderService = orderService;
             _locationService = locationService;
+            _routingService = routingService;
             LoadLeads();
         }
 
@@ -255,7 +257,7 @@ namespace CallMan.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService);
+            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService);
 
             if (selectedLead.Status?.ToLower() == "matured")
             {

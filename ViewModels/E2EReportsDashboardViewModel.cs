@@ -1,14 +1,8 @@
 ﻿using CallMan.Models.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using ToastNotifications.Messages;
 
 namespace CallMan.ViewModels
 {
@@ -73,24 +67,8 @@ namespace CallMan.ViewModels
             // Triggered when user clicks "Generate" after setting their filter matrix configurations
             // Call your dynamic Dapper/FastReport query service here
 
-            //MessageBox.Show($"Generating report for {SelectedMainFilter} compared against {SelectedComparisonTarget} from {FromDate:d} to {ToDate:d}. This may take a moment.", "Report Generation", MessageBoxButton.OK, MessageBoxImage.Information);
-
-            // 1. Pop an alert instantly letting operators know compilation has begun
-            App.Toaster.ShowInformation("Generating e2e Matrix Summary... Please wait.");
-
-            try
-            {
-                // Simulate your Dapper / FastReport execution processing routines
-                await Task.Delay(1200);
-
-                // 2. Pop a clean success notification upon layout completion
-                App.Toaster.ShowSuccess("e2e Report compiled successfully!");
-            }
-            catch (Exception ex)
-            {
-                // 3. Error fallback toast handling alerts
-                App.Toaster.ShowError("Failed to extract intersection metrics data vectors.");
-            }
+            MessageBox.Show($"Generating report for {SelectedMainFilter} compared against {SelectedComparisonTarget} from {FromDate:d} to {ToDate:d}. This may take a moment.", "Report Generation", MessageBoxButton.OK, MessageBoxImage.Information);
+            
         }
     }
 

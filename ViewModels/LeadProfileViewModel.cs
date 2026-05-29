@@ -1,5 +1,6 @@
 ﻿using CallMan.Interfaces;
 using CallMan.Models;
+using CallMan.Models.Enums;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -20,6 +21,7 @@ namespace CallMan.ViewModels
         private readonly SettingService _settingService;
         private readonly IUserSession _session;
         private readonly OccupiedLocationService _locationService;
+        private readonly NotificationRoutingService _notificationRoutingService;
 
         [ObservableProperty] private Lead _selectedLead;
         [ObservableProperty] private int _selectedTabWorkspaceIndex = 2;
@@ -57,12 +59,13 @@ namespace CallMan.ViewModels
         [ObservableProperty] private SettingItem _selectedStatus;
         [ObservableProperty] private SettingItem _selectedDeadReason;   
 
-        public LeadProfileViewModel(LeadService service, SettingService settingService, IUserSession session, Lead lead, OccupiedLocationService locationService)
+        public LeadProfileViewModel(LeadService service, SettingService settingService, IUserSession session, Lead lead, OccupiedLocationService locationService, NotificationRoutingService notificationRoutingService)
         {
             _leadService = service;
             _settingService = settingService;
             _session = session;
             _locationService = locationService; 
+            _notificationRoutingService = notificationRoutingService;
             _selectedLead = lead;
             _ = LoadCollections();
         }
@@ -161,6 +164,17 @@ namespace CallMan.ViewModels
                             FollowupStage = SelectedStatus?.Name
                         };
 
+                        var targetNotification = new NewToastRequest
+                        {
+                            EventId = 1983,
+                            ReminderType = ReminderType.FollowUp.ToString(),
+                            MessageContent = _session.CurrentUser + " " + history.UpdatedByContent,
+                            ScheduleTime = combinedDateTime, // Pops up instantly on target's workstation
+                            TargetUser = _session.CurrentUser,      // <-- Direct routing targeting Sarvesh's profile layout
+                            TargetMachine =Environment.MachineName,        // Set this if you want to explicitly target a specific physical terminal name
+                            SenderUser = _session.CurrentUser        // Authored by Neerja
+                        };
+
                         SelectedLead.LatestUpdate = history;
                         SelectedLead.Status = IsMatured ? "Matured" : (IsDead ? "Dead" : "Followup");
                         SelectedLead.StatusId = SelectedStatus?.Id ?? null;
@@ -200,13 +214,26 @@ namespace CallMan.ViewModels
 
                             SelectedLead.MatureStageId = null; // Reset any previous stage
 
+                            targetNotification = new NewToastRequest
+                            {
+                                EventId = 1983,
+                                ReminderType = Message,
+                                MessageContent = _session.CurrentUser + " " + history.UpdatedByContent,
+                                ScheduleTime = combinedDateTime, // Pops up instantly on target's workstation
+                                TargetUser = _session.CurrentUser,      // <-- Direct routing targeting Sarvesh's profile layout
+                                TargetMachine = Environment.MachineName,        // Set this if you want to explicitly target a specific physical terminal name
+                                SenderUser = _session.CurrentUser        // Authored by Neerja
+                            };
+
                             // Use the service method that handles the transaction
                             await _leadService.MatureLeadWithDoubleHistoryAsync(SelectedLead, newOrder, payment, history);
+                            await _notificationRoutingService.DispatchTargetedToastAsync(targetNotification);
                         }
                         else
                         {
                             // Standard Follow-up/Dead update
                             await _leadService.UpdateLeadFullAsync(SelectedLead, history);
+                            await _notificationRoutingService.DispatchTargetedToastAsync(targetNotification);
                         }
                     }
 

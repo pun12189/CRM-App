@@ -28,9 +28,17 @@ namespace CallMan.ViewModels
         private const int IdleTimeoutMinutes = 30;
 
         private readonly LeadService _leadService;
-        private readonly IDialogService _dialogService;
+
+        [ObservableProperty]
+        private IDialogService _dialogService;
         private readonly IUserSession _session;
         private readonly LoginLogService _logService;
+
+        [ObservableProperty]
+        private NotificationHistoryService _historyService;
+
+        [ObservableProperty]
+        private NotificationRoutingService _routingService;
 
         private bool _isAdminMenuOpen;
         public bool IsAdminMenuOpen
@@ -44,12 +52,14 @@ namespace CallMan.ViewModels
         }
 
         // These are injected via DI when the app starts
-        public MainViewModel(LeadService leadService, IDialogService dialogService, IUserSession session, LoginLogService logService)
+        public MainViewModel(LeadService leadService, IDialogService dialogService, IUserSession session, LoginLogService logService, NotificationHistoryService historyService, NotificationRoutingService routingService)
         {
             _leadService = leadService;
             _dialogService = dialogService; 
             _session = session;
             _logService = logService;
+            _historyService = historyService;
+            _routingService = routingService;
             _userName = session.CurrentUser;
             // Load Dashboard by default
             Navigate("Dashboard");

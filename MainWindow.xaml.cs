@@ -1,5 +1,10 @@
-﻿using CallMan.ViewModels;
+﻿using CallMan.Data;
+using CallMan.Models;
+using CallMan.Services;
+using CallMan.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Threading;
 
 namespace CallMan
@@ -12,6 +17,8 @@ namespace CallMan
         private int _secretClickCount = 0;
         private DispatcherTimer _clickResetTimer;
 
+        private ToastPollingWorker? _bgToasterEngine;
+
         public MainWindow(MainViewModel vm)
         {
             InitializeComponent();
@@ -20,6 +27,14 @@ namespace CallMan
             _clickResetTimer = new DispatcherTimer();
             _clickResetTimer.Interval = TimeSpan.FromSeconds(2); // Must finish clicks within 2 seconds
             _clickResetTimer.Tick += ClickResetTimer_Tick;
+
+            this.Loaded += MainWindow_Loaded;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            // 3. Fire up the Live Background Listener Engine 
+            _bgToasterEngine = App.ServiceProvider!.GetRequiredService<ToastPollingWorker>();
         }
 
         protected override async void OnClosed(EventArgs e)
@@ -29,6 +44,8 @@ namespace CallMan
                 // Trigger the logout command logic to save the timestamp
                 await vm.LogoutCommand.ExecuteAsync(null);
             }
+
+            _bgToasterEngine?.Stop();
             base.OnClosed(e);
         }
 
@@ -59,6 +76,25 @@ namespace CallMan
         {
             _secretClickCount = 0; // User took too long, reset the count
             _clickResetTimer.Stop();
+        }
+
+        private async void NotificationListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var listBox = sender as ListBox;
+            if (listBox == null || listBox.SelectedItem == null) return;
+
+            if (listBox.SelectedItem is ToastQueueItem clickedItem)
+            {
+                // 1. Perform database state synchronization update over your LAN
+                if (DataContext is MainViewModel vm)
+                {
+                    // Trigger the logout command logic to save the timestamp
+                    await vm.RoutingService.HandleNotificationClick(clickedItem.ToastId);
+                    await vm.DialogService.ShowHistoryDialog(clickedItem.LeadId);
+                }                
+            }
+
+            listBox.SelectedIndex = -1; // Reset selection index tracking array
         }
     }
 }

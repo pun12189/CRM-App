@@ -2,9 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace CallMan.Models
 {
@@ -59,5 +61,32 @@ namespace CallMan.Models
         // Refresh UI when components change
         partial void OnSellingPriceChanged(decimal value) => OnPropertyChanged(nameof(TotalCost));
         partial void OnGstPercentChanged(decimal value) => OnPropertyChanged(nameof(TotalCost));
+
+        [ObservableProperty] private byte[]? _productImageBytes;
+
+        /// <summary>
+        /// UI VISUAL HELPER: Dynamically decodes database image binary streams for your main products list dashboards
+        /// </summary>
+        public BitmapImage? CatalogImageSource
+        {
+            get
+            {
+                if (ProductImageBytes == null || ProductImageBytes.Length == 0) return null;
+                try
+                {
+                    using (var stream = new MemoryStream(ProductImageBytes))
+                    {
+                        var image = new BitmapImage();
+                        image.BeginInit();
+                        image.CacheOption = BitmapCacheOption.OnLoad;
+                        image.StreamSource = stream;
+                        image.EndInit();
+                        image.Freeze(); // Freeze to enable safe multi-threaded rendering over UI channels
+                        return image;
+                    }
+                }
+                catch { return null; }
+            }
+        }
     }
 }

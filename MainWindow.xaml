@@ -291,7 +291,9 @@
                 <MenuItem Header="CRM" Icon="{materialDesign:PackIcon Kind=AccountGroup}">
                     <MenuItem Header="Customers" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Customers"/>
                     <MenuItem Header="Orders" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Orders"/>
-                    <MenuItem Header="Product List" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>
+                    <MenuItem Header="Item/Product List" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>
+                    <MenuItem Header="Ledger" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Ledger"/>
+                    <MenuItem Header="Proforma" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Proforma"/>
                 </MenuItem>
                 <MenuItem Header="Admin Settings" Icon="{materialDesign:PackIcon Kind=Settings}" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
                 <MenuItem Header="e2e Reports" HorizontalAlignment="Right" Visibility="Collapsed" Icon="{materialDesign:PackIcon Kind=FileDocument}" Command="{Binding NavigateCommand}" CommandParameter="Reports"/>

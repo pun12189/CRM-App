@@ -1,5 +1,4 @@
-﻿using CallMan.ViewModels;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,27 +10,18 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace CallMan.Views
+namespace CallMan.Dialogs
 {
     /// <summary>
-    /// Interaction logic for LeadView.xaml
+    /// Interaction logic for LeadsActionDialog.xaml
     /// </summary>
-    public partial class LeadView : UserControl
+    public partial class LeadsActionDialog : Window
     {
-        public LeadView()
+        public LeadsActionDialog()
         {
             InitializeComponent();
-        }
-
-        private void CheckBox_Click(object sender, RoutedEventArgs e)
-        {
-            if (this.DataContext is LeadViewModel vm)
-            {
-                vm.RecalculateSelectionStates();
-            }
         }
     }
 }

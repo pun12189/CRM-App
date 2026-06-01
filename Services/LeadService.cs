@@ -4,6 +4,7 @@ using CallMan.Models.Enums;
 using Dapper;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Mysqlx.Crud;
+using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -54,9 +55,9 @@ namespace CallMan.Services
             lead.MetadataJson = JsonSerializer.Serialize(lead.CustomFields);
             lead.LabelsJson = JsonSerializer.Serialize(lead.LeadLabels);
 
-            string sql = @"INSERT INTO Leads (CustomerName, Email, Phone, Status, MetadataJson, 
+            string sql = @"INSERT INTO Leads (CustomerName, Email, Phone, AltPhone, Status, MetadataJson, 
                CompanyName, AddressLine, City, District, State, Pincode, Country, CreatedAt, LeadHolder, WorkingArea, LeadSource, LeadTag, LabelsJson, MonthlyTarget) 
-               VALUES (@CustomerName, @Email, @Phone, @Status, @MetadataJson, 
+               VALUES (@CustomerName, @Email, @Phone, @AltPhone, @Status, @MetadataJson, 
                @CompanyName, @AddressLine, @City, @District, @State, @Pincode, @Country, NOW(), @LeadHolder, @WorkingArea, @LeadSource, @LeadTag, @LabelsJson, @MonthlyTarget);
             SELECT LAST_INSERT_ID();";
 
@@ -98,7 +99,7 @@ namespace CallMan.Services
             lead.LabelsJson = JsonSerializer.Serialize(lead.LeadLabels);
 
             string sql = @"UPDATE Leads SET 
-                    CustomerName = @CustomerName, Email = @Email, Phone = @Phone, 
+                    CustomerName = @CustomerName, Email = @Email, Phone = @Phone, AltPhone = @AltPhone
                     Status = @Status, StatusId = @StatusId, DeadReasonId = @DeadReasonId, MatureStageId = @MatureStageId, LeadSourceId = @LeadSourceId, LeadTagId = @LeadTagId,
                     CompanyName = @CompanyName, AddressLine = @AddressLine, 
                     City = @City, District = @District, State = @State, 
@@ -140,6 +141,62 @@ namespace CallMan.Services
             string sql = "DELETE FROM Leads WHERE LeadId IN @Ids";
 
             int affected = await conn.ExecuteAsync(sql, new { Ids = leadIds });
+            return affected > 0;
+        }
+
+        public async Task<bool> BulkDeadLeadsAsync(IEnumerable<int> leadIds)
+        {
+            using var conn = _context.CreateConnection();
+            string sql = "UPDATE Leads SET Status = 'Dead', DeadReasonId = NULL WHERE LeadId IN @Ids;";
+
+            int affected = await conn.ExecuteAsync(sql, new { Ids = leadIds });
+            return affected > 0;
+        }
+
+        public async Task<bool> BulkMatureDeadLeadsAsync(IEnumerable<int> leadIds)
+        {
+            using var conn = _context.CreateConnection();
+            string sql = "UPDATE Leads SET Status = 'Winback Pool', DeadReasonId = NULL WHERE LeadId IN @Ids;";
+
+            int affected = await conn.ExecuteAsync(sql, new { Ids = leadIds });
+            return affected > 0;
+        }
+
+        public async Task<bool> BulkChangeLeadHolderAsync(IEnumerable<int> leadIds, string user, bool isNew, DateTime date)
+        {
+            using var conn = _context.CreateConnection();
+            string sql = @"
+                UPDATE Leads 
+                SET LeadHolder = @User, 
+                    Status = IF(@AsNew, 'New', Status),
+                    CreatedAt = IF(@AsNew, @Date, CreatedAt)
+                WHERE LeadId IN @Ids;";
+
+            var affected = await conn.ExecuteAsync(sql, new
+            {
+                User = user,
+                AsNew = isNew,
+                Date = date,
+                Ids = leadIds
+            });
+
+
+            return affected > 0;
+        }
+
+        public async Task<bool> BulkChangeLeadLablesAsync(int id, string json)
+        {
+            using var conn = _context.CreateConnection();
+            string sql = @"
+                UPDATE Leads SET LabelsJson = @Json WHERE LeadId = @Id;";
+
+            var affected = await conn.ExecuteAsync(sql, new
+            {
+                Json =json,
+                Id = id
+            });
+
+
             return affected > 0;
         }
 
@@ -800,7 +857,7 @@ AND (
         LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
         LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
         LEFT JOIN Divisions d ON ld.DivisionId = d.Id
-        WHERE h.NextFollowUpDate <= CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
+        WHERE h.NextFollowUpDate < DATE_ADD(CURDATE(), INTERVAL 1 DAY) AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
             SELECT MAX(HistoryId) 
             FROM LeadHistory 
             WHERE LeadId = l.LeadId
@@ -819,7 +876,7 @@ AND (
         LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
         LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
         LEFT JOIN Divisions d ON ld.DivisionId = d.Id
-        WHERE h.NextFollowUpDate > CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
+        WHERE h.NextFollowUpDate > DATE_ADD(CURDATE(), INTERVAL 1 DAY) AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
             SELECT MAX(HistoryId) 
             FROM LeadHistory 
             WHERE LeadId = l.LeadId
@@ -874,7 +931,7 @@ AND (
         LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
         LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
         LEFT JOIN Divisions d ON ld.DivisionId = d.Id
-        WHERE h.NextFollowUpDate = CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
+        WHERE DATE(h.NextFollowUpDate) = CURDATE() AND h.NextFollowUpDate IS NOT NULL AND h.HistoryId = (
             SELECT MAX(HistoryId) 
             FROM LeadHistory 
             WHERE LeadId = l.LeadId
@@ -988,6 +1045,64 @@ AND (
                 // Log exception here according to SofricONE logging standards (e.g., Sentry)
                 throw new InvalidOperationException("Failed to retrieve customer financial metrics.", ex);
             }
+        }
+
+        /// <summary>
+        /// Scans the central database to check if a contact identifier is already assigned to an active lead.
+        /// Excluding the current LeadId prevents self-validation conflicts during edit mode.
+        /// </summary>
+        public async Task<bool> CheckDuplicateFieldAsync(string fieldName, string fieldValue, int currentLeadId)
+        {
+            using var conn = _context.CreateConnection();
+
+            // Dynamically evaluate target column inputs safely without SQL injection vulnerabilities
+            string sql = $@"
+                SELECT COUNT(1) 
+                FROM Leads 
+                WHERE Phone = @Value OR AltPhone = @Value OR Email = @Value
+                  AND LeadId != @CurrentId;";
+
+            int matchCount = await conn.ExecuteScalarAsync<int>(sql, new { Value = fieldValue, CurrentId = currentLeadId });
+            return matchCount > 0;
+        }
+
+        public async Task<IEnumerable<ProformaSummaryItem>> LoadHistoricalProformasAsync(int leadId)
+        {
+            try
+            {
+                using var conn = _context.CreateConnection(); // Uses your connection factor infrastructure
+
+                // RESTRICTION LOGIC: Selects product-list items while safely filtering out service line entries
+                string sql = @"
+                    SELECT 
+                        ProformaId,
+                        ProformaNumber,
+                        'Cash' AS PaymentType, -- Fallback mock or map to your custom fields
+                        CreatedAt AS DateCreated,
+                        GrandTotal AS Amount,
+                        IF(ProformaStatus = 'ConvertedToOrder', 'Converted', 'Pending') AS Status,
+                        IF(TotalPaid >= GrandTotal, 'Paid', 'Unpaid') AS PaymentStatus
+                    FROM Proformas
+                    WHERE LeadId = @LeadId
+                    ORDER BY CreatedAt DESC;";
+
+                var result = await conn.QueryAsync<ProformaSummaryItem>(sql, new { LeadId = leadId });
+                return result;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"History Loading Anomaly: {ex.Message}");
+                return Enumerable.Empty<ProformaSummaryItem>();
+            }
+        }
+
+        public async Task<bool> DeleteProformaRecordAsync(int proformaId)
+        {
+            using var db = _context.CreateConnection();
+            // Note: LeadHistory has a Foreign Key with ON DELETE CASCADE in our SQL schema
+            string sql = "DELETE FROM Proformas WHERE ProformaId = @proformaId";
+            var rows = await db.ExecuteAsync(sql, new { proformaId });
+            return rows > 0;
         }
     }
 }

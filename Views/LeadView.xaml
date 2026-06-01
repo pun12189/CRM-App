@@ -7,12 +7,14 @@
              xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:conv="clr-namespace:CallMan.Converters"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
         <conv:LeadStatusToColorConverter x:Key="StatusToColorConverter"/>
         <conv:IndexToNumberConverter x:Key="IndexToNumberConverter"/>
+        <conv:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter"/>
     </UserControl.Resources>
     <Grid Margin="20">
         <Grid.RowDefinitions>
@@ -31,8 +33,9 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" Grid.Column="0">
-                    <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="Gray"/>
-                    <Grid Width="250">
+                    <TextBlock Text="All Leads" FontSize="16" VerticalAlignment="Center" FontWeight="Bold"/>
+                    <TextBlock Text="🔍" VerticalAlignment="Center" Margin="20,0,10,0" Foreground="Gray"/>
+                    <Grid Width="250" Margin="20,0,0,0">
                         <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
                              VerticalContentAlignment="Center" Height="30"
                              Padding="5,0"/>
@@ -53,13 +56,103 @@
                     </Grid>
                 </StackPanel>
 
-                <Button Grid.Column="2" Content="Import Leads" 
+                <Menu Grid.Column="2"
+                      Background="#FF8A3D" 
+                      Foreground="White"
+                      VerticalAlignment="Center" 
+                      Margin="0,0,10,0">
+                    <!--<Menu.Resources>
+                        <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
+                            <Setter Property="Background" Value="#FF8A3D"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Style>
+                    </Menu.Resources>-->
+
+                    <Menu.Style>
+                        <Style TargetType="Menu">
+                            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="4"/>
+                            <Setter Property="IsEnabled" Value="{Binding SelectedLeadsCount, Converter={StaticResource GreaterThanZeroConverter}}"/>
+                        </Style>
+                    </Menu.Style>
+
+                    <MenuItem  
+                          Header="Action" 
+                          FontWeight="SemiBold" 
+                          FontSize="13"
+                        Height="32"
+                          Padding="20,5"
+                          VerticalAlignment="Center" 
+                          HorizontalAlignment="Center"/>
+
+                    <MenuItem Height="32" Width="30" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                        <MenuItem.Header>
+                            <materialDesign:PackIcon Kind="MenuDown" Width="20" Height="20" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,2,0,0"/>
+                        </MenuItem.Header>
+
+                        <MenuItem.Items>
+                            <MenuItem Header="Batch delete" 
+                      Command="{Binding BulkDeleteCommand}"
+                      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+
+                            <MenuItem Header="Change Leadholder" 
+                      Command="{Binding OpenChangeLeadHolderDialogCommand}"
+                      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+
+                            <MenuItem Header="Move to dead" 
+                      Command="{Binding MoveToDeadCommand}"
+                      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+
+                            <MenuItem Header="Assign Labels" 
+                      Command="{Binding OpenAssignLabelsDialogCommand}"
+                      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+                        </MenuItem.Items>
+                    </MenuItem>
+                </Menu>
+                <!--<Button Grid.Column="2"
+                    Content="Action"
+                    Background="#FF8A3D" BorderBrush="#FF8A3D"
+                    Height="36" Width="110" FontWeight="SemiBold"
+                    Margin="0,0,10,0" VerticalAlignment="Center"
+                    materialDesign:ButtonAssist.CornerRadius="4">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                            <Setter Property="IsEnabled" Value="{Binding SelectedLeadsCount, Converter={StaticResource GreaterThanZeroConverter}}"/>
+                        </Style>
+                    </Button.Style>
+
+                    <Button.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Batch delete" Command="{Binding BulkDeleteCommand}">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="DeleteSweep" Foreground="#E74C3C"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Change Leadholder" Command="{Binding OpenChangeLeadHolderDialogCommand}">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="AccountSwitch" Foreground="#2980B9"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Move to dead" Command="{Binding ExecuteMoveToDeadCommand}">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="AccountCancel" Foreground="#7F8C8D"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                            <MenuItem Header="Assign Labels" Command="{Binding OpenAssignLabelsDialogCommand}">
+                                <MenuItem.Icon>
+                                    <materialDesign:PackIcon Kind="Label" Foreground="#27AE60"/>
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </ContextMenu>
+                    </Button.ContextMenu>
+                </Button>-->
+
+                <Button Grid.Column="3" Content="Import Leads" 
                     Command="{Binding OpenImportLeadsDialogCommand}"
                     Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0"/>
-                <Button Grid.Column="4" Content="Bulk Delete" 
+                <!--<Button Grid.Column="4" Content="Bulk Delete" 
                     Command="{Binding BulkDeleteCommand}"
-                    Padding="20,5" Background="IndianRed" Foreground="White" FontWeight="Bold" Margin="5,0"/>
-                <Button Grid.Column="3" Content="+ New Lead" 
+                    Padding="20,5" Background="IndianRed" Foreground="White" FontWeight="Bold" Margin="5,0"/>-->
+                <Button Grid.Column="4" Content="+ New Lead" 
                     Command="{Binding OpenAddLeadDialogCommand}"
                     Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0"/>
             </Grid>
@@ -107,9 +200,9 @@
                                 </TextBlock>
 
                                 <CheckBox Grid.Row="1" 
-              IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}"
-              HorizontalAlignment="Center" 
-              VerticalAlignment="Center"/>
+                                  IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}"
+                                  HorizontalAlignment="Center" 
+                                  VerticalAlignment="Center" Click="CheckBox_Click"/>
                             </Grid>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -328,7 +421,10 @@
                                 <Border Background="{Binding Status, Converter={StaticResource StatusToColorConverter}, ConverterParameter=dark}" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
                                     <TextBlock Text="{Binding Status}" FontSize="10" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
-                                <TextBlock Text="{Binding LatestUpdate.FollowupStage}" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,15,0,0"/>
+                                <Border Background="Red" Visibility="{Binding LatestUpdate.IsPriority, Converter={StaticResource BoolToVis}}" CornerRadius="10" Margin="0,15,0,0" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                    <TextBlock Text="High Priority" FontSize="10" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <TextBlock Text="{Binding LatestUpdate.FollowupStage}" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5,0,0"/>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -395,5 +491,72 @@
                 </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
+        <Grid Grid.RowSpan="2">
+            <materialDesign:DialogHost IsOpen="{Binding IsChangeLeadHolderOpen}" CloseOnClickAway="True">
+                <materialDesign:DialogHost.DialogContent>
+                    <Border Width="420" Padding="24" Background="White" CornerRadius="8">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,20">
+                                <TextBlock Text="Change Leadholder" FontSize="16" FontWeight="Bold" Foreground="#374151"/>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}" Command="{Binding CloseAllDialogsCommand}" HorizontalAlignment="Right" Padding="0" Width="30" Height="30">
+                            <materialDesign:PackIcon Kind="Close" Foreground="#9CA3AF" Width="20" Height="20"/>
+                        </Button>
+                            </Grid>
+
+                            <TextBlock Text="Select User To Assign" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,6"/>
+                            <ComboBox ItemsSource="{Binding SystemUsersList}" SelectedItem="{Binding TargetSelectedUser}" DisplayMemberPath="DisplayName" materialDesign:HintAssist.Hint="Select..." Margin="0,0,0,16" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                            <CheckBox Content="Transfer as New" IsChecked="{Binding TransferAsNew}" Margin="0,0,0,20" FontWeight="SemiBold" Foreground="#4B5563"/>
+
+                            <TextBlock Text="Select Date" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,6"/>
+                            <DatePicker SelectedDate="{Binding TransferSelectedDate}" Margin="0,0,0,20"/>
+
+                            <CheckBox Content="Send Notification to User" IsChecked="{Binding SendNotificationToUser}" Margin="0,0,0,10" FontWeight="SemiBold" Foreground="#4B5563"/>
+
+                            <!--<TextBlock Text="Select Option:" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,8"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                        <RadioButton Content="Today's Priority" IsChecked="{Binding IsTodayPriority}" Margin="0,0,24,0" FontWeight="SemiBold"/>
+                        <RadioButton Content="Tomorrow's Followup" IsChecked="{Binding IsTodayPriority, Converter={StaticResource InvertedBooleanConverter}}" FontWeight="SemiBold"/>
+                    </StackPanel>-->
+
+                            <Button Content="Submit" Command="{Binding SubmitChangeLeadHolderCommand}" Height="42" Background="#FF8A3D" BorderBrush="#FF8A3D" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                </materialDesign:DialogHost.DialogContent>
+            </materialDesign:DialogHost>
+            <materialDesign:DialogHost IsOpen="{Binding IsAssignLabelsOpen}" CloseOnClickAway="True">
+                <materialDesign:DialogHost.DialogContent>
+                    <Border Width="400" Padding="24" Background="White" CornerRadius="8">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,24">
+                                <TextBlock Text="Assign Labels" FontSize="16" FontWeight="Bold" Foreground="#374151"/>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}" Command="{Binding CloseAllDialogsCommand}" HorizontalAlignment="Right" Padding="0" Width="30" Height="30">
+                            <materialDesign:PackIcon Kind="Close" Foreground="#9CA3AF" Width="20" Height="20"/>
+                        </Button>
+                            </Grid>
+
+                            <TextBlock Text="Lead Label" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="2,0,0,6"/>
+                            <ComboBox ItemsSource="{Binding AvailableLabelsList}" SelectedItem="{Binding TargetSelectedLabel}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Select..." Margin="0,0,0,28" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                            <ItemsControl Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" ItemsSource="{Binding SelectedLabelsList}" Margin="0,0,0,4">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <materialDesign:Chip Content="{Binding Name}" Margin="2" IsDeletable="True"
+                                    DeleteCommand="{Binding DataContext.RemoveLabelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    DeleteCommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Button Content="Submit" Command="{Binding SubmitAssignLabelsCommand}" Height="42" Background="#FF8A3D" BorderBrush="#FF8A3D" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                </materialDesign:DialogHost.DialogContent>
+            </materialDesign:DialogHost>
+        </Grid>
     </Grid>
 </UserControl>

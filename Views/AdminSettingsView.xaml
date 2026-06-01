@@ -84,7 +84,7 @@
                         <Button Style="{StaticResource SettingTileStyle}" Content="Departments" CommandParameter="Departments" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Staff" CommandParameter="Staff" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Order Stages" CommandParameter="OrderStages" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Style="{StaticResource SettingTileStyle}" Content="Categories" CommandParameter="Category" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Style="{StaticResource SettingTileStyle}" Content="Item Categories" CommandParameter="Category" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Proforma Settings" IsEnabled="False" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Notice Board" IsEnabled="False" CommandParameter="Notice" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Login Logs" CommandParameter="Logs" Command="{Binding NavigateToSettingCommand}"/>

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CallMan.ViewModels;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,14 @@ namespace CallMan.Views
         public LeadFollowupView()
         {
             InitializeComponent();
+        }
+
+        private void CheckBox_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.DataContext is LeadFollowupViewModel vm)
+            {
+                vm.RecalculateSelectionStates();
+            }
         }
     }
 }

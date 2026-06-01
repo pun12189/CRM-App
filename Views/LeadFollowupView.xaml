@@ -12,6 +12,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+        <conv:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter"/>
         <conv:LeadStatusToColorConverter x:Key="StatusToColorConverter"/>
         <conv:IndexToNumberConverter x:Key="IndexToNumberConverter"/>
         <materialDesign:BooleanToVisibilityConverter x:Key="InverseBoolToVis" TrueValue="Collapsed" FalseValue="Visible" />
@@ -56,6 +57,59 @@
                     </Grid>
                 </StackPanel>
 
+                <Menu Grid.Column="4"
+      Background="#FF8A3D" 
+      Foreground="White"
+      VerticalAlignment="Center" 
+      Margin="0,0,10,0">
+                    <!--<Menu.Resources>
+        <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
+            <Setter Property="Background" Value="#FF8A3D"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </Menu.Resources>-->
+
+                    <Menu.Style>
+                        <Style TargetType="Menu">
+                            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="4"/>
+                            <Setter Property="IsEnabled" Value="{Binding SelectedLeadsCount, Converter={StaticResource GreaterThanZeroConverter}}"/>
+                        </Style>
+                    </Menu.Style>
+
+                    <MenuItem  
+          Header="Action" 
+          FontWeight="SemiBold" 
+          FontSize="13"
+        Height="32"
+          Padding="20,5"
+          VerticalAlignment="Center" 
+          HorizontalAlignment="Center"/>
+
+                    <MenuItem Height="32" Width="30" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                        <MenuItem.Header>
+                            <materialDesign:PackIcon Kind="MenuDown" Width="20" Height="20" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,2,0,0"/>
+                        </MenuItem.Header>
+
+                        <MenuItem.Items>
+                            <MenuItem Header="Batch delete" 
+      Command="{Binding BulkDeleteCommand}"
+      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+
+                            <MenuItem Header="Change Leadholder" 
+      Command="{Binding OpenChangeLeadHolderDialogCommand}"
+      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+
+                            <MenuItem Header="Move to dead" 
+      Command="{Binding MoveToDeadCommand}"
+      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+
+                            <MenuItem Header="Assign Labels" 
+      Command="{Binding OpenAssignLabelsDialogCommand}"
+      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+                        </MenuItem.Items>
+                    </MenuItem>
+                </Menu>
+
                 <Button Grid.Column="2" Content="+ New Lead" 
                 Command="{Binding OpenAddLeadDialogCommand}"
                 Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Visibility="Collapsed"/>
@@ -65,11 +119,11 @@
                 <Button Grid.Column="3" Content="Pending Followups" Style="{StaticResource MaterialDesignOutlinedLightButton}"
                 Command="{Binding RefreshLeadsCommand}" CommandParameter="{x:Static enum:LeadViewMode.Missed}"
                 Padding="20,5" FontWeight="Bold" Margin="5,0" Visibility="{Binding IsFuture, Converter={StaticResource InverseBoolToVis}}"/>
-                <ComboBox Grid.Column="4" materialDesign:HintAssist.Hint="Select Category" Style="{StaticResource MaterialDesignOutlinedComboBox}"                 
+                <ComboBox Grid.Column="5" materialDesign:HintAssist.Hint="Select Category" Style="{StaticResource MaterialDesignOutlinedComboBox}"                 
                 Padding="20,7" FontWeight="Bold" Margin="5,0" ItemsSource="{Binding LeadTags}" SelectedItem="{Binding SelectedLeadTag}" DisplayMemberPath="Name" SelectedValuePath="Id"/>
-                <Button Grid.Column="5" Content="Bulk Delete" Style="{StaticResource MaterialDesignOutlinedLightButton}"
+                <!--<Button Grid.Column="5" Content="Bulk Delete" Style="{StaticResource MaterialDesignOutlinedLightButton}"
                 Command="{Binding BulkDeleteCommand}"
-                Padding="20,5" Background="IndianRed" Foreground="White" FontWeight="Bold" Margin="5,0"/>
+                Padding="20,5" Background="IndianRed" Foreground="White" FontWeight="Bold" Margin="5,0"/>-->
             </Grid>
         </Border>
 
@@ -117,7 +171,7 @@
                                 <CheckBox Grid.Row="1" 
   IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}"
   HorizontalAlignment="Center" 
-  VerticalAlignment="Center"/>
+  VerticalAlignment="Center" Click="CheckBox_Click"/>
                             </Grid>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -405,5 +459,72 @@
                 </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
+        <Grid Grid.RowSpan="2">
+            <materialDesign:DialogHost IsOpen="{Binding IsChangeLeadHolderOpen}" CloseOnClickAway="True">
+                <materialDesign:DialogHost.DialogContent>
+                    <Border Width="420" Padding="24" Background="White" CornerRadius="8">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,20">
+                                <TextBlock Text="Change Leadholder" FontSize="16" FontWeight="Bold" Foreground="#374151"/>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}" Command="{Binding CloseAllDialogsCommand}" HorizontalAlignment="Right" Padding="0" Width="30" Height="30">
+                                    <materialDesign:PackIcon Kind="Close" Foreground="#9CA3AF" Width="20" Height="20"/>
+                                </Button>
+                            </Grid>
+
+                            <TextBlock Text="Select User To Assign" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,6"/>
+                            <ComboBox ItemsSource="{Binding SystemUsersList}" SelectedItem="{Binding TargetSelectedUser}" DisplayMemberPath="DisplayName" materialDesign:HintAssist.Hint="Select..." Margin="0,0,0,16" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                            <CheckBox Content="Transfer as New" IsChecked="{Binding TransferAsNew}" Margin="0,0,0,20" FontWeight="SemiBold" Foreground="#4B5563"/>
+
+                            <TextBlock Text="Select Date" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,6"/>
+                            <DatePicker SelectedDate="{Binding TransferSelectedDate}" Margin="0,0,0,20"/>
+
+                            <CheckBox Content="Send Notification to User" IsChecked="{Binding SendNotificationToUser}" Margin="0,0,0,10" FontWeight="SemiBold" Foreground="#4B5563"/>
+
+                            <!--<TextBlock Text="Select Option:" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,8"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+                <RadioButton Content="Today's Priority" IsChecked="{Binding IsTodayPriority}" Margin="0,0,24,0" FontWeight="SemiBold"/>
+                <RadioButton Content="Tomorrow's Followup" IsChecked="{Binding IsTodayPriority, Converter={StaticResource InvertedBooleanConverter}}" FontWeight="SemiBold"/>
+            </StackPanel>-->
+
+                            <Button Content="Submit" Command="{Binding SubmitChangeLeadHolderCommand}" Height="42" Background="#FF8A3D" BorderBrush="#FF8A3D" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                </materialDesign:DialogHost.DialogContent>
+            </materialDesign:DialogHost>
+            <materialDesign:DialogHost IsOpen="{Binding IsAssignLabelsOpen}" CloseOnClickAway="True">
+                <materialDesign:DialogHost.DialogContent>
+                    <Border Width="400" Padding="24" Background="White" CornerRadius="8">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,24">
+                                <TextBlock Text="Assign Labels" FontSize="16" FontWeight="Bold" Foreground="#374151"/>
+                                <Button Style="{StaticResource MaterialDesignFlatButton}" Command="{Binding CloseAllDialogsCommand}" HorizontalAlignment="Right" Padding="0" Width="30" Height="30">
+                                    <materialDesign:PackIcon Kind="Close" Foreground="#9CA3AF" Width="20" Height="20"/>
+                                </Button>
+                            </Grid>
+
+                            <TextBlock Text="Lead Label" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="2,0,0,6"/>
+                            <ComboBox ItemsSource="{Binding AvailableLabelsList}" SelectedItem="{Binding TargetSelectedLabel}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Select..." Margin="0,0,0,28" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                            <ItemsControl Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" ItemsSource="{Binding SelectedLabelsList}" Margin="0,0,0,4">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <materialDesign:Chip Content="{Binding Name}" Margin="2" IsDeletable="True"
+                            DeleteCommand="{Binding DataContext.RemoveLabelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            DeleteCommandParameter="{Binding}"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Button Content="Submit" Command="{Binding SubmitAssignLabelsCommand}" Height="42" Background="#FF8A3D" BorderBrush="#FF8A3D" FontWeight="Bold"/>
+                        </StackPanel>
+                    </Border>
+                </materialDesign:DialogHost.DialogContent>
+            </materialDesign:DialogHost>
+        </Grid>
     </Grid>
 </UserControl>

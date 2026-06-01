@@ -35,6 +35,28 @@ namespace CallMan.ViewModels
         // This is what the DataGrid actually binds to now
         public ICollectionView LeadsCollection => _leadsCollection;
 
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(BulkDeleteCommand))]
+        [NotifyCanExecuteChangedFor(nameof(OpenChangeLeadHolderDialogCommand))]
+        [NotifyCanExecuteChangedFor(nameof(OpenAssignLabelsDialogCommand))]
+        [NotifyCanExecuteChangedFor(nameof(MoveToDeadCommand))]
+        private int _selectedLeadsCount;
+
+        // Tracks properties to bind dynamically to our modal popup overlays
+        [ObservableProperty] private bool _isChangeLeadHolderOpen;
+        [ObservableProperty] private bool _isAssignLabelsOpen;
+
+        // Dropdown lookup source lists
+        [ObservableProperty] private ObservableCollection<User> _systemUsersList = new();
+        [ObservableProperty] private ObservableCollection<SettingItem> _availableLabelsList = new();
+
+        [ObservableProperty] private User? _targetSelectedUser;
+        [ObservableProperty] private bool _transferAsNew;
+        [ObservableProperty] private bool _sendNotificationToUser;
+        [ObservableProperty] private DateTime _transferSelectedDate = DateTime.Today;
+        [ObservableProperty] private SettingItem? _targetSelectedLabel;
+        [ObservableProperty] private ObservableCollection<SettingItem> _selectedLabelsList = new();
+
         public MaturedLeadsViewModel(LeadService service, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService)
         {
             _service = service;
@@ -50,6 +72,13 @@ namespace CallMan.ViewModels
         [RelayCommand]
         public async Task LoadData()
         {
+            var users = await _service.GetAllUsersAsync();
+            SystemUsersList = new ObservableCollection<User>(users);
+
+            var labels = await _settingService.GetSettingsAsync("LeadLabels");
+
+            AvailableLabelsList = new ObservableCollection<SettingItem>(labels);
+
             CustomerStats = await _service.GetCustomerFinancialSummaryAsync(1);
             var data = await _service.GetMaturedLedgerAsync();
             MaturedLeads = new ObservableCollection<Lead>(data);
@@ -127,7 +156,17 @@ namespace CallMan.ViewModels
             }
         }
 
-        [RelayCommand]
+        /// <summary>
+        /// Call this helper method whenever an operator checks/unchecks a row item checkbox in the grid
+        /// </summary>
+        public void RecalculateSelectionStates()
+        {
+            SelectedLeadsCount = LeadsCollection.Cast<Lead>().Count(x => x.IsSelectedForAction);
+        }
+
+        private bool HasSelection() => SelectedLeadsCount > 0;
+
+        [RelayCommand(CanExecute = nameof(HasSelection))]
         private async Task BulkDelete()
         {
             // 1. Grab all rows where the checkbox is checked
@@ -152,6 +191,124 @@ namespace CallMan.ViewModels
 
             // 4. Refresh your grid data
             await LoadData();
+        }
+
+        [RelayCommand(CanExecute = nameof(HasSelection))]
+        private async Task MoveToDead()
+        {
+            // 1. Grab all rows where the checkbox is checked
+            var selectedLeads = LeadsCollection.Cast<Lead>().Where(l => l.IsSelectedForAction).ToList();
+
+            if (!selectedLeads.Any())
+            {
+                MessageBox.Show("Please select at least one lead to move.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            // 2. Extract the IDs for your database operation
+            List<int> leadIdsToProcess = selectedLeads.Select(l => l.LeadId).ToList();
+
+            var confirm = MessageBox.Show($"Are you sure you want to move {leadIdsToProcess.Count} leads to DEAD?",
+                                         "Confirm Batch Dead", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+            if (confirm != MessageBoxResult.Yes) return;
+
+            // 3. Pass the IDs list to your service layer
+            await _service.BulkMatureDeadLeadsAsync(leadIdsToProcess);
+
+            // 4. Refresh your grid data
+            await LoadData();
+            RecalculateSelectionStates();
+        }
+
+        [RelayCommand(CanExecute = nameof(HasSelection))]
+        private void OpenChangeLeadHolderDialog()
+        {
+            IsChangeLeadHolderOpen = true;
+        }
+
+        [RelayCommand(CanExecute = nameof(HasSelection))]
+        private void OpenAssignLabelsDialog()
+        {
+            TargetSelectedLabel = null;
+            IsAssignLabelsOpen = true;
+        }
+
+        [RelayCommand]
+        private async Task SubmitChangeLeadHolder()
+        {
+            if (string.IsNullOrEmpty(TargetSelectedUser?.FullName)) return;
+
+            var targetIds = LeadsCollection.Cast<Lead>().Where(x => x.IsSelectedForAction).Select(x => x.LeadId).ToList();
+
+            var success = await _service.BulkChangeLeadHolderAsync(targetIds, TargetSelectedUser.FullName, TransferAsNew, TransferSelectedDate);
+
+            if (success)
+            {
+                IsChangeLeadHolderOpen = false;
+                await LoadData();
+                RecalculateSelectionStates();
+            }
+        }
+
+        [RelayCommand]
+        private async Task SubmitAssignLabels()
+        {
+            if (SelectedLabelsList == null || SelectedLabelsList.Count == 0) return;
+
+            var selectedLeads = LeadsCollection.Cast<Lead>().Where(x => x.IsSelectedForAction).ToList();
+
+            foreach (var lead in selectedLeads)
+            {
+                foreach (var lable in SelectedLabelsList)
+                {
+                    if (!lead.LeadLabels.Contains(lable.Name))
+                    {
+                        lead.LeadLabels.Add(lable.Name);
+                    }
+                }
+
+                string updatedJson = System.Text.Json.JsonSerializer.Serialize(lead.LeadLabels);
+                await _service.BulkChangeLeadLablesAsync(lead.LeadId, updatedJson);
+            }
+
+            IsAssignLabelsOpen = false;
+            await LoadData();
+            RecalculateSelectionStates();
+        }
+
+        partial void OnTargetSelectedLabelChanged(SettingItem? value)
+        {
+            if (value != null)
+            {
+                SelectedLabelsList.Add(value);
+                // Clear selection so the user can pick the same one again if they delete it
+                TargetSelectedLabel = null;
+            }
+        }
+
+        [RelayCommand]
+        public void RemoveLabel(SettingItem? value)
+        {
+            if (value != null)
+            {
+                SelectedLabelsList.Remove(value);
+            }
+        }
+
+        /// <summary>
+        /// Explicitly resets all dialog visibility states to force Close actions safely
+        /// </summary>
+        [RelayCommand]
+        private void CloseAllDialogs()
+        {
+            IsChangeLeadHolderOpen = false;
+            IsAssignLabelsOpen = false;
+
+            // Optional: Flush temporary form input models here if needed
+            TargetSelectedUser = null;
+            TargetSelectedLabel = null;
+            SelectedLabelsList = new();
         }
 
         [RelayCommand]

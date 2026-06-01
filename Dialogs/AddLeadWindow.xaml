@@ -7,6 +7,9 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="Generate New Lead" Height="700" Width="900" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
     <Grid Background="#F9FAFB">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -37,6 +40,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
                             <!-- Column 0: Customer Name -->
@@ -45,35 +49,51 @@
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
                             <!-- Column 1: Cleaned Single Phone TextBox Entry -->
-                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding LeadPhone, UpdateSourceTrigger=LostFocus}" 
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding LeadPhone, UpdateSourceTrigger=LostFocus, ValidatesOnDataErrors=True}" 
                                  materialDesign:HintAssist.Hint="Phone Number" Margin="5"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
                             <!-- Column 2: Cleaned Single Alternate Phone TextBox Entry -->
-                            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding LeadAltPhone, UpdateSourceTrigger=LostFocus}" 
+                            <TextBox Grid.Row="0" Grid.Column="2" Text="{Binding LeadAltPhone, UpdateSourceTrigger=LostFocus, ValidatesOnDataErrors=True}" 
                                  materialDesign:HintAssist.Hint="Alternate Number" Margin="5"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
                             <!-- Column 3: Email Address -->
-                            <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding NewLead.Email}" 
+                            <TextBox Grid.Row="0" Grid.Column="3" Text="{Binding LeadEmail}" 
                                  materialDesign:HintAssist.Hint="Email Address" Margin="5"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="✖ Phone already exists" 
+                                   Foreground="#D32F2F" FontSize="11" FontWeight="SemiBold" Margin="8,0,0,8"
+                                   Visibility="{Binding IsPhoneDuplicate, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="2" Text="✖ Number already exists" 
+                                   Foreground="#D32F2F" FontSize="11" FontWeight="SemiBold" Margin="8,0,0,8"
+                                   Visibility="{Binding IsAltPhoneDuplicate, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="3" Text="✖ Email already registered" 
+                                   Foreground="#D32F2F" FontSize="11" FontWeight="SemiBold" Margin="8,0,0,8"
+                                   Visibility="{Binding IsEmailDuplicate, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="3" Text="✖ Email not valid" 
+                                   Foreground="#D32F2F" FontSize="11" FontWeight="SemiBold" Margin="8,0,0,8"
+                                   Visibility="{Binding IsEmailMalformed, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
                             <!-- Row 2, Column 0: Lead Source -->
-                            <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding SourceList}" 
+                            <ComboBox Grid.Row="3" Grid.Column="1" ItemsSource="{Binding SourceList}" 
                                   DisplayMemberPath="Name" SelectedValuePath="Id"
                                   SelectedValue="{Binding LeadSourceId, UpdateSourceTrigger=PropertyChanged}"                        
                                   materialDesign:HintAssist.Hint="Lead Source" Margin="5"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
                             <!-- Row 2, Column 1: Lead Tags -->
-                            <ComboBox Grid.Row="2" Grid.Column="3" ItemsSource="{Binding TagsList}" 
+                            <ComboBox Grid.Row="3" Grid.Column="3" ItemsSource="{Binding TagsList}" 
                                   DisplayMemberPath="Name" SelectedValuePath="Id"
                                   SelectedValue="{Binding LeadTagId, UpdateSourceTrigger=PropertyChanged}"                        
                                   materialDesign:HintAssist.Hint="Lead Tags" Margin="5"
                                   Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
-                            <ItemsControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding NewLead.AssignedDivisions}" Margin="0,0,0,4">
+                            <ItemsControl Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" ItemsSource="{Binding NewLead.AssignedDivisions}" Margin="0,0,0,4">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <WrapPanel Orientation="Horizontal"/>
@@ -88,11 +108,11 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <!-- Row 2, Column 2: Multi-Select Lead Divisions -->
-                            <ComboBox Grid.Row="2" Grid.Column="0" Margin="5" ItemsSource="{Binding DivisionList}" DisplayMemberPath="Name"
+                            <ComboBox Grid.Row="3" Grid.Column="0" Margin="5" ItemsSource="{Binding DivisionList}" DisplayMemberPath="Name"
                                       SelectedItem="{Binding SelectedDivisionItem, UpdateSourceTrigger=PropertyChanged}"
                                       materialDesign:HintAssist.Hint="Select Divisions" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
-                            <ItemsControl Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" ItemsSource="{Binding NewLead.LeadLabels}" Margin="0,0,0,4">
+                            <ItemsControl Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" ItemsSource="{Binding NewLead.LeadLabels}" Margin="0,0,0,4">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <WrapPanel Orientation="Horizontal"/>
@@ -107,7 +127,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <!-- Row 2, Column 3: Lead Labels -->
-                                <ComboBox Grid.Row="2" Grid.Column="2" Margin="5" ItemsSource="{Binding LabelsList}" DisplayMemberPath="Name" SelectedValuePath="Name"
+                                <ComboBox Grid.Row="3" Grid.Column="2" Margin="5" ItemsSource="{Binding LabelsList}" DisplayMemberPath="Name" SelectedValuePath="Name"
                                       SelectedItem="{Binding SelectedLabelItem}" materialDesign:HintAssist.Hint="Lead Labels" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>                                
                             
                         </Grid>
@@ -216,11 +236,21 @@
         </ScrollViewer>
 
         <!-- SECTION 5: MASTER ACTIONS PANEL ROW -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="24,10,24,20">
-            <Button Content="CANCEL" Style="{StaticResource MaterialDesignFlatButton}" IsCancel="True" Margin="0,0,12,0" Foreground="#6B7280"/>
-            <Button Content="SAVE LEAD" Style="{StaticResource MaterialDesignRaisedButton}" IsDefault="True"
+        <Grid Grid.Row="2" Margin="24,10,24,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="{Binding ValidationMessage}" Foreground="#D32F2F" FontWeight="SemiBold" 
+               VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="CANCEL" Style="{StaticResource MaterialDesignFlatButton}" IsCancel="True" Margin="0,0,12,0" Foreground="#6B7280"/>
+                <Button Content="SAVE LEAD" Style="{StaticResource MaterialDesignRaisedButton}" IsDefault="True"
                 Command="{Binding SaveLeadCommand}" Width="160" Background="#673AB7" BorderBrush="#673AB7" Height="40"/>
-        </StackPanel>
+            </StackPanel>
+        </Grid>
     </Grid>
     <!--<Grid>
         <Grid.RowDefinitions>

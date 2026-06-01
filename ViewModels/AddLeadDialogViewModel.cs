@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 
 namespace CallMan.ViewModels
 {
@@ -71,6 +72,22 @@ namespace CallMan.ViewModels
 
         [ObservableProperty]
         private string? _leadAltPhone;
+
+        [ObservableProperty]
+        private string? _leadEmail;
+
+        [ObservableProperty] private bool _isPhoneDuplicate;
+        [ObservableProperty] private bool _isAltPhoneDuplicate;
+        [ObservableProperty] private bool _isEmailDuplicate;
+        [ObservableProperty] private bool _isEmailMalformed;
+
+        private bool _isProcessingPhoneUpdate;
+
+        [ObservableProperty] private string _validationMessage = string.Empty;
+
+        private static readonly Regex EmailRegex = new Regex(
+            @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         public record PincodeApiRoot(string Status, List<PostOfficeDetail> PostOffice);
         public record PostOfficeDetail(string Name, string District, string State, string Country);
@@ -143,6 +160,13 @@ namespace CallMan.ViewModels
         [RelayCommand]
         private async Task SaveLead()
         {
+            // Block execution if validation rule flags remain high
+            if (IsPhoneDuplicate || IsAltPhoneDuplicate || IsEmailDuplicate || IsEmailMalformed)
+            {
+                ValidationMessage = "Cannot save lead. Please resolve format and duplication flags before continuing.";
+                return;
+            }
+
             if (string.IsNullOrWhiteSpace(NewLead.CustomerName))
             {
                 // You could add a StatusMessage property here for validation errors
@@ -165,7 +189,7 @@ namespace CallMan.ViewModels
                         NextFollowUpDate = DateTime.Now,
                         UpdatedBy = _session.CurrentUser,
                         LogDate = DateTime.Now,
-                        IsPriority = true
+                        IsPriority = false
                     };
 
                     int newLeadId = await _leadService.SaveLeadAsync(NewLead, historyEntry, _session.CurrentUser);
@@ -294,16 +318,45 @@ namespace CallMan.ViewModels
 
         partial void OnLeadPhoneChanged(string value)
         {
+            if (_isProcessingPhoneUpdate) return;
+
             if (string.IsNullOrEmpty(value))
             {
                 NewLead.Phone = string.Empty;
+                IsPhoneDuplicate = false;
                 return;
             }
 
             if (value.Length >= 10)
             {
-                NewLead.Phone = ValidateAndFormatGlobalNumber(value, "IN");
-                this.LeadPhone = NewLead.Phone; // Update the input field with the formatted number
+                string formattedResult = ValidateAndFormatGlobalNumber(value, "IN");
+
+                // Guard Condition: Only update properties if the new format actually differs
+                if (formattedResult != value)
+                {
+                    try
+                    {
+                        // Raise the guard flag high to block incoming change events
+                        _isProcessingPhoneUpdate = true;
+
+                        NewLead.Phone = formattedResult;
+
+                        // This programmatic assignment updates the UI, but step 2 above will catch it 
+                        // and return immediately, completely breaking the infinite loop!
+                        this.LeadPhone = formattedResult;
+                    }
+                    finally
+                    {
+                        // Always lower the flag in a finally block to keep the UI input responsive
+                        _isProcessingPhoneUpdate = false;
+                    }
+                }
+
+                // Run your async duplicate database check safely without background interference
+                if (!formattedResult.Contains("[INVALID") && !formattedResult.Contains("[PARSING"))
+                {
+                    _ = VerifyDuplicateFieldAsync("Phone", formattedResult, isAlt: true);
+                }
             }            
         }
 
@@ -312,15 +365,71 @@ namespace CallMan.ViewModels
             if (string.IsNullOrEmpty(value))
             {
                 NewLead.AltPhone = string.Empty;
+                IsAltPhoneDuplicate = false;
                 return;
             }
 
             if (value.Length >= 10)
             {
-                NewLead.AltPhone = ValidateAndFormatGlobalNumber(value, "IN");
-                this.LeadAltPhone = NewLead.AltPhone; // Update the input field with the formatted number
+                string formattedResult = ValidateAndFormatGlobalNumber(value, "IN");
+
+                // Guard Condition: Only update properties if the new format actually differs
+                if (formattedResult != value)
+                {
+                    try
+                    {
+                        // Raise the guard flag high to block incoming change events
+                        _isProcessingPhoneUpdate = true;
+
+                        NewLead.AltPhone = formattedResult;
+
+                        // This programmatic assignment updates the UI, but step 2 above will catch it 
+                        // and return immediately, completely breaking the infinite loop!
+                        this.LeadAltPhone = formattedResult;
+                    }
+                    finally
+                    {
+                        // Always lower the flag in a finally block to keep the UI input responsive
+                        _isProcessingPhoneUpdate = false;
+                    }
+                }
+
+                // Run your async duplicate database check safely without background interference
+                if (!formattedResult.Contains("[INVALID") && !formattedResult.Contains("[PARSING"))
+                {
+                    _ = VerifyDuplicateFieldAsync("AltPhone", formattedResult, isAlt: true);
+                }
             }
         }
+
+        partial void OnLeadEmailChanged(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                NewLead.Email = string.Empty;
+                IsEmailDuplicate = false;
+                IsEmailMalformed = false;
+                return;
+            }
+
+            if (!EmailRegex.IsMatch(value))
+            {
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    IsEmailMalformed = true;
+                    IsEmailDuplicate = false; // Reset duplicate flag if pattern itself is broken
+                    EvaluateMasterValidationMessage();
+                });
+            }
+            else
+            {
+                // Layer 2: Format is correct, proceed to scan MySQL database for duplication over LAN
+                NewLead.Email = value.Trim();
+                App.Current.Dispatcher.Invoke(() => IsEmailMalformed = false);
+                _ = VerifyDuplicateFieldAsync("Email", NewLead.Email, isAlt: false);
+            }
+        }
+
 
         [RelayCommand]
         public void RemoveLabel(string labelName)
@@ -332,6 +441,39 @@ namespace CallMan.ViewModels
         public void RemoveDivision(Division division)
         {
             NewLead.AssignedDivisions.Remove(division);
+        }
+
+        private void EvaluateMasterValidationMessage()
+        {
+            if (IsPhoneDuplicate || IsAltPhoneDuplicate || IsEmailDuplicate)
+            {
+                ValidationMessage = "⚠️ Warning: Input details match an existing customer profile in your database.";
+            }
+            else if (IsEmailMalformed)
+            {
+                ValidationMessage = "⚠️ Warning: The provided email address format is invalid (e.g., user@domain.com).";
+            }
+            else
+            {
+                ValidationMessage = string.Empty;
+            }
+        }
+
+        private async Task VerifyDuplicateFieldAsync(string columnName, string columnValue, bool isAlt)
+        {
+            if (string.IsNullOrWhiteSpace(columnValue) || columnValue.Contains("[INVALID]")) return;
+
+            // Check against database index rules
+            bool exists = await _leadService.CheckDuplicateFieldAsync(columnName, columnValue, NewLead.LeadId);
+
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                if (columnName == "Phone") IsPhoneDuplicate = exists;
+                else if (columnName == "AltPhone" || isAlt) IsAltPhoneDuplicate = exists;
+                else if (columnName == "Email") IsEmailDuplicate = exists;
+
+                EvaluateMasterValidationMessage();
+            });
         }
 
         /// <summary>

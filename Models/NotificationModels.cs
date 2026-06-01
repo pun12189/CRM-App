@@ -20,8 +20,6 @@ namespace CallMan.Models
         public string? TargetMachine { get; set; }
         public string CreatedBy { get; set; } = string.Empty;
 
-        public ReminderType EnumReminderType => Enum.TryParse(ReminderType, out ReminderType result) ? result : Enums.ReminderType.FollowUp;
-
         // ADDED: Tracks the arrival timestamp of the background entry row
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 

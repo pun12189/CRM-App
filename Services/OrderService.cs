@@ -2,6 +2,7 @@
 using CallMan.Models;
 using CallMan.ViewModels;
 using Dapper;
+using Org.BouncyCastle.Utilities.Collections;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -43,14 +44,172 @@ namespace CallMan.Services
                         transaction);
                 }
 
-                string hist2Sql = @"INSERT INTO LeadHistory (LeadId, Message, ActionType, NextFollowUpDate, FollowupStage, UpdatedBy, LogDate) 
-                            VALUES (@LeadId, @Message, @ActionType, @NextFollowUpDate, @FollowupStage, @UpdatedBy, NOW())";
-                await db.ExecuteAsync(hist2Sql, history, transaction);
+                string insertHistory = @"INSERT INTO LeadHistory 
+            (LeadId, Message, Content, UpdatedByContent, NextFollowUpDate, UpdatedBy, ActionType, FollowupStage, IsPriority) 
+            VALUES (@LeadId, @Message, @Content, @UpdatedByContent, @NextFollowUpDate, @UpdatedBy, @ActionType, @FollowupStage, @IsPriority)";
+                await db.ExecuteAsync(insertHistory, history, transaction);
 
                 transaction.Commit();
                 return true;
             }
             catch
+            {
+                transaction.Rollback();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Inserts complete multi-table proforma records into the database within an isolated, atomic transaction.
+        /// </summary>
+        public async Task<bool> SaveCompleteProformaWorkflowAsync(ProformaHeader proforma, LeadHistoryEntry history)
+        {
+            using var conn = _context.CreateConnection();
+            if (conn.State != ConnectionState.Open) conn.Open();
+
+            using var transaction = conn.BeginTransaction();
+            try
+            {
+                // 1. Insert parent proforma record entry row
+                string insertHeaderSql = @"
+                    INSERT INTO Proformas (ProformaNumber, LeadId, BillTo, DeliverTo, TermsAndConditions, PreferedTransport, InternalRemarks, NextFollowupDate, ItemSubTotal, ExtraChargesTotal, GrandTotal, BalanceDue, CreatedBy)
+                    VALUES (@ProformaNumber, @LeadId, @BillTo, @DeliverTo, @TermsAndConditions, @PreferedTransport, @InternalRemarks, @NextFollowupDate, @ItemSubTotal, @ExtraChargesTotal, @GrandTotal, @BalanceDue, @CreatedBy);
+                    SELECT LAST_INSERT_ID();";
+
+                int proformaId = await conn.ExecuteScalarAsync<int>(insertHeaderSql, proforma, transaction);
+
+                // 2. Map and insert child product items
+                string insertItemSql = @"
+                    INSERT INTO ProformaItems (ProformaId, ProductId, BatchNo, ProductName, Quantity, UnitPrice, GstPercent, SubTotal, IsCustom, ProductImageBlob)
+                    VALUES (@ProformaId, @ProductId, @BatchNo, @ProductName, @Quantity, @UnitPrice, @GstPercent, @SubTotal, @IsCustom, @ProductImageBlob);";
+
+                foreach (var item in proforma.Items)
+                {
+                    item.ProformaId = proformaId;
+                    await conn.ExecuteAsync(insertItemSql, item, transaction);
+                }
+
+                // 3. Map and insert miscellaneous logistical extra charges
+                string insertChargeSql = @"
+                    INSERT INTO ProformaExtraCharges (ProformaId, ChargeDescription, ChargeAmount)
+                    VALUES (@ProformaId, @ChargeDescription, @ChargeAmount);";
+
+                foreach (var charge in proforma.ExtraCharges)
+                {
+                    charge.ProformaId = proformaId;
+                    await conn.ExecuteAsync(insertChargeSql, charge, transaction);
+                }
+
+                string hist2Sql = @"INSERT INTO LeadHistory (LeadId, Message, ActionType, NextFollowUpDate, FollowupStage, UpdatedBy, LogDate) 
+                            VALUES (@LeadId, @Message, @ActionType, @NextFollowUpDate, @FollowupStage, @UpdatedBy, NOW())";
+                await conn.ExecuteAsync(hist2Sql, history, transaction);
+
+                transaction.Commit();
+                return true;
+            }
+            catch (Exception)
+            {
+                transaction.Rollback();
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// CONVERSION ENGINE: Automatically converts an existing Proforma Quote into live system production 
+        /// Orders, OrderItems, OrderExtraCharges, and Payments profiles when a customer deposit arrives.
+        /// </summary>
+        public async Task<bool> ConvertProformaToFinalOrderAsync(int proformaId, decimal incomingDeposit, string paymentMode, string operatorUser)
+        {
+            using var conn = _context.CreateConnection();
+            if (conn.State != ConnectionState.Open) conn.Open();
+
+            using var transaction = conn.BeginTransaction();
+            try
+            {
+                // 1. Fetch the existing historical proforma data details snapshot record row
+                string fetchProformaSql = "SELECT * FROM Proformas WHERE ProformaId = @Id FOR UPDATE;";
+                var proforma = await conn.QueryFirstOrDefaultAsync<ProformaHeader>(fetchProformaSql, new { Id = proformaId }, transaction);
+                if (proforma == null) return false;
+
+                // 2. Commit Header to primary Orders table
+                string insertOrderSql = @"
+                    INSERT INTO Orders (LeadId, TotalAmount, AmountPaid, BalanceAmount, Description, PaymentStatus, Status, ProcessedBy, OrderDate)
+                    VALUES (@LeadId, @GrandTotal, @Deposit, (@GrandTotal - @Deposit), @Remarks, IF(@GrandTotal <= @Deposit, 'Paid', 'Partially Paid'), 'Pending', @Operator, NOW());
+                    SELECT LAST_INSERT_ID();";
+
+                int orderId = await conn.ExecuteScalarAsync<int>(insertOrderSql, new
+                {
+                    LeadId = proforma.LeadId,
+                    GrandTotal = proforma.GrandTotal,
+                    Deposit = incomingDeposit,
+                    Remarks = $"Converted from Proforma Quote: {proforma.ProformaNumber}. Notes: {proforma.InternalRemarks}",
+                    Operator = operatorUser
+                }, transaction);
+
+                // 3. Clone and transfer line items to OrderItems, tracking warehouse inventory adjustments
+                string fetchItemsSql = "SELECT * FROM ProformaItems WHERE ProformaId = @Id;";
+                var items = await conn.QueryAsync<ProformaLineItem>(fetchItemsSql, new { Id = proformaId }, transaction);
+
+                string insertOrderItemSql = @"
+                    INSERT INTO OrderItems (OrderId, ProductId, ProductName, Quantity, UnitPrice, GstPercent, SubTotal)
+                    VALUES (@OrderId, @ProductId, @ProductName, @Quantity, @UnitPrice, @GstPercent, @SubTotal);";
+
+                foreach (var item in items)
+                {
+                    await conn.ExecuteAsync(insertOrderItemSql, new
+                    {
+                        OrderId = orderId,
+                        ProductId = item.ProductId,
+                        ProductName = item.ProductName,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice,
+                        GstPercent = item.GstPercent,
+                        SubTotal = item.SubTotal
+                    }, transaction);
+
+                    // Decrement stock only if it points to a verified, non-custom catalog master product line element
+                    if (item.IsCustom == 0 && item.ProductId.HasValue)
+                    {
+                        string deductStockSql = "UPDATE Products SET CurrentStock = CurrentStock - @Qty WHERE ProductId = @ProductId;";
+                        await conn.ExecuteAsync(deductStockSql, new { Qty = item.Quantity, ProductId = item.ProductId.Value }, transaction);
+                    }
+                }
+
+                // 4. Clone and transfer auxiliary courier/freight records to OrderExtraCharges
+                string fetchChargesSql = "SELECT * FROM ProformaExtraCharges WHERE ProformaId = @Id;";
+                var charges = await conn.QueryAsync<ProformaExtraChargeItem>(fetchChargesSql, new { Id = proformaId }, transaction);
+
+                string insertOrderChargeSql = @"
+                    INSERT INTO OrderExtraCharges (OrderId, ChargeDescription, ChargeAmount)
+                    VALUES (@OrderId, @Desc, @Amount);";
+
+                foreach (var charge in charges)
+                {
+                    await conn.ExecuteAsync(insertOrderChargeSql, new { OrderId = orderId, Desc = charge.ChargeDescription, Amount = charge.ChargeAmount }, transaction);
+                }
+
+                // 5. Append transaction entry straight into your core Payments table
+                string insertPaymentSql = @"
+                    INSERT INTO Payments (LeadId, OrderId, TotalOrderValue, AmountReceived, Remarks, PaymentDate)
+                    VALUES (@LeadId, @OrderId, @GrandTotal, @Deposit, @Remarks, NOW());";
+
+                await conn.ExecuteAsync(insertPaymentSql, new
+                {
+                    LeadId = proforma.LeadId,
+                    OrderId = orderId,
+                    GrandTotal = proforma.GrandTotal,
+                    Deposit = incomingDeposit,
+                    Remarks = $"Initial deposit collected via {paymentMode} against {proforma.ProformaNumber}"
+                }, transaction);
+
+                // 6. Flip original proforma quotation flag context record state parameters to close out loops
+                string completeProformaSql = "UPDATE Proformas SET TotalPaid = @Deposit, BalanceDue = (GrandTotal - @Deposit), ProformaStatus = 'ConvertedToOrder' WHERE ProformaId = @Id;";
+                await conn.ExecuteAsync(completeProformaSql, new { Id = proformaId, Deposit = incomingDeposit }, transaction);
+
+                transaction.Commit();
+                return true;
+            }
+            catch (Exception)
             {
                 transaction.Rollback();
                 return false;

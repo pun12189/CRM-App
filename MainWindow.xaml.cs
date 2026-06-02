@@ -5,6 +5,7 @@ using CallMan.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 
 namespace CallMan
@@ -119,6 +120,23 @@ namespace CallMan
                 {
                     // Cleanly close the dropdown box if the search query is completely erased
                     comboBox.IsDropDownOpen = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// FIXED: Clears logical keyboard focus from clicked menu headers.
+        /// This ensures subsequent hover actions continue to slide open dropdown panels instantly!
+        /// </summary>
+        private void TopLevelMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem)
+            {
+                // If it's a top-level action button (no sub-items), release focus immediately after click
+                if (menuItem.Items.Count == 0)
+                {
+                    // Pass focus back to the parent control window grid context
+                    Keyboard.ClearFocus();
                 }
             }
         }

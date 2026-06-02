@@ -331,93 +331,255 @@
                 </StackPanel>
             </Grid>
         </Border>
-        <materialDesign:ColorZone Grid.Row="1" Mode="Custom" Background="#1794A1" Foreground="White">
-            <Menu x:Name="TopMenu" Background="Transparent" VerticalAlignment="Stretch">
+        <materialDesign:ColorZone Grid.Row="1" Mode="Custom" Background="#1794A1" Foreground="White" Height="48">
+            <Grid>
+            <Menu x:Name="TopMenu" Background="Transparent" VerticalAlignment="Stretch" HorizontalAlignment="Left">
                 <Menu.Resources>
-                    <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
-                        <!--<Setter Property="Height" Value="55"/>-->
-                        <Setter Property="Padding" Value="10,0"/>
+                    <Style TargetType="MenuItem">
+                        <Setter Property="Height" Value="48"/>
+                        <Setter Property="Padding" Value="14,0"/>
                         <Setter Property="Foreground" Value="White"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="IsSubmenuOpen" Value="True"/>
-                                <Setter Property="Background" Value="#14838F"/>
-                            </Trigger>
-                            <Trigger Property="IsHighlighted" Value="True">
-                                <Setter Property="Background" Value="White"/>
-                                <Setter Property="Foreground" Value="#1794A1"/>
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-
-                    <Style TargetType="ContextMenu" BasedOn="{StaticResource MaterialDesignContextMenu}">
-                        <Setter Property="Padding" Value="0"/>
-                        <Setter Property="MinHeight" Value="0"/>
-                        <Setter Property="Background" Value="White"/>
-
+                        <Setter Property="FontWeight" Value="SemiBold"/>
+                        <Setter Property="FontSize" Value="13.5"/>
                         <Setter Property="Template">
                             <Setter.Value>
-                                <ControlTemplate TargetType="ContextMenu">
-                                    <materialDesign:Card UniformCornerRadius="2" 
-                                     Background="White"
-                                     Padding="0" 
-                                     Margin="4">
-                                        <ScrollViewer x:Name="SubMenuScrollViewer" 
-                                  Style="{DynamicResource {ComponentResourceKey ResourceId=MenuScrollViewer, TypeInTargetAssembly={x:Type FrameworkElement}}}">
+                                <ControlTemplate TargetType="MenuItem">
+                                    <Border x:Name="TopLevelBorder" 
+                            Background="Transparent" 
+                            Padding="{TemplateBinding Padding}" 
+                            SnapsToDevicePixels="True">
+                                        <Grid>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <ContentPresenter Content="{TemplateBinding Icon}" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                <ContentPresenter Content="{TemplateBinding Header}" VerticalAlignment="Center"/>
+                                            </StackPanel>
 
-                                            <ItemsPresenter x:Name="ItemsPresenter" 
-                                        KeyboardNavigation.TabNavigation="Cycle" 
-                                        Margin="0" 
-                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                                        </ScrollViewer>
-                                    </materialDesign:Card>
+                                            <Popup x:Name="PART_Popup"
+                                               IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                               Placement="Bottom"
+                                               Focusable="False"
+                                               AllowsTransparency="True"
+                                               PopupAnimation="Fade"
+                                               VerticalOffset="-2"
+       
+                                               HorizontalOffset="-14">
+
+                                                <Border Background="Transparent" Padding="0,2,0,0">
+                                                    <Border Background="White" 
+                                                BorderBrush="#CBD5E1" 
+                                                BorderThickness="1" 
+                                                CornerRadius="4"
+                                                Padding="0">
+                                                        <Border.Effect>
+                                                            <DropShadowEffect BlurRadius="8" ShadowDepth="2" Color="#334155" Opacity="0.12"/>
+                                                        </Border.Effect>
+
+                                                        <StackPanel IsItemsHost="True" Margin="0"/>
+                                                    </Border>
+                                                </Border>
+                                            </Popup>
+                                        </Grid>
+                                    </Border>
+
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="IsSubmenuOpen" Value="True"/>
+                                            <Setter TargetName="TopLevelBorder" Property="Background" Value="#14838F"/>
+                                        </Trigger>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter TargetName="TopLevelBorder" Property="Background" Value="#14838F"/>
+                                        </Trigger>
+                                        <Trigger Property="IsSubmenuOpen" Value="True">
+                                            <Setter TargetName="TopLevelBorder" Property="Background" Value="#14838F"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
                                 </ControlTemplate>
                             </Setter.Value>
                         </Setter>
                     </Style>
 
-                    <Style x:Key="SubItemStyle" TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">                       
-                        <Setter Property="Foreground" Value="#2D3436"/>
-                        <Setter Property="materialDesign:MenuItemAssist.HighlightedBackground" Value="White"/>
+                    <Style x:Key="SubItemStyle" TargetType="MenuItem">
+                        <Setter Property="Foreground" Value="#2D3748"/>
+                        <Setter Property="Background" Value="White"/>
+                        <Setter Property="Height" Value="38"/>
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="MenuItem">
+                                    <Border x:Name="SubMenuBorder" 
+                            Background="{TemplateBinding Background}" 
+                            Padding="16,0,24,0" 
+                            SnapsToDevicePixels="True">
+                                        <Grid VerticalAlignment="Center" Width="140">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="22"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
 
-                        <Setter Property="VerticalContentAlignment" Value="Center"/>
-                        <Setter Property="Margin" Value="0"/>
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="#1794A1"/>
-                            </Trigger>
-                            <Trigger Property="IsHighlighted" Value="True">
-                                <Setter Property="Background" Value="White"/>
-                            </Trigger>
-                        </Style.Triggers>
+                                            <ContentPresenter Grid.Column="0" 
+                                              Content="{TemplateBinding Icon}" 
+                                              VerticalAlignment="Center" 
+                                              HorizontalAlignment="Left"/>
+
+                                            <ContentPresenter Grid.Column="1" 
+                                              Content="{TemplateBinding Header}" 
+                                              RecognizesAccessKey="True"
+                                              VerticalAlignment="Center" 
+                                              HorizontalAlignment="Left"
+                                              Margin="6,0,0,0"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsHighlighted" Value="True">
+                                            <Setter TargetName="SubMenuBorder" Property="Background" Value="#F1F5F9"/>
+                                            <Setter Property="Foreground" Value="#1794A1"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
                     </Style>
                 </Menu.Resources>
 
-                <MenuItem Header="Dashboard" Icon="{materialDesign:PackIcon Kind=ViewDashboard}" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"/>
-                <MenuItem Header="Follow Ups" Icon="{materialDesign:PackIcon Kind=Storage}">
-                    <MenuItem Header="Today's Followup" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Today"/>
-                    <MenuItem Header="Future Followup" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Future"/>
+                <MenuItem Header="Dashboard" Icon="{materialDesign:PackIcon Kind=ViewDashboard}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"/>
+
+                <MenuItem Header="Task's" Icon="{materialDesign:PackIcon Kind=Clockwise}" Click="TopLevelMenuItem_Click">
+                    <MenuItem Header="Today's Task" Icon="{materialDesign:PackIcon Kind=CalendarToday}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Today"/>
+                    <MenuItem Header="Future Task" Icon="{materialDesign:PackIcon Kind=CalendarClock}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Future"/>
                 </MenuItem>
-                <MenuItem Header="Leads" Icon="{materialDesign:PackIcon Kind=AccountGroup}">
-                    <MenuItem Header="All Leads" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Leads"/>
-                    <MenuItem Header="My Leads" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="MyLeads"/>
+
+                <MenuItem Header="Leads" Icon="{materialDesign:PackIcon Kind=AccountGroup}" Click="TopLevelMenuItem_Click">
+                    <MenuItem Header="All Leads" Icon="{materialDesign:PackIcon Kind=AccountMultiple}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Leads"/>
+                    <MenuItem Header="My Leads" Icon="{materialDesign:PackIcon Kind=Account}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="MyLeads"/>
                 </MenuItem>
-                <MenuItem Header="Occupied Locations" Icon="{materialDesign:PackIcon Kind=LocalAreaNetwork}" Command="{Binding NavigateCommand}" CommandParameter="Location"/>
-                <MenuItem Header="Dead Leads" Icon="{materialDesign:PackIcon Kind=MedicalBag}">
-                    <MenuItem Header="Dead" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dead"/>
-                    <MenuItem Header="Winback Pool" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="WinbackPool"/>
+
+                <MenuItem Header="Occupied Locations" Icon="{materialDesign:PackIcon Kind=MapMarkerRadius}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Location"/>
+
+                <MenuItem Header="Dead Leads" Icon="{materialDesign:PackIcon Kind=AccountCancel}" Click="TopLevelMenuItem_Click">
+                    <MenuItem Header="Dead" Icon="{materialDesign:PackIcon Kind=CloseCircle}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dead"/>
+                    <MenuItem Header="Winback Pool" Icon="{materialDesign:PackIcon Kind=Pool}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="WinbackPool"/>
                 </MenuItem>
                 <MenuItem Header="Purchase" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}" IsEnabled="False" Visibility="Collapsed"/>
-                <MenuItem Header="CRM" Icon="{materialDesign:PackIcon Kind=AccountGroup}">
-                    <MenuItem Header="Customers" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Customers"/>
-                    <MenuItem Header="Orders" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Orders"/>
-                    <MenuItem Header="Item/Product List" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>
-                    <MenuItem Header="Ledger" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Ledger"/>
-                    <MenuItem Header="Proforma" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Proforma"/>
+                <MenuItem Header="CRM" Icon="{materialDesign:PackIcon Kind=Briefcase}" Click="TopLevelMenuItem_Click">
+                    <MenuItem Header="Customers" Icon="{materialDesign:PackIcon Kind=CardAccountDetails}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Customers"/>
+                    <MenuItem Header="Orders" Icon="{materialDesign:PackIcon Kind=CartCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Orders"/>
+                    <MenuItem Header="Item/Product List" Icon="{materialDesign:PackIcon Kind=PackageVariant}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>
+                    <MenuItem Header="Ledger" Icon="{materialDesign:PackIcon Kind=BookOpenPageVariant}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Ledger"/>
+                    <MenuItem Header="Proforma" Icon="{materialDesign:PackIcon Kind=FileDocumentCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Proforma"/>
                 </MenuItem>
-                <MenuItem Header="Admin Settings" Icon="{materialDesign:PackIcon Kind=Settings}" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
-                <MenuItem Header="e2e Reports" HorizontalAlignment="Right" Visibility="Collapsed" Icon="{materialDesign:PackIcon Kind=FileDocument}" Command="{Binding NavigateCommand}" CommandParameter="Reports"/>
-            </Menu>
+
+                    <MenuItem Header="Admin Settings" Icon="{materialDesign:PackIcon Kind=Settings}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
+                </Menu>
+                <Menu Background="Transparent" VerticalAlignment="Stretch" HorizontalAlignment="Right">
+                    <Menu.Resources>
+                        <Style TargetType="MenuItem">
+                            <Setter Property="Height" Value="48"/>
+                            <Setter Property="Padding" Value="14,0"/>
+                            <Setter Property="Foreground" Value="White"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="FontSize" Value="13.5"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="MenuItem">
+                                        <Border x:Name="TopLevelBorder" 
+                Background="Transparent" 
+                Padding="{TemplateBinding Padding}" 
+                SnapsToDevicePixels="True">
+                                            <Grid>
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <ContentPresenter Content="{TemplateBinding Icon}" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                    <ContentPresenter Content="{TemplateBinding Header}" VerticalAlignment="Center"/>
+                                                </StackPanel>
+
+                                                <Popup x:Name="PART_Popup"
+                                   IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                   Placement="Bottom"
+                                   Focusable="False"
+                                   AllowsTransparency="True"
+                                   PopupAnimation="Fade"
+                                   VerticalOffset="-2"
+       
+                                   HorizontalOffset="-14">
+
+                                                    <Border Background="Transparent" Padding="0,2,0,0">
+                                                        <Border Background="White" 
+                                    BorderBrush="#CBD5E1" 
+                                    BorderThickness="1" 
+                                    CornerRadius="4"
+                                    Padding="0">
+                                                            <Border.Effect>
+                                                                <DropShadowEffect BlurRadius="8" ShadowDepth="2" Color="#334155" Opacity="0.12"/>
+                                                            </Border.Effect>
+
+                                                            <StackPanel IsItemsHost="True" Margin="0"/>
+                                                        </Border>
+                                                    </Border>
+                                                </Popup>
+                                            </Grid>
+                                        </Border>
+
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="IsSubmenuOpen" Value="True"/>
+                                                <Setter TargetName="TopLevelBorder" Property="Background" Value="#14838F"/>
+                                            </Trigger>
+                                            <Trigger Property="IsHighlighted" Value="True">
+                                                <Setter TargetName="TopLevelBorder" Property="Background" Value="#14838F"/>
+                                            </Trigger>
+                                            <Trigger Property="IsSubmenuOpen" Value="True">
+                                                <Setter TargetName="TopLevelBorder" Property="Background" Value="#14838F"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+
+                        <Style x:Key="SubItemStyle" TargetType="MenuItem">
+                            <Setter Property="Foreground" Value="#2D3748"/>
+                            <Setter Property="Background" Value="White"/>
+                            <Setter Property="Height" Value="38"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="MenuItem">
+                                        <Border x:Name="SubMenuBorder" 
+                Background="{TemplateBinding Background}" 
+                Padding="16,0,24,0" 
+                SnapsToDevicePixels="True">
+                                            <Grid VerticalAlignment="Center" Width="140">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="22"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <ContentPresenter Grid.Column="0" 
+                                  Content="{TemplateBinding Icon}" 
+                                  VerticalAlignment="Center" 
+                                  HorizontalAlignment="Left"/>
+
+                                                <ContentPresenter Grid.Column="1" 
+                                  Content="{TemplateBinding Header}" 
+                                  RecognizesAccessKey="True"
+                                  VerticalAlignment="Center" 
+                                  HorizontalAlignment="Left"
+                                  Margin="6,0,0,0"/>
+                                            </Grid>
+                                        </Border>
+
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsHighlighted" Value="True">
+                                                <Setter TargetName="SubMenuBorder" Property="Background" Value="#F1F5F9"/>
+                                                <Setter Property="Foreground" Value="#1794A1"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </Menu.Resources>                    
+                    <MenuItem Header="e2e Reports" Click="TopLevelMenuItem_Click" HorizontalAlignment="Right" Visibility="Visible" Icon="{materialDesign:PackIcon Kind=FileDocument}" Command="{Binding NavigateCommand}" CommandParameter="Reports"/>
+                </Menu>
+            </Grid>
         </materialDesign:ColorZone>
         <ContentControl Grid.Row="2" Content="{Binding CurrentView}"/>
         <materialDesign:DrawerHost Grid.RowSpan="3" IsRightDrawerOpen="{Binding IsAdminMenuOpen, Mode=TwoWay}">
@@ -506,6 +668,78 @@
                     </Button.Style>
                 </Button>
             </Grid>
-        </materialDesign:DrawerHost>        
+        </materialDesign:DrawerHost>
+        <Grid Grid.RowSpan="3" Visibility="{Binding IsGlobalLoadingActive, Converter={StaticResource BooleanToVisibilityConverter}}">
+
+            <Border Background="#1E293B" Opacity="0.55"/>
+
+            <materialDesign:Card UniformCornerRadius="8" 
+                         Padding="28,24" 
+                         Width="280"
+                         VerticalAlignment="Center" 
+                         HorizontalAlignment="Center"
+                         materialDesign:ElevationAssist.Elevation="Dp8">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,16">
+                        <StackPanel.Resources>
+                            <Storyboard x:Key="PulseAnimation" RepeatBehavior="Forever" Duration="0:0:1.2">
+                                <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                                    <DiscreteDoubleKeyFrame KeyTime="0:0:0.0" Value="0.2"/>
+                                    <DiscreteDoubleKeyFrame KeyTime="0:0:0.4" Value="1.0"/>
+                                    <DiscreteDoubleKeyFrame KeyTime="0:0:0.8" Value="0.2"/>
+                                </DoubleAnimationUsingKeyFrames>
+                            </Storyboard>
+                        </StackPanel.Resources>
+
+                        <Ellipse Width="10" Height="10" Fill="#008080" Margin="4,0">
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard Storyboard="{StaticResource PulseAnimation}"/>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                        <Ellipse Width="10" Height="10" Fill="#008080" Margin="4,0" Opacity="0.5">
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever" Duration="0:0:1.2">
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                                                <DiscreteDoubleKeyFrame KeyTime="0:0:0.0" Value="0.2"/>
+                                                <DiscreteDoubleKeyFrame KeyTime="0:0:0.4" Value="0.2"/>
+                                                <DiscreteDoubleKeyFrame KeyTime="0:0:0.8" Value="1.0"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                        <Ellipse Width="10" Height="10" Fill="#008080" Margin="4,0" Opacity="0.2">
+                            <Ellipse.Triggers>
+                                <EventTrigger RoutedEvent="Loaded">
+                                    <BeginStoryboard>
+                                        <Storyboard RepeatBehavior="Forever" Duration="0:0:1.2">
+                                            <DoubleAnimationUsingKeyFrames Storyboard.TargetProperty="Opacity">
+                                                <DiscreteDoubleKeyFrame KeyTime="0:0:0.0" Value="1.0"/>
+                                                <DiscreteDoubleKeyFrame KeyTime="0:0:0.4" Value="0.2"/>
+                                                <DiscreteDoubleKeyFrame KeyTime="0:0:0.8" Value="0.2"/>
+                                            </DoubleAnimationUsingKeyFrames>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Ellipse.Triggers>
+                        </Ellipse>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding GlobalLoadingMessage}" 
+                       HorizontalAlignment="Center" 
+                       VerticalAlignment="Center"
+                       TextAlignment="Center"
+                       FontSize="14" 
+                       FontWeight="SemiBold" 
+                       Foreground="#334155"
+                       TextWrapping="Wrap"/>
+                </StackPanel>               
+            </materialDesign:Card>
+        </Grid>
     </Grid>
 </Window>

@@ -52,6 +52,9 @@ namespace CallMan.ViewModels
         [ObservableProperty] private ObservableCollection<GlobalSearchRowItem> _globalSearchResults = new();
         [ObservableProperty] private GlobalSearchRowItem? _selectedGlobalSearchLead;
 
+        [ObservableProperty] private bool _isGlobalLoadingActive;
+        [ObservableProperty] private string _globalLoadingMessage = "Loading...";
+
         private bool _isAdminMenuOpen;
         public bool IsAdminMenuOpen
         {
@@ -77,6 +80,21 @@ namespace CallMan.ViewModels
             Navigate("Dashboard");
 
             SetupIdleTimer();
+
+            LoadingService.OnLoadingStateChanged += HandleGlobalLoadingEvent;
+        }
+
+        private void HandleGlobalLoadingEvent(bool isActive, string message)
+        {
+            // Safely route execution parameters back to the main UI thread pool
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                IsGlobalLoadingActive = isActive;
+                if (isActive && !string.IsNullOrEmpty(message))
+                {
+                    GlobalLoadingMessage = message;
+                }
+            });
         }
 
         [RelayCommand] 
@@ -121,61 +139,128 @@ namespace CallMan.ViewModels
         [RelayCommand]
         private async Task Navigate(string destination)
         {
-            switch (destination)
+            try
             {
-                case "Leads":
-                    // We pull the ViewModel from the DI container we set up in App.xaml.cs
-                    var vm = App.ServiceProvider.GetRequiredService<LeadViewModel>();
-                    await vm.InitializeAsync(Models.Enums.LeadViewMode.AllLeads);
-                    CurrentView = vm;
-                    break;
-                case "Dashboard":
-                    CurrentView = App.ServiceProvider.GetRequiredService<DashboardViewModel>();
-                    break;
-                case "Customers":
-                    CurrentView = App.ServiceProvider.GetRequiredService<MaturedLeadsViewModel>();
-                    break;
-                case "Orders":
-                    CurrentView = App.ServiceProvider.GetRequiredService<AllOrdersViewModel>();
-                    break;
-                case "Admin":
-                    CurrentView = App.ServiceProvider.GetRequiredService<AdminSettingsViewModel>();
-                    break;
-                case "Inventory":
-                    CurrentView = App.ServiceProvider.GetRequiredService<InventoryViewModel>();
-                    break;
-                case "Location":
-                    CurrentView = App.ServiceProvider.GetRequiredService<OccupiedLocationViewModel>();
-                    break;
-                case "Reports":
-                    CurrentView = App.ServiceProvider.GetRequiredService<E2EReportsDashboardViewModel>();
-                    break;
-                case "Dead":
-                    var vm2 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
-                    await vm2.InitializeAsync(Models.Enums.LeadViewMode.Dead);
-                    CurrentView = vm2;
-                    break;
-                case "WinbackPool":
-                    var vm5 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
-                    await vm5.InitializeAsync(Models.Enums.LeadViewMode.WinbackPool);
-                    CurrentView = vm5;
-                    break;
-                case "MyLeads":
-                    var vm1 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
-                    await vm1.InitializeAsync(Models.Enums.LeadViewMode.MyLeads);
-                    CurrentView = vm1;
-                    break;
-                case "Today":
-                    var vm3 = App.ServiceProvider.GetRequiredService<LeadFollowupViewModel>();
-                    await vm3.InitializeAsync(Models.Enums.LeadViewMode.TodayFollowUp);
-                    CurrentView = vm3;
-                    break;
-                case "Future":
-                    var vm4 = App.ServiceProvider.GetRequiredService<LeadFollowupViewModel>();
-                    await vm4.InitializeAsync(Models.Enums.LeadViewMode.FutureFollowUp);
-                    CurrentView = vm4;
-                    break;
-                    // Add other cases as you build them
+                LoadingService.Show("Loading view... Please wait.");
+
+                switch (destination)
+                {
+                    case "Leads":
+                        // We pull the ViewModel from the DI container we set up in App.xaml.cs
+                        var vm = App.ServiceProvider.GetRequiredService<LeadViewModel>();
+                        await vm.InitializeAsync(Models.Enums.LeadViewMode.AllLeads);
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm;
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "Dashboard":
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = App.ServiceProvider.GetRequiredService<DashboardViewModel>();
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "Customers":
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = App.ServiceProvider.GetRequiredService<MaturedLeadsViewModel>();
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "Orders":
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = App.ServiceProvider.GetRequiredService<AllOrdersViewModel>();
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "Admin":
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = App.ServiceProvider.GetRequiredService<AdminSettingsViewModel>();
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "Inventory":
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = App.ServiceProvider.GetRequiredService<InventoryViewModel>();
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "Location":
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = App.ServiceProvider.GetRequiredService<OccupiedLocationViewModel>();
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "Reports":
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = App.ServiceProvider.GetRequiredService<E2EReportsDashboardViewModel>();
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "Dead":
+                        var vm2 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
+                        await vm2.InitializeAsync(Models.Enums.LeadViewMode.Dead);
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm2;
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "WinbackPool":
+                        var vm5 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
+                        await vm5.InitializeAsync(Models.Enums.LeadViewMode.WinbackPool);
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm5;
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "MyLeads":
+                        var vm1 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
+                        await vm1.InitializeAsync(Models.Enums.LeadViewMode.MyLeads);
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm1;
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "Today":
+                        var vm3 = App.ServiceProvider.GetRequiredService<LeadFollowupViewModel>();
+                        await vm3.InitializeAsync(Models.Enums.LeadViewMode.TodayFollowUp);
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm3;
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                    case "Future":
+                        var vm4 = App.ServiceProvider.GetRequiredService<LeadFollowupViewModel>();
+                        await vm4.InitializeAsync(Models.Enums.LeadViewMode.FutureFollowUp);
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm4;
+                        }, DispatcherPriority.Background);
+                        
+                        break;
+                        // Add other cases as you build them
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error navigating to {destination}: {ex.Message}");
+            }
+            finally
+            {
+                // Ensure admin menu is closed after navigation
+                await Task.Delay(100); // Small delay to allow UI to update before hiding the loading indicator
+                LoadingService.Hide();
             }
         }
 
@@ -263,6 +348,8 @@ namespace CallMan.ViewModels
         {
             if (value == null) return;
 
+            LoadingService.Show("Loading lead details... Please wait.");
+
             // 1. Navigate your application's primary content presenter view straight to your Leads page
             _leadsPageViewModel = App.ServiceProvider.GetRequiredService<LeadViewModel>();
 
@@ -303,7 +390,13 @@ namespace CallMan.ViewModels
                 });
 
                 // Switch workspace tabs safely after the collection is filtered
-                CurrentView = _leadsPageViewModel;
+                await App.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    CurrentView = _leadsPageViewModel;
+                }, DispatcherPriority.Background);
+                
+                await Task.Delay(100); // Small delay to allow UI to update before hiding the loading indicator
+                LoadingService.Hide();
             }
         }
     }

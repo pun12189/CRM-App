@@ -99,7 +99,7 @@ namespace CallMan.Services
             lead.LabelsJson = JsonSerializer.Serialize(lead.LeadLabels);
 
             string sql = @"UPDATE Leads SET 
-                    CustomerName = @CustomerName, Email = @Email, Phone = @Phone, AltPhone = @AltPhone
+                    CustomerName = @CustomerName, Email = @Email, Phone = @Phone, AltPhone = @AltPhone,
                     Status = @Status, StatusId = @StatusId, DeadReasonId = @DeadReasonId, MatureStageId = @MatureStageId, LeadSourceId = @LeadSourceId, LeadTagId = @LeadTagId,
                     CompanyName = @CompanyName, AddressLine = @AddressLine, 
                     City = @City, District = @District, State = @State, 
@@ -940,6 +940,12 @@ AND (
                         currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson);
                     }
 
+                    if (!string.IsNullOrEmpty(currentLead.LabelsJson))
+                    {
+                        currentLead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(currentLead.LabelsJson)
+                                                 ?? new ObservableCollection<string>();
+                    }
+
                     leadMap.Add(currentLead.LeadId, currentLead);
                 }
 
@@ -1012,6 +1018,12 @@ AND (
                     if (!string.IsNullOrEmpty(currentLead.MetadataJson))
                     {
                         currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson);
+                    }
+
+                    if (!string.IsNullOrEmpty(currentLead.LabelsJson))
+                    {
+                        currentLead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(currentLead.LabelsJson)
+                                                 ?? new ObservableCollection<string>();
                     }
 
                     leadMap.Add(currentLead.LeadId, currentLead);

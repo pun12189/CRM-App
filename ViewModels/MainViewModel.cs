@@ -31,6 +31,7 @@ namespace CallMan.ViewModels
         private DispatcherTimer _idleTimer;
         private const int IdleTimeoutMinutes = 30;
 
+        private readonly IServiceProvider _serviceProvider;
         private readonly LeadService _leadService;
         private LeadViewModel _leadsPageViewModel;
         private MaturedLeadsViewModel _maturedLeadsPageViewModel;
@@ -67,7 +68,7 @@ namespace CallMan.ViewModels
         }
 
         // These are injected via DI when the app starts
-        public MainViewModel(LeadService leadService, IDialogService dialogService, IUserSession session, LoginLogService logService, NotificationHistoryService historyService, NotificationRoutingService routingService)
+        public MainViewModel(IServiceProvider serviceProvider, LeadService leadService, IDialogService dialogService, IUserSession session, LoginLogService logService, NotificationHistoryService historyService, NotificationRoutingService routingService)
         {
             _leadService = leadService;
             _dialogService = dialogService; 
@@ -75,9 +76,10 @@ namespace CallMan.ViewModels
             _logService = logService;
             _historyService = historyService;
             _routingService = routingService;
+            _serviceProvider = serviceProvider;
             _userName = session.CurrentUser;
             // Load Dashboard by default
-            Navigate("Dashboard");
+            _ = Navigate("Dashboard");
 
             SetupIdleTimer();
 
@@ -100,7 +102,7 @@ namespace CallMan.ViewModels
         [RelayCommand] 
         private void QuickAddLead()
         {
-            _leadsPageViewModel = App.ServiceProvider.GetRequiredService<LeadViewModel>();
+            _leadsPageViewModel = _serviceProvider.GetRequiredService<LeadViewModel>();
             if (_leadsPageViewModel != null)
             {
                 _leadsPageViewModel.OpenAddLeadDialogCommand.Execute(null);
@@ -109,7 +111,7 @@ namespace CallMan.ViewModels
 
         [RelayCommand] private void QuickAddCustomer() 
         {
-            _maturedLeadsPageViewModel = App.ServiceProvider.GetRequiredService<MaturedLeadsViewModel>();
+            _maturedLeadsPageViewModel = _serviceProvider.GetRequiredService<MaturedLeadsViewModel>();
             if (_maturedLeadsPageViewModel != null)
             {
                 _maturedLeadsPageViewModel.OpenAddLeadDialogCommand.Execute(null);
@@ -118,7 +120,7 @@ namespace CallMan.ViewModels
 
         [RelayCommand] private void QuickAddProduct() 
         {
-            _inventoryPageViewModel = App.ServiceProvider.GetRequiredService<InventoryViewModel>();
+            _inventoryPageViewModel = _serviceProvider.GetRequiredService<InventoryViewModel>();
             if (_inventoryPageViewModel != null)
             {
                 _inventoryPageViewModel.OpenAddProductCommand.Execute(null);
@@ -127,7 +129,7 @@ namespace CallMan.ViewModels
 
         [RelayCommand] private void QuickAddOrder() 
         {
-            _orderPageViewModel = App.ServiceProvider.GetRequiredService<AllOrdersViewModel>();
+            _orderPageViewModel = _serviceProvider.GetRequiredService<AllOrdersViewModel>();
             if (_orderPageViewModel != null)
             {
                 _orderPageViewModel.AddNewOrderCommand.Execute(null);
@@ -147,7 +149,7 @@ namespace CallMan.ViewModels
                 {
                     case "Leads":
                         // We pull the ViewModel from the DI container we set up in App.xaml.cs
-                        var vm = App.ServiceProvider.GetRequiredService<LeadViewModel>();
+                        var vm = _serviceProvider.GetRequiredService<LeadViewModel>();
                         await vm.InitializeAsync(Models.Enums.LeadViewMode.AllLeads);
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
@@ -158,54 +160,54 @@ namespace CallMan.ViewModels
                     case "Dashboard":
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            CurrentView = App.ServiceProvider.GetRequiredService<DashboardViewModel>();
+                            CurrentView = _serviceProvider.GetRequiredService<DashboardViewModel>();
                         }, DispatcherPriority.Background);
                         
                         break;
                     case "Customers":
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            CurrentView = App.ServiceProvider.GetRequiredService<MaturedLeadsViewModel>();
+                            CurrentView = _serviceProvider.GetRequiredService<MaturedLeadsViewModel>();
                         }, DispatcherPriority.Background);
                         
                         break;
                     case "Orders":
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            CurrentView = App.ServiceProvider.GetRequiredService<AllOrdersViewModel>();
+                            CurrentView = _serviceProvider.GetRequiredService<AllOrdersViewModel>();
                         }, DispatcherPriority.Background);
                         
                         break;
                     case "Admin":
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            CurrentView = App.ServiceProvider.GetRequiredService<AdminSettingsViewModel>();
+                            CurrentView = _serviceProvider.GetRequiredService<AdminSettingsViewModel>();
                         }, DispatcherPriority.Background);
                         
                         break;
                     case "Inventory":
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            CurrentView = App.ServiceProvider.GetRequiredService<InventoryViewModel>();
+                            CurrentView = _serviceProvider.GetRequiredService<InventoryViewModel>();
                         }, DispatcherPriority.Background);
                         
                         break;
                     case "Location":
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            CurrentView = App.ServiceProvider.GetRequiredService<OccupiedLocationViewModel>();
+                            CurrentView = _serviceProvider.GetRequiredService<OccupiedLocationViewModel>();
                         }, DispatcherPriority.Background);
                         
                         break;
                     case "Reports":
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
-                            CurrentView = App.ServiceProvider.GetRequiredService<E2EReportsDashboardViewModel>();
+                            CurrentView = _serviceProvider.GetRequiredService<E2EReportsDashboardViewModel>();
                         }, DispatcherPriority.Background);
                         
                         break;
                     case "Dead":
-                        var vm2 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
+                        var vm2 = _serviceProvider.GetRequiredService<LeadViewModel>();
                         await vm2.InitializeAsync(Models.Enums.LeadViewMode.Dead);
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
@@ -214,7 +216,7 @@ namespace CallMan.ViewModels
                         
                         break;
                     case "WinbackPool":
-                        var vm5 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
+                        var vm5 = _serviceProvider.GetRequiredService<LeadViewModel>();
                         await vm5.InitializeAsync(Models.Enums.LeadViewMode.WinbackPool);
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
@@ -223,7 +225,7 @@ namespace CallMan.ViewModels
                         
                         break;
                     case "MyLeads":
-                        var vm1 = App.ServiceProvider.GetRequiredService<LeadViewModel>();
+                        var vm1 = _serviceProvider.GetRequiredService<LeadViewModel>();
                         await vm1.InitializeAsync(Models.Enums.LeadViewMode.MyLeads);
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
@@ -232,7 +234,7 @@ namespace CallMan.ViewModels
                         
                         break;
                     case "Today":
-                        var vm3 = App.ServiceProvider.GetRequiredService<LeadFollowupViewModel>();
+                        var vm3 = _serviceProvider.GetRequiredService<LeadFollowupViewModel>();
                         await vm3.InitializeAsync(Models.Enums.LeadViewMode.TodayFollowUp);
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
@@ -241,7 +243,7 @@ namespace CallMan.ViewModels
                         
                         break;
                     case "Future":
-                        var vm4 = App.ServiceProvider.GetRequiredService<LeadFollowupViewModel>();
+                        var vm4 = _serviceProvider.GetRequiredService<LeadFollowupViewModel>();
                         await vm4.InitializeAsync(Models.Enums.LeadViewMode.FutureFollowUp);
                         await App.Current.Dispatcher.InvokeAsync(() =>
                         {
@@ -298,7 +300,7 @@ namespace CallMan.ViewModels
             // 2. Clear session and return to Login Screen
             Application.Current.Dispatcher.Invoke(() =>
             {
-                var loginView = App.ServiceProvider.GetRequiredService<LoginView>();
+                var loginView = _serviceProvider.GetRequiredService<LoginView>();
                 loginView.Show();
 
                 Application.Current.MainWindow = loginView;
@@ -330,7 +332,7 @@ namespace CallMan.ViewModels
             {
                 var rows = await _leadService.SearchGlobalQueryAsync(textPattern);
 
-                App.Current.Dispatcher.Invoke(() =>
+                await App.Current.Dispatcher.InvokeAsync(() =>
                 {
                     // Overwriting the collection reference can cause input layout lag.
                     // Clear and add items to preserve the internal visual tree focus.
@@ -339,7 +341,7 @@ namespace CallMan.ViewModels
                     {
                         GlobalSearchResults.Add(row);
                     }
-                });
+                }, DispatcherPriority.Background);
             }
             catch { Debug.WriteLine("Error executing global query."); }
         }
@@ -351,10 +353,10 @@ namespace CallMan.ViewModels
             LoadingService.Show("Loading lead details... Please wait.");
 
             // 1. Navigate your application's primary content presenter view straight to your Leads page
-            _leadsPageViewModel = App.ServiceProvider.GetRequiredService<LeadViewModel>();
+            _leadsPageViewModel = _serviceProvider.GetRequiredService<LeadViewModel>();
 
             // 2. Clear out the full table collection and load strictly the single matched record (ref. Image 3)
-            LoadSingleIsolatedLeadIntoGridAsync(value.Id);
+            _ = LoadSingleIsolatedLeadIntoGridAsync(value.Id);
 
             // Clear search query value inputs to look clean for subsequent actions
             GlobalSearchQueryText = string.Empty;
@@ -387,7 +389,7 @@ namespace CallMan.ViewModels
 
                     // 4. Reset your toolbar counter metrics
                     _leadsPageViewModel.SelectedLeadsCount = 0;
-                });
+                }, DispatcherPriority.Background);
 
                 // Switch workspace tabs safely after the collection is filtered
                 await App.Current.Dispatcher.InvokeAsync(() =>

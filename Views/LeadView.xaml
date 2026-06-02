@@ -107,44 +107,7 @@
                       Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
                         </MenuItem.Items>
                     </MenuItem>
-                </Menu>
-                <!--<Button Grid.Column="2"
-                    Content="Action"
-                    Background="#FF8A3D" BorderBrush="#FF8A3D"
-                    Height="36" Width="110" FontWeight="SemiBold"
-                    Margin="0,0,10,0" VerticalAlignment="Center"
-                    materialDesign:ButtonAssist.CornerRadius="4">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
-                            <Setter Property="IsEnabled" Value="{Binding SelectedLeadsCount, Converter={StaticResource GreaterThanZeroConverter}}"/>
-                        </Style>
-                    </Button.Style>
-
-                    <Button.ContextMenu>
-                        <ContextMenu>
-                            <MenuItem Header="Batch delete" Command="{Binding BulkDeleteCommand}">
-                                <MenuItem.Icon>
-                                    <materialDesign:PackIcon Kind="DeleteSweep" Foreground="#E74C3C"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Header="Change Leadholder" Command="{Binding OpenChangeLeadHolderDialogCommand}">
-                                <MenuItem.Icon>
-                                    <materialDesign:PackIcon Kind="AccountSwitch" Foreground="#2980B9"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Header="Move to dead" Command="{Binding ExecuteMoveToDeadCommand}">
-                                <MenuItem.Icon>
-                                    <materialDesign:PackIcon Kind="AccountCancel" Foreground="#7F8C8D"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                            <MenuItem Header="Assign Labels" Command="{Binding OpenAssignLabelsDialogCommand}">
-                                <MenuItem.Icon>
-                                    <materialDesign:PackIcon Kind="Label" Foreground="#27AE60"/>
-                                </MenuItem.Icon>
-                            </MenuItem>
-                        </ContextMenu>
-                    </Button.ContextMenu>
-                </Button>-->
+                </Menu>               
 
                 <Button Grid.Column="3" Content="Import Leads" 
                     Command="{Binding OpenImportLeadsDialogCommand}"
@@ -159,7 +122,12 @@
         </Border>
 
         <DataGrid Grid.Row="1" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" AlternationCount="9999" SelectedItem="{Binding SelectedLead}"
-          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionUnit="FullRow">            
+          AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionUnit="FullRow" VirtualizingPanel.IsVirtualizing="True"
+          VirtualizingPanel.VirtualizationMode="Recycling"
+          VirtualizingPanel.ScrollUnit="Pixel"
+          VirtualizingPanel.CacheLengthUnit="Item"
+          VirtualizingPanel.CacheLength="10,20"
+          ScrollViewer.CanContentScroll="True">            
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                     <!-- Bind Background to the 'Status' property of your Lead model -->

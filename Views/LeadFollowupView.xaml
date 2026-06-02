@@ -128,7 +128,12 @@
         </Border>
 
         <DataGrid Grid.Row="1" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" AlternationCount="9999" SelectedItem="{Binding SelectedLead}"
-      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single">
+      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single" VirtualizingPanel.IsVirtualizing="True"
+          VirtualizingPanel.VirtualizationMode="Recycling"
+          VirtualizingPanel.ScrollUnit="Pixel"
+          VirtualizingPanel.CacheLengthUnit="Item"
+          VirtualizingPanel.CacheLength="10,20"
+          ScrollViewer.CanContentScroll="True">
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow" BasedOn="{StaticResource MaterialDesignDataGridRow}">
                     <!-- Bind Background to the 'Status' property of your Lead model -->

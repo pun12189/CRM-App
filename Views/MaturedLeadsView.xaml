@@ -136,7 +136,13 @@
             </DockPanel>
         </materialDesign:Card>
 
-        <DataGrid Grid.Row="2" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" SelectedItem="{Binding SelectedLead}" AlternationCount="9999" AutoGenerateColumns="False" IsReadOnly="True" Margin="10">
+        <DataGrid Grid.Row="2" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" SelectedItem="{Binding SelectedLead}" AlternationCount="9999" AutoGenerateColumns="False" IsReadOnly="True" Margin="10"
+                  VirtualizingPanel.IsVirtualizing="True"
+          VirtualizingPanel.VirtualizationMode="Recycling"
+          VirtualizingPanel.ScrollUnit="Pixel"
+          VirtualizingPanel.CacheLengthUnit="Item"
+          VirtualizingPanel.CacheLength="10,20"
+          ScrollViewer.CanContentScroll="True">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Width="60">
                     <DataGridTemplateColumn.Header>

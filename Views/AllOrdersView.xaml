@@ -81,47 +81,34 @@
         <materialDesign:Card Grid.Row="0" Padding="15" Margin="0,0,0,20" Background="#F5F5F5">
             <DockPanel>
                 <TextBlock Text="ORDER's" FontSize="20" FontWeight="Bold" Foreground="#2C3E50" VerticalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <ToggleButton x:Name="ToggleCountersBtn" Margin="0,0,10,0" Visibility="Collapsed"
-                  IsChecked="{Binding IsCounterPanelExpanded, Mode=TwoWay}"
-                  Background="#FF9E4A" BorderBrush="#FF8C2B"
-                  HorizontalAlignment="Left"
-                  Style="{StaticResource MaterialDesignRaisedSecondaryButton}"
-                  Effect="{DynamicResource MaterialDesignShadowDepth1}">
-                        <ToggleButton.Template>
-                            <ControlTemplate TargetType="ToggleButton">
-                                <Border Background="{TemplateBinding Background}" 
-                        BorderBrush="{TemplateBinding BorderBrush}" 
-                        BorderThickness="1" CornerRadius="6" Padding="12,0">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <TextBlock Grid.Column="0" Text="Orders Counter" 
-                                   Foreground="White" FontSize="14" FontWeight="SemiBold"
-                                   VerticalAlignment="Center" HorizontalAlignment="Center"/>
-
-                                        <materialDesign:PackIcon Grid.Column="1" x:Name="ButtonChevron" 
-                                                 Kind="ArrowDown" Foreground="White" 
-                                                 Width="18" Height="18" Margin="8,0,0,0"
-                                                 VerticalAlignment="Center"/>
-                                    </Grid>
-                                </Border>
-                                <ControlTemplate.Triggers>
-                                    <Trigger Property="IsChecked" Value="True">
-                                        <Setter TargetName="ButtonChevron" Property="Kind" Value="ArrowUp"/>
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </ToggleButton.Template>
-                    </ToggleButton>
-                    <Button Content="IMPORT ORDER's" Command="{Binding ImportOrdersCommand}" 
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <TextBlock Text="🔍" VerticalAlignment="Center" Margin="20,0,10,0" Foreground="Gray" HorizontalAlignment="Left"/>
+                    <Grid Width="250" Margin="30,0,0,0" HorizontalAlignment="Left">
+                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" Height="30" Padding="5,0"/>
+                        <TextBlock Text="Search Order, Batch..." IsHitTestVisible="False" VerticalAlignment="Center" Margin="10,0" Foreground="LightGray">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding SearchText}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                    <Button Grid.Column="1" Content="IMPORT ORDER's" Command="{Binding ImportOrdersCommand}" HorizontalAlignment="Right"
                         Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0"/>
-                    <Button Content="NEW ORDER" Command="{Binding AddNewOrderCommand}" 
-                         Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32"/>
-                </StackPanel>
+                    <Button Grid.Column="2" Content="NEW ORDER" Command="{Binding AddNewOrderCommand}" 
+                         Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" HorizontalAlignment="Right"/>
+                </Grid>
             </DockPanel>
         </materialDesign:Card>
 
@@ -227,7 +214,12 @@
             </UniformGrid>
         </Border>
 
-        <DataGrid Grid.Row="3" ItemsSource="{Binding AllOrders}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All">
+        <DataGrid Grid.Row="3" ItemsSource="{Binding OrderCollection}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All" VirtualizingPanel.IsVirtualizing="True"
+          VirtualizingPanel.VirtualizationMode="Recycling"
+          VirtualizingPanel.ScrollUnit="Pixel"
+          VirtualizingPanel.CacheLengthUnit="Item"
+          VirtualizingPanel.CacheLength="10,20"
+          ScrollViewer.CanContentScroll="True">
             <DataGrid.ColumnHeaderStyle>
                 <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
                     <Setter Property="HorizontalContentAlignment" Value="Center"/>

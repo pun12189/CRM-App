@@ -9,9 +9,11 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Data;
 
 namespace CallMan.ViewModels
 {
@@ -39,6 +41,13 @@ namespace CallMan.ViewModels
         [ObservableProperty] private int _unpaidOrdersCount;
         [ObservableProperty] private int _partiallyPaidOrdersCount;
         [ObservableProperty] private int _pendingStageOrdersCount;
+        private ICollectionView _ordersCollection;
+
+        [ObservableProperty]
+        private string _searchText = string.Empty;
+
+        // This is what the DataGrid actually binds to now
+        public ICollectionView OrderCollection => _ordersCollection;
 
         public AllOrdersViewModel(LeadService service, IDialogService dialogService)
         {
@@ -100,6 +109,15 @@ namespace CallMan.ViewModels
 
                 // Update collection on UI thread
                 AllOrders = new ObservableCollection<Order>(data);
+
+                _ordersCollection = CollectionViewSource.GetDefaultView(AllOrders);
+
+                // 4. Re-apply your search filter logic
+                _ordersCollection.Filter = FilterOrders;
+
+                // 5. Notify the UI to refresh the table
+                OnPropertyChanged(nameof(OrderCollection));
+
                 await RecalculateLedgerAnalytics(); // Recalculate analytics whenever orders are loaded
                 CalculateSegmentedOrderCounters(AllOrders); // Calculate segmented order counters
 
@@ -113,6 +131,32 @@ namespace CallMan.ViewModels
             {
                 IsLoading = false;
             }
+        }
+
+        partial void OnSearchTextChanged(string value)
+        {
+            _ordersCollection?.Refresh();
+        }
+
+        private bool FilterOrders(object obj)
+        {
+            if (obj is not Order order) return false;
+            if (string.IsNullOrWhiteSpace(SearchText)) return true;
+
+            // Search across multiple fields: Name, Phone, City, and Company
+            return order.FormattedOrderId.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                   (order.FirmName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (order.Status?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (order.PaymentStatus?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (order.Description?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (order.LeadHolder?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (order.ProcessedBy?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (order.CustomerName?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (order.ProformaNumber?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (order.InvoiceNumber?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (order.OrderType?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (order.Items?.Any(d => d.ProductName.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false) ||
+                   (order.Items?.Any(d => d.BatchNumber.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false);                   
         }
 
         [RelayCommand]

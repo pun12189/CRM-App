@@ -491,45 +491,64 @@ namespace CallMan.ViewModels
             if (string.IsNullOrWhiteSpace(inputNumber)) return string.Empty;
 
             var phoneUtil = PhoneNumberUtil.GetInstance();
-            string cleanedInput = inputNumber.Trim();
+
+            // Strip out standard typing noise like dashes, spaces, or brackets, but preserve the leading '+'
+            string cleanedInput = Regex.Replace(inputNumber.Trim(), @"[^\d+]", "");
 
             try
             {
-                // Smart auto-repair: If the number doesn't start with '+' but is 10 digits and default region is India, prepend +91
+                // 1. SMART AUTO-REPAIR FOR DOMESTIC DEFAULT REGION (e.g., India 10 Digits)
                 if (!cleanedInput.StartsWith("+") && defaultRegion == "IN" && cleanedInput.Length == 10 && long.TryParse(cleanedInput, out _))
                 {
                     cleanedInput = "+91" + cleanedInput;
                 }
-                // If it doesn't start with '+' but they provided an explicit prefix code (e.g. '919876543210'), make sure it is parsed as an absolute target
-                else if (!cleanedInput.StartsWith("+") && cleanedInput.Length > 10 && (cleanedInput.StartsWith("91") || cleanedInput.StartsWith("1")))
+
+                // 2. GLOBAL SMART AUTO-REPAIR (e.g., typed '447123456789' or '14155552671' without '+')
+                else if (!cleanedInput.StartsWith("+"))
                 {
-                    cleanedInput = "+" + cleanedInput;
+                    try
+                    {
+                        // Test parse by prepending a '+' to see if it resolves to a valid international number
+                        string testInput = "+" + cleanedInput;
+                        PhoneNumber testParsed = phoneUtil.Parse(testInput, "ZZ"); // "ZZ" means Unknown/Global Region Identification Mode
+
+                        if (phoneUtil.IsValidNumber(testParsed))
+                        {
+                            // The number is a perfectly valid global number; accept the repaired prefix!
+                            cleanedInput = testInput;
+                        }
+                    }
+                    catch (NumberParseException)
+                    {
+                        // Fallback: If prepending '+' fails parsing entirely, leave it un-prefixed 
+                        // so the standard domestic parser configuration below can evaluate it.
+                    }
                 }
 
-                // Parse the string into libphonenumber's geometric data object pattern
-                // If input starts with '+', the regional parameter context is deduced automatically
+                // 3. FINAL VALIDATION LAYER PASS
+                // If cleanedInput now starts with '+', defaultRegion is safely ignored by the engine.
                 PhoneNumber parsedNumber = phoneUtil.Parse(cleanedInput, defaultRegion);
 
-                // Check 1: Verify structural length and country code assignment integrity
                 bool isValid = phoneUtil.IsValidNumber(parsedNumber);
-
-                // Check 2: Deduce carrier mapping routing configurations type (Mobile, Landline, VoIP, etc.)
                 PhoneNumberType type = phoneUtil.GetNumberType(parsedNumber);
 
-                if (isValid && (type == PhoneNumberType.MOBILE || type == PhoneNumberType.FIXED_LINE_OR_MOBILE || type == PhoneNumberType.FIXED_LINE))
+                // Broadened routing profiles to accommodate varying global carrier rules (e.g., VOIP/Pager/Personal numbers)
+                if (isValid && (type == PhoneNumberType.MOBILE ||
+                                type == PhoneNumberType.FIXED_LINE_OR_MOBILE ||
+                                type == PhoneNumberType.FIXED_LINE ||
+                                type == PhoneNumberType.UAN ||
+                                type == PhoneNumberType.VOIP))
                 {
-                    // Repair successful! Rewrite the input field into a clean standard international string format
-                    return phoneUtil.Format(parsedNumber, PhoneNumberFormat.INTERNATIONAL); // Output example: "+91 98765 43210"
+                    // Success! Rewrite into clean standard international format (e.g., "+44 7123 456789")
+                    return phoneUtil.Format(parsedNumber, PhoneNumberFormat.INTERNATIONAL);
                 }
                 else
                 {
-                    // The phone format doesn't match standard routing profiles. Append warning text to catch attention
                     return inputNumber + " [INVALID NUMBER]";
                 }
             }
             catch (NumberParseException)
             {
-                // The text cannot be processed or mapped back to any country index rules
                 return inputNumber + " [PARSING ERROR]";
             }
         }

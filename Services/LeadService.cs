@@ -541,35 +541,75 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
             return await db.QueryAsync<Models.Order>(sql);
         }
 
-        public async Task<Lead> GetLeadByIdAsync(int leadId)
+        public async Task<Lead?> GetLeadByIdAsync(int leadId)
         {
-            using var conn = _context.CreateConnection();
-            Lead resultLead = null;
+            using var db = _context.CreateConnection();
 
+            // Since we are targeting a single Lead ID, we don't need a full Map Dictionary anymore; 
+            // a single tracking instance variable works perfectly.
+            Lead? targetLead = null;
+
+            // Optimized Single-Target Multi-Mapping Query
             string sql = @"
-        SELECT l.*, d.Id, d.Name 
+        SELECT 
+            l.*, 
+            (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,  
+            (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) as OrderCount,
+            h.*, 
+            d.*
         FROM Leads l
-        LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
+        LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+        LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId 
         LEFT JOIN Divisions d ON ld.DivisionId = d.Id
-        WHERE l.LeadId = @Id";
+        WHERE l.LeadId = @LeadId 
+          AND (h.HistoryId = (
+                SELECT MAX(HistoryId) 
+                FROM LeadHistory 
+                WHERE LeadId = l.LeadId
+               ) OR h.HistoryId IS NULL);";
 
-            await conn.QueryAsync<Lead, Division, Lead>(sql, (lead, division) =>
-            {
-                if (resultLead == null)
+            // Execute multi-mapping row traversal over the structural child tables
+            await db.QueryAsync<Lead, LeadHistoryEntry, Division, Lead>(sql,
+                (lead, history, division) =>
                 {
-                    resultLead = lead;
-                    resultLead.AssignedDivisions = new ObservableCollection<Division>();
-                }
+                    // First row pass: initialize our target object and deserialize JSON structures
+                    if (targetLead == null)
+                    {
+                        targetLead = lead;
+                        targetLead.AssignedDivisions = new ObservableCollection<Division>();
+                        targetLead.LatestUpdate = history;
 
-                if (division != null)
-                {
-                    resultLead.AssignedDivisions.Add(division);
-                }
-                return lead;
-            }, new { Id = leadId }, splitOn: "Id");
+                        // Handle Custom Field JSON Deserialization Layer
+                        if (!string.IsNullOrEmpty(targetLead.MetadataJson))
+                        {
+                            targetLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(targetLead.MetadataJson)
+                                                       ?? new Dictionary<string, string>();
+                        }
 
-            return resultLead;
-        }
+                        // Handle Labels JSON Deserialization Layer
+                        if (!string.IsNullOrEmpty(targetLead.LabelsJson))
+                        {
+                            targetLead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(targetLead.LabelsJson)
+                                                     ?? new ObservableCollection<string>();
+                        }
+                    }
+
+                    // Subsequent row passes: append multiple items into the collection safely if they exist
+                    if (division != null && !targetLead.AssignedDivisions.Any(x => x.Id == division.Id))
+                    {
+                        targetLead.AssignedDivisions.Add(division);
+                    }
+
+                    // Always ensure the history snapshot reference stays mapped to the current instance object
+                    targetLead.LatestUpdate = history;
+
+                    return targetLead;
+                },
+                new { LeadId = leadId }, // Pass the parameters safely to protect from SQL Injection
+                splitOn: "HistoryId,Id");
+
+            return targetLead;
+        }        
 
         public async Task<DashboardStats> GetDashboardStatsAsync()
         {
@@ -1103,6 +1143,35 @@ AND (
             string sql = "DELETE FROM Proformas WHERE ProformaId = @proformaId";
             var rows = await db.ExecuteAsync(sql, new { proformaId });
             return rows > 0;
+        }
+
+        public async Task<IEnumerable<GlobalSearchRowItem>> SearchGlobalQueryAsync(string textPattern)
+        {
+            try
+            {
+                using var conn = _context.CreateConnection();
+
+                // Sweeps across the primary Name, Contact, and Office fields in a single rapid pass
+                string sql = @"
+                    SELECT 
+                        LeadId AS Id, 
+                        CustomerName, 
+                        CompanyName, 
+                        Phone,
+                        AltPhone,
+                        IF(CompanyName IS NOT NULL AND CompanyName != '', 1, 0) AS HasCompany
+                    FROM Leads
+                    WHERE CustomerName LIKE @Query 
+                       OR Phone LIKE @Query 
+                       OR AltPhone LIKE @Query
+                       OR CompanyName LIKE @Query
+                    LIMIT 8;";
+
+                var rows = await conn.QueryAsync<GlobalSearchRowItem>(sql, new { Query = $"%{textPattern}%" });
+
+                return rows;
+            }
+            catch { return Enumerable.Empty<GlobalSearchRowItem>(); }
         }
     }
 }

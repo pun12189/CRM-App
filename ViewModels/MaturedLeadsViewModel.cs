@@ -325,6 +325,27 @@ namespace CallMan.ViewModels
         }
 
         [RelayCommand]
+        private async Task OpenAddLeadDialog()
+        {
+            var vm = App.ServiceProvider.GetRequiredService<AddLeadDialogViewModel>();
+            vm.Initialize(null, true); // Pass null for new lead
+            var dialogWindow = new AddLeadWindow { DataContext = vm };
+
+            // Subscribe to the close request
+            vm.RequestClose += (result) =>
+            {
+                dialogWindow.DialogResult = result;
+                dialogWindow.Close();
+            };
+
+            if (dialogWindow.ShowDialog() == true)
+            {
+                // Re-run the query to show the new lead in the DataGrid
+                await LoadData();
+            }
+        }
+
+        [RelayCommand]
         private void EditLead(Lead leadToEdit)
         {
             if (leadToEdit == null) return;

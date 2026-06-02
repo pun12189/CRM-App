@@ -96,5 +96,31 @@ namespace CallMan
 
             listBox.SelectedIndex = -1; // Reset selection index tracking array
         }
+
+        /// <summary>
+        /// Automatically forces the search ComboBox dropdown to slide open 
+        /// the exact moment records populate from the database.
+        /// </summary>
+        private void GlobalSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // Safeguard cast access to ensure we are modifying the correct control element
+            if (sender is ComboBox comboBox)
+            {
+                // Only open the dropdown box if the operator typed an actual query string 
+                // and the backend has successfully bound valid matching row items to display.
+                if (comboBox.IsKeyboardFocusWithin &&
+                    !string.IsNullOrWhiteSpace(comboBox.Text) &&
+                    comboBox.Items.Count > 0)
+                {
+                    // Forces the pop-up panel to slide down instantly on the screen
+                    comboBox.IsDropDownOpen = true;
+                }
+                else if (string.IsNullOrWhiteSpace(comboBox.Text) || comboBox.Items.Count == 0)
+                {
+                    // Cleanly close the dropdown box if the search query is completely erased
+                    comboBox.IsDropDownOpen = false;
+                }
+            }
+        }
     }
 }

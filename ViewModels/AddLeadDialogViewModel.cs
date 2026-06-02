@@ -108,7 +108,7 @@ namespace CallMan.ViewModels
             _ = LoadSettingsAsync();
         }
 
-        public void Initialize(Lead? existingLead)
+        public void Initialize(Lead? existingLead, bool IsCustomer = false)
         {
             if (existingLead != null)
             {
@@ -120,6 +120,11 @@ namespace CallMan.ViewModels
                 this.LeadSourceId = existingLead.LeadSourceId;
                 _isEditMode = true;
                 // Load address fields from existingLead if they aren't auto-bound
+            }
+
+            if (IsCustomer)
+            {
+                NewLead.Status = "Matured";
             }
         }
 

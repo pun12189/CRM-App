@@ -27,6 +27,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" Grid.Column="0">
@@ -108,9 +109,9 @@
                 <Button Grid.Column="2" Content="Import Leads" 
             Command="{Binding OpenImportLeadsDialogCommand}"
             Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0"/>
-                <!--<Button Grid.Column="3" Content="Bulk Delete" 
-                    Command="{Binding BulkDeleteCommand}"
-                    Padding="20,5" Background="IndianRed" Foreground="White" FontWeight="Bold" Margin="5,0"/>-->
+                <Button Grid.Column="4" Content="+ New Customer" 
+                    Command="{Binding OpenAddLeadDialogCommand}"
+                    Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0"/>
             </Grid>
         </Border>
 

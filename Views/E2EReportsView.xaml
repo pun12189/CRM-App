@@ -6,9 +6,13 @@
              xmlns:local="clr-namespace:CallMan.Views"
              xmlns:models="clr-namespace:CallMan.Models.Enums"
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             xmlns:conv="clr-namespace:CallMan.Converters"
              mc:Ignorable="d" 
                 xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <conv:EnumToBooleanConverter x:Key="EnumToBooleanConverter"/>
+    </UserControl.Resources>
     <Grid Background="#F9FAFB">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -34,14 +38,45 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <TextBlock Text="Cross Compare With:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#4B5563" Width="130" FontSize="13"/>
                     <WrapPanel Orientation="Horizontal" MaxWidth="1100">
-                        <RadioButton Content="Customer Profile" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" IsEnabled="{Binding IsCustomerEnabled}" Margin="0,2,8,2" Padding="12,6"/>
-                        <RadioButton Content="Lead Holder" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" IsEnabled="{Binding IsLeadHolderEnabled}" Margin="0,2,8,2" Padding="12,6"/>
-                        <RadioButton Content="Items Catalog" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" IsEnabled="{Binding IsItemsEnabled}" Margin="0,2,8,2" Padding="12,6"/>
-                        <RadioButton Content="Business Overviews" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" IsEnabled="{Binding IsBusinessEnabled}" Margin="0,2,8,2" Padding="12,6"/>
-                        <RadioButton Content="Ledger Books" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" IsEnabled="{Binding IsLedgersEnabled}" Margin="0,2,8,2" Padding="12,6"/>
-                        <RadioButton Content="Geographic Areas" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" IsEnabled="{Binding IsAreasEnabled}" Margin="0,2,8,2" Padding="12,6"/>
-                        <RadioButton Content="Vendors Matrix" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" IsEnabled="{Binding IsVendorsEnabled}" Margin="0,2,8,2" Padding="12,6"/>
-                        <RadioButton Content="P &amp; L Statement" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" IsEnabled="{Binding IsPLEnabled}" Margin="0,2,8,2" Padding="12,6"/>
+                        <RadioButton Content="Customers" FontWeight="ExtraBold" 
+                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
+                 IsEnabled="{Binding IsCustomerEnabled}" Margin="0,2,8,2" Padding="12,6"
+                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Customer}}"/>
+
+                        <RadioButton Content="Lead Holder" FontWeight="ExtraBold" 
+                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
+                 IsEnabled="{Binding IsLeadHolderEnabled}" Margin="0,2,8,2" Padding="12,6"
+                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.LeadHolder}}"/>
+
+                        <RadioButton Content="Items" FontWeight="ExtraBold" 
+                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
+                 IsEnabled="{Binding IsItemsEnabled}" Margin="0,2,8,2" Padding="12,6"
+                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Items}}"/>
+
+                        <RadioButton Content="Business" FontWeight="ExtraBold" 
+                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
+                 IsEnabled="{Binding IsBusinessEnabled}" Margin="0,2,8,2" Padding="12,6"
+                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Business}}"/>
+
+                        <RadioButton Content="Ledger" FontWeight="ExtraBold" 
+                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
+                 IsEnabled="{Binding IsLedgersEnabled}" Margin="0,2,8,2" Padding="12,6"
+                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Ledgers}}"/>
+
+                        <RadioButton Content="Locations" FontWeight="ExtraBold" 
+                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
+                 IsEnabled="{Binding IsAreasEnabled}" Margin="0,2,8,2" Padding="12,6"
+                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Areas}}"/>
+
+                        <RadioButton Content="Vendors" FontWeight="ExtraBold" 
+                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
+                 IsEnabled="{Binding IsVendorsEnabled}" Margin="0,2,8,2" Padding="12,6"
+                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Vendors}}"/>
+
+                        <RadioButton Content="P &amp; L Statement" FontWeight="ExtraBold" 
+                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
+                 IsEnabled="{Binding IsPLEnabled}" Margin="0,2,8,2" Padding="12,6"
+                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.PL}}"/>
                     </WrapPanel>
                 </StackPanel>
             </StackPanel>
@@ -57,7 +92,7 @@
                 <Grid>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                         <materialDesign:PackIcon Kind="CalendarMonth" Foreground="Gray" Width="16" Height="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="Timeline Boundaries:" FontWeight="Medium" Foreground="#374151" Margin="6,0,15,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Date Filters:" FontWeight="Medium" Foreground="#374151" Margin="6,0,15,0" VerticalAlignment="Center"/>
 
                         <DatePicker SelectedDate="{Binding FromDate}" Width="130" Style="{StaticResource MaterialDesignFloatingHintDatePicker}"/>
                         <TextBlock Text="to" Margin="10,0" Foreground="Gray" VerticalAlignment="Center"/>
@@ -65,14 +100,14 @@
                     </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="GENERATE INTERSECTION" Command="{Binding GenerateE2EReportCommand}" 
+                        <Button Content="GENERATE REPORT" Command="{Binding GenerateE2EReportCommand}" 
                             Height="32" Padding="16,0" Background="#1794A1" BorderBrush="#1794A1" Style="{StaticResource MaterialDesignRaisedButton}"/>
                     </StackPanel>
                 </Grid>
             </materialDesign:Card>
 
             <materialDesign:Card Grid.Row="1" Background="White" UniformCornerRadius="6" Padding="10">
-                <DataGrid ItemsSource="{Binding ReportGridSource}" AutoGenerateColumns="True" IsReadOnly="True" 
+                <DataGrid ItemsSource="{Binding ReportGridSource}" AutoGenerateColumns="True" IsReadOnly="True" ColumnWidth="*"
                       Background="White" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
                 </DataGrid>
             </materialDesign:Card>

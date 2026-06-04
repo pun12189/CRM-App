@@ -2,6 +2,7 @@
 using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Services;
+using CallMan.Services.Reports;
 using CallMan.ViewModels;
 using CallMan.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -72,6 +73,7 @@ namespace CallMan
             services.AddSingleton<IImportService, ImportService>();
             services.AddSingleton<NotificationRoutingService>();
             services.AddSingleton<NotificationHistoryService>();
+            services.AddSingleton<E2EReportEngine>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();

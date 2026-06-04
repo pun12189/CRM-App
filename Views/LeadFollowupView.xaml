@@ -92,20 +92,20 @@
 
                         <MenuItem.Items>
                             <MenuItem Header="Batch delete" 
-      Command="{Binding BulkDeleteCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+                              Command="{Binding BulkDeleteCommand}"
+                              Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
 
                             <MenuItem Header="Change Leadholder" 
-      Command="{Binding OpenChangeLeadHolderDialogCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+                              Command="{Binding OpenChangeLeadHolderDialogCommand}"
+                              Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
 
                             <MenuItem Header="Move to dead" 
-      Command="{Binding MoveToDeadCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+                              Command="{Binding MoveToDeadCommand}"
+                              Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
 
                             <MenuItem Header="Assign Labels" 
-      Command="{Binding OpenAssignLabelsDialogCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+                              Command="{Binding OpenAssignLabelsDialogCommand}"
+                              Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
                         </MenuItem.Items>
                     </MenuItem>
                 </Menu>
@@ -113,10 +113,10 @@
                 <Button Grid.Column="2" Content="+ New Lead" 
                 Command="{Binding OpenAddLeadDialogCommand}"
                 Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Visibility="Collapsed"/>
-                <Button Grid.Column="2" Content="Today's Followups" 
+                <Button Grid.Column="2" Content="Today's Task" 
                 Command="{Binding RefreshLeadsCommand}" CommandParameter="{x:Static enum:LeadViewMode.Today}" Style="{StaticResource MaterialDesignOutlinedSecondaryButton}"
                 Padding="20,5" FontWeight="Bold" Margin="5,0" Visibility="{Binding IsFuture, Converter={StaticResource InverseBoolToVis}}"/>
-                <Button Grid.Column="3" Content="Pending Followups" Style="{StaticResource MaterialDesignOutlinedLightButton}"
+                <Button Grid.Column="3" Content="Pending Task" Style="{StaticResource MaterialDesignOutlinedLightButton}"
                 Command="{Binding RefreshLeadsCommand}" CommandParameter="{x:Static enum:LeadViewMode.Missed}"
                 Padding="20,5" FontWeight="Bold" Margin="5,0" Visibility="{Binding IsFuture, Converter={StaticResource InverseBoolToVis}}"/>
                 <ComboBox Grid.Column="5" materialDesign:HintAssist.Hint="Select Category" Style="{StaticResource MaterialDesignOutlinedComboBox}"                 
@@ -163,20 +163,20 @@
                                 </Grid.RowDefinitions>
 
                                 <TextBlock x:Name="TxtSerialNumber" 
-   VerticalAlignment="Center" 
-   HorizontalAlignment="Center"                                   
-   Foreground="DarkSlateGray">
+                                    VerticalAlignment="Center" 
+                                    HorizontalAlignment="Center"                                   
+                                    Foreground="DarkSlateGray">
                                     <TextBlock.Text>
                                         <Binding RelativeSource="{RelativeSource AncestorType=DataGridRow}" 
-         Path="(DataGrid.AlternationIndex)" 
-         Converter="{StaticResource IndexToNumberConverter}"/>
+                                         Path="(DataGrid.AlternationIndex)" 
+                                         Converter="{StaticResource IndexToNumberConverter}"/>
                                     </TextBlock.Text>
                                 </TextBlock>
 
                                 <CheckBox Grid.Row="1" 
-  IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}"
-  HorizontalAlignment="Center" 
-  VerticalAlignment="Center" Click="CheckBox_Click"/>
+                                  IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}"
+                                  HorizontalAlignment="Center" 
+                                  VerticalAlignment="Center" Click="CheckBox_Click"/>
                             </Grid>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>

@@ -261,7 +261,6 @@ namespace CallMan.ViewModels
             finally
             {
                 // Ensure admin menu is closed after navigation
-                await Task.Delay(100); // Small delay to allow UI to update before hiding the loading indicator
                 LoadingService.Hide();
             }
         }

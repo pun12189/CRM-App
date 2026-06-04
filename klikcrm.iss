@@ -10,7 +10,7 @@
 ;#define public Version "1.0.0.25"
 ;#endif
 ;#ifndef SourceFileDir
-;#define public SourceFileDir "C:\Users\Kishant\Source\Repos\SofricERP\bin\Release\net6.0-windows\"
+;#define public SourceFileDir "C:\Users\Kishant\Source\Repos\SofricERP-Online\bin\Release\net6.0-windows\"
 ;#endif
 
 #include "CodeDependencies.iss"
@@ -21,12 +21,12 @@ ChangesAssociations=yes
 ChangesEnvironment=yes
 PrivilegesRequired=admin
 DisableReadyPage=yes
-AppName=SofricERP      
+AppName=SofricERP-Online      
 ;DefaultDialogFontName=Segoe UI     
 ;repeat name of application. (otherwise you get
 ;multiple entries in add/remove programs)
-AppVerName=SofricERP
-AppId=SofricERP
+AppVerName=SofricERP-Online
+AppId=SofricERP-Online
 AppCopyright=Copyright © 2024
 ;app publisher name
 AppPublisher=sofric.com
@@ -38,10 +38,10 @@ AppSupportURL=https://sofric.com/support
 AppUpdatesURL=https://sofric.com/download
 ;default directory {pf} is a constant for
 ;program files. See INNO help for all constants
-DefaultDirName={autopf}\SofricERP
+DefaultDirName={autopf}\SofricERP-Online
 ;default group name in the programs
 ; section of the start menu
-DefaultGroupName=SofricERP
+DefaultGroupName=SofricERP-Online
 ;Boolean to disable allowing user to customize
 ;start menu entry during installation
 DisableProgramGroupPage=yes
@@ -72,7 +72,7 @@ AppVersion={#Version}
 ArchitecturesAllowed = x86compatible and x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 ;without the framework included
-OutputBaseFilename=SofricERP
+OutputBaseFilename=SofricERP-Online
 ;Directory where setup.exe will be compiled to
 ;OutputDir="C:\Users\Kishant\OneDrive\Desktop\setup"
 WizardStyle=modern
@@ -121,7 +121,7 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 
    [Dirs]
  ;Name: "{app}\Assets"
- Name: "{commonappdata}\SofricERP"; Permissions: everyone-modify
+ Name: "{commonappdata}\SofricERP-Online"; Permissions: everyone-modify
  ;Name: "{app}\TxtFile"
  Name: "{app}\runtimes"
 [Files]
@@ -256,7 +256,7 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 InstallingDependencies=Installing Dependencies
 viewhelpfile = View Help File
 optimizingperformance = Optimizing performance
-launchtemplatetoaster = Launch SofricERP
+launchtemplatetoaster = Launch SofricERP-Online
 settingpermission = Setting Program Access Permissions
 
 ;da.StandardVersion=Standard Edition
@@ -405,10 +405,10 @@ settingpermission = Setting Program Access Permissions
 ;uk.StandardVersion=стандарт версія
 ;uk.StarterVersion=стартер версія
 [icons]
-Name: {group}\SofricERP; Filename: {app}\CallMan.exe; WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico";
+Name: {group}\SofricERP-Online; Filename: {app}\CallMan.exe; WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico";
 Name: "{group}\Help"; Filename: "http://sofric.com/"; 
 Name: {group}\Uninstall; Filename: {uninstallexe};  WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico";
-Name: {commondesktop}\SofricERP;  Filename: {app}\CallMan.exe; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico"; Tasks: desktopicon
+Name: {commondesktop}\SofricERP-Online;  Filename: {app}\CallMan.exe; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"
@@ -487,18 +487,18 @@ Type: filesandordirs; Name: "{app}\Resources";
     
 Type: filesandordirs; Name: "{app}"
 Type: filesandordirs; Name: "{app}\Resources"
-Type:files;  Name:{commondesktop}\SofricERP
+Type:files;  Name:{commondesktop}\SofricERP-Online
 [UninstallRun]
-;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""SofricERP"""; Flags: skipifdoesntexist runhidden;
-;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""SofricERP"""; Flags: skipifdoesntexist runhidden;
+;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""SofricERP-Online"""; Flags: skipifdoesntexist runhidden;
+;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""SofricERP-Online"""; Flags: skipifdoesntexist runhidden;
 ;Filename: {app}\Deactivator.exe; 
 ;Filename: "https://templatetoaster.com/survey5/survey.php/?v={# Version}"; Flags: shellexec  waituntilterminated
 
 [Registry]
-Root: HKCR; Subkey: ".ttr"; ValueType: string; ValueName: ""; ValueData: "SofricERP"; Flags: uninsdeletevalue 
-Root: HKCR; Subkey: "SofricERP"; ValueType: string; ValueName: ""; ValueData: "SofricERP"; Flags: uninsdeletekey 
-Root: HKCR; Subkey: "SofricERP\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\CallMan.exe,1" 
-Root: HKCR; Subkey: "SofricERP\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\CallMan.exe"" ""%1""" 
+;Root: HKCR; Subkey: ".ttr"; ValueType: string; ValueName: ""; ValueData: "SofricERP-Online"; Flags: uninsdeletevalue 
+Root: HKCR; Subkey: "SofricERP-Online"; ValueType: string; ValueName: ""; ValueData: "SofricERP-Online"; Flags: uninsdeletekey 
+Root: HKCR; Subkey: "SofricERP-Online\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\CallMan.exe,1" 
+Root: HKCR; Subkey: "SofricERP-Online\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\CallMan.exe"" ""%1""" 
 ;Root: HKLM; Subkey: "SOFTWARE\Platform\Brand"; ValueType: string; ValueName: "Colours7"; ValueData:  "{code:RegisteredUser}"; 
  [Code]
    
@@ -870,8 +870,8 @@ end;
        
     //if NeedsFramework() then 
     //begin
-      //  if MsgBox('SofricERP requires Microsoft .NET 6 Desktop Runtime.'#13#13
-        //    'Please download this file to run SofricERP. Click Yes to download it.',  mbConfirmation, MB_YESNO) = IDYES
+      //  if MsgBox('SofricERP-Online requires Microsoft .NET 6 Desktop Runtime.'#13#13
+        //    'Please download this file to run SofricERP-Online. Click Yes to download it.',  mbConfirmation, MB_YESNO) = IDYES
           //  then 
     //ShellExec('open', 'https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.36-windows-x64-installer',
       //'', '', SW_SHOW, ewNoWait, ErrCode);
@@ -934,12 +934,12 @@ begin
 
 if ((CurStep = ssInstall) and IsWin64) then 
    begin
-    DelTree(ExpandConstant('{autopf}\SofricERP'), True, True, True);
+    DelTree(ExpandConstant('{autopf}\SofricERP-Online'), True, True, True);
 end;
 
 if CurStep = ssInstall then 
    begin
-    DelTree(ExpandConstant('{app}\SofricERP\Resources'), True, True, True);
+    DelTree(ExpandConstant('{app}\SofricERP-Online\Resources'), True, True, True);
 end;
 
 //if CurStep = ssPostInstall then 

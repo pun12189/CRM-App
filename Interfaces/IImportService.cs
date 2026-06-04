@@ -9,6 +9,6 @@ namespace CallMan.Interfaces
 {
     public interface IImportService
     {
-        Task<int> BulkInsertAsync(IEnumerable<dynamic> data, ImportType type);
+        Task<int> BulkInsertAsync(List<Dictionary<string, object>> data, ImportType type);
     }
 }

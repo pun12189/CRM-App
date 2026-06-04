@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.IO;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace CallMan.ViewModels
@@ -14,6 +15,7 @@ namespace CallMan.ViewModels
     public partial class ImportViewModel : ObservableObject
     {
         private readonly IImportService _service;
+        private const string SkipToken = "[ Skip Column ]";
 
         [ObservableProperty] private ImportType _currentType;
         [ObservableProperty] private string _filePath;
@@ -82,92 +84,147 @@ namespace CallMan.ViewModels
         [RelayCommand]
         private async Task StartImport()
         {
-            var list = new List<dynamic>();
-
-            using (var workbook = new XLWorkbook(FilePath))
+            try
             {
-                var sheet = workbook.Worksheet(1);
-                var activeMappings = Mappings.Where(m => !string.IsNullOrEmpty(m.SelectedExcelHeader)).ToList();
+                var payloadList = new List<Dictionary<string, object>>();
 
-                // Map header name to column number
-                var headerMap = new Dictionary<string, int>();
-                var firstRow = sheet.Row(1);
-                int colCount = sheet.LastColumnUsed().ColumnNumber();
-                for (int c = 1; c <= colCount; c++)
+                // Find columns explicitly matched by the user or the auto-matcher
+                var activeFieldMappings = Mappings.Where(m => !string.IsNullOrEmpty(m.SelectedExcelHeader)).ToList();
+
+                // Create a fast lookup hash set of all explicitly claimed spreadsheet columns
+                var claimedExcelHeaders = activeFieldMappings.Select(m => m.SelectedExcelHeader).ToHashSet();
+
+                using (var workbook = new XLWorkbook(FilePath))
                 {
-                    headerMap[firstRow.Cell(c).GetValue<string>()] = c;
-                }
+                    var sheet = workbook.Worksheet(1);
+                    int lastRow = sheet.LastRowUsed().RowNumber();
 
-                int lastRow = sheet.LastRowUsed().RowNumber();
+                    // Get every column header actually present in this spreadsheet file
+                    var totalExcelColumns = sheet.Row(1).CellsUsed().Select(c => c.GetValue<string>().Trim()).ToList();
 
-                for (int r = 2; r <= lastRow; r++)
-                {
-                    var rowData = sheet.Row(r);
-                    var rowObj = new System.Dynamic.ExpandoObject() as IDictionary<string, object>;
-
-                    foreach (var m in activeMappings)
+                    for (int r = 2; r <= lastRow; r++)
                     {
-                        int colIndex = headerMap[m.SelectedExcelHeader];
+                        var rowData = sheet.Row(r);
+                        var dbRow = new Dictionary<string, object>();
+                        var metadataPool = new Dictionary<string, string>();
 
-                        // FIX: Use GetValue<object>() or ToString() to extract the primitive value
-                        // instead of passing the XLCellValue object directly.
-                        var rawValue = rowData.Cell(colIndex).Value;
+                        // STEP A: Map standard target destination parameters
+                        foreach (var m in activeFieldMappings)
+                        {
+                            var cellValue = rowData.Cell(totalExcelColumns.IndexOf(m.SelectedExcelHeader) + 1).Value;
+                            dbRow[m.InternalPropertyName] = cellValue.IsBlank ? null : cellValue.ToString().Trim();
+                        }
 
-                        // Convert to a database-friendly type
-                        object finalValue = rawValue.IsBlank ? null : rawValue.ToString();
+                        // STEP B: AUTOMATED EXTRA CATCH-ALL RULE
+                        // Loop through all spreadsheet columns. If a column wasn't claimed above, 
+                        // pack it straight into the metadata dictionary automatically.
+                        foreach (var header in totalExcelColumns)
+                        {
+                            if (!claimedExcelHeaders.Contains(header))
+                            {
+                                var cellValue = rowData.Cell(totalExcelColumns.IndexOf(header) + 1).Value;
+                                if (!cellValue.IsBlank)
+                                {
+                                    metadataPool[header] = cellValue.ToString().Trim();
+                                }
+                            }
+                        }
 
-                        rowObj.Add(m.InternalPropertyName, finalValue);
+                        // Append the processed JSON string directly into the query payload parameter slot
+                        dbRow["MetadataJson"] = metadataPool.Count > 0 ? JsonSerializer.Serialize(metadataPool) : null;
+                        payloadList.Add(dbRow);
                     }
-                    list.Add(rowObj);
                 }
-            }
 
-            // Now Dapper will receive standard strings/numbers
-            int count = await _service.BulkInsertAsync(list, CurrentType);
-            StatusMessage = $"Successfully imported {count} records!";
+                int count = await _service.BulkInsertAsync(payloadList, CurrentType);
+                StatusMessage = $"Import completed! {count} records successfully committed.";
+            }
+            catch (Exception ex)
+            {
+                StatusMessage = "Import Failure: " + ex.Message;
+            }
         }
 
         private void GenerateMappings()
         {
             Mappings.Clear();
 
-            // Using Reflection to get all public properties of your Lead model
-            var properties = typeof(Order).GetProperties();
-            if (CurrentType == ImportType.Product)
+            // 1. Resolve your standard entity schemas dynamically
+            var targetProperties = CurrentType switch
             {
-                properties = typeof(Product).GetProperties();
-            }
-            else if (CurrentType == ImportType.Lead)
-            {
-                properties = typeof(Lead).GetProperties();
-            }
+                ImportType.Lead => new Dictionary<string, (MappingTargetType Type, string Table, string IdCol)>
+                {
+                    { "CustomerName", (MappingTargetType.StandardField, null, null) },
+                    { "Email", (MappingTargetType.StandardField, null, null) },
+                    { "Phone", (MappingTargetType.StandardField, null, null) },
+                    { "AltPhone", (MappingTargetType.StandardField, null, null) },
+                    { "CompanyName", (MappingTargetType.StandardField, null, null) },
+                    { "AddressLine", (MappingTargetType.StandardField, null, null) },
+                    { "City", (MappingTargetType.StandardField, null, null) },
+                    { "District", (MappingTargetType.StandardField, null, null) },
+                    { "State", (MappingTargetType.StandardField, null, null) },
+                    { "Pincode", (MappingTargetType.StandardField, null, null) },
+                    { "Country", (MappingTargetType.StandardField, null, null) },
+                    { "MonthlyTarget", (MappingTargetType.StandardField, null, null) },
+                    { "WorkingArea", (MappingTargetType.StandardField, null, null) },
+                    { "LeadSource", (MappingTargetType.ForeignKeyLookup, "LeadSources", "Id") },
+                    { "LeadTag", (MappingTargetType.ForeignKeyLookup, "LeadTags", "Id") },
+                    { "LeadHolder", (MappingTargetType.ForeignKeyLookup, "Users", "UserId") },
+                    { "FollowupStage", (MappingTargetType.ForeignKeyLookup, "LeadStatuses", "Id") }
 
-            foreach (var prop in properties)
-            {
-                // Skip ID and internal fields
-                if (prop.Name.Contains("Id") || prop.Name == "CreatedAt") continue;
+                },
+                ImportType.Product => new Dictionary<string, (MappingTargetType Type, string Table, string IdCol)>
+                {
+                    // Core Product Structural Fields
+                    { "Name", (MappingTargetType.StandardField, null, null) },
+                    { "ShortName", (MappingTargetType.StandardField, null, null) },
+                    { "SKU", (MappingTargetType.StandardField, null, null) },
+                    { "Unit", (MappingTargetType.StandardField, null, null) },
+                    { "Manufacturer", (MappingTargetType.StandardField, null, null) },
+                    { "BrandName", (MappingTargetType.StandardField, null, null) },
+                    { "Packaging", (MappingTargetType.StandardField, null, null) },
+                    { "InitialStock", (MappingTargetType.StandardField, null, null) },
+                    { "MRP", (MappingTargetType.StandardField, null, null) },
+                    { "CostPrice", (MappingTargetType.StandardField, null, null) },
+                    { "SellingPrice", (MappingTargetType.StandardField, null, null) },
+                    { "GSTPercent", (MappingTargetType.StandardField, null, null) },
+                    { "TotalCost", (MappingTargetType.StandardField, null, null) },
+    
+                    // Relational Category text-to-ID lookup rule
+                    { "CategoryName", (MappingTargetType.ForeignKeyLookup, "Categories", "CategoryId") },
 
+                    // Parallel Batch Tracking Fields (Auto-inserted into child ProductBatches table)
+                    { "BatchNumber", (MappingTargetType.StandardField, null, null) },
+                    { "MfgDate", (MappingTargetType.StandardField, null, null) },
+                    { "ExpiryDate", (MappingTargetType.StandardField, null, null) }
+                },
+                _ => throw new NotImplementedException()
+            };
+
+            // 2. Build the UI rows. If a property can't auto-match an Excel header, 
+            // it leaves SelectedExcelHeader as null (ignored during standard insert).
+            foreach (var prop in targetProperties)
+            {
                 var mapping = new ImportMapping
                 {
-                    InternalPropertyName = prop.Name,
-                    // Formats "CompanyName" to "Company Name" for the UI label
-                    DisplayName = Regex.Replace(prop.Name, "([a-z])([A-Z])", "$1 $2")
+                    InternalPropertyName = prop.Key,
+                    DisplayName = Regex.Replace(prop.Key, "([a-z])([A-Z])", "$1 $2"),
+                    TargetType = prop.Value.Type,
+                    LookupTableName = prop.Value.Table,
+                    LookupIdColumn = prop.Value.IdCol
                 };
 
-                // SMART MATCH: Try to auto-select the best header from the Excel file
-                // Based on your image, PNAME would auto-match to "FullName"
+                // Strict auto-matching loop
                 mapping.SelectedExcelHeader = ExcelHeaders.FirstOrDefault(h =>
-                    h.ToLower().Contains(prop.Name.ToLower()) ||
-                    (prop.Name == "FullName" && h.ToLower().Contains("pname")) ||
-                    (prop.Name == "CompanyName" && h.ToLower().Contains("firm")));
+                    h.Equals(mapping.InternalPropertyName, StringComparison.OrdinalIgnoreCase) ||
+                    h.Equals(mapping.DisplayName, StringComparison.OrdinalIgnoreCase) ||
+                    (mapping.InternalPropertyName == "CustomerName" && h.ToLower().Contains("name")) ||
+                    (mapping.InternalPropertyName == "CompanyName" && h.ToLower().Contains("firm")));
 
-                // Subscribe to changes so Step 2 (Preview) updates instantly
                 mapping.PropertyChanged += (s, e) =>
                 {
                     if (e.PropertyName == nameof(ImportMapping.SelectedExcelHeader))
-                    {
                         PreviewData = GenerateFilteredPreview(FilePath, Mappings);
-                    }
                 };
 
                 Mappings.Add(mapping);

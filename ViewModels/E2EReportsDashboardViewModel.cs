@@ -1,23 +1,42 @@
-﻿using CallMan.Models.Enums;
+﻿using CallMan.Models;
+using CallMan.Models.Enums;
+using CallMan.Services;
+using CallMan.Services.Reports;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Windows;
 
 namespace CallMan.ViewModels
 {
     public partial class E2EReportsDashboardViewModel : ObservableObject
     {
-        // Active Selection Anchors
+        private readonly E2EReportEngine _reportEngine;
+
         [ObservableProperty] private E2EMainFilter _selectedMainFilter = E2EMainFilter.Sales;
-        [ObservableProperty] private E2EComparisonTarget _selectedComparisonTarget = E2EComparisonTarget.Customer;
+
+        private E2EComparisonTarget _selectedComparisonTarget = E2EComparisonTarget.Customer;
+
+        public E2EComparisonTarget SelectedComparisonTarget
+        {
+            get => _selectedComparisonTarget;
+            set
+            {
+                if (SetProperty(ref _selectedComparisonTarget, value))
+                {
+                    // If your interface rules dictate validation when targets shift directly:
+                    EvaluateAvailableComparisonMatrix();
+                }
+            }
+        }
 
         // Timeline Parameters Context Bounds
         [ObservableProperty] private DateTime _fromDate = DateTime.Now.AddDays(-30);
         [ObservableProperty] private DateTime _toDate = DateTime.Now;
 
         // Dynamic Columns Source Collection for the UI Grid View
-        [ObservableProperty] private ObservableCollection<ReportResultRow> _reportGridSource = new();
+        [ObservableProperty] private DataView? _reportGridSource = new();
 
         // Control flags to dynamically enable/disable comparison buttons based on your precise rules
         [ObservableProperty] private bool _isCustomerEnabled = true;
@@ -28,6 +47,13 @@ namespace CallMan.ViewModels
         [ObservableProperty] private bool _isAreasEnabled = true;
         [ObservableProperty] private bool _isVendorsEnabled = false;
         [ObservableProperty] private bool _isPLEnabled = true;
+
+
+        public E2EReportsDashboardViewModel(E2EReportEngine reportEngine)
+        {
+            _reportEngine = reportEngine;
+            EvaluateAvailableComparisonMatrix();
+        }
 
         partial void OnSelectedMainFilterChanged(E2EMainFilter value)
         {
@@ -64,16 +90,36 @@ namespace CallMan.ViewModels
         [RelayCommand]
         private async Task GenerateE2EReportAsync()
         {
-            // Triggered when user clicks "Generate" after setting their filter matrix configurations
-            // Call your dynamic Dapper/FastReport query service here
+            try
+            {
+                // 1. Pop up your global freeze-proof loader overlay cleanly
+                LoadingService.Show($"Assembling matrix report data layout for {SelectedMainFilter} x {SelectedComparisonTarget}...");
 
-            MessageBox.Show($"Generating report for {SelectedMainFilter} compared against {SelectedComparisonTarget} from {FromDate:d} to {ToDate:d}. This may take a moment.", "Report Generation", MessageBoxButton.OK, MessageBoxImage.Information);
-            
+                // Yield the execution context briefly so the spinner paints smoothly before the database queries execute
+                await Task.Delay(60);
+
+                // 2. Query the engine asynchronously on the database worker threads pool
+                DataTable reportData = await _reportEngine.ExecuteMatrixQueryAsync(SelectedMainFilter, SelectedComparisonTarget, FromDate, ToDate);
+
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    // Binding to the DefaultView forces the UI DataGrid to re-generate structural grid headers
+                    ReportGridSource = reportData.DefaultView;
+                });
+            }
+            catch (NotSupportedException ex)
+            {
+                ReportGridSource = null;
+                MessageBox.Show(ex.Message, "Matrix Formula Selection", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An unexpected analytical error occurred while pulling report records: {ex.Message}", "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                LoadingService.Hide();
+            }
         }
-    }
-
-    public class ReportResultRow
-    {
-        // Dynamic placeholder model to hold mapped SQL outputs
     }
 }

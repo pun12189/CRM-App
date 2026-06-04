@@ -248,10 +248,11 @@
                                     <RowDefinition/>
                                     <RowDefinition/>
                                 </Grid.RowDefinitions>
-                                <materialDesign:PackIcon Kind="Phone" Grid.Row="1" Grid.Column="0" FontSize="12" FontWeight="Bold" Visibility="{Binding ElementName=WhatsApp, Path=Visibility}" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="Phone" Grid.Row="0" Grid.Column="0" FontSize="12" FontWeight="Bold" Visibility="{Binding ElementName=WhatsApp, Path=Visibility}" VerticalAlignment="Center"/>
+                                <materialDesign:PackIcon Kind="Phone" Grid.Row="1" Grid.Column="0" FontSize="12" FontWeight="Bold" Visibility="{Binding ElementName=WhatsApp1, Path=Visibility}" VerticalAlignment="Center"/>
                                 <materialDesign:PackIcon Kind="Mailbox" Grid.Row="2" Grid.Column="0" FontSize="12" FontWeight="Bold" Visibility="{Binding ElementName=Email, Path=Visibility}" VerticalAlignment="Center"/>
                                 <materialDesign:PackIcon Kind="MapMarker" Grid.Row="3" Grid.Column="0" FontSize="12" FontWeight="Bold" Visibility="{Binding ElementName=Map, Path=Visibility}" VerticalAlignment="Top"/>
-                                <StackPanel x:Name="WhatsApp" Grid.Row="1" Grid.Column="2" Orientation="Horizontal">
+                                <StackPanel x:Name="WhatsApp" Grid.Row="0" Grid.Column="2" Orientation="Horizontal">
                                     <TextBlock Text="{Binding Phone}" TextWrapping="Wrap" FontSize="12" Margin="0" VerticalAlignment="Center"/>
                                     <Button BorderThickness="0" Command="{Binding DataContext.WhatsappCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" Margin="5,0" Padding="5" Foreground="Green">
                                         <materialDesign:PackIcon Kind="Whatsapp"/>

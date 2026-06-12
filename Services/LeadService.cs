@@ -609,37 +609,174 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
                 splitOn: "HistoryId,Id");
 
             return targetLead;
-        }        
+        }
+
+        public async Task<DashboardStageSummaries> GetDashboardStageSummariesAsync()
+        {
+            var summaries = new DashboardStageSummaries();
+            using var db = _context.CreateConnection();
+
+            // 1. COMPILING REMINDERS BADGES (Re-Order thresholds & outstanding unpaid accounts)
+            string remindersSql = @"     
+    
+            SELECT 'New' as `Key`, COUNT(*) as `Value` 
+            FROM Orders 
+            WHERE (PaymentStatus = 'Unpaid' OR PaymentStatus = 'Partially Paid')
+              AND (OrderType = 'New' OR OrderType = 'Sale')
+      
+            UNION ALL    
+    
+            SELECT 'Repeat' as `Key`, COUNT(*) as `Value` 
+            FROM Orders 
+            WHERE (PaymentStatus = 'Unpaid' OR PaymentStatus = 'Partially Paid')
+              AND (OrderType != 'New' AND OrderType != 'Sale');";
+
+            summaries.Reminders = (await db.QueryAsync<KeyValuePair<string, int>>(remindersSql)).ToList();
+
+            // 2. COMPILING FOLLOWUP STAGES BADGES
+            string followupSql = @"
+            SELECT 'All FollowUps' as `Key`, COUNT(*) as `Value` FROM Leads WHERE Status = 'Followup'
+            UNION ALL
+            SELECT s.StatusesName as `Key`, COUNT(l.LeadId) as `Value`
+            FROM LeadStatuses s
+            LEFT JOIN Leads l ON s.Id = l.StatusId AND l.Status = 'Followup'
+            GROUP BY s.Id, s.StatusesName
+            ORDER BY `Key` ASC;";
+            summaries.FollowupStages = (await db.QueryAsync<KeyValuePair<string, int>>(followupSql)).ToList();
+
+            // 3. COMPILING MATURE STAGES BADGES
+            string matureSql = @"
+            SELECT 'All Matured' as `Key`, COUNT(*) as `Value` FROM Leads WHERE Status = 'Matured'
+            UNION ALL
+            SELECT m.MatureStagesName as `Key`, COUNT(l.LeadId) as `Value`
+            FROM MatureStages m
+            LEFT JOIN Leads l ON m.Id = l.MatureStageId AND l.Status = 'Matured'
+            GROUP BY m.Id, m.MatureStagesName
+            ORDER BY `Key` ASC;";
+            summaries.MatureStages = (await db.QueryAsync<KeyValuePair<string, int>>(matureSql)).ToList();
+
+            // 4. COMPILING DEAD STAGES AND LABELS BADGES
+            string labelsSql = @"
+            -- A. Calculate a baseline counter of how many unique labels exist in your master setup
+            SELECT 'All Labels' as `Key`, COUNT(*) as `Value` 
+            FROM LeadLabels
+
+            UNION ALL
+
+            -- B. Run a high-performance JSON search checking how many leads possess each master label string
+            SELECT 
+                master.LabelsName as `Key`,
+                (
+                    SELECT COUNT(*) 
+                    FROM Leads l
+                    WHERE l.LabelsJson IS NOT NULL 
+                      AND l.LabelsJson != ''
+                      AND l.LabelsJson != '[]'
+                      -- Safely checks if the string exists anywhere inside the array
+                      AND JSON_CONTAINS(l.LabelsJson, JSON_QUOTE(master.LabelsName))
+                ) as `Value`
+            FROM LeadLabels master
+            WHERE master.LabelsName IS NOT NULL AND master.LabelsName != ''
+            ORDER BY `Key` ASC;";
+
+            summaries.LeadLabels = (await db.QueryAsync<KeyValuePair<string, int>>(labelsSql)).ToList();
+
+            return summaries;
+        }
 
         public async Task<DashboardStats> GetDashboardStatsAsync()
         {
             using var db = _context.CreateConnection();
 
-            // Using a single complex query to get all counts for performance
+            // Combined multi-table aggregation execution block
             string sql = @"
         SELECT 
+            
             (SELECT COUNT(*) FROM Leads) as AllLeads,
             (SELECT COUNT(*) FROM Leads WHERE Status = 'New') as NewLeads,
             (SELECT COUNT(*) FROM Leads WHERE Status = 'Followup') as FollowupLeads,
             (SELECT COUNT(*) FROM Leads l WHERE Status = 'Followup' AND (SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoFollowupLeads,
             (SELECT COUNT(*) FROM Leads WHERE Status = 'Dead') as Dead,
-
             (SELECT COUNT(*) FROM Leads WHERE Status = 'Matured') as Customers,
-(SELECT 
-    COUNT(DISTINCT l.LeadId) AS NoUpdation7Days
-FROM Leads l
-WHERE l.Status = 'Matured'
-AND (
-    SELECT GREATEST(
-        l.CreatedAt,
-        IFNULL((SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId), '1900-01-01'),
-        IFNULL((SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId), '1900-01-01'),
-        IFNULL((SELECT MAX(PaymentDate) FROM Payments WHERE LeadId = l.LeadId), '1900-01-01')
-    )
-) < DATE_SUB(NOW(), INTERVAL 7 DAY)) AS NoUpdation7Days,
+            
+            (SELECT 
+                COUNT(DISTINCT l.LeadId)
+             FROM Leads l
+             WHERE l.Status = 'Matured'
+             AND (
+                 SELECT GREATEST(
+                     l.CreatedAt,
+                     IFNULL((SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId), '1900-01-01'),
+                     IFNULL((SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId), '1900-01-01'),
+                     IFNULL((SELECT MAX(PaymentDate) FROM Payments WHERE LeadId = l.LeadId), '1900-01-01')
+                 )
+             ) < DATE_SUB(NOW(), INTERVAL 7 DAY)) AS NoUpdation7Days,
+            
             (SELECT COUNT(*) FROM Leads l WHERE Status = 'Matured' AND (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) <= 1) as NoRepeatOrder,
             (SELECT COUNT(*) FROM Leads l WHERE Status = 'Matured' AND (SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoOrder,
-            (SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders) as TotalBusiness";
+            
+            -- TODO: Replace with custom user logic lookup check when target matrix details are provided
+            (SELECT COUNT(*) FROM (
+                SELECT l.LeadId
+                FROM Leads l
+                LEFT JOIN Orders o ON l.LeadId = o.LeadId 
+                    AND o.OrderDate >= DATE_ADD(LAST_DAY(DATE_SUB(NOW(), INTERVAL 2 MONTH)), INTERVAL 1 DAY)
+                    AND o.OrderDate <= LAST_DAY(DATE_SUB(NOW(), INTERVAL 1 MONTH))
+                WHERE l.Status = 'Matured' 
+                  AND IFNULL(l.MonthlyTarget, 0) > 0
+                GROUP BY l.LeadId, l.MonthlyTarget
+                HAVING IFNULL(SUM(o.TotalAmount), 0) < l.MonthlyTarget
+            ) as CustomerShortfallTrack) as BelowTarget, 
+            
+            (SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders) as TotalBusiness,
+
+            
+            (SELECT COUNT(DISTINCT CategoryId) FROM Products WHERE CategoryId IS NOT NULL) as TotalCategoriesUsed,
+            (SELECT COUNT(*) FROM Products) as TotalProducts,
+            (SELECT COUNT(*) FROM Products WHERE CreatedAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as TotalNewProducts,
+            
+            -- Fast Moving Benchmark: Products with total sales of 50 units or more
+            (SELECT COUNT(*) FROM (
+                SELECT ProductId FROM OrderItems GROUP BY ProductId HAVING SUM(Quantity) >= 50
+            ) as FastTrack) as FastMovingProducts,
+
+            -- Slow Moving Benchmark: Products with total sales under 5 units across history
+            (SELECT COUNT(*) FROM (
+                SELECT p.ProductId FROM Products p 
+                LEFT JOIN OrderItems oi ON p.ProductId = oi.ProductId 
+                GROUP BY p.ProductId HAVING IFNULL(SUM(oi.Quantity), 0) < 5
+            ) as SlowTrack) as SlowMovingProducts,
+
+            (SELECT COUNT(*) FROM Products WHERE RemainingStock <= SKU AND SKU > 0) as NearSkuCount,
+
+            -- B. Near Expiry Rule: Batches whose active expiration dates hit within the next 90 days
+            (SELECT COUNT(DISTINCT ProductId) FROM ProductBatches 
+             WHERE ExpiryDate IS NOT NULL 
+               AND ExpiryDate >= NOW() 
+               AND ExpiryDate <= DATE_ADD(NOW(), INTERVAL 3 MONTH)) as NearExpiryCount,
+
+            -- C. Skipped Products Rule: Ordered the month before last, but completely missed last month
+            (SELECT COUNT(DISTINCT prev.ProductId) FROM OrderItems prev
+             JOIN Orders oprev ON prev.OrderId = oprev.OrderId
+                AND oprev.OrderDate >= DATE_ADD(LAST_DAY(DATE_SUB(NOW(), INTERVAL 3 MONTH)), INTERVAL 1 DAY)
+                AND oprev.OrderDate <= LAST_DAY(DATE_SUB(NOW(), INTERVAL 2 MONTH))
+             WHERE prev.ProductId NOT IN (
+                 SELECT DISTINCT curr.ProductId FROM OrderItems curr
+                 JOIN Orders ocurr ON curr.OrderId = ocurr.OrderId
+                 WHERE ocurr.OrderDate >= DATE_ADD(LAST_DAY(DATE_SUB(NOW(), INTERVAL 2 MONTH)), INTERVAL 1 DAY)
+                   AND ocurr.OrderDate <= LAST_DAY(DATE_SUB(NOW(), INTERVAL 1 MONTH))
+             )) as SkippedProductsCount,
+
+            (SELECT COUNT(*) FROM Orders) as TotalOrders,
+            (SELECT COUNT(*) FROM Orders WHERE OrderType = 'New' OR OrderType = 'Sale') as TotalNewOrders,
+            
+            -- Repeat Orders Counter: Distinct leads who have placed more than 1 individual invoice order
+            (SELECT COUNT(*) FROM (
+                SELECT LeadId FROM Orders GROUP BY LeadId HAVING COUNT(OrderId) > 1
+            ) as RepeatTrack) as TotalRepeatedOrders,
+
+            (SELECT COUNT(*) FROM Orders WHERE PaymentStatus = 'Unpaid') as TotalUnpaidOrders,
+            (SELECT COUNT(*) FROM Orders WHERE PaymentStatus = 'Partially Paid') as TotalPartialPaidOrders;";
 
             return await db.QuerySingleAsync<DashboardStats>(sql);
         }
@@ -650,13 +787,13 @@ AND (
 
             // We calculate pending balance per customer
             string sql = @"
-        SELECT l.CustomerName, l.Phone,
-               ((SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders WHERE LeadId = l.LeadId) - 
-                (SELECT COALESCE(SUM(AmountReceived), 0) FROM Payments WHERE LeadId = l.LeadId)) as PendingBalance
-        FROM Leads l
-        WHERE l.Status = 'Matured'
-        HAVING PendingBalance > 0
-        ORDER BY PendingBalance DESC";
+            SELECT l.CustomerName, l.Phone,
+                   ((SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders WHERE LeadId = l.LeadId) - 
+                    (SELECT COALESCE(SUM(AmountReceived), 0) FROM Payments WHERE LeadId = l.LeadId)) as PendingBalance
+            FROM Leads l
+            WHERE l.Status = 'Matured'
+            HAVING PendingBalance > 0
+            ORDER BY PendingBalance DESC";
 
             return await db.QueryAsync<PaymentReminder>(sql);
         }
@@ -674,124 +811,215 @@ AND (
             using var db = _context.CreateConnection();
             var parameters = new DynamicParameters();
 
-            // 1. Unified LeadHolder Filter
+            // 1. Structural Filters Setup
             string holderFilter = "";
+            string orderHolderFilter = "";
             if (!string.IsNullOrEmpty(filter.LeadHolder))
             {
                 holderFilter = " AND LeadHolder = @Holder ";
+                orderHolderFilter = " AND ProcessedBy = @Holder ";
                 parameters.Add("Holder", filter.LeadHolder);
             }
 
-            // 2. Date Parameters
+            // 2. Date Range Boundaries Setup
             parameters.Add("From", filter.FromDate);
             parameters.Add("To", filter.ToDate);
-
-            // Helper logic for Date Filtering
             string dateRange = (filter.FromDate != null) ? " BETWEEN @From AND @To " : null;
 
             string sql = $@"
-    SELECT 
-        /* ALL LEADS: Counted by Creation Date */
-        (SELECT COUNT(*) FROM Leads 
-         WHERE 1=1 {holderFilter} 
-         {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}) as AllLeads,
-
-        /* NEW LEADS: Created in this range */
-        (SELECT COUNT(*) FROM Leads 
-         WHERE Status = 'New' {holderFilter} 
-         {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}) as NewLeads,
-
-        /* FOLLOWUP LEADS: Filtered by the LATEST Activity Date (History Log) */
-        (SELECT COUNT(DISTINCT l.LeadId) FROM Leads l
-         INNER JOIN LeadHistory h ON l.LeadId = h.LeadId
-         WHERE l.Status = 'Followup' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
-         {(dateRange != null ? $" AND h.LogDate {dateRange}" : "")}) as FollowupLeads,
-
-        /* NO FOLLOWUP (30 Days): Stale leads within the filtered group */
-        (SELECT COUNT(*) FROM Leads l 
-         WHERE Status = 'Followup' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
-         {(dateRange != null ? $" AND l.CreatedAt {dateRange}" : "")}
-         AND (SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoFollowupLeads,
-
-        /* NO UPDATION (7 Days): Based on GREATEST of all activities */
-        (SELECT COUNT(DISTINCT l.LeadId) FROM Leads l
-         WHERE l.Status = 'Matured' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
-         {(dateRange != null ? $" AND l.CreatedAt {dateRange}" : "")}
-         AND (SELECT GREATEST(l.CreatedAt, 
-                IFNULL((SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId), '1900-01-01'),
-                IFNULL((SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId), '1900-01-01'),
-                IFNULL((SELECT MAX(PaymentDate) FROM Payments WHERE LeadId = l.LeadId), '1900-01-01'))
-             ) < DATE_SUB(NOW(), INTERVAL 7 DAY)) as NoUpdation7Days,
-
-        /* TOTAL BUSINESS: Filtered by ORDER DATE, not Lead Creation Date */
-        (SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Orders o 
-         INNER JOIN Leads l ON o.LeadId = l.LeadId
-         WHERE 1=1 {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
-         {(dateRange != null ? $" AND o.OrderDate {dateRange}" : "")}) as TotalBusiness,
-
-        /* CUSTOMERS: Matured leads in this period */
-        (SELECT COUNT(*) FROM Leads WHERE Status = 'Matured' {holderFilter}
-         {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}) as Customers";
-
-            var stats = await db.QuerySingleAsync<DashboardStats>(sql, parameters);
-
-            // 4. Calculate Percentages in the ViewModel/Service after retrieval
-            return stats;
-        }
-
-        /*public async Task<DashboardStats> GetDashboardStatsFilteredAsync(DashboardFilter filter)
-        {
-            using var db = _context.CreateConnection();
-
-            // Base WHERE clause logic
-            string whereClause = " WHERE 1=1 ";
-            string whereClause2 = " WHERE 1=1 ";
-            var parameters = new DynamicParameters();
-
-            if (!string.IsNullOrEmpty(filter.LeadHolder))
-            {
-                whereClause += " AND LeadHolder = @LeadHolder ";
-                whereClause2 += " AND l.LeadHolder = @LeadHolder ";
-                parameters.Add("LeadHolder", filter.LeadHolder);
-            }
-
-            if (filter.FromDate != null && filter.ToDate != null)
-            {
-                // Filtering based on Lead Creation or Update date
-                whereClause += " AND CreatedAt BETWEEN @FromDate AND @ToDate ";
-                whereClause2 += " AND l.CreatedAt BETWEEN @FromDate AND @ToDate ";
-                parameters.Add("FromDate", filter.FromDate);
-                parameters.Add("ToDate", filter.ToDate);
-            }
-
-            string sql = $@"
         SELECT 
-            (SELECT COUNT(*) FROM Leads {whereClause}) as AllLeads,
-            (SELECT COUNT(*) FROM Leads {whereClause} AND Status = 'New') as NewLeads,
-            (SELECT COUNT(*) FROM Leads {whereClause} AND Status = 'Followup') as FollowupLeads,
-            (SELECT COUNT(*) FROM Leads l {whereClause2} AND Status = 'Followup' AND (SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoFollowupLeads,
-            (SELECT COUNT(*) FROM Leads {whereClause} AND Status = 'Dead') as Dead,
-(SELECT 
-    COUNT(DISTINCT l.LeadId) AS NoUpdation7Days
-FROM Leads l
-{whereClause2} AND l.Status = 'Matured'
-AND (
-    SELECT GREATEST(
-        l.CreatedAt,
-        IFNULL((SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId), '1900-01-01'),
-        IFNULL((SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId), '1900-01-01'),
-        IFNULL((SELECT MAX(PaymentDate) FROM Payments WHERE LeadId = l.LeadId), '1900-01-01')
-    )
-) < DATE_SUB(NOW(), INTERVAL 7 DAY)) AS NoUpdation7Days,
-            (SELECT COUNT(*) FROM Leads {whereClause} AND Status = 'Matured') as Customers,
-            (SELECT COUNT(*) FROM Leads l {whereClause} AND Status = 'Matured' AND (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) <= 1) as NoRepeatOrder,
-            (SELECT COUNT(*) FROM Leads l {whereClause} AND Status = 'Matured' AND (SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoOrder,
-            (SELECT COALESCE(SUM(o.TotalAmount), 0) FROM Orders o 
-                    INNER JOIN Leads l ON o.LeadId = l.LeadId 
-                    {whereClause.Replace("CreatedAt", "o.OrderDate")}) as TotalBusiness";
+            (SELECT COUNT(*) FROM Leads 
+             WHERE 1=1 {holderFilter} 
+             {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}) as AllLeads,
+
+            (SELECT COUNT(*) FROM Leads 
+             WHERE Status = 'New' {holderFilter} 
+             {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}) as NewLeads,
+
+            (SELECT COUNT(DISTINCT l.LeadId) FROM Leads l
+             INNER JOIN LeadHistory h ON l.LeadId = h.LeadId
+             WHERE l.Status = 'Followup' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
+             {(dateRange != null ? $" AND h.LogDate {dateRange}" : "")}) as FollowupLeads,
+
+            (SELECT COUNT(*) FROM Leads l 
+             WHERE Status = 'Followup' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
+             {(dateRange != null ? $" AND l.CreatedAt {dateRange}" : "")}
+             AND (SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoFollowupLeads,
+
+            (SELECT COUNT(*) FROM Leads WHERE Status = 'Dead' {holderFilter}
+             {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}) as Dead,
+
+            (SELECT COUNT(*) FROM Leads WHERE Status = 'Matured' {holderFilter}
+             {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}) as Customers,
+
+            (SELECT COUNT(DISTINCT l.LeadId) FROM Leads l
+             WHERE l.Status = 'Matured' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
+             {(dateRange != null ? $" AND l.CreatedAt {dateRange}" : "")}
+             AND (SELECT GREATEST(l.CreatedAt, 
+                    IFNULL((SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId), '1900-01-01'),
+                    IFNULL((SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId), '1900-01-01'),
+                    IFNULL((SELECT MAX(PaymentDate) FROM Payments WHERE LeadId = l.LeadId), '1900-01-01'))
+                  ) < DATE_SUB(NOW(), INTERVAL 7 DAY)) as NoUpdation7Days,
+
+            (SELECT COUNT(*) FROM Leads l WHERE Status = 'Matured' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
+             AND (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) <= 1) as NoRepeatOrder,
+
+            (SELECT COUNT(*) FROM Leads l WHERE Status = 'Matured' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
+             AND (SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)) as NoOrder,
+
+            (SELECT COUNT(*) FROM (
+                SELECT l.LeadId
+                FROM Leads l
+                LEFT JOIN Orders o ON l.LeadId = o.LeadId 
+                    AND o.OrderDate >= DATE_ADD(LAST_DAY(DATE_SUB(NOW(), INTERVAL 2 MONTH)), INTERVAL 1 DAY)
+                    AND o.OrderDate <= LAST_DAY(DATE_SUB(NOW(), INTERVAL 1 MONTH))
+                WHERE l.Status = 'Matured' {holderFilter.Replace("LeadHolder", "l.LeadHolder")}
+                  AND IFNULL(l.MonthlyTarget, 0) > 0
+                GROUP BY l.LeadId, l.MonthlyTarget
+                HAVING IFNULL(SUM(o.TotalAmount), 0) < l.MonthlyTarget
+            ) as CustomerShortfallTrack) as BelowTarget,
+
+            (SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders 
+             WHERE 1=1 {orderHolderFilter}
+             {(dateRange != null ? $" AND OrderDate {dateRange}" : "")}) as TotalBusiness,
+
+            (SELECT COUNT(DISTINCT p.CategoryId) FROM Products p
+             INNER JOIN OrderItems oi ON p.ProductId = oi.ProductId
+             INNER JOIN Orders o ON oi.OrderId = o.OrderId
+             WHERE 1=1 {orderHolderFilter.Replace("ProcessedBy", "o.ProcessedBy")}
+             {(dateRange != null ? $" AND o.OrderDate {dateRange}" : "")}) as TotalCategoriesUsed,
+
+            (SELECT COUNT(DISTINCT p.ProductId) FROM Products p
+             LEFT JOIN OrderItems oi ON p.ProductId = oi.ProductId
+             LEFT JOIN Orders o ON oi.OrderId = o.OrderId
+             WHERE 1=1 {(dateRange != null ? $" AND p.CreatedAt {dateRange}" : "")}) as TotalProducts,
+
+            (SELECT COUNT(*) FROM Products WHERE CreatedAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)) as TotalNewProducts,
+
+            (SELECT COUNT(*) FROM (
+                SELECT oi.ProductId FROM OrderItems oi
+                INNER JOIN Orders o ON oi.OrderId = o.OrderId
+                WHERE 1=1 {orderHolderFilter.Replace("ProcessedBy", "o.ProcessedBy")}
+                {(dateRange != null ? $" AND o.OrderDate {dateRange}" : "")}
+                GROUP BY oi.ProductId HAVING SUM(oi.Quantity) >= 50
+            ) as FastTrack) as FastMovingProducts,
+
+            (SELECT COUNT(*) FROM (
+                SELECT p.ProductId FROM Products p
+                LEFT JOIN OrderItems oi ON p.ProductId = oi.ProductId
+                LEFT JOIN Orders o ON oi.OrderId = o.OrderId {orderHolderFilter.Replace("ProcessedBy", "o.ProcessedBy")}
+                {(dateRange != null ? $" AND o.OrderDate {dateRange}" : "")}
+                GROUP BY p.ProductId HAVING IFNULL(SUM(oi.Quantity), 0) < 5
+            ) as SlowTrack) as SlowMovingProducts,
+
+            (SELECT COUNT(*) FROM Products WHERE RemainingStock <= SKU AND SKU > 0) as NearSkuCount,
+
+            (SELECT COUNT(DISTINCT ProductId) FROM ProductBatches 
+             WHERE ExpiryDate IS NOT NULL AND ExpiryDate >= NOW() AND ExpiryDate <= DATE_ADD(NOW(), INTERVAL 3 MONTH)) as NearExpiryCount,
+
+            (SELECT COUNT(DISTINCT prev.ProductId) FROM OrderItems prev
+             INNER JOIN Orders oprev ON prev.OrderId = oprev.OrderId {orderHolderFilter.Replace("ProcessedBy", "oprev.ProcessedBy")}
+                AND oprev.OrderDate >= DATE_ADD(LAST_DAY(DATE_SUB(NOW(), INTERVAL 3 MONTH)), INTERVAL 1 DAY)
+                AND oprev.OrderDate <= LAST_DAY(DATE_SUB(NOW(), INTERVAL 2 MONTH))
+             WHERE prev.ProductId NOT IN (
+                 SELECT DISTINCT curr.ProductId FROM OrderItems curr
+                 INNER JOIN Orders ocurr ON curr.OrderId = ocurr.OrderId {orderHolderFilter.Replace("ProcessedBy", "ocurr.ProcessedBy")}
+                 WHERE ocurr.OrderDate >= DATE_ADD(LAST_DAY(DATE_SUB(NOW(), INTERVAL 2 MONTH)), INTERVAL 1 DAY)
+                   AND ocurr.OrderDate <= LAST_DAY(DATE_SUB(NOW(), INTERVAL 1 MONTH))
+             )) as SkippedProductsCount,
+
+            (SELECT COUNT(*) FROM Orders 
+             WHERE 1=1 {orderHolderFilter}
+             {(dateRange != null ? $" AND OrderDate {dateRange}" : "")}) as TotalOrders,
+
+            (SELECT COUNT(*) FROM Orders 
+             WHERE (OrderType = 'New' OR OrderType = 'Sale') {orderHolderFilter}
+             {(dateRange != null ? $" AND OrderDate {dateRange}" : "")}) as TotalNewOrders,
+
+            (SELECT COUNT(*) FROM (
+                SELECT LeadId FROM Orders 
+                WHERE 1=1 {orderHolderFilter}
+                {(dateRange != null ? $" AND OrderDate {dateRange}" : "")}
+                GROUP BY LeadId HAVING COUNT(OrderId) > 1
+            ) as RepeatTrack) as TotalRepeatedOrders,
+
+            (SELECT COUNT(*) FROM Orders 
+             WHERE PaymentStatus = 'Unpaid' {orderHolderFilter}
+             {(dateRange != null ? $" AND OrderDate {dateRange}" : "")}) as TotalUnpaidOrders,
+
+            (SELECT COUNT(*) FROM Orders 
+             WHERE PaymentStatus = 'Partially Paid' {orderHolderFilter}
+             {(dateRange != null ? $" AND OrderDate {dateRange}" : "")}) as TotalPartialPaidOrders;";
 
             return await db.QuerySingleAsync<DashboardStats>(sql, parameters);
-        }  */     
+        }
+
+        public async Task<DashboardStageSummaries> GetDashboardStageSummariesFilteredAsync(DashboardFilter filter)
+        {
+            var summaries = new DashboardStageSummaries();
+            using var db = _context.CreateConnection();
+            var parameters = new DynamicParameters();
+
+            string holderFilter = "";
+            string orderHolderFilter = "";
+            if (!string.IsNullOrEmpty(filter.LeadHolder))
+            {
+                holderFilter = " AND LeadHolder = @Holder ";
+                orderHolderFilter = " AND ProcessedBy = @Holder ";
+                parameters.Add("Holder", filter.LeadHolder);
+            }
+
+            parameters.Add("From", filter.FromDate);
+            parameters.Add("To", filter.ToDate);
+            string dateRange = (filter.FromDate != null) ? " BETWEEN @From AND @To " : null;
+
+            // 1. FILTERED REMINDERS IN ALPHABETICAL ORDER
+            string remindersSql = $@"                
+                SELECT 'New' as `Key`, COUNT(*) as `Value` FROM Orders 
+                WHERE (PaymentStatus = 'Unpaid' OR PaymentStatus = 'Partially Paid') AND (OrderType = 'New' OR OrderType = 'Sale') {orderHolderFilter} {(dateRange != null ? $" AND OrderDate {dateRange}" : "")}
+                UNION ALL
+                SELECT 'Repeat' as `Key`, COUNT(*) as `Value` FROM Orders 
+                WHERE (PaymentStatus = 'Unpaid' OR PaymentStatus = 'Partially Paid') AND (OrderType != 'New' AND OrderType != 'Sale') {orderHolderFilter} {(dateRange != null ? $" AND OrderDate {dateRange}" : "")}
+                ORDER BY `Key` ASC;"; // Alphabetical sorting modifier
+            summaries.Reminders = (await db.QueryAsync<KeyValuePair<string, int>>(remindersSql, parameters)).ToList();
+
+            // 2. FILTERED FOLLOWUP STAGES IN ALPHABETICAL ORDER
+            string followupSql = $@"
+                SELECT 'All FollowUps' as `Key`, COUNT(*) as `Value` FROM Leads WHERE Status = 'Followup' {holderFilter} {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}
+                UNION ALL
+                SELECT s.StatusesName as `Key`, COUNT(l.LeadId) as `Value`
+                FROM LeadStatuses s
+                LEFT JOIN Leads l ON s.Id = l.StatusId AND l.Status = 'Followup' {holderFilter.Replace("LeadHolder", "l.LeadHolder")} {(dateRange != null ? $" AND l.CreatedAt {dateRange}" : "")}
+                GROUP BY s.Id, s.StatusesName
+                ORDER BY `Key` ASC;";
+            summaries.FollowupStages = (await db.QueryAsync<KeyValuePair<string, int>>(followupSql, parameters)).ToList();
+
+            // 3. FILTERED MATURE STAGES IN ALPHABETICAL ORDER
+            string matureSql = $@"
+                SELECT 'All Matured' as `Key`, COUNT(*) as `Value` FROM Leads WHERE Status = 'Matured' {holderFilter} {(dateRange != null ? $" AND CreatedAt {dateRange}" : "")}
+                UNION ALL
+                SELECT m.MatureStagesName as `Key`, COUNT(l.LeadId) as `Value`
+                FROM MatureStages m
+                LEFT JOIN Leads l ON m.Id = l.MatureStageId AND l.Status = 'Matured' {holderFilter.Replace("LeadHolder", "l.LeadHolder")} {(dateRange != null ? $" AND l.CreatedAt {dateRange}" : "")}
+                GROUP BY m.Id, m.MatureStagesName
+                ORDER BY `Key` ASC;";
+            summaries.MatureStages = (await db.QueryAsync<KeyValuePair<string, int>>(matureSql, parameters)).ToList();
+
+            // 4. FILTERED MULTI-ASSIGNMENT LEAD LABELS IN ALPHABETICAL ORDER
+            string labelsSql = $@"
+                SELECT 'All Labels' as `Key`, COUNT(*) as `Value` FROM LeadLabels
+                UNION ALL
+                SELECT master.LabelsName as `Key`,
+                    (SELECT COUNT(*) FROM Leads l 
+                     WHERE l.LabelsJson IS NOT NULL AND l.LabelsJson != '' AND l.LabelsJson != '[]' {holderFilter.Replace("LeadHolder", "l.LeadHolder")} {(dateRange != null ? $" AND l.CreatedAt {dateRange}" : "")}
+                       AND JSON_CONTAINS(l.LabelsJson, JSON_QUOTE(master.LabelsName))) as `Value`
+                FROM LeadLabels master
+                WHERE master.LabelsName IS NOT NULL AND master.LabelsName != ''
+                ORDER BY `Key` ASC;";
+            summaries.LeadLabels = (await db.QueryAsync<KeyValuePair<string, int>>(labelsSql, parameters)).ToList();
+
+            return summaries;
+        }
 
         // --- USER MANAGEMENT METHODS ---
 

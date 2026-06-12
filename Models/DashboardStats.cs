@@ -25,5 +25,26 @@ namespace CallMan.Models
         public double NoFollowupLeadsPercentage => AllLeads > 0 ? Math.Round((double)NoFollowupLeads / AllLeads * 100, 1) : 0;
         public double DeadPercentage => AllLeads > 0 ? Math.Round((double)Dead / AllLeads * 100, 1) : 0;
         public double CustomersPercentage => AllLeads > 0 ? Math.Round((double)Customers / AllLeads * 100, 1) : 0;
+
+        // ====================================================================
+        // NEW ADDITION: ENHANCED PRODUCT OPERATION COUNTERS
+        // ====================================================================
+        public int TotalCategoriesUsed { get; set; }
+        public int TotalProducts { get; set; }
+        public int TotalNewProducts { get; set; }
+        public int FastMovingProducts { get; set; }
+        public int SlowMovingProducts { get; set; }
+        public int NearSkuCount { get; set; }
+        public int NearExpiryCount { get; set; }
+        public int SkippedProductsCount { get; set; }
+
+        // ====================================================================
+        // NEW ADDITION: ENHANCED ORDERS PERFORMANCE PIPELINE COUNTERS
+        // ====================================================================
+        public int TotalOrders { get; set; }
+        public int TotalNewOrders { get; set; }
+        public int TotalRepeatedOrders { get; set; }
+        public int TotalUnpaidOrders { get; set; }
+        public int TotalPartialPaidOrders { get; set; }
     }
 }

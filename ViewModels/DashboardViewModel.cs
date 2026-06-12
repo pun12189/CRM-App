@@ -21,7 +21,7 @@ namespace CallMan.ViewModels
 
         [ObservableProperty] private bool _isLoading;
         [ObservableProperty] private string _lastUpdatedStatus = "Last Updated: Just Now";
-        [ObservableProperty] private string _dataUpdatedStatus = "All Time Data";
+        [ObservableProperty] private string _dataUpdatedStatus;
 
         // Stats Counters
         [ObservableProperty] private DashboardStats _stats;
@@ -29,8 +29,13 @@ namespace CallMan.ViewModels
         // This property controls the button's visibility
         [ObservableProperty] private bool _isFilterActive;
 
-        // Financial Summaries for Expanders
-        [ObservableProperty] private ObservableCollection<PaymentReminder> _reminders = new();
+        // ====================================================================
+        // NEW ADDITIONS: SIDEBAR STAGE SUMMARY COLLECTIONS
+        // ====================================================================
+        [ObservableProperty] private ObservableCollection<KeyValuePair<string, int>> _reminderCounters = new();
+        [ObservableProperty] private ObservableCollection<KeyValuePair<string, int>> _followupStagesCounters = new();
+        [ObservableProperty] private ObservableCollection<KeyValuePair<string, int>> _matureStagesCounters = new();
+        [ObservableProperty] private ObservableCollection<KeyValuePair<string, int>> _leadLabelsCounters = new();
 
         public DashboardViewModel(LeadService service, IDialogService dialog)
         {
@@ -46,14 +51,14 @@ namespace CallMan.ViewModels
             try
             {
                 // 1. Fetch Stats for Tiles
-                Stats = await _service.GetDashboardStatsAsync();               
+                Stats = await _service.GetDashboardStatsAsync();                
 
-                // 2. Fetch Payment Reminders for the Right Sidebar
-                var remindersData = await _service.GetPaymentRemindersAsync();
-                Reminders = new ObservableCollection<PaymentReminder>(remindersData);
+                var stagesData = await _service.GetDashboardStageSummariesAsync();
 
-                // 3. Logic for Followup Stages (Mock data or DB call)
-                // You can add logic here to count leads in different categories
+                ReminderCounters = new ObservableCollection<KeyValuePair<string, int>>(stagesData.Reminders);
+                FollowupStagesCounters = new ObservableCollection<KeyValuePair<string, int>>(stagesData.FollowupStages);
+                MatureStagesCounters = new ObservableCollection<KeyValuePair<string, int>>(stagesData.MatureStages);
+                LeadLabelsCounters = new ObservableCollection<KeyValuePair<string, int>>(stagesData.LeadLabels);
             }
             finally
             {
@@ -79,7 +84,7 @@ namespace CallMan.ViewModels
         private async Task ClearFilter()
         {
             await Refresh();
-            DataUpdatedStatus = "All Time Data";
+            DataUpdatedStatus = string.Empty;
             IsFilterActive = false;
         }
 
@@ -88,11 +93,18 @@ namespace CallMan.ViewModels
             IsLoading = true;
             try
             {
-                Stats = await _service.GetDashboardStatsFilteredAsync(filter);                
+                Stats = await _service.GetDashboardStatsFilteredAsync(filter);
+
+                var filteredStages = await _service.GetDashboardStageSummariesFilteredAsync(filter);
+
+                ReminderCounters = new ObservableCollection<KeyValuePair<string, int>>(filteredStages.Reminders);
+                FollowupStagesCounters = new ObservableCollection<KeyValuePair<string, int>>(filteredStages.FollowupStages);
+                MatureStagesCounters = new ObservableCollection<KeyValuePair<string, int>>(filteredStages.MatureStages);
+                LeadLabelsCounters = new ObservableCollection<KeyValuePair<string, int>>(filteredStages.LeadLabels);
 
                 // Optional: Update 'Last Updated' timestamp
                 LastUpdatedStatus = $"Filtered by {filter.LeadHolder ?? "All"} ({filter.PresetRange})";
-                DataUpdatedStatus = $"All Time Data: Filtered by {filter.LeadHolder ?? "All "} ({filter.PresetRange})";
+                DataUpdatedStatus = $"Filtered by {filter.LeadHolder ?? "All "} ({filter.PresetRange})";
             }
             finally
             {

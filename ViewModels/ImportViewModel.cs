@@ -123,15 +123,12 @@ namespace CallMan.ViewModels
                             if (!claimedExcelHeaders.Contains(header))
                             {
                                 var cellValue = rowData.Cell(totalExcelColumns.IndexOf(header) + 1).Value;
-                                if (!cellValue.IsBlank)
-                                {
-                                    metadataPool[header] = cellValue.ToString().Trim();
-                                }
+                                dbRow[header] = cellValue.IsBlank ? null : cellValue.ToString().Trim();
                             }
                         }
 
                         // Append the processed JSON string directly into the query payload parameter slot
-                        dbRow["MetadataJson"] = metadataPool.Count > 0 ? JsonSerializer.Serialize(metadataPool) : null;
+                        //dbRow["MetadataJson"] = metadataPool.Count > 0 ? JsonSerializer.Serialize(metadataPool) : null;
                         payloadList.Add(dbRow);
                     }
                 }
@@ -197,6 +194,31 @@ namespace CallMan.ViewModels
                     { "BatchNumber", (MappingTargetType.StandardField, null, null) },
                     { "MfgDate", (MappingTargetType.StandardField, null, null) },
                     { "ExpiryDate", (MappingTargetType.StandardField, null, null) }
+                },
+                ImportType.Order => new Dictionary<string, (MappingTargetType Type, string Table, string IdCol)>
+                {
+                    // Parent Order Core Configuration Fields
+                    { "InvoiceNumber", (MappingTargetType.StandardField, null, null) }, // Automatically maps to 'VCN'
+                    { "OrderDate", (MappingTargetType.StandardField, null, null) },      // Automatically maps to 'C_DATE'
+                    { "OrderType", (MappingTargetType.StandardField, null, null) },      // Automatically maps to 'TYPE2'
+    
+                    // Relational Connection Lookups
+                    { "CustomerName", (MappingTargetType.ForeignKeyLookup, "Leads", "LeadId") }, // Maps to 'PNAME'
+                    { "ProcessedBy", (MappingTargetType.ForeignKeyLookup, "Users", "UserId") },   // Maps to 'SALESMEN'
+
+                    // Child Line-Item Attributes (OrderItems)
+                    { "ProductName", (MappingTargetType.StandardField, null, null) },    // Maps to 'NAME'
+                    { "BatchNumber", (MappingTargetType.StandardField, null, null) },    // Maps to 'BATCH'
+                    { "Quantity", (MappingTargetType.StandardField, null, null) },       // Maps to 'QTY'
+                    { "FreeQuantity", (MappingTargetType.StandardField, null, null) },   // Maps to 'FREE'
+                    { "UnitPrice", (MappingTargetType.StandardField, null, null) },      // Maps to 'RATE'
+                    { "GSTPercent", (MappingTargetType.StandardField, null, null) },     // Maps to 'GST'
+                    { "GstAmount", (MappingTargetType.StandardField, null, null) },       // Maps to 'TAXAMT'
+                    { "Total", (MappingTargetType.StandardField, null, null) },          // Maps to 'AMOUNT'
+
+                    // Fallback tracking variables
+                    { "BrandName", (MappingTargetType.StandardField, null, null) },      // Maps to 'COMPANY'
+                    { "AmountReceived", (MappingTargetType.StandardField, null, null) }
                 },
                 _ => throw new NotImplementedException()
             };

@@ -81,7 +81,7 @@ WindowResizable=yes
 SetupIconFile={#SourceFileDir}SetupFiles\BahiKitab-Icon.ico
 SetupLogging=yes
 ;#include <idp.iss>
- ;SignTool=sn /d $qTemplateToaster Installer$q $f
+ SignTool=signtool
  UninstallIconFile={#SourceFileDir}SetupFiles\BahiKitab-Icon.ico
  [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
@@ -128,7 +128,7 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
    ;Source: {#SourceFileDir}\Assets\*;  DestDir: "{app}\Assets"; Flags:ignoreversion recursesubdirs
    Source: {#SourceFileDir}\runtimes\*;  DestDir: "{app}\runtimes"; Flags:ignoreversion recursesubdirs
    ;Source: {#SourceFileDir}\TxtFile\*;  DestDir: "{app}\TxtFile"; Flags:ignoreversion recursesubdirs
-   Source: {#SourceFileDir}\CallMan.exe;  DestDir: "{app}"; Flags:ignoreversion recursesubdirs
+   Source: {#SourceFileDir}\CallMan.exe;  DestDir: "{app}"; Flags:ignoreversion recursesubdirs sign
    Source: {#SourceFileDir}\*.dll;  DestDir: "{app}"; Flags:ignoreversion
    Source: {#SourceFileDir}\*.pdb;  DestDir: "{app}"; Flags:ignoreversion
    Source: {#SourceFileDir}\*.json;  DestDir: "{app}"; Flags:ignoreversion

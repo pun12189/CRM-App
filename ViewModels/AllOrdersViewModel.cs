@@ -17,7 +17,7 @@ using System.Windows.Data;
 
 namespace CallMan.ViewModels
 {
-    public partial class AllOrdersViewModel : ObservableObject
+    public partial class AllOrdersViewModel : ObservableObject, IDashboardFilterable
     {
         private readonly LeadService _service;
         private readonly IDialogService _dialogService;
@@ -222,6 +222,11 @@ namespace CallMan.ViewModels
             var mleads = new ObservableCollection<Lead>(data);
             TotalOutstandingBalance = mleads.Sum(x => x.TotalBalanceDue);
             TotalPaymentsReceived = mleads.Sum(x => x.TotalPaidAmount);
+        }
+
+        public void ApplyDashboardFilter(DashboardFilter? filter, DashboardTargetView target)
+        {
+            throw new NotImplementedException();
         }
     }
 }

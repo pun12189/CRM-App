@@ -68,10 +68,10 @@ namespace CallMan.Services
                         parameters.Add("LeadTagId", tagId);
                         parameters.Add("Status", row.GetValueOrDefault("Status") ?? "New");
                         parameters.Add("StatusId", statusId);
-                        parameters.Add("LeadHolder", user);
+                        parameters.Add("LeadHolder", user != null ? user : "Admin");
 
                         // 4. Inject the automatically packed extra spreadsheet columns
-                        // parameters.Add("MetadataJson", row.GetValueOrDefault("MetadataJson"));
+                        parameters.Add("MetadataJson", null);
 
                         string insertLeadSql = @"
                             INSERT INTO Leads (
@@ -206,7 +206,7 @@ namespace CallMan.Services
                             var primaryRow = group.First();
 
                             // 3. Dynamic Relational Customer Verification Match (Search 'PNAME' to resolve 'LeadId')
-                            int? leadId = await GetOrCreateLeadIdAsync(connection, transaction, "Leads", "CustomerName", primaryRow.GetValueOrDefault("CustomerName")?.ToString());
+                            int? leadId = await GetOrCreateLeadIdAsync(connection, transaction, primaryRow.GetValueOrDefault("CustomerName")?.ToString());
                             if (!leadId.HasValue) continue; // Skip order block if customer profile record is missing
 
                             int? divisionId = await GetOrCreateDivisionAsync(connection, transaction, "Divisions", "Name", primaryRow.GetValueOrDefault("COMPANY")?.ToString());
@@ -395,6 +395,12 @@ namespace CallMan.Services
                     await InsertBulkHistory(connection, transaction, rowsList);
                 }
 
+                if (type == ImportType.Order)
+                {
+                    // After all leads are inserted, we can batch insert corresponding history records in one go for efficiency
+                    await InsertBulkOrdersHistoryAsync(connection, transaction, rowsList);
+                }
+
                 // Everything succeeded: Commit the transaction atomically
                 transaction.Commit();
                 return processedRecordsCount;
@@ -477,20 +483,51 @@ namespace CallMan.Services
         /// Scans structural reference tables. If a text description is missing, it auto-provisions 
         /// the new element to ensure relational foreign key integrity on the fly.
         /// </summary>
-        private async Task<int?> GetOrCreateLeadIdAsync(IDbConnection db, IDbTransaction tx, string tableName, string column, string textValue)
+        private async Task<int?> GetOrCreateLeadIdAsync(IDbConnection db, IDbTransaction tx, string textValue)
         {
-            if (string.IsNullOrWhiteSpace(textValue)) return null;            
+            if (string.IsNullOrWhiteSpace(textValue)) return null;
 
-            // Note: If your reference tables use 'LeadId' or generic 'Id' as the primary key, adjust this column selection logic
-            
-                var querySql = $"SELECT LeadId FROM Leads WHERE LOWER(CustomerName) = @Txt OR LOWER(CompanyName) = @Txt LIMIT 1;";           
+            string trimmedValue = textValue.Trim();
+            string lowerValue = trimmedValue.ToLower();
 
-            int? idResult = await db.QueryFirstOrDefaultAsync<int?>(querySql, new { Txt = textValue.ToLower().Trim() }, tx);
-            if (idResult.HasValue) return idResult.Value;            
+            // 1. Check if the Lead already exists (by matching CustomerName or CompanyName)
+            string querySql = "SELECT LeadId FROM Leads WHERE LOWER(CustomerName) = @Txt OR LOWER(CompanyName) = @Txt LIMIT 1;";
+            int? existingLeadId = await db.QueryFirstOrDefaultAsync<int?>(querySql, new { Txt = lowerValue }, tx);
 
-            // Auto-provision new entries for configuration tables (like LeadSources, LeadTags, Categories, etc.)
-            string insertSql = $"INSERT INTO {tableName} ({column}, CompanyName, Status) VALUES (@Txt, @Txt, 'Matured'); SELECT LAST_INSERT_ID();";
-            return await db.ExecuteScalarAsync<int>(insertSql, new { Txt = textValue.Trim() }, tx);
+            if (existingLeadId.HasValue)
+            {
+                // ====================================================================
+                // CASE A: LEAD FOUND -> Update the existing lead profile details
+                // ====================================================================
+                string updateSql = @"
+            UPDATE Leads 
+            SET Status = 'Matured'
+            WHERE LeadId = @LeadId;";
+
+                await db.ExecuteAsync(updateSql, new { LeadId = existingLeadId.Value }, tx);
+                return existingLeadId.Value;
+            }
+            else
+            {
+                // ====================================================================
+                // CASE B: LEAD NOT FOUND -> Insert a brand-new matured lead record
+                // ====================================================================
+                string insertSql = @"
+            INSERT INTO Leads (
+                CustomerName, 
+                CompanyName, 
+                Status, 
+                CreatedAt
+            ) VALUES (
+                @Txt, 
+                @Txt, 
+                'Matured', 
+                NOW()
+            ); 
+            SELECT LAST_INSERT_ID();";
+
+                return await db.ExecuteScalarAsync<int>(insertSql, new { Txt = trimmedValue }, tx);
+            }
         }
 
         /// <summary>
@@ -533,6 +570,91 @@ namespace CallMan.Services
             var phones = dataList.Select(d => d["Phone"].ToString()).ToList();
             var updatedBy = _session.CurrentUser;
             await conn.ExecuteAsync(historySql, new { Phones = phones, UpdatedBy = updatedBy }, trans);
+        }
+
+        private async Task InsertBulkOrdersHistoryAsync(IDbConnection conn, IDbTransaction trans, List<Dictionary<string, object>> orderRows)
+        {
+            if (orderRows == null || !orderRows.Any()) return;
+
+            string currentUser = _session.CurrentUser ?? "System Import";
+
+            // 1. Isolating unique telephone lines from the spreadsheet rows
+            var phones = orderRows
+                .Where(d => d.ContainsKey("Phone") && d["Phone"] != null && !string.IsNullOrWhiteSpace(d["Phone"].ToString()))
+                .Select(d => d["Phone"].ToString()!.Trim())
+                .Distinct()
+                .ToList();
+
+            if (!phones.Any()) return;
+
+            // 2. Fetch Lead IDs linked to those phone numbers in bulk to avoid repeated database scans
+            string leadLookupSql = "SELECT LeadId, Phone FROM Leads WHERE Phone IN @Phones;";
+            var leadMapping = (await conn.QueryAsync<(int LeadId, string Phone)>(leadLookupSql, new { Phones = phones }, trans))
+                .ToDictionary(x => x.Phone.ToLower().Trim(), x => x.LeadId);
+
+            // SQL definitions for logging history entries
+            string checkHistorySql = "SELECT COUNT(*) FROM LeadHistory WHERE LeadId = @LeadId LIMIT 1;";
+
+            string insertHistorySql = @"
+        INSERT INTO LeadHistory (LeadId, LogDate, Message, Content, FollowupStage, UpdatedBy)
+        VALUES (@LeadId, NOW(), @Message, @Content, @Stage, @UpdatedBy);";
+
+            // 3. Process records to determine history state
+            foreach (var row in orderRows)
+            {
+                if (!row.ContainsKey("Phone") || row["Phone"] == null) continue;
+
+                string rowPhone = row["Phone"].ToString()!.ToLower().Trim();
+                if (!leadMapping.TryGetValue(rowPhone, out int leadId)) continue; // Skip if no lead matches
+
+                // Extract spreadsheet order data details securely
+                string invoiceNo = row.ContainsKey("InvoiceNumber") ? row["InvoiceNumber"]?.ToString() ?? "N/A" : "N/A";
+                string totalBill = row.ContainsKey("TotalAmount") ? row["TotalAmount"]?.ToString() ?? "0" : "0";
+
+                // Check if any history logs exist for this LeadId
+                int historyCount = await conn.ExecuteScalarAsync<int>(checkHistorySql, new { LeadId = leadId }, trans);
+
+                if (historyCount == 0)
+                {
+                    // ====================================================================
+                    // CONDITION 1: NO HISTORY LOG FOUND -> Write baseline record + order log
+                    // ====================================================================
+
+                    // Log Entry 1: Base data import profile initialization entry
+                    await conn.ExecuteAsync(insertHistorySql, new
+                    {
+                        LeadId = leadId,
+                        Message = "Lead Uploaded",
+                        Content = $"{currentUser} uploaded this Lead through order sheet import",
+                        Stage = "Lead Uploaded",
+                        UpdatedBy = currentUser
+                    }, trans);
+
+                    // Log Entry 2: Order details fulfillment entry
+                    await conn.ExecuteAsync(insertHistorySql, new
+                    {
+                        LeadId = leadId,
+                        Message = "Order Details Added",
+                        Content = $"Order processed via import sheet. Invoice: {invoiceNo}, Total Order Value: ₹{totalBill}",
+                        Stage = "Matured",
+                        UpdatedBy = currentUser
+                    }, trans);
+                }
+                else
+                {
+                    // ====================================================================
+                    // CONDITION 2: HISTORY ALREADY EXISTS -> Append order log details only
+                    // ====================================================================
+                    await conn.ExecuteAsync(insertHistorySql, new
+                    {
+                        LeadId = leadId,
+                        Message = "Order Details Added",
+                        Content = $"New order appended via import sheet. Invoice: {invoiceNo}, Total Order Value: ₹{totalBill}",
+                        Stage = "Matured",
+                        UpdatedBy = currentUser
+                    }, trans);
+                }
+            }
         }
 
         private async Task<(int ProductId, decimal CostPrice)> GetOrCreateProductContextAsync(

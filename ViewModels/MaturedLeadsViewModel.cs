@@ -14,7 +14,7 @@ using System.Windows.Data;
 
 namespace CallMan.ViewModels
 {
-    public partial class MaturedLeadsViewModel : ObservableObject
+    public partial class MaturedLeadsViewModel : ObservableObject, IDashboardFilterable
     {
         private readonly LeadService _service;
         private readonly SettingService _settingService;
@@ -23,7 +23,6 @@ namespace CallMan.ViewModels
         private readonly ProductService _productService;
         private readonly OrderService _orderService;
         private readonly OccupiedLocationService _locationService;
-        [ObservableProperty] private ObservableCollection<Lead> _maturedLeads = new();
         [ObservableProperty] private decimal _totalOutstanding;
         [ObservableProperty] private CustomerStats _customerStats = new();
 
@@ -57,6 +56,8 @@ namespace CallMan.ViewModels
         [ObservableProperty] private SettingItem? _targetSelectedLabel;
         [ObservableProperty] private ObservableCollection<SettingItem> _selectedLabelsList = new();
 
+        private bool _isInitialized;
+
         public MaturedLeadsViewModel(LeadService service, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService)
         {
             _service = service;
@@ -66,11 +67,10 @@ namespace CallMan.ViewModels
             _productService = productService;
             _orderService = orderService;
             _locationService = locationService;
-            _ = LoadData();
+            _ = LoadInitialDataAsync();
         }
 
-        [RelayCommand]
-        public async Task LoadData()
+        private async Task LoadInitialDataAsync()
         {
             var users = await _service.GetAllUsersAsync();
             SystemUsersList = new ObservableCollection<User>(users);
@@ -80,17 +80,31 @@ namespace CallMan.ViewModels
             AvailableLabelsList = new ObservableCollection<SettingItem>(labels);
 
             CustomerStats = await _service.GetCustomerFinancialSummaryAsync(1);
-            var data = await _service.GetMaturedLedgerAsync();
-            MaturedLeads = new ObservableCollection<Lead>(data);
-            TotalOutstanding = MaturedLeads.Sum(x => x.TotalBalanceDue);
 
-            _leadsCollection = CollectionViewSource.GetDefaultView(MaturedLeads);
+            if (_isInitialized) return;
+            var data = await _service.GetMaturedLedgerAsync();
+
+            if (_isInitialized) return;
+            var list = new ObservableCollection<Lead>(data);
+
+            TotalOutstanding = list.Sum(x => x.TotalBalanceDue);
+
+            _leadsCollection = CollectionViewSource.GetDefaultView(list);
 
             // 4. Re-apply your search filter logic
             _leadsCollection.Filter = FilterLeads;
 
             // 5. Notify the UI to refresh the table
             OnPropertyChanged(nameof(LeadsCollection));
+
+            OnPropertyChanged(nameof(TotalOutstanding));
+        }
+
+        [RelayCommand]
+        public async Task LoadData()
+        {
+            _isInitialized = false; // Reset flag to allow complete reload
+            await LoadInitialDataAsync();
         }
 
         // This logic runs every time SearchText changes
@@ -470,6 +484,35 @@ namespace CallMan.ViewModels
                         Debug.WriteLine(ex.Message);
                     }
                 }
+            }
+        }
+
+        public async void ApplyDashboardFilter(DashboardFilter? filter, DashboardTargetView target)
+        {
+            try
+            {
+                _isInitialized = true;
+
+                // 1. Call the service layer to run the fast database check
+                var retrievedLeads = await _service.GetCustomerByDashboardContextAsync(target, filter);
+
+                // 2. Clear and append to the existing bound collection to keep references intact
+                var list = new ObservableCollection<Lead>(retrievedLeads);
+
+                // 3. Re-aggregate monetary totals
+                TotalOutstanding = list.Sum(x => x.TotalBalanceDue);
+
+                // 4. Force the permanent collection view to refresh its text layouts and redrawing loops
+                _leadsCollection = CollectionViewSource.GetDefaultView(list);
+                _leadsCollection.Filter = FilterLeads;
+
+                // Tell the WPF DataGrid explicitly to drop its visual index cache and look at the new collection
+                OnPropertyChanged(nameof(LeadsCollection));
+                OnPropertyChanged(nameof(TotalOutstanding));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
             }
         }
     }

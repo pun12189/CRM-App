@@ -1,14 +1,18 @@
 ﻿using CallMan.Interfaces;
 using CallMan.Models;
+using CallMan.Models.Enums;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace CallMan.ViewModels
 {
@@ -16,6 +20,8 @@ namespace CallMan.ViewModels
     {
         private readonly LeadService _service;
         private readonly IDialogService _dialog;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly MainViewModel _mainViewModel;
 
         [ObservableProperty] private object? _selectedTabContent;
 
@@ -28,6 +34,7 @@ namespace CallMan.ViewModels
 
         // This property controls the button's visibility
         [ObservableProperty] private bool _isFilterActive;
+        private DashboardFilter? _currentActiveFilter;
 
         // ====================================================================
         // NEW ADDITIONS: SIDEBAR STAGE SUMMARY COLLECTIONS
@@ -37,10 +44,12 @@ namespace CallMan.ViewModels
         [ObservableProperty] private ObservableCollection<KeyValuePair<string, int>> _matureStagesCounters = new();
         [ObservableProperty] private ObservableCollection<KeyValuePair<string, int>> _leadLabelsCounters = new();
 
-        public DashboardViewModel(LeadService service, IDialogService dialog)
+        public DashboardViewModel(LeadService service, IDialogService dialog, IServiceProvider serviceProvider, MainViewModel mainViewModel)
         {
             _service = service;
             _dialog = dialog;
+            _serviceProvider = serviceProvider;
+            _mainViewModel = mainViewModel;
             RefreshCommand.Execute(null);
         }
 
@@ -104,12 +113,88 @@ namespace CallMan.ViewModels
 
                 // Optional: Update 'Last Updated' timestamp
                 LastUpdatedStatus = $"Filtered by {filter.LeadHolder ?? "All"} ({filter.PresetRange})";
-                DataUpdatedStatus = $"Filtered by {filter.LeadHolder ?? "All "} ({filter.PresetRange})";
+                DataUpdatedStatus = $"Filtered Target Group: {filter.LeadHolder ?? "All Staff Operations"} ({filter.PresetRange})";
             }
             finally
             {
                 IsLoading = false;
             }
         }
+
+        /// <summary>
+        /// Global Click Routing Engine for Dashboard Tiles
+        /// </summary>
+        [RelayCommand]
+        private async Task NavigateFromCounter(DashboardTargetView target)
+        {
+            try
+            {
+                LoadingService.Show("Loading view... Please wait.");
+
+                object targetViewModel = null;
+
+                // 1. Map your target enum context to the exact DI View Model requested
+                switch (target)
+                {
+                    case DashboardTargetView.AllLeads:
+                    case DashboardTargetView.OpenLeads:
+                    case DashboardTargetView.FollowupLeads:
+                    case DashboardTargetView.NoFollowupLeads:
+                    case DashboardTargetView.DeadLeads:
+                        targetViewModel = _serviceProvider.GetRequiredService<LeadViewModel>();
+                        break;
+
+                    case DashboardTargetView.Customers:
+                    case DashboardTargetView.NoUpdation7Days:
+                    case DashboardTargetView.NoRepeatOrders:
+                    case DashboardTargetView.NoOrders30Days:
+                    case DashboardTargetView.BelowTargetCustomers:
+                        targetViewModel = _serviceProvider.GetRequiredService<MaturedLeadsViewModel>();
+                        break;
+
+                    case DashboardTargetView.ProductsList:
+                    case DashboardTargetView.CategoriesList:
+                    case DashboardTargetView.NearSkuProducts:
+                    case DashboardTargetView.NearExpiryBatches:
+                    case DashboardTargetView.SkippedProducts:
+                        targetViewModel = _serviceProvider.GetRequiredService<InventoryViewModel>();
+                        break;
+
+                    case DashboardTargetView.AllOrders:
+                    case DashboardTargetView.NewOrders:
+                    case DashboardTargetView.RepeatedOrders:
+                    case DashboardTargetView.UnpaidOrders:
+                    case DashboardTargetView.PartiallyPaidOrders:
+                        targetViewModel = _serviceProvider.GetRequiredService<AllOrdersViewModel>();
+                        break;
+                }
+
+                if (targetViewModel == null) return;
+
+                // 2. Inject the current filter context state into the resolved view model
+                if (targetViewModel is IDashboardFilterable filterableVm)
+                {
+                    // Passes your filter state (or null if unfiltered) along with the specific tile context clicked
+                    filterableVm.ApplyDashboardFilter(IsFilterActive ? _currentActiveFilter : null, target);
+                }
+
+                // 3. Switch the workspace layout smoothly via the Main Window dispatcher frame
+                await App.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    _mainViewModel.CurrentView = targetViewModel;
+                }, DispatcherPriority.Background);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"An error occurred while navigating: {ex.Message}");
+            }
+            finally
+            {
+                LoadingService.Hide();
+            }            
+        }
+
+        // Keep your existing Refresh, OpenFilter, and ClearFilter methods completely unchanged
     }
 }
+

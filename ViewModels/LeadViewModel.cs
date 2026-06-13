@@ -20,7 +20,7 @@ using System.Windows.Data;
 
 namespace CallMan.ViewModels
 {
-    public partial class LeadViewModel : ObservableObject
+    public partial class LeadViewModel : ObservableObject, IDashboardFilterable
     {
         private readonly LeadService _leadService;
         private readonly SettingService _settingService;
@@ -68,6 +68,8 @@ namespace CallMan.ViewModels
         [ObservableProperty] private SettingItem? _targetSelectedLabel;
         [ObservableProperty] private ObservableCollection<SettingItem> _selectedLabelsList = new();
 
+        private bool _isInitialized;
+
         public LeadViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService)
         {
             _leadService = leadService;
@@ -78,8 +80,8 @@ namespace CallMan.ViewModels
             _productService = productService;
             _orderService = orderService;
             _routingService = routingService;
-            _ = LoadLeads();
-        }
+            _ = LoadInitialDataAsync();
+        }        
 
         public async Task InitializeAsync(LeadViewMode mode)
         {
@@ -255,7 +257,7 @@ namespace CallMan.ViewModels
             SelectedLabelsList = new();
         }
 
-        private async Task LoadLeads()
+        private async Task LoadInitialDataAsync()
         {
             var users = await _leadService.GetAllUsersAsync();
             SystemUsersList = new ObservableCollection<User>(users);
@@ -264,9 +266,11 @@ namespace CallMan.ViewModels
 
             AvailableLabelsList = new ObservableCollection<SettingItem>(labels);
 
+            if (_isInitialized) return;
             // 1. Call the new service method that joins Leads with their latest History
             var data = await _leadService.GetAllLeadsWithLatestUpdateAsync();
 
+            if (_isInitialized) return;
             // 2. Wrap the result in an ObservableCollection
             var list = new ObservableCollection<Lead>(data);
 
@@ -294,6 +298,12 @@ namespace CallMan.ViewModels
 
             // 5. Notify the UI to refresh the table
             OnPropertyChanged(nameof(LeadsCollection));
+        }
+
+        private async Task LoadLeads()
+        {
+            _isInitialized = false;
+            await LoadInitialDataAsync();
         }
 
         // This logic runs every time SearchText changes
@@ -502,6 +512,31 @@ namespace CallMan.ViewModels
                         Debug.WriteLine(ex.Message);
                     }
                 }
+            }
+        }
+
+        public async void ApplyDashboardFilter(DashboardFilter? filter, DashboardTargetView target)
+        {
+            try
+            {
+                _isInitialized = true;
+
+                // 1. Call the service layer to run the fast database check
+                var retrievedLeads = await _leadService.GetLeadsByDashboardContextAsync(target, filter);
+
+                // 2. Clear and append to the existing bound collection to keep references intact
+                var list = new ObservableCollection<Lead>(retrievedLeads);
+
+                // 4. Force the permanent collection view to refresh its text layouts and redrawing loops
+                _leadsCollection = CollectionViewSource.GetDefaultView(list);
+                _leadsCollection.Filter = FilterLeads;
+
+                // Tell the WPF DataGrid explicitly to drop its visual index cache and look at the new collection
+                OnPropertyChanged(nameof(LeadsCollection));
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
             }
         }
     }

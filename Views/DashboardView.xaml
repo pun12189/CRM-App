@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CallMan.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:enums="clr-namespace:CallMan.Models.Enums"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -69,36 +70,54 @@
                                 <Expander Header="Product Counters" IsExpanded="True" Background="Transparent" Foreground="#2C3E50" FontWeight="Bold" FontSize="13">
                                     <UniformGrid Columns="5" Margin="5,10">
                                         <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.CategoriesList}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.TotalCategoriesUsed}" FontSize="24" FontWeight="Bold" Foreground="#34495E" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Total Categories" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
                                         <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.ProductsList}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.TotalProducts}" FontSize="24" FontWeight="Bold" Foreground="#2980B9" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Total Products" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
                                         <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NewProducts}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.TotalNewProducts}" FontSize="24" FontWeight="Bold" Foreground="#16A085" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="New Products" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
                                         <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.FastMovingProducts}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.FastMovingProducts}" FontSize="24" FontWeight="Bold" Foreground="#D35400" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Fast Moving" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
                                         <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.SlowMovingProducts}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.SlowMovingProducts}" FontSize="24" FontWeight="Bold" Foreground="#C0392B" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Slow Moving" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
                                         <Border Background="#FEF2F2" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NearSkuProducts}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.NearSkuCount}" FontSize="22" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Near SKU" FontSize="10" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center" Margin="0,4,0,0"/>
@@ -107,6 +126,9 @@
 
                                         <!-- NEW ADDITION SLOT 2: EXPIRY MONITORING RUNWAY TILE -->
                                         <Border Background="#FFF7ED" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NearExpiryBatches}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.NearExpiryCount}" FontSize="22" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Near Expiry" FontSize="10" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center" Margin="0,4,0,0"/>
@@ -115,6 +137,9 @@
 
                                         <!-- NEW ADDITION SLOT 3: SKIPPED PRODUCTS VELOCITY EXCLUSION TILE -->
                                         <Border Background="#F5F3FF" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.SkippedProducts}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.SkippedProductsCount}" FontSize="22" FontWeight="Bold" Foreground="#6D28D9" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Skipped Products" FontSize="10" Foreground="#6D28D9" HorizontalAlignment="Center" Margin="0,4,0,0"/>
@@ -128,6 +153,9 @@
                                 <Expander Header="All Time Data" IsExpanded="False" Background="Transparent" Foreground="#2C3E50" FontWeight="Bold" FontSize="13">
                                     <UniformGrid Columns="5" Margin="5,10">
                                         <Border Background="#1794A1" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.AllLeads}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.AllLeads}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="ALL LEADS" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
@@ -135,6 +163,9 @@
                                         </Border>
 
                                         <Border Background="#1794A1" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.OpenLeads}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.NewLeads}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="OPEN" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
@@ -143,6 +174,9 @@
                                         </Border>
 
                                         <Border Background="#1794A1" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.FollowupLeads}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.FollowupLeads}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="FOLLOW UP" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
@@ -151,6 +185,9 @@
                                         </Border>
 
                                         <Border Background="#1794A1" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoFollowupLeads}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.NoFollowupLeads}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="NO FOLLOW UP" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
@@ -160,6 +197,9 @@
                                         </Border>
 
                                         <Border Background="#1794A1" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.DeadLeads}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.Dead}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="DEAD" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
@@ -168,6 +208,9 @@
                                         </Border>
 
                                         <Border Background="#21B19C" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.Customers}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.Customers}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="CUSTOMERS" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
@@ -176,6 +219,9 @@
                                         </Border>
 
                                         <Border Background="#21B19C" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoUpdation7Days}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.NoUpdation7Days}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="NO UPDATION" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
@@ -184,6 +230,9 @@
                                         </Border>
 
                                         <Border Background="#21B19C" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoRepeatOrders}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.NoRepeatOrder}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="NO REPEAT ORDER" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
@@ -191,6 +240,9 @@
                                         </Border>
 
                                         <Border Background="#21B19C" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoOrders30Days}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.NoOrder}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="NO ORDER" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
@@ -199,6 +251,9 @@
                                         </Border>
 
                                         <Border Background="#21B19C" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.BelowTargetCustomers}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.BelowTarget}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="BELOW TARGET" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
@@ -213,30 +268,45 @@
                                 <Expander Header="Order Counters" IsExpanded="False" Background="Transparent" Foreground="#2C3E50" FontWeight="Bold" FontSize="13">
                                     <UniformGrid Columns="5" Margin="5,10">
                                         <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.AllOrders}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.TotalOrders}" FontSize="24" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Total Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
                                         <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NewOrders}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.TotalNewOrders}" FontSize="24" FontWeight="Bold" Foreground="#2980B9" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="First Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
                                         <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.RepeatedOrders}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.TotalRepeatedOrders}" FontSize="24" FontWeight="Bold" Foreground="#8E44AD" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Repeated Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
                                         <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.UnpaidOrders}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.TotalUnpaidOrders}" FontSize="24" FontWeight="Bold" Foreground="#C0392B" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Unpaid Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
                                         <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                            <Border.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.PartiallyPaidOrders}"/>
+                                            </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
                                                 <TextBlock Text="{Binding Stats.TotalPartialPaidOrders}" FontSize="24" FontWeight="Bold" Foreground="#F39C12" HorizontalAlignment="Center"/>
                                                 <TextBlock Text="Partially Paid" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>

@@ -1,4 +1,5 @@
 ﻿using CallMan.Dialogs;
+using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Models.Enums;
 using CallMan.Services;
@@ -16,7 +17,7 @@ using System.Windows.Controls;
 
 namespace CallMan.ViewModels
 {
-    public partial class InventoryViewModel : ObservableObject
+    public partial class InventoryViewModel : ObservableObject, IDashboardFilterable
     {
         private readonly ProductService _productService;
         private readonly CategoryService _categoryService;
@@ -296,6 +297,11 @@ namespace CallMan.ViewModels
 
             // Push the blank fields into the active collection drawer layout view
             parentProduct.InnerBatchesCollection.Add(newBatchRow);
+        }
+
+        public void ApplyDashboardFilter(DashboardFilter? filter, DashboardTargetView target)
+        {
+            throw new NotImplementedException();
         }
     }
 }

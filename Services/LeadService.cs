@@ -1279,17 +1279,21 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
             // WHERE DivisionId = @DivId
             const string sql = @"
     WITH CustomerOrderStats AS (
-        SELECT 
-            LeadId,
-            OrderId,
-            TotalAmount,
-            AmountPaid,
-            -- DYNAMIC CALCULATION: Subtraction replaces the missing column footprint
-            (TotalAmount - AmountPaid) AS CalculatedOrderBalance,
-            ROW_NUMBER() OVER (PARTITION BY LeadId ORDER BY OrderDate ASC, OrderId ASC) AS OrderSequence
-        FROM Orders
-        WHERE DivisionId = @DivId OR DivisionId IS NULL
-    )
+            SELECT 
+                o.LeadId,
+                o.OrderId,
+                o.TotalAmount,
+                o.AmountPaid,
+                -- DYNAMIC CALCULATION: Compiles exact outstanding ledger margins per row
+                (o.TotalAmount - o.AmountPaid) AS CalculatedOrderBalance,
+                ROW_NUMBER() OVER (
+                    PARTITION BY o.LeadId 
+                    ORDER BY o.OrderDate ASC, o.OrderId ASC
+                ) AS OrderSequence
+            FROM Orders o
+            INNER JOIN Leads l ON o.LeadId = l.LeadId
+            WHERE l.Status = 'Matured' -- CRITICAL FIX: Excludes Dead and Windback pool leads completely
+        )
     SELECT 
         COUNT(DISTINCT o.LeadId) AS TotalCustomers,
         COUNT(o.OrderId) AS TotalOrders,
@@ -1412,6 +1416,140 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
                 return rows;
             }
             catch { return Enumerable.Empty<GlobalSearchRowItem>(); }
+        }
+
+        public async Task<IEnumerable<Lead>> GetCustomerByDashboardContextAsync(DashboardTargetView target, DashboardFilter? filter)
+        {
+            using var db = _context.CreateConnection();
+            var parameters = new DynamicParameters();
+
+            // Set up standard filters if a context package is present
+            string holderFilter = "";
+            if (filter != null && !string.IsNullOrEmpty(filter.LeadHolder))
+            {
+                holderFilter = " AND l.LeadHolder = @Holder ";
+                parameters.Add("Holder", filter.LeadHolder);
+            }
+
+            parameters.Add("From", filter?.FromDate);
+            parameters.Add("To", filter?.ToDate);
+            string dateCondition = (filter?.FromDate != null) ? " AND l.CreatedAt BETWEEN @From AND @To " : "";
+
+            string baseSql = "SELECT l.* FROM Leads l WHERE l.Status = 'Matured' ";
+
+            // Apply specific query rules based on which tile card was clicked on the dashboard
+            switch (target)
+            {
+                case DashboardTargetView.Customers:
+                    // Standard customer list loading logic
+                    baseSql += $" {holderFilter} {dateCondition} ";
+                    break;
+
+                case DashboardTargetView.NoUpdation7Days:
+                    // Filter customers who haven't logged any operational updates in the last 7 days
+                    baseSql += $@" {holderFilter} {dateCondition} 
+                AND (SELECT GREATEST(l.CreatedAt, 
+                    IFNULL((SELECT MAX(LogDate) FROM LeadHistory WHERE LeadId = l.LeadId), '1900-01-01'),
+                    IFNULL((SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId), '1900-01-01'),
+                    IFNULL((SELECT MAX(PaymentDate) FROM Payments WHERE LeadId = l.LeadId), '1900-01-01'))
+                ) < DATE_SUB(NOW(), INTERVAL 7 DAY)";
+                    break;
+
+                case DashboardTargetView.NoRepeatOrders:
+                    // Target customer single-buyers
+                    baseSql += $" {holderFilter} {dateCondition} AND (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) <= 1";
+                    break;
+
+                case DashboardTargetView.NoOrders30Days:
+                    // Cold customer tracking flag
+                    baseSql += $" {holderFilter} {dateCondition} AND (SELECT MAX(OrderDate) FROM Orders WHERE LeadId = l.LeadId) < DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                    break;
+
+                case DashboardTargetView.BelowTargetCustomers:
+                    // Customers missing target parameters
+                    baseSql = $@"
+                SELECT l.* FROM Leads l
+                LEFT JOIN Orders o ON l.LeadId = o.LeadId 
+                    AND o.OrderDate >= DATE_ADD(LAST_DAY(DATE_SUB(NOW(), INTERVAL 2 MONTH)), INTERVAL 1 DAY)
+                    AND o.OrderDate <= LAST_DAY(DATE_SUB(NOW(), INTERVAL 1 MONTH))
+                WHERE l.Status = 'Matured' AND IFNULL(l.MonthlyTarget, 0) > 0 {holderFilter.Replace("l.LeadHolder", "l.LeadHolder")}
+                GROUP BY l.LeadId
+                HAVING IFNULL(SUM(o.TotalAmount), 0) < l.MonthlyTarget";
+                    break;
+            }
+
+            return await db.QueryAsync<Lead>(baseSql, parameters);
+        }
+
+        public async Task<IEnumerable<Lead>> GetLeadsByDashboardContextAsync(DashboardTargetView target, DashboardFilter? filter)
+        {
+            using var db = _context.CreateConnection();
+            var parameters = new DynamicParameters();
+
+            // 1. Unified LeadHolder Filter Setup
+            string holderFilter = "";
+            if (filter != null && !string.IsNullOrEmpty(filter.LeadHolder))
+            {
+                holderFilter = " AND l.LeadHolder = @Holder ";
+                parameters.Add("Holder", filter.LeadHolder);
+            }
+
+            // 2. Date Ranges Binding Setup
+            parameters.Add("From", filter?.FromDate);
+            parameters.Add("To", filter?.ToDate);
+            string dateCondition = (filter?.FromDate != null) ? " AND l.CreatedAt BETWEEN @From AND @To " : "";
+            string historyDateCondition = (filter?.FromDate != null) ? " AND h.LogDate BETWEEN @From AND @To " : "";
+
+            // Base fallback query anchor
+            string baseSql = "SELECT l.* FROM Leads l WHERE 1=1 ";
+
+            // 3. Evaluate context-specific criteria matching the dashboard tile clicked
+            switch (target)
+            {
+                case DashboardTargetView.AllLeads:
+                    // ALL LEADS: Filtered by lead creation range across all pipeline states
+                    baseSql += $" {holderFilter} {dateCondition} ";
+                    break;
+
+                case DashboardTargetView.OpenLeads:
+                    // OPEN LEADS: Fresh leads matching your creation window
+                    baseSql += $" AND l.Status = 'New' {holderFilter} {dateCondition} ";
+                    break;
+
+                case DashboardTargetView.FollowupLeads:
+                    // FOLLOWUP LEADS: Filtered by the active log history interaction date window
+                    baseSql = $@"
+                SELECT DISTINCT l.* FROM Leads l
+                INNER JOIN LeadHistory h ON l.LeadId = h.LeadId
+                WHERE l.Status = 'Followup' {holderFilter} {historyDateCondition}";
+                    break;
+
+                case DashboardTargetView.NoFollowupLeads:
+                    // NO FOLLOWUP (30 Days): Leads whose newest touchpoint is older than 30 days
+                    baseSql += $@" 
+                AND l.Status = 'Followup' {holderFilter} {dateCondition}
+                AND (
+                    SELECT MAX(lh.LogDate) 
+                    FROM LeadHistory lh 
+                    WHERE lh.LeadId = l.LeadId
+                ) < DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                    break;
+
+                case DashboardTargetView.DeadLeads:
+                    // DEAD LEADS: Lost opportunities filtered by creation date criteria
+                    baseSql += $" AND l.Status = 'Dead' {holderFilter} {dateCondition} ";
+                    break;
+
+                default:
+                    // Standard fallback safe-guard to ensure it returns nothing if an incorrect tab boundary bleeds over
+                    baseSql += " AND 1=0 ";
+                    break;
+            }
+
+            // Append standard sorting index to ensure grids look highly structured (A to Z)
+            baseSql += " ORDER BY l.CustomerName ASC;";
+
+            return await db.QueryAsync<Lead>(baseSql, parameters);
         }
     }
 }

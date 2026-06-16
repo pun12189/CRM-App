@@ -61,8 +61,8 @@ LicenseFile={#SourceFileDir}SetupFiles\eula.rtf
 ;file to show after install (I show readme)
 ;InfoAfterFile={#SourceFileDir}readme.txt
 ;Custom image to show on left side of installer
-WizardImageFile={#SourceFileDir}SetupFiles\BahiKitab-Icon.bmp
-WizardSmallImageFile={#SourceFileDir}SetupFiles\BahiKitab-Icon.bmp
+WizardImageFile={#SourceFileDir}SetupFiles\CRM.bmp
+WizardSmallImageFile={#SourceFileDir}SetupFiles\Offline-Icon.bmp
 ;I use whatever my apps icon is                               
 ;UninstallDisplayIcon={app}\CallMan.exe
 ;Version number of your installer (not your app)
@@ -78,11 +78,11 @@ OutputBaseFilename=SofricERP-Offline
 WizardStyle=modern
 WindowShowCaption=no 
 WindowResizable=yes
-SetupIconFile={#SourceFileDir}SetupFiles\BahiKitab-Icon.ico
+SetupIconFile={#SourceFileDir}SetupFiles\Offline.ico
 SetupLogging=yes
 ;#include <idp.iss>
  SignTool=signtool
- UninstallIconFile={#SourceFileDir}SetupFiles\BahiKitab-Icon.ico
+ UninstallIconFile={app}\CallMan.exe
  [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
 ;Name: "da"; MessagesFile: "compiler:Languages\Danish.isl"
@@ -125,6 +125,7 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
  ;Name: "{app}\TxtFile"
  Name: "{app}\runtimes"
 [Files]
+    Source: {#SourceFileDir}SetupFiles\SofricCert.cer; DestDir: "{tmp}"; Flags: deleteafterinstall
    ;Source: {#SourceFileDir}\Assets\*;  DestDir: "{app}\Assets"; Flags:ignoreversion recursesubdirs
    Source: {#SourceFileDir}\runtimes\*;  DestDir: "{app}\runtimes"; Flags:ignoreversion recursesubdirs
    ;Source: {#SourceFileDir}\TxtFile\*;  DestDir: "{app}\TxtFile"; Flags:ignoreversion recursesubdirs
@@ -239,12 +240,12 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 ;[Components]
 ;Name: "main"; Description: "Main Files"; Types: full compact custom; Flags: fixed
 ;Name: "compact"; Description: "Compact installation"; Types: full 
-;[Tasks]
+[Tasks]
 ;Name: starterversion; Description: "Starter Version"; Flags:exclusive 
 ;Name: standardversion; Description: "{cm:StandardVersion}";   Flags:exclusive unchecked;  
 ;Name: professionalversion; Description: "{cm:ProfessionalVersion}";  Flags:exclusive;
 ;Name: Basic; Description: {#Strd} ; GroupDescription: {#sver}; Flags:exclusive unchecked;  Components: main
-;Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 ;Name: Professional; Description: {#Pro}; GroupDescription: {#sver}; Flags: exclusive;
 ;Name: desktopicon\user; Description: "For the current user only"; GroupDescription: "Additional icons:"; Components: main; Flags: exclusive unchecked
 ;Name: quicklaunchicon; Description: "Create a &Quick Launch icon"; GroupDescription: "Additional icons:"; Components: main; Flags: unchecked
@@ -405,18 +406,19 @@ settingpermission = Setting Program Access Permissions
 ;uk.StandardVersion=стандарт версія
 ;uk.StarterVersion=стартер версія
 [icons]
-Name: {group}\SofricERP-Offline; Filename: {app}\CallMan.exe; WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico";
+Name: "{group}\SofricERP-Offline"; Filename: "{app}\CallMan.exe"; IconFilename: "{#SourceFileDir}SetupFiles\Offline.ico"; IconIndex: 0
 Name: "{group}\Help"; Filename: "http://sofric.com/"; 
-Name: {group}\Uninstall; Filename: {uninstallexe};  WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico";
-Name: {commondesktop}\SofricERP-Offline;  Filename: {app}\CallMan.exe; IconFilename: "{#SourceFileDir}SetupFiles\BahiKitab-Icon.ico"; Tasks: desktopicon
+Name: {group}\Uninstall; Filename: {uninstallexe};  WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\Offline.ico";
+Name: "{autodesktop}\SofricERP-Offline"; Filename: "{app}\CallMan.exe"; IconFilename: "{#SourceFileDir}SetupFiles\Offline.ico"; IconIndex: 0; Tasks: desktopicon
 
-[Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"
+;[Tasks]
+;Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"
 
 [Run]
 ;Filename: "{tmp}\net8runtime.exe"; Parameters: "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"; Flags: runhidden waituntilterminated
 Filename: "{app}\CallMan.exe"; Description: "{cm:launchtemplatetoaster}"; Flags: nowait skipifsilent postinstall ; 
 Filename: explorer.exe; Parameters: "http://sofric.com/"; Description: "{cm:viewhelpfile}"; Flags: Shellexec skipifsilent  postinstall unchecked; 
+Filename: "certutil.exe"; Parameters: "-addstore ""Root"" ""{tmp}\SofricCert.cer"""; Flags: runhidden runascurrentuser; StatusMsg: "Installing secure system certificates..."
 
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v Edition /t REG_SZ /d ""Starter"" /f"; Flags: runasoriginaluser; Tasks: starterversion
 ;Filename: Reg.exe; Parameters: "add ""HKLM\Software\TemplateToaster"" /v Edition /t REG_SZ /d ""Standard"" /f"; Flags: runasoriginaluser runhidden;  Tasks: standardversion

@@ -623,7 +623,7 @@
             </Grid>
         </materialDesign:ColorZone>
         <ContentControl Grid.Row="3" Content="{Binding CurrentView}"/>
-        <materialDesign:DrawerHost Grid.RowSpan="4" IsRightDrawerOpen="{Binding IsAdminMenuOpen, Mode=TwoWay}">
+        <materialDesign:DrawerHost Grid.RowSpan="4" IsRightDrawerOpen="{Binding IsAdminMenuOpen, Mode=TwoWay}" Visibility="Collapsed">
 
             <materialDesign:DrawerHost.RightDrawerContent>
                 <Grid Width="300" Background="{DynamicResource MaterialDesignPaper}" Margin="20,40">

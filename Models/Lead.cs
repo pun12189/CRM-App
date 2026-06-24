@@ -12,6 +12,7 @@ namespace CallMan.Models
 {
     public partial class Lead : ObservableObject
     {
+        [ObservableProperty] private int _serialNumber;
         [ObservableProperty] private bool _isSelectedForAction;
 
         public int LeadId { get; set; }

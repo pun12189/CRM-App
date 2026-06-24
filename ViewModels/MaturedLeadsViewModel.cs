@@ -5,6 +5,7 @@ using CallMan.Models.Enums;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -33,6 +34,32 @@ namespace CallMan.ViewModels
 
         // This is what the DataGrid actually binds to now
         public ICollectionView LeadsCollection => _leadsCollection;
+
+        // 1. Pagination Core State Tracking Variables
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(TotalPages))]
+        [NotifyPropertyChangedFor(nameof(StartEntry))]
+        [NotifyPropertyChangedFor(nameof(EndEntry))]
+        private int _totalEntries = 1471; // Seeded with your image's example number
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(TotalPages))]
+        [NotifyPropertyChangedFor(nameof(StartEntry))]
+        [NotifyPropertyChangedFor(nameof(EndEntry))]
+        private int _pageSize = 15; // Matches '15' entries selected default from your image
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(StartEntry))]
+        [NotifyPropertyChangedFor(nameof(EndEntry))]
+        private int _currentPage = 1;
+
+        // 2. Computed Read-Only Layout Parameters
+        public int TotalPages => (int)Math.Ceiling((double)TotalEntries / PageSize);
+        public int StartEntry => TotalEntries == 0 ? 0 : ((CurrentPage - 1) * PageSize) + 1;
+        public int EndEntry => Math.Min(CurrentPage * PageSize, TotalEntries);
+
+        [ObservableProperty] private ObservableCollection<PageItem> _pageItemsCollection = new();
+        public ObservableCollection<int> PageSizeOptions { get; } = new() { 10, 15, 25, 50, 100 };
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(BulkDeleteCommand))]
@@ -67,7 +94,9 @@ namespace CallMan.ViewModels
             _productService = productService;
             _orderService = orderService;
             _locationService = locationService;
-            _ = LoadInitialDataAsync();
+            PageSize = 10;
+            CurrentPage = 1;
+            Task.Run(async () => await LoadInitialDataAsync());
         }
 
         private async Task LoadInitialDataAsync()
@@ -81,23 +110,48 @@ namespace CallMan.ViewModels
 
             CustomerStats = await _service.GetCustomerFinancialSummaryAsync(1);
 
-            if (_isInitialized) return;
-            var data = await _service.GetMaturedLedgerAsync();
+            // 1. Calculate the starting position offset row boundary point
+            int calculatedOffset = (CurrentPage - 1) * PageSize;
 
-            if (_isInitialized) return;
-            var list = new ObservableCollection<Lead>(data);
+            try
+            {
+                if (_isInitialized) return;
+                // 2. Request the paged payload data block over the active database factory 
+                var (leadsList, totalCount) = await _service.GetMaturedLedgerPagedAsync(PageSize, calculatedOffset);
 
-            TotalOutstanding = list.Sum(x => x.TotalBalanceDue);
+                if (_isInitialized) return;
+                // 3. Update the tracking variable so the view dynamically computes the footer count text strings
+                TotalEntries = totalCount;
 
-            _leadsCollection = CollectionViewSource.GetDefaultView(list);
+                int runningSerialNumber = calculatedOffset + 1;
+                foreach (var lead in leadsList)
+                {
+                    lead.SerialNumber = runningSerialNumber++;
+                }
 
-            // 4. Re-apply your search filter logic
-            _leadsCollection.Filter = FilterLeads;
+                // 4. Repopulate the data collection array cleanly inside the UI grid thread
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    var list = new ObservableCollection<Lead>(leadsList);
+                    TotalOutstanding = list.Sum(x => x.TotalBalanceDue);                    
 
-            // 5. Notify the UI to refresh the table
-            OnPropertyChanged(nameof(LeadsCollection));
+                    /// 3. Update the CollectionView (the actual source for your DataGrid)
+                    _leadsCollection = CollectionViewSource.GetDefaultView(list);
 
-            OnPropertyChanged(nameof(TotalOutstanding));
+                    // 4. Re-apply your search filter logic
+                    _leadsCollection.Filter = FilterLeads;
+
+                    // 5. Notify the UI to refresh the table
+                    OnPropertyChanged(nameof(LeadsCollection));
+                    OnPropertyChanged(nameof(TotalOutstanding));
+                    UpdatePaginationStripUI(); // Ensure pagination button matrix regenerates bounds accurately
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Database execution pipeline error encountered: {ex.Message}",
+                    "Query Exception Handled", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Error);
+            }           
         }
 
         [RelayCommand]
@@ -105,6 +159,19 @@ namespace CallMan.ViewModels
         {
             _isInitialized = false; // Reset flag to allow complete reload
             await LoadInitialDataAsync();
+        }
+
+        partial void OnCurrentPageChanged(int value)
+        {
+            UpdatePaginationStripUI();
+            _ = LoadData(); // Automatically trigger data fetch when user clicks a page number
+        }
+
+        partial void OnPageSizeChanged(int value)
+        {
+            CurrentPage = 1; // Reset back to page 1 whenever page sizing limits alter
+            UpdatePaginationStripUI();
+            _ = LoadData(); // Automatically fetch data with new size parameters
         }
 
         // This logic runs every time SearchText changes
@@ -513,6 +580,76 @@ namespace CallMan.ViewModels
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Advanced Sliding Window Logic: Generates the exact text strip [1][2][3]...[98][99] natively
+        /// </summary>
+        private void UpdatePaginationStripUI()
+        {
+            PageItemsCollection.Clear();
+            int total = TotalPages;
+            int current = CurrentPage;
+
+            if (total <= 0) return;
+
+            // Always add page 1 element
+            PageItemsCollection.Add(new PageItem { DisplayText = "1", PageNumber = 1, IsSelected = current == 1, IsClickable = true });
+
+            int startPage = Math.Max(2, current - 2);
+            int endPage = Math.Min(total - 1, current + 2);
+
+            // Add ellipses after page 1 if required
+            if (startPage > 2)
+            {
+                PageItemsCollection.Add(new PageItem { DisplayText = "...", IsClickable = false });
+            }
+
+            // Generate intermediate contextual pages loop
+            for (int i = startPage; i <= endPage; i++)
+            {
+                PageItemsCollection.Add(new PageItem { DisplayText = i.ToString(), PageNumber = i, IsSelected = current == i, IsClickable = true });
+            }
+
+            // Add trailing ellipses before the final page if required
+            if (endPage < total - 1)
+            {
+                PageItemsCollection.Add(new PageItem { DisplayText = "...", IsClickable = false });
+            }
+
+            // Always add the absolute final page element if more than 1 page exists
+            if (total > 1)
+            {
+                PageItemsCollection.Add(new PageItem { DisplayText = total.ToString(), PageNumber = total, IsSelected = current == total, IsClickable = true });
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateToSelectedPage(PageItem targetItem)
+        {
+            if (targetItem != null && targetItem.IsClickable && !targetItem.IsSelected)
+            {
+                CurrentPage = targetItem.PageNumber;
+                // Task.Run(async () => await LoadLeadsData()); // Executes database extraction
+            }
+        }
+
+        [RelayCommand]
+        private void NavigateNext()
+        {
+            if (CurrentPage < TotalPages)
+            {
+                CurrentPage++;
+            }
+        }
+
+        [RelayCommand]
+        private void NavigatePrevious()
+        {
+            if (CurrentPage > 1)
+            {
+                CurrentPage--;
             }
         }
     }

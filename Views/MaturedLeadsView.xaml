@@ -18,6 +18,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <Border Grid.Row="0" Margin="0,0,0,15" Padding="10" Background="White" CornerRadius="8">
@@ -147,54 +148,29 @@
             <DataGrid.Columns>
                 <DataGridTemplateColumn Width="60">
                     <DataGridTemplateColumn.Header>
-                        <CheckBox Command="{Binding DataContext.ToggleSelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                        <CheckBox Command="{Binding DataContext.ToggleSelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                          CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
                     </DataGridTemplateColumn.Header>
-
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Grid Background="Transparent" VerticalAlignment="Center" HorizontalAlignment="Center" >
+                            <Grid Background="Transparent" VerticalAlignment="Center" HorizontalAlignment="Center">
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" SharedSizeGroup="SrNoGroup"/>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
                                 <TextBlock x:Name="TxtSerialNumber" 
+                                   Text="{Binding SerialNumber}" 
                                    VerticalAlignment="Center" 
-                                   HorizontalAlignment="Center"                                   
-                                   Foreground="DarkSlateGray">
-                                    <TextBlock.Text>
-                                        <Binding RelativeSource="{RelativeSource AncestorType=DataGridRow}" 
-                                         Path="(DataGrid.AlternationIndex)" 
-                                         Converter="{StaticResource IndexToNumberConverter}"/>
-                                    </TextBlock.Text>
-                                </TextBlock>
+                                   HorizontalAlignment="Center" 
+                                   Foreground="DarkSlateGray"/>
 
-                                <CheckBox Grid.Row="1" 
-                                  IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}"
-                                  HorizontalAlignment="Center" 
-                                  VerticalAlignment="Center" Click="CheckBox_Click"/>
+                                <CheckBox Grid.Row="1" IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}" 
+                                  HorizontalAlignment="Center" VerticalAlignment="Center" Click="CheckBox_Click"/>
                             </Grid>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <!--<DataGridTextColumn Header="#" Width="50">
-                    <DataGridTextColumn.Binding>
-                        <Binding Path="(ItemsControl.AlternationIndex)" RelativeSource="{RelativeSource AncestorType=DataGridRow}">
-                            --><!-- We use a converter to start counting from 1 instead of 0 --><!--
-                            <Binding.Converter>
-                                <conv:IndexToNumberConverter/>
-                            </Binding.Converter>
-                        </Binding>
-                    </DataGridTextColumn.Binding>
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="FontWeight" Value="Bold"/>
-                            <Setter Property="Foreground" Value="Gray"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>-->
                 <DataGridTemplateColumn Header="Name" MinWidth="170" MaxWidth="200" IsReadOnly="True">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -440,7 +416,83 @@
                 </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
-        <Grid Grid.RowSpan="3">
+
+        <Grid Grid.Row="3" Background="#F8FAFC" Margin="5,10,5,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <!-- Summary meta data context row info string -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Combobox entry dropdown configuration selector -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Dynamic page elements control switch layout box -->
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Component Block Summary Context -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Showing " Foreground="#64748B" FontSize="13"/>
+                <TextBlock Text="{Binding StartEntry}" FontWeight="Bold" Foreground="#334155" FontSize="13"/>
+                <TextBlock Text=" to " Foreground="#64748B" FontSize="13"/>
+                <TextBlock Text="{Binding EndEntry}" FontWeight="Bold" Foreground="#334155" FontSize="13"/>
+                <TextBlock Text=" of " Foreground="#64748B" FontSize="13"/>
+                <TextBlock Text="{Binding TotalEntries}" FontWeight="Bold" Foreground="#334155" FontSize="13"/>
+                <TextBlock Text=" entries" Foreground="#64748B" FontSize="13"/>
+            </StackPanel>
+
+            <!-- Center Component Block Items Density Dropdown Config -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="30,0">
+                <TextBlock Text="Show " Foreground="#64748B" FontSize="13" VerticalAlignment="Center"/>
+                <ComboBox ItemsSource="{Binding PageSizeOptions}" SelectedItem="{Binding PageSize, Mode=TwoWay}"
+      Width="65" Height="28" Padding="6,2" FontSize="13" FontWeight="Bold" Background="White" BorderBrush="#CBD5E1" 
+      HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                <TextBlock Text=" entries" Foreground="#64748B" FontSize="13" VerticalAlignment="Center" Margin="6,0,0,0"/>
+            </StackPanel>
+
+            <!-- Right Component Block Context Routing Index Trays Buttons -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button Content="Previous" Command="{Binding NavigatePreviousCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" 
+    Height="32" Padding="12,0" BorderBrush="#E2E8F0" Foreground="#475569" Background="White" FontSize="13"/>
+
+                <ItemsControl ItemsSource="{Binding PageItemsCollection}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding DisplayText}" Command="{Binding DataContext.NavigateToSelectedPageCommand, RelativeSource={RelativeSource AncestorType=Grid}}" CommandParameter="{Binding}"
+                Height="32" Width="36" Padding="0" FontSize="13" BorderThickness="1,1,0,1">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                                        <Setter Property="Background" Value="White"/>
+                                        <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                        <Setter Property="Foreground" Value="#1794A1"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                <Setter Property="Background" Value="#1794A1"/>
+                                                <Setter Property="BorderBrush" Value="#1794A1"/>
+                                                <Setter Property="Foreground" Value="White"/>
+                                                <Setter Property="FontWeight" Value="Black"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsClickable}" Value="False">
+                                                <Setter Property="IsEnabled" Value="False"/>
+                                                <Setter Property="Background" Value="#F8FAFC"/>
+                                                <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                                <Setter Property="Foreground" Value="#94A3B8"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Button Content="Next" Command="{Binding NavigateNextCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" 
+                Height="32" Padding="12,0" BorderBrush="#E2E8F0" Foreground="#475569" Background="White" FontSize="13" Margin="-1,0,0,0"/>
+            </StackPanel>
+        </Grid>
+        <Grid Grid.RowSpan="4">
             <materialDesign:DialogHost IsOpen="{Binding IsChangeLeadHolderOpen}" CloseOnClickAway="True">
                 <materialDesign:DialogHost.DialogContent>
                     <Border Width="420" Padding="24" Background="White" CornerRadius="8">

@@ -205,7 +205,106 @@ namespace CallMan.Services
             using var db = _context.CreateConnection();
             string sql = "SELECT * FROM LeadHistory WHERE LeadId = @leadId ORDER BY LogDate DESC";
             return await db.QueryAsync<LeadHistoryEntry>(sql, new { leadId });
-        }        
+        }
+
+        /// <summary>
+        /// Highly optimized database pagination system. Fetches page data and total row counts 
+        /// cleanly in a fast, single-connection execution pass.
+        /// </summary>
+        public async Task<(IEnumerable<Lead> Leads, int TotalCount)> GetLeadsPagedAsync(int limit, int offset)
+        {
+            using var db = _context.CreateConnection();
+
+            // 1. First execution pass: Instantly extract total counts for pagination array mappings
+            const string countSql = "SELECT COUNT(*) FROM Leads;";
+            int totalCount = await db.ExecuteScalarAsync<int>(countSql);
+
+            // If there are zero entries overall, short-circuit out to save computing overhead
+            if (totalCount == 0)
+            {
+                return (Enumerable.Empty<Lead>(), 0);
+            }
+
+            // 2. Second execution pass: Fetch the specific page slice using pre-aggregated joins
+            string dataSql = @"
+                SELECT 
+                    l.*, 
+                    COALESCE(hc.HistCount, 0) AS HistoryCount,
+                    COALESCE(oc.OrdCount, 0) AS OrderCount,
+                    h.*, 
+                    d.*
+                FROM (
+                    -- CRITICAL FIX: Limit the unique core Leads FIRST before running any row-multiplying joins
+                    SELECT * FROM Leads                      
+                    ORDER BY LeadId DESC 
+                    LIMIT @Limit OFFSET @Offset
+                ) l
+    
+                -- Now safely join histories and divisions without losing your page size target count
+                LEFT JOIN (
+                    SELECT lh.* FROM LeadHistory lh
+                    INNER JOIN (
+                        SELECT LeadId, MAX(HistoryId) as MaxId 
+                        FROM LeadHistory 
+                        GROUP BY LeadId
+                    ) latest ON lh.HistoryId = latest.MaxId
+                ) h ON l.LeadId = h.LeadId
+    
+                LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId 
+                LEFT JOIN Divisions d ON ld.DivisionId = d.Id
+    
+                LEFT JOIN (
+                    SELECT LeadId, COUNT(*) - 1 AS HistCount FROM LeadHistory GROUP BY LeadId
+                ) hc ON l.LeadId = hc.LeadId
+    
+                LEFT JOIN (
+                    SELECT LeadId, COUNT(*) AS OrdCount FROM Orders GROUP BY LeadId
+                ) oc ON l.LeadId = oc.LeadId
+    
+                ORDER BY l.LeadId DESC;";
+
+            var leadMap = new Dictionary<int, Lead>();
+
+            await db.QueryAsync<Lead, LeadHistoryEntry, Division, Lead>(
+                dataSql,
+                (lead, history, division) =>
+                {
+                    if (!leadMap.TryGetValue(lead.LeadId, out var currentLead))
+                    {
+                        currentLead = lead;
+                        currentLead.AssignedDivisions = new ObservableCollection<Division>();
+                        currentLead.LatestUpdate = history;
+
+                        // Localized dynamic string conversions run only once per record entry
+                        if (!string.IsNullOrEmpty(currentLead.MetadataJson))
+                        {
+                            currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson)
+                                                       ?? new Dictionary<string, string>();
+                        }
+
+                        if (!string.IsNullOrEmpty(currentLead.LabelsJson))
+                        {
+                            currentLead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(currentLead.LabelsJson)
+                                                       ?? new ObservableCollection<string>();
+                        }
+
+                        leadMap.Add(currentLead.LeadId, currentLead);
+                    }
+
+                    // Append divisions maps cleanly on joint duplications steps
+                    if (division != null && !currentLead.AssignedDivisions.Any(x => x.Id == division.Id))
+                    {
+                        currentLead.AssignedDivisions.Add(division);
+                    }
+
+                    return currentLead;
+                },
+                new { Limit = limit, Offset = offset },
+                splitOn: "HistoryId,Id"
+            );
+
+            return (leadMap.Values, totalCount);
+        }
 
         public async Task<IEnumerable<Lead>> GetAllLeadsWithLatestUpdateAsync()
         {
@@ -437,61 +536,222 @@ ORDER BY l.LeadId DESC;";
             }
         }
 
-        // Get all Matured Leads with calculated totals
         public async Task<IEnumerable<Lead>> GetMaturedLedgerAsync()
+
         {
+
             using var db = _context.CreateConnection();
+
             var leadMap = new Dictionary<int, Lead>();
 
+
+
             string sql = @"SELECT l.*, 
+
             (SELECT COALESCE(SUM(TotalAmount), 0) FROM Orders WHERE LeadId = l.LeadId) as TotalOrderAmount,
+
             (SELECT COALESCE(SUM(AmountReceived), 0) FROM Payments WHERE LeadId = l.LeadId) as TotalPaidAmount,
-(SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
-(SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) as OrderCount,
-h.*, d.*
-            FROM Leads l  
-LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
-LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
-LEFT JOIN Divisions d ON ld.DivisionId = d.Id
-        WHERE l.Status = 'Matured' AND h.HistoryId = (
-            SELECT MAX(HistoryId) 
-            FROM LeadHistory 
-            WHERE LeadId = l.LeadId
-        ) ORDER BY l.LeadId DESC;";
+
+            (SELECT COUNT(*) FROM LeadHistory WHERE LeadId = l.LeadId) - 1 as HistoryCount,
+
+                (SELECT COUNT(*) FROM Orders WHERE LeadId = l.LeadId) as OrderCount,
+
+                h.*, d.*
+
+                            FROM Leads l  
+
+                LEFT JOIN LeadHistory h ON l.LeadId = h.LeadId
+
+                LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId
+
+                LEFT JOIN Divisions d ON ld.DivisionId = d.Id
+
+                        WHERE l.Status = 'Matured' AND h.HistoryId = (
+
+                            SELECT MAX(HistoryId) 
+
+                            FROM LeadHistory 
+
+                            WHERE LeadId = l.LeadId
+
+                        ) ORDER BY l.LeadId DESC;";
+
             await db.QueryAsync<Lead, LeadHistoryEntry, Division, Lead>(sql, (lead, history, division) =>
+
             {
+
                 // 1. If lead isn't in our map, add it
+
                 if (!leadMap.TryGetValue(lead.LeadId, out var currentLead))
+
                 {
+
                     currentLead = lead;
+
                     currentLead.AssignedDivisions = new ObservableCollection<Division>();
+
                     currentLead.LatestUpdate = history;
 
+
+
                     // Deserialize JSON metadata if present
+
                     if (!string.IsNullOrEmpty(currentLead.MetadataJson))
+
                     {
+
                         currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson);
+
                     }
+
+
 
                     if (!string.IsNullOrEmpty(currentLead.LabelsJson))
+
                     {
+
                         currentLead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(currentLead.LabelsJson)
+
                                            ?? new ObservableCollection<string>();
+
                     }
 
+
+
                     leadMap.Add(currentLead.LeadId, currentLead);
+
                 }
+
+
 
                 // 2. Add the division from this specific row to the existing lead's collection
+
                 if (division != null && !currentLead.AssignedDivisions.Any(x => x.Id == division.Id))
+
                 {
+
                     currentLead.AssignedDivisions.Add(division);
+
                 }
 
+
+
                 return currentLead;
+
             }, splitOn: "HistoryId,Id");
 
+
+
             return leadMap.Values;
+
+        }
+
+        /// <summary>
+        /// Fetches a high-performance paginated ledger of matured leads (Customers),
+        /// including optimized pre-aggregated order totals and payment histories.
+        /// </summary>
+        public async Task<(IEnumerable<Lead> Customers, int TotalCount)> GetMaturedLedgerPagedAsync(int limit, int offset)
+        {
+            using var db = _context.CreateConnection();
+
+            // 1. Instantly extract grand total counts of matured leads to map pagination numbers
+            const string countSql = "SELECT COUNT(*) FROM Leads WHERE Status = 'Matured';";
+            int totalCount = await db.ExecuteScalarAsync<int>(countSql);
+
+            if (totalCount == 0)
+            {
+                return (Enumerable.Empty<Lead>(), 0);
+            }
+
+            // 2. High-performance single-pass multi-mapping database query
+            string dataSql = @"
+                SELECT 
+                    l.*, 
+                    COALESCE(am.TotalOrderAmount, 0) AS TotalOrderAmount,
+                    COALESCE(pm.TotalPaidAmount, 0) AS TotalPaidAmount,
+                    COALESCE(hc.HistCount, 0) AS HistoryCount,
+                    COALESCE(am.OrdCount, 0) AS OrderCount,
+                    h.*, 
+                    d.*
+                FROM (
+                    -- CRITICAL FIX: Limit core items FIRST to protect page-size boundaries
+                    SELECT * FROM Leads 
+                    WHERE Status = 'Matured'
+                    ORDER BY LeadId DESC
+                    LIMIT @Limit OFFSET @Offset
+                ) l
+                
+                -- Isolate the newest single history entry per record instantly
+                LEFT JOIN (
+                    SELECT lh.* FROM LeadHistory lh
+                    INNER JOIN (
+                        SELECT LeadId, MAX(HistoryId) as MaxId 
+                        FROM LeadHistory 
+                        GROUP BY LeadId
+                    ) latest ON lh.HistoryId = latest.MaxId
+                ) h ON l.LeadId = h.LeadId
+                
+                -- Map divisions lookup relationships
+                LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId 
+                LEFT JOIN Divisions d ON ld.DivisionId = d.Id
+                
+                -- Fast single-pass pre-calculated aggregations
+                LEFT JOIN (
+                    SELECT LeadId, COUNT(*) - 1 AS HistCount FROM LeadHistory GROUP BY LeadId
+                ) hc ON l.LeadId = hc.LeadId
+                
+                LEFT JOIN (
+                    SELECT LeadId, SUM(TotalAmount) AS TotalOrderAmount, COUNT(*) AS OrdCount 
+                    FROM Orders 
+                    GROUP BY LeadId
+                ) am ON l.LeadId = am.LeadId
+                
+                LEFT JOIN (
+                    SELECT LeadId, SUM(AmountReceived) AS TotalPaidAmount FROM Payments GROUP BY LeadId
+                ) pm ON l.LeadId = pm.LeadId
+                
+                ORDER BY l.LeadId DESC;";
+
+            var leadMap = new Dictionary<int, Lead>();
+
+            await db.QueryAsync<Lead, LeadHistoryEntry, Division, Lead>(
+                dataSql,
+                (lead, history, division) =>
+                {
+                    if (!leadMap.TryGetValue(lead.LeadId, out var currentLead))
+                    {
+                        currentLead = lead;
+                        currentLead.AssignedDivisions = new ObservableCollection<Division>();
+                        currentLead.LatestUpdate = history;
+
+                        // Safe JSON string conversions executed strictly once per record item
+                        if (!string.IsNullOrEmpty(currentLead.MetadataJson))
+                        {
+                            currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson);
+                        }
+
+                        if (!string.IsNullOrEmpty(currentLead.LabelsJson))
+                        {
+                            currentLead.LeadLabels = JsonSerializer.Deserialize<ObservableCollection<string>>(currentLead.LabelsJson)
+                                                       ?? new ObservableCollection<string>();
+                        }
+
+                        leadMap.Add(currentLead.LeadId, currentLead);
+                    }
+
+                    // Append running division mappings cleanly
+                    if (division != null && !currentLead.AssignedDivisions.Any(x => x.Id == division.Id))
+                    {
+                        currentLead.AssignedDivisions.Add(division);
+                    }
+
+                    return currentLead;
+                },
+                new { Limit = limit, Offset = offset },
+                splitOn: "HistoryId,Id"
+            );
+
+            return (leadMap.Values, totalCount);
         }
 
         // Record a payment and auto-update Order status

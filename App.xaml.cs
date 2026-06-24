@@ -129,6 +129,7 @@ namespace CallMan
             services.AddSingleton<E2EReportEngine>();
             services.AddSingleton<CustomFieldService>();
             services.AddSingleton<LicenseService>();
+            services.AddSingleton<BackupService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();

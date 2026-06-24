@@ -1,0 +1,95 @@
+﻿<Window x:Class="CallMan.Dialogs.BackupConfirmationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CallMan.Dialogs"
+        mc:Ignorable="d"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Exit SofricONE" 
+        Width="480" 
+        SizeToContent="Height" WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize" WindowStyle="None"
+        AllowsTransparency="True" Background="Transparent">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+    </Window.Resources>
+
+    <Border Background="White" CornerRadius="12" BorderBrush="#E2E8F0" BorderThickness="1" Margin="2">
+        <Grid Margin="28,24,28,24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                    <materialDesign:PackIcon Kind="DatabaseRefresh" Foreground="#1794A1" Width="24" Height="24" VerticalAlignment="Center"/>
+                    <TextBlock Text="Database Backup Options" FontSize="16" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                </StackPanel>
+                <TextBlock Text="Would you like to secure a system database backup before shutting down the software application terminal?" 
+                           FontSize="13" Foreground="#64748B" TextWrapping="Wrap" LineHeight="18"/>
+            </StackPanel>
+
+            <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="8" Padding="14,10" Margin="0,18,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <materialDesign:PackIcon Kind="ClockOutline" Foreground="#64748B" VerticalAlignment="Center" Width="16" Height="16" Grid.Column="0"/>
+                    <TextBlock FontSize="12" Foreground="#475569" VerticalAlignment="Center" Grid.Column="1" Margin="8,0,0,0" TextWrapping="Wrap">
+                        <Run Text="Last System Backup: " FontWeight="SemiBold"/>
+                        <Run x:Name="RunLastBackupDate" Text="Checking logs..." Foreground="#0F172A"/>
+                        <Run Text="   |   By User: " FontWeight="SemiBold"/>
+                        <Run x:Name="RunLastBackupUser" Text="..." Foreground="#1794A1" FontWeight="Bold"/>
+                    </TextBlock>
+                </Grid>
+            </Border>
+
+            <CheckBox x:Name="ChkSendEmail" Grid.Row="2" 
+                      Content="Send compressed backup archive via Cloud Email Sync" 
+                      FontWeight="SemiBold" Foreground="#475569" 
+                      VerticalAlignment="Center" Margin="2,18,0,0"
+                      Click="ChkSendEmail_Click"/>
+
+            <StackPanel Grid.Row="3" Margin="2,12,0,0" 
+                        Visibility="{Binding IsChecked, ElementName=ChkSendEmail, Converter={StaticResource BoolToVisConverter}}">
+                <TextBox x:Name="TxtTargetEmail" Height="38" Padding="10,0" VerticalContentAlignment="Center"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         materialDesign:HintAssist.Hint="Destination Backup Email Address.." 
+                         FontSize="13" Foreground="#1E293B"/>
+            </StackPanel>
+
+            <Grid Grid.Row="5" Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0" Content="Cancel" Click="Cancel_Click" 
+                        Style="{StaticResource MaterialDesignFlatButton}" Foreground="#94A3B8" FontWeight="SemiBold" Height="36" Padding="16,0"/>
+
+                <StackPanel Grid.Column="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Just Exit" Click="JustExit_Click" 
+                            Style="{StaticResource MaterialDesignFlatButton}" Foreground="#EF4444" FontWeight="SemiBold" Height="36" Padding="16,0" Margin="0,0,8,0"/>
+
+                    <Button Content="Backup &amp; Exit" Click="BackupAndExit_Click" 
+                            Background="#1794A1" BorderBrush="#1794A1" Foreground="White" FontWeight="Bold" Height="38" Padding="20,0">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="6"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

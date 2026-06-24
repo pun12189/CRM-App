@@ -1,8 +1,11 @@
 ﻿using CallMan.Data;
+using CallMan.Dialogs;
+using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Services;
 using CallMan.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -19,6 +22,8 @@ namespace CallMan
         private DispatcherTimer _clickResetTimer;
 
         private ToastPollingWorker? _bgToasterEngine;
+
+        private bool _isSafeToClose = false;
 
         public MainWindow(MainViewModel vm)
         {
@@ -139,6 +144,71 @@ namespace CallMan
                     Keyboard.ClearFocus();
                 }
             }
+        }
+
+        protected override async void OnClosing(CancelEventArgs e)
+        {
+            if (_isSafeToClose)
+            {
+                base.OnClosing(e);
+                return;
+            }
+
+            e.Cancel = true;
+
+            var backupService = App.ServiceProvider?.GetRequiredService<BackupService>();
+            var session = App.ServiceProvider?.GetRequiredService<IUserSession>();
+
+            DateTime? lastBackupDate = null;
+            string lastBackupUser = "None";
+            bool emailSettingsExist = false;
+
+            // Evaluate operational connectivity modes via Network interfaces & License states rules
+            bool isInternetAvailable = System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()
+                                       && CallMan.Core.LicenseManager.Current?.AreOnlineServicesAllowed == true;
+
+            if (backupService != null)
+            {
+                // Gather database log summaries and row verification checks simultaneously
+                var (date, user) = await backupService.GetLastBackupDetailsAsync();
+                lastBackupDate = date;
+                lastBackupUser = user;
+                emailSettingsExist = await backupService.CheckEmailSettingsExistAsync();
+            }
+
+            // Initialize custom modal window dialog pre-seeded with validation contexts
+            var dialog = new BackupConfirmationWindow(lastBackupDate, lastBackupUser, emailSettingsExist, isInternetAvailable) { Owner = this };
+            dialog.ShowDialog();
+
+            if (dialog.UserSelectedCancel)
+            {
+                return;
+            }
+
+            if (!dialog.UserSelectedBackup)
+            {
+                _isSafeToClose = true;
+                Application.Current.Shutdown();
+                return;
+            }
+
+            // Thread Affinity Extraction Fix: Extract standard primitives safely on the UI Thread first
+            bool shouldEmail = dialog.SendEmailChecked;
+            string destinationEmail = dialog.TargetEmailAddress;
+
+            this.Hide();
+
+            string currentUserName = session?.CurrentUser ?? "System Terminal";
+
+            if (backupService != null)
+            {
+                // Pass UI primitives into the background file-system streaming engine worker thread task
+                await Task.Run(async () =>
+                    await backupService.ProcessManualExitBackupAsync(currentUserName, shouldEmail, destinationEmail));
+            }
+
+            _isSafeToClose = true;
+            Application.Current.Shutdown();
         }
     }
 }

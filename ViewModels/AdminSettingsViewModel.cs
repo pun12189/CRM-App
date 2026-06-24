@@ -1,11 +1,15 @@
-﻿using CallMan.Services;
+﻿using CallMan.Dialogs;
+using CallMan.Models;
+using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Xml.Linq;
@@ -178,6 +182,62 @@ namespace CallMan.ViewModels
                     ? "Online Services Connectivity have been activated successfully."
                     : "Application switched to Offline Mode. External web services are now restricted.",
                 "Settings Updated", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        [RelayCommand]
+        private void ChangeDatabaseConfig()
+        {
+            // 1. Instantiate the setup window layout
+            var configWindow = new DbConfigurationWindow();
+
+            // 2. Extract the window's ViewModel to seed the current database values
+            if (configWindow.DataContext is DbConfigurationViewModel vm)
+            {
+                try
+                {
+                    // Read the active configuration file straight from the application folder
+                    string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dbconfig.json");
+
+                    if (File.Exists(configPath))
+                    {
+                        string rawJson = File.ReadAllText(configPath);
+                        var currentConfig = JsonSerializer.Deserialize<DbConfig>(rawJson);
+
+                        if (currentConfig != null)
+                        {
+                            // Populates the fields on the view automatically with their active settings
+                            vm.Config = currentConfig;
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // Soft landing fallback: if the file is corrupted, the viewmodel defaults take over
+                }
+            }
+
+            // 3. Display the populated window modal dialog frame
+            bool? dialogResult = configWindow.ShowDialog();
+
+            // 4. If the user completes the validation test execution run successfully
+            if (dialogResult == true)
+            {
+                MessageBox.Show(
+                    "Database routing configurations updated successfully!\n\n" +
+                    "TIJORI will now perform a graceful restart sequence to fully map your services to the new target server destination.",
+                    "Database Migrated", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                ExecuteGracefulSystemRestart();
+            }
+        }
+
+        private void ExecuteGracefulSystemRestart()
+        {
+            // Spawn a fresh process instance thread of the application executable
+            System.Diagnostics.Process.Start(Application.ResourceAssembly.Location);
+
+            // Terminate the current instance processes immediately
+            Application.Current.Shutdown();
         }
     }
 }

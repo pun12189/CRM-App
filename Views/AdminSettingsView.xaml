@@ -28,58 +28,96 @@
             <VirtualizingStackPanel Orientation="Vertical">
 
                 <materialDesign:Card Padding="20" Margin="5,0,5,16" Background="White" UniformCornerRadius="6">
-                    <materialDesign:Card.Style>
-                        <Style TargetType="materialDesign:Card">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </materialDesign:Card.Style>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                            <TextBlock Text="Network Connectivity Mode" FontSize="14" FontWeight="Bold" Foreground="#374151" HorizontalAlignment="Left"/>
-                            <TextBlock Text="Allows cloud communications like external webhook automations, email server syncing, and background notifications." 
-                                   FontSize="12" Foreground="#6B7280" Margin="0,4,0,0" TextWrapping="Wrap" HorizontalAlignment="Left"/>
-                            <TextBlock Text="⚠️ Keeping the software offline is highly recommended for isolated local office speeds." 
-                                   FontSize="11" FontWeight="SemiBold" Foreground="#EA580C" Margin="0,6,0,0" HorizontalAlignment="Left"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-
-                            <!-- Dynamic Status Label Text Indicator (Changes color and text reactively) -->
-                            <TextBlock Width="65" TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0" FontSize="12" FontWeight="Black">
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="4">
+                            <TextBlock FontSize="14" FontWeight="Bold" Foreground="#374151" HorizontalAlignment="Left">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
-                                        <!-- Default state when switch is unchecked -->
-                                        <Setter Property="Text" Value="OFFLINE"/>
-                                        <Setter Property="Foreground" Value="#6B7280"/>
+                                        <Setter Property="Text" Value="Network Connectivity Mode"/>
                                         <Style.Triggers>
-                                            <!-- Active state when switch is toggled to true -->
-                                            <DataTrigger Binding="{Binding ToggleOnlineServices}" Value="True">
-                                                <Setter Property="Text" Value="ONLINE"/>
-                                                <Setter Property="Foreground" Value="#1794A1"/>
+                                            <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
+                                                <Setter Property="Text" Value="Cloud Environment Mode"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </TextBlock.Style>
                             </TextBlock>
 
-                            <!-- Clean Switch Control without broken internal text constraints -->
+                            <TextBlock FontSize="12" Foreground="#6B7280" TextWrapping="Wrap" HorizontalAlignment="Left" Margin="0,4,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="Allows cloud communications like external webhook automations, email server syncing, and background notifications."/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
+                                                <Setter Property="Text" Value="TIJORI is running on an active cloud configuration environment. Core communications, webhooks, and live background synchronization pipelines are permanently operational."/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <TextBlock FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Left" Margin="0,6,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="⚠️ Keeping the software offline is highly recommended for isolated local office speeds."/>
+                                        <Setter Property="Foreground" Value="#EA580C"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
+                                                <Setter Property="Text" Value="✅ Cloud database synchronization pipelines are operating securely over a verified network connection."/>
+                                                <Setter Property="Foreground" Value="#16A34A"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <Button Command="{Binding ChangeDatabaseConfigCommand}" 
+                                Content="🔧 Change Database Server Configuration" 
+                                Style="{StaticResource MaterialDesignFlatButton}" 
+                                Foreground="#2563EB" FontSize="12" FontWeight="SemiBold" 
+                                HorizontalAlignment="Left" Margin="0,8,0,0" Padding="0" Height="24"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
+                            <TextBlock Width="65" TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0" FontSize="12" FontWeight="Black">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="OFFLINE"/>
+                                        <Setter Property="Foreground" Value="#6B7280"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ToggleOnlineServices}" Value="True">
+                                                <Setter Property="Text" Value="ONLINE"/>
+                                                <Setter Property="Foreground" Value="#1794A1"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
                             <ToggleButton Cursor="Hand" VerticalAlignment="Center"
-                              IsChecked="{Binding ToggleOnlineServices, Mode=TwoWay}"
-                              Command="{Binding UpdateOnlineServicesOptionCommand}"
-                              CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
-                              Style="{StaticResource MaterialDesignSwitchToggleButton}"
-                              ToolTip="Switch software modes between connected networks and completely local network layers."/>
+                                  IsChecked="{Binding ToggleOnlineServices, Mode=TwoWay}"
+                                  Command="{Binding UpdateOnlineServicesOptionCommand}"
+                                  CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
+                                  ToolTip="Switch software modes between connected networks and completely local network layers.">
+                                <ToggleButton.Style>
+                                    <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignSwitchToggleButton}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ToggleButton.Style>
+                            </ToggleButton>
                         </StackPanel>
                     </Grid>
                 </materialDesign:Card>

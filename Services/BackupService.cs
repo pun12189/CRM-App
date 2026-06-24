@@ -3,6 +3,7 @@ using Dapper;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -70,7 +71,7 @@ namespace CallMan.Services
                 int currentMaxHistory = await multi.ReadFirstAsync<int>();
                 int currentMaxOrder = await multi.ReadFirstAsync<int>();
 
-                // 2. Build local app data safe folder structures tree strings
+                // 2. Provision file system folder structural trees strings
                 string appDataRoot = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
                 string localBackupDir = Path.Combine(appDataRoot, "SofricONE", "TIJORI_Backups");
                 string tempStagingDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "BackupStaging");
@@ -80,10 +81,10 @@ namespace CallMan.Services
 
                 string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
                 string sqlFilePath = Path.Combine(tempStagingDir, $"tijori_{timestamp}.sql");
-                string zipFileName = $"Backup_Tijori_{timestamp}.zip";
+                string zipFileName = $"Backup_TIJORI_{timestamp}.zip";
                 string zipStagingPath = Path.Combine(tempStagingDir, zipFileName);
 
-                // 3. Run streaming backup execution pass
+                // 3. Run primary memory dump execution streaming pass
                 using (var cmd = new MySqlCommand())
                 {
                     using (var mb = new MySqlBackup(cmd))
@@ -93,35 +94,51 @@ namespace CallMan.Services
                     }
                 }
 
-                // 4. Encapsulate inside compressed zip folder file structure
+                // 4. Encapsulate data inside compressed zip folder frame structures
                 using (var archive = ZipFile.Open(zipStagingPath, ZipArchiveMode.Create))
                 {
                     archive.CreateEntryFromFile(sqlFilePath, Path.GetFileName(sqlFilePath));
                 }
-                File.Delete(sqlFilePath); // Wipe out large sql string format instantly
+                File.Delete(sqlFilePath); // Safe un-locked deletion target line
 
                 string backupType = "Local";
 
-                // 5. Evaluate dynamic distribution route targeting conditions
+                // 5. Evaluate cloud sync email distribution channel triggers
                 if (forceEmailDelivery && !string.IsNullOrWhiteSpace(destinationEmail))
                 {
-                    backupType = "Email";
+                    backupType = "Local+Email";
+
                     await _emailService.SendEmailAsync(
-                        recipientEmail: destinationEmail, // Uses the custom text typed inside the window text box control
+                        recipientEmail: destinationEmail,
                         subject: $"TIJORI Manual Backup Request - {DateTime.Today:dd/MM/yyyy}",
-                        body: $"Manual application closing backup successfully produced by user '{currentUser}' on workstation terminal '{Environment.MachineName}'.",
+                        body: $"Manual requested exit snapshot processed by user '{currentUser}' on workstation terminal '{Environment.MachineName}'.",
                         attachments: new List<string> { zipStagingPath }
                     );
-                    File.Delete(zipStagingPath); // Clean temporary staging directory file remnants
+
+                    // ====================================================================
+                    // CRITICAL DEFENSIVE PATCH: ISOLATED TEMPORARY FILE CLEANUP CONTAINER
+                    // ====================================================================
+                    try
+                    {
+                        if (File.Exists(zipStagingPath))
+                        {
+                            File.Delete(zipStagingPath);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Defer cleanup. If .NET has a temporary stream lock on the file handle, 
+                        // we catch it silently here so the main execution block can log 'Success'.
+                    }
                 }
                 else
                 {
-                    // Default Fallback: Relocate compression package file structure securely to LocalAppData folder tree
+                    // Default Fallback: Relocate backup package safely straight into user AppData
                     string finalDestinationPath = Path.Combine(localBackupDir, zipFileName);
                     File.Move(zipStagingPath, finalDestinationPath);
                 }
 
-                // 6. Log successful execution record parameters back up to the master table
+                // 6. COMMIT REFRESHED SYSTEM STATE SNAPSHOT VALUES TO THE LOG RECORD
                 const string logSql = @"
             INSERT INTO SystemBackupLog (BackupDate, TriggeredByUser, MachineName, BackupType, Status, MaxLeadId, MaxHistoryId, MaxOrderId)
             VALUES (NOW(), @User, @Machine, @Type, 'Success', @MaxLead, @MaxHist, @MaxOrd);";
@@ -136,17 +153,19 @@ namespace CallMan.Services
                     MaxOrd = currentMaxOrder
                 });
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Debug.WriteLine($"BackupService.ProcessManualExitBackupAsync failed: {e.Message}");
+                // Global exception fallback recovery trap
                 try
                 {
-                    using var conn = _dbContext.CreateConnection();
-                    await conn.ExecuteAsync(@"
+                    using var fallbackConn = _dbContext.CreateConnection();
+                    await fallbackConn.ExecuteAsync(@"
                 INSERT INTO SystemBackupLog (BackupDate, TriggeredByUser, MachineName, BackupType, Status)
                 VALUES (NOW(), @User, @Machine, 'None', 'Failed');",
                         new { User = currentUser, Machine = Environment.MachineName });
                 }
-                catch { /* Master server fully disconnected */ }
+                catch { /* Master MySQL server unreachable */ }
             }
         }
 

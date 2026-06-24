@@ -154,6 +154,9 @@ namespace CallMan.ViewModels
 
                     case DashboardTargetView.ProductsList:
                     case DashboardTargetView.CategoriesList:
+                    case DashboardTargetView.NewProducts:
+                    case DashboardTargetView.FastMovingProducts:
+                    case DashboardTargetView.SlowMovingProducts:
                     case DashboardTargetView.NearSkuProducts:
                     case DashboardTargetView.NearExpiryBatches:
                     case DashboardTargetView.SkippedProducts:

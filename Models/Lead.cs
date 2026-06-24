@@ -45,6 +45,36 @@ namespace CallMan.Models
         [ObservableProperty]
         private string? _leadHolder;
 
+        /// <summary>
+        /// Automatically extracts uppercase initials from the CustomerName for the UI Avatar.
+        /// e.g., "Ashish" -> "A", "Mr. Aggarwal" -> "MA", "Chhaya Medicine" -> "CM"
+        /// </summary>
+        public string Initials
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(CustomerName))
+                    return "??";
+
+                // Split name by spaces, filter out empty elements
+                var parts = CustomerName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                if (parts.Length == 1)
+                {
+                    // If single name, take first 2 letters if available, or just 1
+                    return parts[0].Length >= 2
+                        ? parts[0].Substring(0, 2).ToUpper()
+                        : parts[0].Substring(0, 1).ToUpper();
+                }
+
+                // If multiple names, take the first letter of the first name and first letter of the last name
+                string firstInitial = parts[0].Substring(0, 1);
+                string lastInitial = parts[parts.Length - 1].Substring(0, 1);
+
+                return (firstInitial + lastInitial).ToUpper();
+            }
+        }
+
         [NotMapped]
         [ObservableProperty]
         private decimal _totalOrderAmount;

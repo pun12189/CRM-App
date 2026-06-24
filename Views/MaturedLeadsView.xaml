@@ -30,7 +30,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Orientation="Horizontal" Grid.Column="0">
+                <StackPanel Orientation="Horizontal" Grid.Column="0" Visibility="Collapsed">
                     <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="Gray"/>
                     <Grid Width="250">
                         <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 

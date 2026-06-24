@@ -19,6 +19,7 @@ namespace CallMan.ViewModels
         private readonly WorkflowEngine _workflowEngine;
         private readonly SettingService _settingService;
         private readonly ProfileService _profileService;
+        private readonly CustomFieldService _customFieldService;
         [ObservableProperty]
         private Lead _newLead = new();
 
@@ -30,11 +31,15 @@ namespace CallMan.ViewModels
 
         private bool _isEditMode;
 
+        private bool _isCustomerMode;
+
         // Event to close the window from ViewModel
         public event Action<bool>? RequestClose;
 
         // Small helper class
         public record CustomFieldEntry(string Key, string Value);
+
+        [ObservableProperty] private ObservableCollection<CustomFieldInputValue> _dynamicLeadFields = new();
 
         // In ViewModel
         [ObservableProperty]
@@ -81,6 +86,10 @@ namespace CallMan.ViewModels
         [ObservableProperty] private bool _isEmailDuplicate;
         [ObservableProperty] private bool _isEmailMalformed;
 
+        private string _originalPhone = string.Empty;
+        private string _originalAltPhone = string.Empty;
+        private string _originalEmail = string.Empty;
+
         private bool _isProcessingPhoneUpdate;
 
         [ObservableProperty] private string _validationMessage = string.Empty;
@@ -92,12 +101,13 @@ namespace CallMan.ViewModels
         public record PincodeApiRoot(string Status, List<PostOfficeDetail> PostOffice);
         public record PostOfficeDetail(string Name, string District, string State, string Country);
 
-        public AddLeadDialogViewModel(LeadService leadService, IUserSession session, WorkflowEngine workflowEngine, SettingService settingService, ProfileService profileService)
+        public AddLeadDialogViewModel(LeadService leadService, IUserSession session, WorkflowEngine workflowEngine, SettingService settingService, ProfileService profileService, CustomFieldService customFieldService)
         {
             _leadService = leadService;
             _session = session;
             _isEditMode = false;
             _workflowEngine = workflowEngine;
+            _customFieldService = customFieldService;
             _settingService = settingService;
             _profileService = profileService;
             NewLead.Status = "New";
@@ -105,30 +115,52 @@ namespace CallMan.ViewModels
 
             NewLead.LeadHolder = _session.CurrentUser;
 
-            _ = LoadSettingsAsync();
+            _ = LoadSettingsAndCustomFieldsAsync();
         }
 
-        public void Initialize(Lead? existingLead, bool IsCustomer = false)
+        public async Task Initialize(Lead? existingLead, bool IsCustomer = false)
         {
             if (existingLead != null)
             {
-                NewLead = existingLead;
+                NewLead = existingLead;               
+
+                _originalPhone = existingLead.Phone ?? string.Empty;
+                _originalAltPhone = existingLead.AltPhone ?? string.Empty;
+                _originalEmail = existingLead.Email ?? string.Empty;
+
+                _isEditMode = true;
+
                 this.LeadPhone = existingLead.Phone;
                 this.LeadAltPhone = existingLead.AltPhone;
                 this.LeadPincode = existingLead.Pincode;
                 this.LeadTagId = existingLead.LeadTagId;
                 this.LeadSourceId = existingLead.LeadSourceId;
-                _isEditMode = true;
-                // Load address fields from existingLead if they aren't auto-bound
+                // Load address fields from existingLead if they aren't auto-bound                
+                var savedValues = await _leadService.GetCustomFieldValuesForLeadAsync(existingLead.LeadId, IsCustomer ? "Customer" : "Lead");
+                foreach (var inputField in DynamicLeadFields)
+                {
+                    if (savedValues.TryGetValue(inputField.FieldId, out var val))
+                    {
+                        inputField.FieldValue = val;
+
+                        // IF THE TYPE IS CALENDAR, POPULATE BOTH TRANSFORMS AUTOMATICALLY
+                        if (inputField.FieldType == "CalendarClock" && DateTime.TryParse(val, out var parsedDateTime))
+                        {
+                            inputField.SelectedDate = parsedDateTime.Date;
+                            inputField.SelectedTime = parsedDateTime;
+                        }
+                    }
+                }
             }
 
             if (IsCustomer)
             {
                 NewLead.Status = "Matured";
+                _isCustomerMode = true;
             }
         }
 
-        private async Task LoadSettingsAsync()
+        private async Task LoadSettingsAndCustomFieldsAsync()
         {
             // Assuming your DataService has methods to fetch these from Admin tables
             var sources = await _settingService.GetSettingsAsync("LeadSources");
@@ -136,10 +168,31 @@ namespace CallMan.ViewModels
             var labels = await _settingService.GetSettingsAsync("LeadLabels");
 
             DivisionList = new ObservableCollection<Division>(await _profileService.GetActiveDivisionsAsync());
-
             SourceList = new ObservableCollection<SettingItem>(sources);
             TagsList = new ObservableCollection<SettingItem>(tags);
             LabelsList = new ObservableCollection<SettingItem>(labels);
+            await GetCustomFields();
+        }
+
+        private async Task GetCustomFields()
+        {
+            // Fetch dynamic database configurations schemas matching this view target space
+            var fieldDefinitions = await _customFieldService.GetAllFieldsAsync();
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                DynamicLeadFields.Clear();
+                foreach (var f in fieldDefinitions.Where(x => _isCustomerMode ? x.IsVisibleInCustomer : x.IsVisibleInLead))
+                {
+                    DynamicLeadFields.Add(new CustomFieldInputValue
+                    {
+                        FieldId = f.FieldId,
+                        FieldName = f.FieldName,
+                        FieldType = f.FieldType,
+                        IsRequiredInLead = f.IsRequiredInLead,
+                        SeedValueOptionsList = f.SeedValueOptionsList ?? new ObservableCollection<string>()
+                    });
+                }
+            });
         }
 
         [RelayCommand]
@@ -178,8 +231,31 @@ namespace CallMan.ViewModels
                 return;
             }
 
+            bool validationFailed = false;
+            foreach (var inputField in DynamicLeadFields)
+            {
+                if (inputField.IsRequiredInLead && string.IsNullOrWhiteSpace(inputField.FieldValue))
+                {
+                    inputField.HasValidationError = true;
+                    inputField.ValidationErrorMessage = $"{inputField.FieldName} is mandatory.";
+                    validationFailed = true;
+                }
+                else
+                {
+                    inputField.HasValidationError = false;
+                }
+            }
+
+            if (validationFailed)
+            {
+                ValidationMessage = "Please complete all required custom validation properties before submitting.";
+                return;
+            }
+
             try
             {
+                int targetLeadId = NewLead.LeadId;
+
                 if (_isEditMode)
                 {
                     await _leadService.UpdateLeadAsync(NewLead);
@@ -188,19 +264,21 @@ namespace CallMan.ViewModels
                 {
                     var historyEntry = new LeadHistoryEntry
                     {
-                        Message = "New Lead Added",
-                        Content = $"Lead '{NewLead.CustomerName}' created.",
-                        UpdatedByContent = "added a new lead",
+                        Message = _isCustomerMode ? "New Customer Added" : "New Lead Added",
+                        Content = _isCustomerMode ? $"Customer '{NewLead.CustomerName}' created." : $"Lead '{NewLead.CustomerName}' created.",
+                        UpdatedByContent = _isCustomerMode ? "added a new customer" : "added a new lead",
                         NextFollowUpDate = DateTime.Now,
                         UpdatedBy = _session.CurrentUser,
                         LogDate = DateTime.Now,
                         IsPriority = false
                     };
 
-                    int newLeadId = await _leadService.SaveLeadAsync(NewLead, historyEntry, _session.CurrentUser);
-                    await _workflowEngine.EnqueueEventAsync("OnLeadCreated", newLeadId, "Lead");
-                }               
+                    targetLeadId = await _leadService.SaveLeadAsync(NewLead, historyEntry, _session.CurrentUser);
+                    await _workflowEngine.EnqueueEventAsync("OnLeadCreated", targetLeadId, "Lead");                    
+                }
 
+                var valuesPayload = DynamicLeadFields.Select(f => new KeyValuePair<int, string>(f.FieldId, f.FieldValue ?? string.Empty));
+                await _leadService.SaveLeadCustomFieldValuesAsync(targetLeadId, valuesPayload, _isCustomerMode ? "Customer" : "Lead");
                 // Close window with 'True' result
                 RequestClose?.Invoke(true);
             }
@@ -337,7 +415,7 @@ namespace CallMan.ViewModels
                 string formattedResult = ValidateAndFormatGlobalNumber(value, "IN");
 
                 // Guard Condition: Only update properties if the new format actually differs
-                if (formattedResult != value)
+                if (formattedResult != value || formattedResult != NewLead.Phone)
                 {
                     try
                     {
@@ -379,7 +457,7 @@ namespace CallMan.ViewModels
                 string formattedResult = ValidateAndFormatGlobalNumber(value, "IN");
 
                 // Guard Condition: Only update properties if the new format actually differs
-                if (formattedResult != value)
+                if (formattedResult != value || formattedResult != NewLead.AltPhone)
                 {
                     try
                     {
@@ -467,6 +545,25 @@ namespace CallMan.ViewModels
         private async Task VerifyDuplicateFieldAsync(string columnName, string columnValue, bool isAlt)
         {
             if (string.IsNullOrWhiteSpace(columnValue) || columnValue.Contains("[INVALID]")) return;
+
+            if (_isEditMode)
+            {
+                if (columnName == "Phone" && columnValue == _originalPhone)
+                {
+                    App.Current.Dispatcher.Invoke(() => { IsPhoneDuplicate = false; EvaluateMasterValidationMessage(); });
+                    return;
+                }
+                if (columnName == "AltPhone" && columnValue == _originalAltPhone)
+                {
+                    App.Current.Dispatcher.Invoke(() => { IsAltPhoneDuplicate = false; EvaluateMasterValidationMessage(); });
+                    return;
+                }
+                if (columnName == "Email" && columnValue == _originalEmail)
+                {
+                    App.Current.Dispatcher.Invoke(() => { IsEmailDuplicate = false; EvaluateMasterValidationMessage(); });
+                    return;
+                }
+            }
 
             // Check against database index rules
             bool exists = await _leadService.CheckDuplicateFieldAsync(columnName, columnValue, NewLead.LeadId);

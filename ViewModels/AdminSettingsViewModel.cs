@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CallMan.Services;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Xml.Linq;
 
 namespace CallMan.ViewModels
@@ -14,8 +16,13 @@ namespace CallMan.ViewModels
     {
         private readonly IServiceProvider _serviceProvider;
 
+        private readonly LicenseService _licenseService;
+
         [ObservableProperty] private object? _currentSettingView;
         [ObservableProperty] private bool _isMainGridVisible = true;
+
+        [ObservableProperty] private bool _toggleOnlineServices;
+        [ObservableProperty] private bool _isToggleVisible;
 
         private int _openExpanderIndex = 1; // -1 means all are closed
 
@@ -40,9 +47,13 @@ namespace CallMan.ViewModels
         public bool IsExpander3Open => OpenExpanderIndex == 3;
         public bool IsExpander4Open => OpenExpanderIndex == 4;
 
-        public AdminSettingsViewModel(IServiceProvider serviceProvider)
+        public AdminSettingsViewModel(IServiceProvider serviceProvider, LicenseService licenseService)
         {
             _serviceProvider = serviceProvider;
+            _licenseService = licenseService;
+
+            ToggleOnlineServices = Core.LicenseManager.Current.IsOnlineServicesEnabled;
+            IsToggleVisible = Core.LicenseManager.Current.IsLocalDatabase;
         }
 
         [RelayCommand]
@@ -63,16 +74,51 @@ namespace CallMan.ViewModels
                 case "OrderStages":
                     CurrentSettingView = _serviceProvider.GetRequiredService<OrderStagesViewModel>();
                     break;
+                case "CustomFields":
+                    CurrentSettingView = _serviceProvider.GetRequiredService<CustomFieldsViewModel>();
+                    break;
                 case "Departments":
                     CurrentSettingView = _serviceProvider.GetRequiredService<DepartmentsViewModel>();
                     break;
                 case "Logs":
                     CurrentSettingView = _serviceProvider.GetRequiredService<LoginLogsViewModel>();
                     break;
+                case "Whatsapp":
+                case "CallMan":
+                case "ECom":
+                case "MargTally":
+                    if (!Core.LicenseManager.Current.AreOnlineServicesAllowed)
+                    {
+                        MessageBox.Show(
+                            "This operation requires online communication access permissions.\n\n" +
+                            "Please activate your product license and enable 'Online Services' inside the Admin Settings dashboard configuration layout panel.",
+                            "Action Restricted", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        BackToGrid();
+                        return;
+                    }
+                    break;
                 case "Email":
+                    if (!Core.LicenseManager.Current.AreOnlineServicesAllowed)
+                    {
+                        MessageBox.Show(
+                            "This operation requires online communication access permissions.\n\n" +
+                            "Please activate your product license and enable 'Online Services' inside the Admin Settings dashboard configuration layout panel.",
+                            "Action Restricted", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        BackToGrid();
+                        return;
+                    }
                     CurrentSettingView = _serviceProvider.GetRequiredService<EmailSettingsViewModel>();
                     break;
                 case "Workflows":
+                    if (!CallMan.Core.LicenseManager.Current.AreOnlineServicesAllowed)
+                    {
+                        MessageBox.Show(
+                            "This operation requires online communication access permissions.\n\n" +
+                            "Please activate your product license and enable 'Online Services' inside the Admin Settings dashboard configuration layout panel.",
+                            "Action Restricted", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        BackToGrid();
+                        return;
+                    }
                     CurrentSettingView = _serviceProvider.GetRequiredService<WorkflowViewModel>();
                     break;
                 case "Dead Reasons":                     
@@ -115,6 +161,23 @@ namespace CallMan.ViewModels
 
             // Set it as the current view
             CurrentSettingView = genericVM;
+        }
+
+        [RelayCommand]
+        private async Task UpdateOnlineServicesOption(bool isChecked)
+        {
+            // 1. Commit the configuration change over the LAN instance registry
+            await _licenseService.SaveOnlineServicesToggleStateAsync(isChecked);
+
+            // 2. Force an immediate reload onto the shared in-memory manager
+            await Core.LicenseManager.RefreshCacheAsync();
+
+            // 3. Inform user to restart or confirm successful execution state change smoothly
+            MessageBox.Show(
+                isChecked
+                    ? "Online Services Connectivity have been activated successfully."
+                    : "Application switched to Offline Mode. External web services are now restricted.",
+                "Settings Updated", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

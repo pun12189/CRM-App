@@ -152,112 +152,120 @@
                             <materialDesign:Card Margin="5,15,5,5" Background="White" UniformCornerRadius="6">
                                 <Expander Header="All Time Data" IsExpanded="False" Background="Transparent" Foreground="#2C3E50" FontWeight="Bold" FontSize="13">
                                     <UniformGrid Columns="5" Margin="5,10">
-                                        <Border Background="#1794A1" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.AllLeads}"/>
                                             </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Stats.AllLeads}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="ALL LEADS" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Stats.AllLeads}" FontSize="24" FontWeight="Bold" Foreground="#34495E" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="ALL LEADS" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
 
-                                        <Border Background="#1794A1" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <!-- OPEN LEADS -->
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.OpenLeads}"/>
                                             </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Stats.NewLeads}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="OPEN" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Stats.NewLeadsPercentage, StringFormat={}({0}%)}" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                                                <TextBlock Text="{Binding Stats.NewLeads}" FontSize="24" FontWeight="Bold" Foreground="#2980B9" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="OPEN" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                <TextBlock Text="{Binding Stats.NewLeadsPercentage, StringFormat={}({0}%)}" FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center" Opacity="0.8"/>
                                             </StackPanel>
                                         </Border>
 
-                                        <Border Background="#1794A1" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <!-- FOLLOW UP -->
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.FollowupLeads}"/>
                                             </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Stats.FollowupLeads}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="FOLLOW UP" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Stats.FollowupLeadsPercentage, StringFormat={}({0}%)}" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                                                <TextBlock Text="{Binding Stats.FollowupLeads}" FontSize="24" FontWeight="Bold" Foreground="#16A085" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="FOLLOW UP" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                <TextBlock Text="{Binding Stats.FollowupLeadsPercentage, StringFormat={}({0}%)}" FontSize="10" Foreground="#16A085" HorizontalAlignment="Center" Opacity="0.8"/>
                                             </StackPanel>
                                         </Border>
 
-                                        <Border Background="#1794A1" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <!-- NO FOLLOW UP -->
+                                        <Border Background="#FFF7ED" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoFollowupLeads}"/>
                                             </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Stats.NoFollowupLeads}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="NO FOLLOW UP" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="(Since 30 Days)" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
-                                                <!--<TextBlock Text="{Binding Stats.NoFollowupLeadsPercentage, StringFormat={}({0}%)}" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>-->
+                                                <TextBlock Text="{Binding Stats.NoFollowupLeads}" FontSize="24" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="NO FOLLOW UP" FontSize="11" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                <TextBlock Text="(Since 30 Days)" FontSize="10" Foreground="#C2410C" HorizontalAlignment="Center" Opacity="0.8"/>
                                             </StackPanel>
                                         </Border>
 
-                                        <Border Background="#1794A1" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <!-- DEAD LEADS -->
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.DeadLeads}"/>
                                             </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Stats.Dead}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="DEAD" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Stats.DeadPercentage, StringFormat={}({0}%)}" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                                                <TextBlock Text="{Binding Stats.Dead}" FontSize="24" FontWeight="Bold" Foreground="#C0392B" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="DEAD" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                <TextBlock Text="{Binding Stats.DeadPercentage, StringFormat={}({0}%)}" FontSize="10" Foreground="#C0392B" HorizontalAlignment="Center" Opacity="0.8"/>
                                             </StackPanel>
                                         </Border>
 
-                                        <Border Background="#21B19C" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <!-- CUSTOMERS -->
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.Customers}"/>
                                             </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Stats.Customers}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="CUSTOMERS" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="{Binding Stats.CustomersPercentage, StringFormat={}({0}%)}" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                                                <TextBlock Text="{Binding Stats.Customers}" FontSize="24" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="CUSTOMERS" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                <TextBlock Text="{Binding Stats.CustomersPercentage, StringFormat={}({0}%)}" FontSize="10" Foreground="#27AE60" HorizontalAlignment="Center" Opacity="0.8"/>
                                             </StackPanel>
                                         </Border>
 
-                                        <Border Background="#21B19C" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <!-- NO UPDATION (7 DAYS) -->
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoUpdation7Days}"/>
                                             </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Stats.NoUpdation7Days}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="NO UPDATION" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="(Since 7 Days)" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                                                <TextBlock Text="{Binding Stats.NoUpdation7Days}" FontSize="24" FontWeight="Bold" Foreground="#D35400" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="NO UPDATION" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                <TextBlock Text="(Since 7 Days)" FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center" Opacity="0.8"/>
                                             </StackPanel>
                                         </Border>
 
-                                        <Border Background="#21B19C" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <!-- NO REPEAT ORDER -->
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoRepeatOrders}"/>
                                             </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Stats.NoRepeatOrder}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="NO REPEAT ORDER" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="{Binding Stats.NoRepeatOrder}" FontSize="24" FontWeight="Bold" Foreground="#8E44AD" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="NO REPEAT ORDER" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
 
-                                        <Border Background="#21B19C" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <!-- NO ORDER (30 DAYS) -->
+                                        <Border Background="#FEF2F2" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoOrders30Days}"/>
                                             </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Stats.NoOrder}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="NO ORDER" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="(Since 30 Days)" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                                                <TextBlock Text="{Binding Stats.NoOrder}" FontSize="24" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="NO ORDER" FontSize="11" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                <TextBlock Text="(Since 30 Days)" FontSize="10" Foreground="#991B1B" HorizontalAlignment="Center" Opacity="0.8"/>
                                             </StackPanel>
                                         </Border>
 
-                                        <Border Background="#21B19C" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <!-- BELOW TARGET -->
+                                        <Border Background="#F5F3FF" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.BelowTargetCustomers}"/>
                                             </Border.InputBindings>
                                             <StackPanel VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Stats.BelowTarget}" FontSize="24" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="BELOW TARGET" Foreground="White" FontSize="11" HorizontalAlignment="Center"/>
-                                                <TextBlock Text="(Last Month)" Foreground="White" FontSize="10" HorizontalAlignment="Center" Opacity="0.8"/>
+                                                <TextBlock Text="{Binding Stats.BelowTarget}" FontSize="24" FontWeight="Bold" Foreground="#6D28D9" HorizontalAlignment="Center"/>
+                                                <TextBlock Text="BELOW TARGET" FontSize="11" Foreground="#6D28D9" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                <TextBlock Text="(Last Month)" FontSize="10" Foreground="#6D28D9" HorizontalAlignment="Center" Opacity="0.8"/>
                                             </StackPanel>
                                         </Border>
                                     </UniformGrid>

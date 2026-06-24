@@ -1,5 +1,6 @@
 ﻿using CallMan.Data;
 using CallMan.Models;
+using CallMan.Models.Enums;
 using Dapper;
 using System;
 using System.Collections.Generic;
@@ -52,8 +53,7 @@ namespace CallMan.Services
             FROM ProductBatches
             WHERE DivisionId = @DivId
             GROUP BY ProductId
-        ) b ON p.ProductId = b.ProductId
-        WHERE p.DivisionId = @DivId
+        ) b ON p.ProductId = b.ProductId        
         ORDER BY p.Name ASC;";
 
             return await db.QueryAsync<Product>(sql, new { DivId = divisionId });
@@ -319,6 +319,122 @@ namespace CallMan.Services
                 // Add your Sentry/logging hook here
                 throw new InvalidOperationException("Failed to commit product inventory batch assembly.", ex);
             }
+        }
+
+        public async Task<IEnumerable<Product>> GetProductsByDashboardContextAsync(DashboardTargetView target, DashboardFilter? filter)
+        {
+            using var db = _context.CreateConnection();
+            var parameters = new DynamicParameters();
+
+            // 1. Structural Filters Setup (Matches executive tracking for orders)
+            string orderHolderFilter = "";
+            if (filter != null && !string.IsNullOrEmpty(filter.LeadHolder))
+            {
+                orderHolderFilter = " AND o.ProcessedBy = @Holder ";
+                parameters.Add("Holder", filter.LeadHolder);
+            }
+
+            // 2. Date Parameters Setup
+            parameters.Add("From", filter?.FromDate);
+            parameters.Add("To", filter?.ToDate);
+            string dateCondition = (filter?.FromDate != null) ? " AND o.OrderDate BETWEEN @From AND @To " : "";
+            string productCreationCondition = (filter?.FromDate != null) ? " AND p.CreatedAt BETWEEN @From AND @To " : "";
+
+            // Base SELECT template anchor
+            string baseSql = "SELECT p.*, c.CategoryName FROM Products p LEFT JOIN Categories c ON p.CategoryId = c.Id WHERE 1=1 ";
+
+            switch (target)
+            {
+                case DashboardTargetView.CategoriesList:
+                    // 1. TOTAL CATEGORIES: Pulls active products grouped inside categories sold within the filtered window
+                    baseSql = $@"
+                SELECT DISTINCT p.*, c.CategoryName 
+                FROM Products p
+                INNER JOIN Categories c ON p.CategoryId = c.Id
+                INNER JOIN OrderItems oi ON p.ProductId = oi.ProductId
+                INNER JOIN Orders o ON oi.OrderId = o.OrderId
+                WHERE 1=1 {orderHolderFilter} {dateCondition}";
+                    break;
+
+                case DashboardTargetView.ProductsList:
+                    // 2. TOTAL PRODUCTS: Active items in the master table (constrained by date range if applied)
+                    baseSql += productCreationCondition;
+                    break;
+
+                case DashboardTargetView.NewProducts:
+                    // 3. NEW PRODUCTS: Items introduced to the inventory ecosystem within the last 30 days
+                    baseSql += " AND p.CreatedAt >= DATE_SUB(NOW(), INTERVAL 30 DAY)";
+                    break;
+
+                case DashboardTargetView.FastMovingProducts:
+                    // 4. FAST MOVING: High-velocity items with a total sold volume greater than or equal to 50 units
+                    baseSql = $@"
+                SELECT p.*, c.CategoryName 
+                FROM Products p
+                LEFT JOIN Categories c ON p.CategoryId = c.Id
+                INNER JOIN OrderItems oi ON p.ProductId = oi.ProductId
+                INNER JOIN Orders o ON oi.OrderId = o.OrderId
+                WHERE 1=1 {orderHolderFilter} {dateCondition}
+                GROUP BY p.ProductId, c.CategoryName
+                HAVING SUM(oi.Quantity) >= 50";
+                    break;
+
+                case DashboardTargetView.SlowMovingProducts:
+                    // 5. SLOW MOVING: Low-velocity or stagnant items moving under 5 units within the filtered window
+                    baseSql = $@"
+                SELECT p.*, c.CategoryName 
+                FROM Products p
+                LEFT JOIN Categories c ON p.CategoryId = c.Id
+                LEFT JOIN OrderItems oi ON p.ProductId = oi.ProductId
+                LEFT JOIN Orders o ON oi.OrderId = o.OrderId {orderHolderFilter} {dateCondition}
+                GROUP BY p.ProductId, c.CategoryName
+                HAVING IFNULL(SUM(oi.Quantity), 0) < 5";
+                    break;
+
+                case DashboardTargetView.NearSkuProducts:
+                    // 6. NEAR SKU: Low inventory alert check (remaining stock is less than or equal to minimum safe threshold limits)
+                    baseSql += " AND p.RemainingStock <= p.SKU AND p.SKU > 0";
+                    break;
+
+                case DashboardTargetView.NearExpiryBatches:
+                    // 7. NEAR EXPIRY: Inventory batches whose chemical/shelf expiration milestones arrive inside 3 months
+                    baseSql = @"
+                SELECT DISTINCT p.*, c.CategoryName 
+                FROM Products p
+                LEFT JOIN Categories c ON p.CategoryId = c.Id
+                INNER JOIN ProductBatches pb ON p.ProductId = pb.ProductId
+                WHERE pb.ExpiryDate IS NOT NULL 
+                  AND pb.ExpiryDate >= NOW() 
+                  AND pb.ExpiryDate <= DATE_ADD(NOW(), INTERVAL 3 MONTH)";
+                    break;
+
+                case DashboardTargetView.SkippedProducts:
+                    // 8. SKIPPED PRODUCTS: Products sold 2-3 months ago but entirely missed/skipped during the past 30 days
+                    baseSql = $@"
+                SELECT DISTINCT p.*, c.CategoryName 
+                FROM Products p
+                LEFT JOIN Categories c ON p.CategoryId = c.Id
+                INNER JOIN OrderItems oi_prev ON p.ProductId = oi_prev.ProductId
+                INNER JOIN Orders o ON oi_prev.OrderId = o.OrderId {orderHolderFilter}
+                  AND o.OrderDate >= DATE_ADD(LAST_DAY(DATE_SUB(NOW(), INTERVAL 3 MONTH)), INTERVAL 1 DAY)
+                  AND o.OrderDate <= LAST_DAY(DATE_SUB(NOW(), INTERVAL 2 MONTH))
+                WHERE p.ProductId NOT IN (
+                    SELECT DISTINCT curr.ProductId 
+                    FROM OrderItems curr
+                    INNER JOIN Orders ocurr ON curr.OrderId = ocurr.OrderId
+                    WHERE ocurr.OrderDate >= DATE_ADD(LAST_DAY(DATE_SUB(NOW(), INTERVAL 2 MONTH)), INTERVAL 1 DAY)
+                      AND ocurr.OrderDate <= LAST_DAY(DATE_SUB(NOW(), INTERVAL 1 MONTH))
+                      {(string.IsNullOrEmpty(filter?.LeadHolder) ? "" : " AND ocurr.ProcessedBy = @Holder ")}
+                )";
+                    break;
+
+                default:
+                    baseSql += " AND 1=0 ";
+                    break;
+            }
+
+            baseSql += " ORDER BY p.Name ASC;";
+            return await db.QueryAsync<Product>(baseSql, parameters);
         }
     }
 }

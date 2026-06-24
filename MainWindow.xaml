@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CallMan"
+        xmlns:core="clr-namespace:CallMan.Core"
         xmlns:vm="clr-namespace:CallMan.ViewModels"
         xmlns:views="clr-namespace:CallMan.Views"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -68,6 +69,9 @@
         <DataTemplate DataType="{x:Type vm:E2EReportsDashboardViewModel}">
             <views:E2EReportsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CustomFieldsViewModel}">
+            <views:CustomFieldsView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -91,12 +95,47 @@
     </Window.Resources>
     <Grid Background="#F0F2F5">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="70"/>
             <RowDefinition Height="50"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <!-- TOP WORKSPACE LIFECYCLE CONTROLLER PLATFORM BANNER RUN -->
+        <Border Height="30" VerticalAlignment="Top" BorderThickness="0,0,0,1" BorderBrush="#FED7AA">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="#FFFAF0"/>
+                    <Style.Triggers>
+                        <!-- Trigger Case 1: Change color palette immediately to highlight a full trial expiration lock -->
+                        <DataTrigger Binding="{Binding Source={x:Static core:LicenseManager.Current}, Path=IsExpired}" Value="True">
+                            <Setter Property="Background" Value="#FEE2E2"/>
+                            <Setter Property="BorderBrush" Value="#FCA5A5"/>
+                        </DataTrigger>
+                        <!-- Trigger Case 2: Cleanly collapse the entire notification ribbon space when the software is fully activated -->
+                        <DataTrigger Binding="{Binding Source={x:Static core:LicenseManager.Current}, Path=IsFullVersion}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
 
-        <Border Grid.Row="0" Background="#008080" BorderBrush="#DCDDE1" BorderThickness="0,0,0,1">
+            <Grid Margin="16,0">
+                <!-- Display Message (Left-Aligned and Vertically Centered) -->
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="ShieldAlertOutline" Foreground="#EA580C" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="{Binding Source={x:Static core:LicenseManager.Current}, Path=StatusMessage}" 
+        FontSize="11" FontWeight="SemiBold" Foreground="#C2410C" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Launcher Control Button (Right-Aligned and Vertically Centered) -->
+                <Button Content="Activate Copy" 
+         Command="{Binding DataContext.OpenActivationModalCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+         HorizontalAlignment="Right" VerticalAlignment="Center" 
+         Style="{StaticResource MaterialDesignFlatButton}" 
+         Foreground="#2563EB" FontSize="11" FontWeight="Bold" Padding="0" Height="22"/>
+            </Grid>
+        </Border>
+        <Border Grid.Row="1" Background="#008080" BorderBrush="#DCDDE1" BorderThickness="0,0,0,1">
             <Grid Margin="20,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -331,7 +370,7 @@
                 </StackPanel>
             </Grid>
         </Border>
-        <materialDesign:ColorZone Grid.Row="1" Mode="Custom" Background="#1794A1" Foreground="White" Height="48">
+        <materialDesign:ColorZone Grid.Row="2" Mode="Custom" Background="#1794A1" Foreground="White" Height="48">
             <Grid>
                 <Menu x:Name="TopMenu" Background="Transparent" VerticalAlignment="Stretch" HorizontalAlignment="Left">
                     <Menu.Resources>
@@ -583,8 +622,8 @@
                 </Menu>
             </Grid>
         </materialDesign:ColorZone>
-        <ContentControl Grid.Row="2" Content="{Binding CurrentView}"/>
-        <materialDesign:DrawerHost Grid.RowSpan="3" IsRightDrawerOpen="{Binding IsAdminMenuOpen, Mode=TwoWay}">
+        <ContentControl Grid.Row="3" Content="{Binding CurrentView}"/>
+        <materialDesign:DrawerHost Grid.RowSpan="4" IsRightDrawerOpen="{Binding IsAdminMenuOpen, Mode=TwoWay}">
 
             <materialDesign:DrawerHost.RightDrawerContent>
                 <Grid Width="300" Background="{DynamicResource MaterialDesignPaper}" Margin="20,40">
@@ -671,7 +710,7 @@
                 </Button>
             </Grid>
         </materialDesign:DrawerHost>
-        <Grid Grid.RowSpan="3" Visibility="{Binding IsGlobalLoadingActive, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Grid Grid.RowSpan="4" Visibility="{Binding IsGlobalLoadingActive, Converter={StaticResource BooleanToVisibilityConverter}}">
 
             <Border Background="#1E293B" Opacity="0.55"/>
 
@@ -742,6 +781,7 @@
                        TextWrapping="Wrap"/>
                 </StackPanel>               
             </materialDesign:Card>
-        </Grid>
+        </Grid>        
+        
     </Grid>
 </Window>

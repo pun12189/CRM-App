@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -49,14 +50,16 @@ namespace CallMan.ViewModels
         // This is what the DataGrid actually binds to now
         public ICollectionView OrderCollection => _ordersCollection;
 
+        private bool _isInitialized;
+
         public AllOrdersViewModel(LeadService service, IDialogService dialogService)
         {
             _service = service;
             _dialogService = dialogService;
 
             // Initial Load
-            _ = LoadAllOrdersAsync();
-        }
+            _ = LoadInitialDataAsync();
+        }        
 
         /// <summary>
         /// Core execution engine to segment and group order statuses.
@@ -99,14 +102,15 @@ namespace CallMan.ViewModels
             PendingStageOrdersCount = UnpaidOrdersCount;
         }
 
-        [RelayCommand]
-        public async Task LoadAllOrdersAsync()
+        private async Task LoadInitialDataAsync()
         {
             IsLoading = true;
             try
             {
-                var data = await _service.GetAllOrdersWithCustomerNamesAsync();                
+                if (_isInitialized) return;
+                var data = await _service.GetAllOrdersWithCustomerNamesAsync();
 
+                if (_isInitialized) return;
                 // Update collection on UI thread
                 AllOrders = new ObservableCollection<Order>(data);
 
@@ -131,6 +135,13 @@ namespace CallMan.ViewModels
             {
                 IsLoading = false;
             }
+        }
+
+        [RelayCommand]
+        public async Task LoadAllOrdersAsync()
+        {
+            _isInitialized = false;
+            await LoadInitialDataAsync();
         }
 
         partial void OnSearchTextChanged(string value)
@@ -224,9 +235,42 @@ namespace CallMan.ViewModels
             TotalPaymentsReceived = mleads.Sum(x => x.TotalPaidAmount);
         }
 
-        public void ApplyDashboardFilter(DashboardFilter? filter, DashboardTargetView target)
+        public async void ApplyDashboardFilter(DashboardFilter? filter, DashboardTargetView target)
         {
-            throw new NotImplementedException();
+            _isInitialized = true;
+
+            try
+            {
+                // 1. Pull the data from your new repository method
+                var retrievedOrders = await _service.GetOrdersByDashboardContextAsync(target, filter);
+
+                // 2. Clear old collections and populate without breaking references
+                AllOrders.Clear();
+                foreach (var order in retrievedOrders)
+                {
+                    AllOrders.Add(order);
+                }
+
+                // 3. Reset and refresh the collection view to bind seamlessly to the DataGrid
+                _ordersCollection = CollectionViewSource.GetDefaultView(AllOrders);
+                _ordersCollection.Refresh();
+
+                // 4. Force WPF notification event pass
+                OnPropertyChanged(nameof(OrderCollection));
+
+                await RecalculateLedgerAnalytics(); // Recalculate analytics whenever orders are loaded
+                CalculateSegmentedOrderCounters(AllOrders); // Calculate segmented order counters
+
+                // Calculate Summaries
+                TotalOrderCount = AllOrders.Count;
+                TotalOrderVolume = AllOrders.Sum(x => x.TotalAmount);
+
+                CustomerStats = await _service.GetCustomerFinancialSummaryAsync(1);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Orders Dashboard Drilldown Sync Failure: {ex.Message}");
+            }
         }
     }
 }

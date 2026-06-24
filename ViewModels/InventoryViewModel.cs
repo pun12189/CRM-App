@@ -9,11 +9,13 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace CallMan.ViewModels
 {
@@ -30,6 +32,8 @@ namespace CallMan.ViewModels
         // The focused row tracker property
         [ObservableProperty] private Product? _selectedProduct;
         [ObservableProperty] private string _searchText = string.Empty;
+
+        private bool _isInitialized;
 
         public string SubmitButtonText => CurrentProduct.ProductId == 0 ? "ADD PRODUCT" : "UPDATE PRODUCT";
 
@@ -299,9 +303,24 @@ namespace CallMan.ViewModels
             parentProduct.InnerBatchesCollection.Add(newBatchRow);
         }
 
-        public void ApplyDashboardFilter(DashboardFilter? filter, DashboardTargetView target)
+        public async void ApplyDashboardFilter(DashboardFilter? filter, DashboardTargetView target)
         {
-            throw new NotImplementedException();
+            _isInitialized = true;
+
+            try
+            {
+                // 1. Fetch targeted product records from the updated database query engine
+                var retrievedProducts = await _productService.GetProductsByDashboardContextAsync(target, filter);
+
+                // 2. Clear and append straight into the existing bound collection to keep memory references alive
+                AllProducts = new ObservableCollection<Product>(retrievedProducts);
+
+                RefreshDashboardMetrics();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Inventory Dashboard Drilldown Synchronization Failure: {ex.Message}");
+            }
         }
     }
 }

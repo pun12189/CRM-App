@@ -10,7 +10,7 @@
     <UserControl.Resources>
         <materialDesign:BooleanToVisibilityConverter x:Key="InverseBoolToVis" TrueValue="Collapsed" FalseValue="Visible" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-    </UserControl.Resources>    
+    </UserControl.Resources>
     <Grid Background="#F5F7F9" Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -18,108 +18,126 @@
         </Grid.RowDefinitions>
 
         <DockPanel Grid.Row="0" Margin="0,0,0,20">
-            
             <TextBlock Text="Admin Settings" FontSize="24" FontWeight="Bold" Foreground="#1794A1" HorizontalAlignment="Left"/>
             <Button Command="{Binding BackToGridCommand}" 
-    Visibility="{Binding IsMainGridVisible, Converter={StaticResource InverseBoolToVis}}"
-    Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Right" Content="&#8593; Back to Settings" FontSize="15"/>
+                Visibility="{Binding IsMainGridVisible, Converter={StaticResource InverseBoolToVis}}"
+                Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Right" Content="↑ Back to Settings" FontSize="15"/>
         </DockPanel>
-
-        <!--<ScrollViewer Grid.Row="1" Visibility="{Binding IsMainGridVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="300"/>
-                </Grid.ColumnDefinitions>
-
-                <UniformGrid Columns="4" VerticalAlignment="Top">
-                    <Button Style="{StaticResource SettingTileStyle}" Content="Staff" CommandParameter="Staff" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Visibility="Collapsed" Content="Permissions" CommandParameter="Permissions" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Content="Departments" CommandParameter="Departments" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Content="Order Stages" CommandParameter="OrderStages" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Visibility="Collapsed" Content="Fetch Inquiries" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Content="Login Logs" CommandParameter="Logs" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Content="Workflows" CommandParameter="Workflows" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Content="Categories" CommandParameter="Category" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Content="Company Profile" CommandParameter="CProfile" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Content="Connect Email" CommandParameter="Email" Command="{Binding NavigateToSettingCommand}"/>
-                    <Button Style="{StaticResource SettingTileStyle}" Content="Connect Whatsapp" CommandParameter="Whatsapp" Command="{Binding NavigateToSettingCommand}"/>
-                </UniformGrid>
-
-                <materialDesign:Card Grid.Column="1" Margin="20,0,0,0" VerticalAlignment="Top">
-                    <StackPanel>
-                        <Expander Header="Lead Settings" IsExpanded="True" Background="#1794A1" Foreground="White">
-                            <StackPanel Background="White">
-                                <Button Content="Add New Location" Style="{StaticResource SidebarLinkStyle}"/>
-                                <Button Content="Dead Reasons" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Dead Reasons" Command="{Binding NavigateToSettingCommand}"/>
-                                <Button Content="Followup Stages" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Followup Stages" Command="{Binding NavigateToSettingCommand}"/>
-                                <Button Content="Mature Stages" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Mature Stages" Command="{Binding NavigateToSettingCommand}"/>
-                                <Button Content="Lead Tags" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Lead Tags" Command="{Binding NavigateToSettingCommand}"/>
-                                <Button Content="Custom Fields" Style="{StaticResource SidebarLinkStyle}"/>
-                                <Button Content="Lead Source" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Lead Source" Command="{Binding NavigateToSettingCommand}"/>
-                                <Separator/>
-                                <Button Content="Lead Label" Style="{StaticResource SidebarLinkStyle}" CommandParameter="Lead Labels" Command="{Binding NavigateToSettingCommand}"/>
-                            </StackPanel>
-                        </Expander>
-                    </StackPanel>
-                </materialDesign:Card>
-            </Grid>
-        </ScrollViewer>-->
 
         <ScrollViewer Grid.Row="1" Visibility="{Binding IsMainGridVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <VirtualizingStackPanel Orientation="Vertical">
-                <Expander Expanded="Expander_Expanded" Background="Transparent" Tag="1" Margin="5,10" BorderThickness="1" BorderBrush="Black" HorizontalContentAlignment="Stretch" IsExpanded="{Binding IsExpander1Open, Mode=OneWay}">
+
+                <materialDesign:Card Padding="20" Margin="5,0,5,16" Background="White" UniformCornerRadius="6">
+                    <materialDesign:Card.Style>
+                        <Style TargetType="materialDesign:Card">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </materialDesign:Card.Style>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                            <TextBlock Text="Network Connectivity Mode" FontSize="14" FontWeight="Bold" Foreground="#374151" HorizontalAlignment="Left"/>
+                            <TextBlock Text="Allows cloud communications like external webhook automations, email server syncing, and background notifications." 
+                                   FontSize="12" Foreground="#6B7280" Margin="0,4,0,0" TextWrapping="Wrap" HorizontalAlignment="Left"/>
+                            <TextBlock Text="⚠️ Keeping the software offline is highly recommended for isolated local office speeds." 
+                                   FontSize="11" FontWeight="SemiBold" Foreground="#EA580C" Margin="0,6,0,0" HorizontalAlignment="Left"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
+
+                            <!-- Dynamic Status Label Text Indicator (Changes color and text reactively) -->
+                            <TextBlock Width="65" TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0" FontSize="12" FontWeight="Black">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <!-- Default state when switch is unchecked -->
+                                        <Setter Property="Text" Value="OFFLINE"/>
+                                        <Setter Property="Foreground" Value="#6B7280"/>
+                                        <Style.Triggers>
+                                            <!-- Active state when switch is toggled to true -->
+                                            <DataTrigger Binding="{Binding ToggleOnlineServices}" Value="True">
+                                                <Setter Property="Text" Value="ONLINE"/>
+                                                <Setter Property="Foreground" Value="#1794A1"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <!-- Clean Switch Control without broken internal text constraints -->
+                            <ToggleButton Cursor="Hand" VerticalAlignment="Center"
+                              IsChecked="{Binding ToggleOnlineServices, Mode=TwoWay}"
+                              Command="{Binding UpdateOnlineServicesOptionCommand}"
+                              CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
+                              Style="{StaticResource MaterialDesignSwitchToggleButton}"
+                              ToolTip="Switch software modes between connected networks and completely local network layers."/>
+                        </StackPanel>
+                    </Grid>
+                </materialDesign:Card>
+
+                <Expander Background="Transparent" Tag="1" Margin="5,10" BorderThickness="1" BorderBrush="Black" HorizontalContentAlignment="Stretch" IsExpanded="{Binding IsExpander1Open, Mode=OneWay}">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Margin="10">
                             <materialDesign:PackIcon Kind="Build" VerticalAlignment="Center" Height="24" Width="24"/>
                             <TextBlock Text="Internal Setup" 
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           Margin="20,0,0,0"
-                           VerticalAlignment="Center"/>
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="20,0,0,0"
+                                   VerticalAlignment="Center"/>
                         </StackPanel>
                     </Expander.Header>
 
                     <UniformGrid Columns="4" VerticalAlignment="Top">
                         <Button Style="{StaticResource SettingTileStyle}" Content="Divisions" CommandParameter="CProfile" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Style="{StaticResource SettingTileStyle}" Content="Departments" CommandParameter="Departments" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Style="{StaticResource SettingTileStyle}" Content="Departments" Visibility="Collapsed" CommandParameter="Departments" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Staff" CommandParameter="Staff" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Order Stages" CommandParameter="OrderStages" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Content="Custom Fields" Style="{StaticResource SettingTileStyle}" CommandParameter="CustomFields" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Item Categories" CommandParameter="Category" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Proforma Settings" IsEnabled="False" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Notice Board" IsEnabled="False" CommandParameter="Notice" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Login Logs" CommandParameter="Logs" Command="{Binding NavigateToSettingCommand}"/>
                     </UniformGrid>
                 </Expander>
-                <Expander Expanded="Expander_Expanded" Background="Transparent" Tag="2" Margin="5,10" BorderThickness="1" BorderBrush="Black" HorizontalContentAlignment="Stretch" IsExpanded="{Binding IsExpander2Open, Mode=OneWay}">
+
+                <Expander Background="Transparent" Tag="2" Margin="5,10" BorderThickness="1" BorderBrush="Black" HorizontalContentAlignment="Stretch" IsExpanded="{Binding IsExpander2Open, Mode=OneWay}">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Margin="10">
                             <materialDesign:PackIcon Kind="Settings" VerticalAlignment="Center" Height="24" Width="24"/>
                             <TextBlock Text="Lead Settings" 
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           Margin="20,0,0,0"
-                           VerticalAlignment="Center"/>
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="20,0,0,0"
+                                   VerticalAlignment="Center"/>
                         </StackPanel>
                     </Expander.Header>
+
                     <UniformGrid Columns="4" VerticalAlignment="Top">
                         <Button Content="Add New Location" Style="{StaticResource SettingTileStyle}" IsEnabled="False"/>
                         <Button Content="Dead Reasons" Style="{StaticResource SettingTileStyle}" CommandParameter="Dead Reasons" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Content="Followup Stages" Style="{StaticResource SettingTileStyle}" CommandParameter="Followup Stages" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Content="Mature Stages" Style="{StaticResource SettingTileStyle}" CommandParameter="Mature Stages" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Content="Lead Categories" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Tags" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Content="Custom Fields" Style="{StaticResource SettingTileStyle}" IsEnabled="False"/>
                         <Button Content="Lead Source" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Source" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Content="Lead Label" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Labels" Command="{Binding NavigateToSettingCommand}"/>
                     </UniformGrid>
-
                 </Expander>
-                <Expander Expanded="Expander_Expanded" Background="Transparent" Tag="3" Margin="5,10" BorderThickness="1" BorderBrush="Black" HorizontalContentAlignment="Stretch" IsExpanded="{Binding IsExpander3Open, Mode=OneWay}">
+
+                <Expander Background="Transparent" Tag="3" Margin="5,10" BorderThickness="1" BorderBrush="Black" HorizontalContentAlignment="Stretch" IsExpanded="{Binding IsExpander3Open, Mode=OneWay}">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Margin="10">
                             <materialDesign:PackIcon Kind="SourceMerge" VerticalAlignment="Center" Height="24" Width="24"/>
                             <TextBlock Text="Third Party Integrations" 
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           Margin="20,0,0,0"
-                           VerticalAlignment="Center"/>
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="20,0,0,0"
+                                   VerticalAlignment="Center"/>
                         </StackPanel>
                     </Expander.Header>
 
@@ -131,14 +149,15 @@
                         <Button Style="{StaticResource SettingTileStyle}" Content="Marg/Tally etc." CommandParameter="MargTally" Command="{Binding NavigateToSettingCommand}"/>
                     </UniformGrid>
                 </Expander>
-                <Expander Expanded="Expander_Expanded" Background="Transparent" Tag="4" Margin="5,10" BorderThickness="1" BorderBrush="Black" HorizontalContentAlignment="Stretch" IsExpanded="{Binding IsExpander4Open, Mode=OneWay}">
+
+                <Expander Background="Transparent" Tag="4" Margin="5,10" BorderThickness="1" BorderBrush="Black" HorizontalContentAlignment="Stretch" IsExpanded="{Binding IsExpander4Open, Mode=OneWay}">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Margin="10">
                             <materialDesign:PackIcon Kind="Automatic" VerticalAlignment="Center" Height="24" Width="24"/>
                             <TextBlock Text="Automations" 
-                           Style="{StaticResource MaterialDesignHeadline6TextBlock}"
-                           Margin="20,0,0,0"
-                           VerticalAlignment="Center"/>
+                                   Style="{StaticResource MaterialDesignHeadline6TextBlock}"
+                                   Margin="20,0,0,0"
+                                   VerticalAlignment="Center"/>
                         </StackPanel>
                     </Expander.Header>
 
@@ -147,6 +166,7 @@
                         <Button Style="{StaticResource SettingTileStyle}" Content="Enable AI" CommandParameter="Workflows" Command="{Binding NavigateToSettingCommand}"/>
                     </UniformGrid>
                 </Expander>
+
             </VirtualizingStackPanel>
         </ScrollViewer>
 

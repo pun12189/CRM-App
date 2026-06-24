@@ -1,4 +1,5 @@
-﻿using CallMan.Interfaces;
+﻿using CallMan.Dialogs;
+using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Models.Enums;
 using CallMan.Services;
@@ -399,6 +400,18 @@ namespace CallMan.ViewModels
                 await Task.Delay(100); // Small delay to allow UI to update before hiding the loading indicator
                 LoadingService.Hide();
             }
+        }
+
+        [RelayCommand]
+        private async Task OpenActivationModal()
+        {
+            var activationViewModel = _serviceProvider.GetRequiredService<ActivationViewModel>();
+            var activationWindow = new ActivationWindow
+            {
+                DataContext = activationViewModel
+            };
+
+            activationWindow.ShowDialog();
         }
     }
 }

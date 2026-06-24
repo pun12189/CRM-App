@@ -1,0 +1,157 @@
+﻿<Window x:Class="CallMan.Dialogs.CreateFieldWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CallMan.Dialogs"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        mc:Ignorable="d"
+        Title="Create Custom Field" 
+        Height="Auto" 
+        Width="480" 
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner" 
+        ResizeMode="NoResize"
+        Background="#F8FAFC">
+    <Grid>
+        <Border Padding="12" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1">
+            <StackPanel Margin="10">
+
+                <Grid Margin="0,0,0,10">
+                    <TextBlock Text="Create Field" FontSize="18" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                </Grid>
+
+                <StackPanel Margin="6">
+                    <TextBlock Text="Field Name" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
+                    <TextBox Text="{Binding NewField.FieldName, UpdateSourceTrigger=PropertyChanged}" 
+                             materialDesign:HintAssist.Hint="Enter field Name" 
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                </StackPanel>
+
+                <StackPanel Margin="6">
+                    <TextBlock Text="Field Type" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
+                    <ComboBox SelectedValue="{Binding NewField.FieldType}" SelectedValuePath="Tag"
+                              materialDesign:HintAssist.Hint="Select type" 
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                        <ComboBoxItem Content="Textbox" Tag="Textbox"/>
+                        <ComboBoxItem Content="TextArea" Tag="TextArea"/>
+                        <ComboBoxItem Content="Dropdown (single selection)" Tag="DropdownSingle"/>
+                        <ComboBoxItem Content="Dropdown (multiple selection)" Tag="DropdownMultiple"/>
+                        <ComboBoxItem Content="Calendar" Tag="CalendarClock"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <StackPanel Margin="8">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding NewField.FieldType}" Value="DropdownSingle">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding NewField.FieldType}" Value="DropdownMultiple">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Text="{Binding NewValueOptionText, UpdateSourceTrigger=PropertyChanged}"
+                                 materialDesign:HintAssist.Hint="Type option choice value text here..."
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" Grid.Column="0" Margin="0,0,8,0">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding AddValueOptionCommand}"/>
+                            </TextBox.InputBindings>
+                        </TextBox>
+
+                        <Button Grid.Column="1" Command="{Binding AddValueOptionCommand}"
+                                Content="Add" Padding="16,0" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                    </Grid>
+
+                    <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="10,6" Background="#F8FAFC" MinHeight="45">
+                        <Grid>
+                            <TextBlock Text="No option choices added yet." Foreground="#94A3B8" FontSize="12" FontStyle="Italic" VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding NewField.SeedValueOptionsList.Count}" Value="0">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+
+                            <ItemsControl ItemsSource="{Binding NewField.SeedValueOptionsList}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <materialDesign:Chip Content="{Binding}" Margin="3" IsDeletable="True"
+                     DeleteCommand="{Binding DataContext.RemoveValueOptionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                     DeleteCommandParameter="{Binding}" Background="#EFF6FF" Foreground="#1E40AF" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Margin="6">
+                    <TextBlock Text="Visible-In (Where this field should be added)" FontSize="13" FontWeight="SemiBold" Foreground="#475569"/>
+                    <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="12,10" Background="#F8FAFC">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox Content="Lead" IsChecked="{Binding NewField.IsVisibleInLead}" Margin="0,0,24,0" FontWeight="Medium" Foreground="#334155"/>
+                            <CheckBox Content="Customer" IsChecked="{Binding NewField.IsVisibleInCustomer}" Margin="0,0,24,0" FontWeight="Medium" Foreground="#334155"/>
+                            <CheckBox Content="Product" IsChecked="{Binding NewField.IsVisibleInProduct}" FontWeight="Medium" Foreground="#334155"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <DockPanel LastChildFill="False" Margin="0,5,0,0">
+                    <TextBlock Text="Required Field Validation*" FontSize="13" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
+                    <ToggleButton x:Name="RequiredToggle" IsChecked="{Binding NewField.IsRequired}" 
+                                  Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                                  DockPanel.Dock="Right" Background="#FF8A3D" BorderBrush="#FF8A3D"/>
+                </DockPanel>
+
+                <StackPanel Margin="6">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsChecked, ElementName=RequiredToggle}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
+                    <TextBlock Text="Enforce Requirement For Submission In:" FontSize="12" FontWeight="SemiBold" Foreground="#B91C1C" Margin="2,0,0,0"/>
+                    <Border BorderBrush="#FEE2E2" BorderThickness="1" CornerRadius="4" Padding="12,10" Background="#FEF2F2">
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox Content="Lead" IsChecked="{Binding NewField.IsRequiredInLead}" IsEnabled="{Binding NewField.IsVisibleInLead}" Margin="0,0,16,0" FontWeight="Medium" Foreground="#991B1B"/>
+                            <CheckBox Content="Customer" IsChecked="{Binding NewField.IsRequiredInCustomer}" IsEnabled="{Binding NewField.IsVisibleInCustomer}" Margin="0,0,16,0" FontWeight="Medium" Foreground="#991B1B"/>
+                            <CheckBox Content="Product" IsChecked="{Binding NewField.IsRequiredInProduct}" IsEnabled="{Binding NewField.IsVisibleInProduct}" FontWeight="Medium" Foreground="#991B1B"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <Separator Background="#E2E8F0" Margin="0,5"/>
+
+                <Button Content="Submit" Command="{Binding SubmitCustomFieldCommand}" 
+                        Height="40" FontSize="14" FontWeight="Bold" Style="{StaticResource MaterialDesignFlatDarkBgButton}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -6,21 +6,15 @@ using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
 
 namespace CallMan.ViewModels
 {
-    public partial class LeadViewModel : ObservableObject, IDashboardFilterable
+    public partial class LeadViewModel : ObservableObject, IDashboardFilterable, IDashboardWorkspace
     {
         private readonly LeadService _leadService;
         private readonly SettingService _settingService;
@@ -37,6 +31,9 @@ namespace CallMan.ViewModels
 
         // This is what the DataGrid actually binds to now
         public ICollectionView LeadsCollection => _leadsCollection;
+
+        [ObservableProperty] private bool _workspaceViewIsActive;
+        [ObservableProperty] private Lead? _activeProfileLead;
 
         [ObservableProperty] private LeadViewMode _currentMode = LeadViewMode.AllLeads;
 
@@ -538,6 +535,21 @@ namespace CallMan.ViewModels
             {
                 Debug.WriteLine(ex.Message);
             }
+        }
+
+        [RelayCommand]
+        public void ShowLeadWorkspace(Lead selectedLead)
+        {
+            if (selectedLead == null) return;
+            ActiveProfileLead = selectedLead;
+            WorkspaceViewIsActive = true; // Swaps grid out for profile workspace view layout instantly
+        }
+
+        [RelayCommand]
+        public void HideLeadWorkspace()
+        {
+            WorkspaceViewIsActive = false;
+            ActiveProfileLead = null;
         }
     }
 }

@@ -360,13 +360,13 @@ namespace CallMan.ViewModels
         }
 
         [RelayCommand]
-        private void EditLead(Lead leadToEdit)
+        private async void EditLead(Lead leadToEdit)
         {
             if (leadToEdit == null) return;
 
             // Open the Dialog and pass the lead data
             var vm = App.ServiceProvider.GetRequiredService<AddLeadDialogViewModel>();
-            vm.Initialize(leadToEdit);
+            await vm.Initialize(leadToEdit, true);
             var dialogWindow = new AddLeadWindow { DataContext = vm, Title = "Update Lead Info" };
 
             vm.RequestClose += (result) => {
@@ -376,7 +376,7 @@ namespace CallMan.ViewModels
 
             if (dialogWindow.ShowDialog() == true)
             {
-                LoadData(); // Refresh list after update
+                await LoadData(); // Refresh list after update
             }
         }
 

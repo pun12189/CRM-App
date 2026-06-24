@@ -771,9 +771,16 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
             (SELECT COUNT(*) FROM Orders WHERE OrderType = 'New' OR OrderType = 'Sale') as TotalNewOrders,
             
             -- Repeat Orders Counter: Distinct leads who have placed more than 1 individual invoice order
-            (SELECT COUNT(*) FROM (
-                SELECT LeadId FROM Orders GROUP BY LeadId HAVING COUNT(OrderId) > 1
-            ) as RepeatTrack) as TotalRepeatedOrders,
+            (
+                SELECT IFNULL(SUM(RepeatCount), 0) 
+                FROM (
+                    SELECT COUNT(OrderId) - 1 AS RepeatCount 
+                    FROM Orders 
+                    WHERE 1=1 
+                    GROUP BY LeadId 
+                    HAVING COUNT(OrderId) > 1
+                ) AS RepeatTrack
+            ) AS TotalRepeatedOrders,
 
             (SELECT COUNT(*) FROM Orders WHERE PaymentStatus = 'Unpaid') as TotalUnpaidOrders,
             (SELECT COUNT(*) FROM Orders WHERE PaymentStatus = 'Partially Paid') as TotalPartialPaidOrders;";
@@ -936,12 +943,17 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
              WHERE (OrderType = 'New' OR OrderType = 'Sale') {orderHolderFilter}
              {(dateRange != null ? $" AND OrderDate {dateRange}" : "")}) as TotalNewOrders,
 
-            (SELECT COUNT(*) FROM (
-                SELECT LeadId FROM Orders 
-                WHERE 1=1 {orderHolderFilter}
-                {(dateRange != null ? $" AND OrderDate {dateRange}" : "")}
-                GROUP BY LeadId HAVING COUNT(OrderId) > 1
-            ) as RepeatTrack) as TotalRepeatedOrders,
+            (
+                SELECT IFNULL(SUM(RepeatCount), 0) 
+                FROM (
+                    SELECT COUNT(OrderId) - 1 AS RepeatCount 
+                    FROM Orders 
+                    WHERE 1=1 {orderHolderFilter}
+                      {(dateRange != null ? $" AND OrderDate {dateRange}" : "")}
+                    GROUP BY LeadId 
+                    HAVING COUNT(OrderId) > 1
+                ) AS RepeatTrack
+            ) AS TotalRepeatedOrders,
 
             (SELECT COUNT(*) FROM Orders 
              WHERE PaymentStatus = 'Unpaid' {orderHolderFilter}
@@ -1551,6 +1563,120 @@ LEFT JOIN Divisions d ON ld.DivisionId = d.Id
 
             return await db.QueryAsync<Lead>(baseSql, parameters);
         }
+
+        public async Task<IEnumerable<Models.Order>> GetOrdersByDashboardContextAsync(DashboardTargetView target, DashboardFilter? filter)
+        {
+            using var db = _context.CreateConnection();
+            var parameters = new DynamicParameters();
+
+            // 1. Structural Filters Setup (Filters orders handled by the respective sales executive)
+            string orderHolderFilter = "";
+            if (filter != null && !string.IsNullOrEmpty(filter.LeadHolder))
+            {
+                orderHolderFilter = " AND o.ProcessedBy = @Holder ";
+                parameters.Add("Holder", filter.LeadHolder);
+            }
+
+            // 2. Date Range Boundaries Setup
+            parameters.Add("From", filter?.FromDate);
+            parameters.Add("To", filter?.ToDate);
+            string dateCondition = (filter?.FromDate != null) ? " AND o.OrderDate BETWEEN @From AND @To " : "";
+
+            // Base SELECT query structure linking orders back to core customer company files
+            string baseSql = @"
+                SELECT o.*, l.CustomerName, l.CompanyName 
+                FROM Orders o
+                INNER JOIN Leads l ON o.LeadId = l.LeadId
+                WHERE 1=1 ";
+
+            switch (target)
+            {
+                case DashboardTargetView.AllOrders:
+                    // TARGET: Global baseline sales sheet overview
+                    baseSql += $"{orderHolderFilter} {dateCondition}";
+                    break;
+
+                case DashboardTargetView.NewOrders:
+                    // TARGET: First conversion transactions only
+                    baseSql += $" AND (o.OrderType = 'New' OR o.OrderType = 'Sale') {orderHolderFilter} {dateCondition}";
+                    break;
+
+                case DashboardTargetView.RepeatedOrders:
+                    // TARGET: Sub-sequent repeat orders from accounts who have ordered more than once in the window
+                    baseSql = $@"
+                        SELECT 
+                            o.*, 
+                            l.CustomerName, 
+                            l.CompanyName AS FirmName
+                        FROM Orders o
+                        INNER JOIN Leads l ON o.LeadId = l.LeadId
+                        WHERE o.LeadId IN (
+                            SELECT o_sub.LeadId 
+                            FROM Orders o_sub
+                            WHERE 1=1 {orderHolderFilter.Replace("o.", "o_sub.")} {dateCondition.Replace("o.", "o_sub.")}
+                            GROUP BY o_sub.LeadId 
+                            HAVING COUNT(o_sub.OrderId) > 1
+                        )
+                        -- CRITICAL FIX: Excludes the initial/first order for each customer group
+                        AND o.OrderId NOT IN (
+                            SELECT MIN(o_first.OrderId)
+                            FROM Orders o_first
+                            GROUP BY o_first.LeadId
+                        )
+                        {orderHolderFilter} 
+                        {dateCondition}";
+                    break;
+
+                case DashboardTargetView.UnpaidOrders:
+                    // TARGET: Accounts lacking payment entries
+                    baseSql += $" AND o.PaymentStatus = 'Unpaid' {orderHolderFilter} {dateCondition}";
+                    break;
+
+                case DashboardTargetView.PartiallyPaidOrders:
+                    // TARGET: Risk tracking accounts matching fractional collection updates
+                    baseSql += $" AND o.PaymentStatus = 'Partially Paid' {orderHolderFilter} {dateCondition}";
+                    break;
+
+                default:
+                    // Safe-guard condition
+                    baseSql += " AND 1=0 ";
+                    break;
+            }
+
+            // Order sequentially with the newest invoices sitting squarely at the top
+            baseSql += " ORDER BY o.OrderDate DESC, o.OrderId DESC;";
+
+            return await db.QueryAsync<Models.Order>(baseSql, parameters);
+        }
+
+        public async Task SaveLeadCustomFieldValuesAsync(int leadId, IEnumerable<KeyValuePair<int, string>> values, string entityType = "Lead")
+        {
+            const string sql = @"
+                INSERT INTO CustomFieldValues (EntityId, EntityType, FieldId, FieldValue)
+                VALUES (@LeadId, @EntityType, @FieldId, @FieldValue)
+                ON DUPLICATE KEY UPDATE FieldValue = @FieldValue;";
+
+            using var db = _context.CreateConnection();
+            foreach (var kvp in values)
+            {
+                await db.ExecuteAsync(sql, new { LeadId = leadId, EntityType = entityType, FieldId = kvp.Key, FieldValue = kvp.Value });
+            }
+        }
+
+        // Method to pull values back when opening an existing lead in Edit mode
+        public async Task<Dictionary<int, string>> GetCustomFieldValuesForLeadAsync(int leadId, string entityType = "Lead")
+        {
+            const string sql = "SELECT FieldId, FieldValue FROM CustomFieldValues WHERE EntityId = @LeadId AND EntityType = @EntityType;";
+            using var db = _context.CreateConnection();
+            var rows = await db.QueryAsync<(int FieldId, string FieldValue)>(sql, new { LeadId = leadId, EntityType = entityType });
+            var dictionary = new Dictionary<int, string>();
+            foreach (var row in rows)
+            {
+                dictionary[row.FieldId] = row.FieldValue;
+            }
+            return dictionary;
+        }
     }
 }
+
 

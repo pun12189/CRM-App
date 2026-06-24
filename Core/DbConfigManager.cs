@@ -11,7 +11,7 @@ namespace CallMan.Core
 {
     public static class DbConfigManager
     {
-        private static readonly string ConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "dbconfig.json");
+        private static readonly string ConfigPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "SofricONE", "dbconfig.json");
 
         // Globally accessible active connection string cache pointer
         public static string CachedConnectionString { get; private set; } = string.Empty;
@@ -42,6 +42,7 @@ namespace CallMan.Core
         {
             var options = new JsonSerializerOptions { WriteIndented = true };
             string rawJson = JsonSerializer.Serialize(config, options);
+            Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath));
             File.WriteAllText(ConfigPath, rawJson);
 
             // Instantly refresh localized application memory pointers

@@ -72,6 +72,9 @@
         <DataTemplate DataType="{x:Type vm:CustomFieldsViewModel}">
             <views:CustomFieldsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PermissionsManagementViewModel}">
+            <views:PermissionsManagementView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>

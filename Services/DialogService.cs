@@ -100,7 +100,7 @@ namespace CallMan.Services
         public async Task<bool?> ShowAddStaffWindow(User? userToEdit)
         {
             var vm = App.ServiceProvider.GetRequiredService<AddStaffDialogViewModel>();
-            vm.Initialize(userToEdit);
+            await vm.InitializeAsync(userToEdit);
 
             var window = new AddStaffWindow
             {

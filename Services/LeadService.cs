@@ -1291,52 +1291,6 @@ ORDER BY l.LeadId DESC;";
             summaries.LeadLabels = (await db.QueryAsync<KeyValuePair<string, int>>(labelsSql, parameters)).ToList();
 
             return summaries;
-        }
-
-        // --- USER MANAGEMENT METHODS ---
-
-        // 1. Get all users including their Senior's name for the DataGrid
-        public async Task<IEnumerable<User>> GetAllUsersAsync()
-        {
-            using var db = _context.CreateConnection();
-            string sql = @"
-            SELECT u.*, s.FullName as SeniorName 
-            FROM Users u
-            LEFT JOIN Users s ON u.SeniorId = s.UserId
-            ORDER BY u.Role, u.FullName";
-
-            return await db.QueryAsync<User>(sql);
-        }
-
-        // 2. Create User (Email-based)
-        public async Task<int> CreateUserAsync(User user)
-        {
-            using var db = _context.CreateConnection();
-            string sql = @"
-            INSERT INTO Users (Email, Password, FullName, Phone, Role, SeniorId, MonthlyTarget, IsActive)
-            VALUES (@Email, @Password, @FullName, @Phone, @Role, @SeniorId, @MonthlyTarget, @IsActive);
-            SELECT LAST_INSERT_ID();";
-
-            return await db.QuerySingleAsync<int>(sql, user);
-        }
-
-        // 3. Update User
-        public async Task<bool> UpdateUserAsync(User user)
-        {
-            using var db = _context.CreateConnection();
-            string sql = @"
-            UPDATE Users 
-            SET Email = @Email, 
-                FullName = @FullName, 
-                Phone = @Phone, 
-                Role = @Role, 
-                SeniorId = @SeniorId, 
-                MonthlyTarget = @MonthlyTarget, 
-                IsActive = @IsActive
-            WHERE UserId = @UserId";
-
-            int affected = await db.ExecuteAsync(sql, user);
-            return affected > 0;
         }        
 
         // --- DASHBOARD & HIERARCHY LOGIC ---
@@ -1353,17 +1307,7 @@ ORDER BY l.LeadId DESC;";
             WHERE u.SeniorId = @seniorId";
 
             return await db.QuerySingleAsync<decimal>(sql, new { seniorId });
-        }
-
-        public async Task<bool> DeleteUserAsync(int userId)
-        {
-            using var db = _context.CreateConnection();
-            // Safety Check: We might want to prevent deleting the last Admin
-            string sql = "DELETE FROM Users WHERE UserId = @userId";
-
-            int affected = await db.ExecuteAsync(sql, new { userId });
-            return affected > 0;
-        }
+        }       
 
         public async Task<CustomerAnalytics> GetCustomerSummaryAsync(int leadId)
         {

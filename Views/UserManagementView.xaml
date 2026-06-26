@@ -30,50 +30,116 @@
         </DockPanel>
 
         <DataGrid Grid.Row="1" ItemsSource="{Binding UsersList}" AutoGenerateColumns="False" 
-              CanUserAddRows="False" SelectionMode="Single"
-              Background="#F9F9F9" BorderThickness="1" BorderBrush="#DDD"
-              RowHeight="60" ColumnHeaderHeight="45">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="#" Binding="{Binding UserId}" Width="40"/>                
+          CanUserAddRows="False" SelectionMode="Single"
+          Background="White" BorderThickness="1" BorderBrush="#E2E8F0"
+          RowHeight="65" ColumnHeaderHeight="42" GridLinesVisibility="Horizontal"
+          HorizontalGridLinesBrush="#F1F5F9" RowBackground="White" AlternatingRowBackground="#F8FAFC">
 
-                <DataGridTemplateColumn Header="Name" Width="180">
+            <DataGrid.Resources>
+                <Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                </Style>
+
+                <Style x:Key="ProfessionalLeftAlignStyle" TargetType="TextBlock">
+                    <Setter Property="VerticalAlignment" Value="Center"/>
+                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                    <Setter Property="TextAlignment" Value="Left"/>
+                    <Setter Property="TextWrapping" Value="Wrap"/>
+                    <Setter Property="Padding" Value="12,0,12,0"/>
+                    <Setter Property="Foreground" Value="#334155"/>
+                    <Setter Property="FontSize" Value="13"/>
+                </Style>
+
+                <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                    <Setter Property="Background" Value="#F1F5F9"/>
+                    <Setter Property="Foreground" Value="#475569"/>
+                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Height" Value="42"/>
+                    <Setter Property="Padding" Value="12,0,12,0"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                    <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                    <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                </Style>
+            </DataGrid.Resources>
+
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="#" Binding="{Binding UserId}" Width="55" 
+                            ElementStyle="{StaticResource ProfessionalLeftAlignStyle}"/>
+
+                <DataGridTemplateColumn Header="Name" Width="160">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding FullName}" Foreground="#1794A1" FontWeight="SemiBold"/>
-                                <TextBlock Text="{Binding UserId, StringFormat='ID- {0}'}" FontSize="10" Foreground="#888"/>
+                            <StackPanel VerticalAlignment="Center" Margin="12,0,12,0">
+                                <TextBlock Text="{Binding FullName}" Foreground="#1794A1" FontWeight="SemiBold" FontSize="13" TextWrapping="Wrap" HorizontalAlignment="Left"/>
+                                <TextBlock Text="{Binding UserId, StringFormat='ID- {0}'}" FontSize="10.5" Foreground="#64748B" FontWeight="Medium" HorizontalAlignment="Left"/>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="E-mail" Binding="{Binding Email}" Width="180"/>
-                <DataGridTextColumn Header="Phone/Whatsapp" Binding="{Binding Phone}" Width="130"/>
-                <DataGridTextColumn Header="Team Leader" Binding="{Binding SeniorName}" Width="130"/>
-                <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="110"/>
+                <DataGridTextColumn Header="E-mail" Binding="{Binding Email}" Width="180" 
+                            ElementStyle="{StaticResource ProfessionalLeftAlignStyle}"/>
 
-                <DataGridTemplateColumn Header="Status" Width="90">
+                <DataGridTextColumn Header="Phone / Whatsapp" Binding="{Binding Phone}" Width="160" 
+                            ElementStyle="{StaticResource ProfessionalLeftAlignStyle}"/>
+
+                <DataGridTextColumn Header="Team Leader" Binding="{Binding SeniorName, TargetNullValue='—'}" Width="135" 
+                            ElementStyle="{StaticResource ProfessionalLeftAlignStyle}"/>
+
+                <DataGridTextColumn Header="Role" Binding="{Binding Role}" Width="110" 
+                            ElementStyle="{StaticResource ProfessionalLeftAlignStyle}"/>
+
+                <DataGridTemplateColumn Header="Status" Width="95">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border Background="#27AE60" CornerRadius="4" Padding="5,2" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                <TextBlock Text="Active" Foreground="White" FontSize="10" FontWeight="Bold"/>
+                            <Border x:Name="StatusBadge" CornerRadius="6" Padding="8,3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="12,0,0,0">
+                                <TextBlock x:Name="StatusText" Text="Active" Foreground="White" FontSize="11" FontWeight="Bold"/>
                             </Border>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding IsActive}" Value="False">
+                                    <Setter TargetName="StatusBadge" Property="Background" Value="#94A3B8"/>
+                                    <Setter TargetName="StatusText" Property="Text" Value="Inactive"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsActive}" Value="True">
+                                    <Setter TargetName="StatusBadge" Property="Background" Value="#22C55E"/>
+                                    <Setter TargetName="StatusText" Property="Text" Value="Active"/>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="Member Since" Binding="{Binding CreatedDate, StringFormat='dd-MMM-yyyy hh:mm'}" Width="*"/>
+                <DataGridTextColumn Header="Member Since" Binding="{Binding CreatedDate, StringFormat='dd-MMM-yyyy hh:mm tt'}" Width="165" 
+                            ElementStyle="{StaticResource ProfessionalLeftAlignStyle}"/>
 
                 <DataGridTemplateColumn Header="Action" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Button Style="{StaticResource MaterialDesignIconButton}" Width="30" Height="30" 
-                                    Command="{Binding DataContext.EditUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
-                                    <materialDesign:PackIcon Kind="Edit" Foreground="#FF8A3D" Width="18"/>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="12,0,12,0">
+                                <Button Style="{StaticResource MaterialDesignIconButton}" Width="32" Height="32" 
+                                Command="{Binding DataContext.EditUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                CommandParameter="{Binding}">
+                                    <materialDesign:PackIcon Kind="Edit" Foreground="#FF8A3D" Width="18" Height="18"/>
                                 </Button>
-                                <Button Style="{StaticResource MaterialDesignIconButton}" Width="30" Height="30" Command="{Binding DataContext.DeleteUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
-                                    <materialDesign:PackIcon Kind="Delete" Foreground="#E74C3C" Width="18"/>
+
+                                <Button x:Name="BtnDeleteStaff" Width="32" Height="32" 
+                                Command="{Binding DataContext.DeleteUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                CommandParameter="{Binding}">
+                                    <Button.Style>
+                                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Role}" Value="Admin">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                    <materialDesign:PackIcon Kind="Delete" Foreground="#E74C3C" Width="18" Height="18"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

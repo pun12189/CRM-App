@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CallMan.Models.Enums;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -15,17 +16,21 @@ namespace CallMan.Models
         public int UserId { get; set; }
 
         [ObservableProperty] private string _email = string.Empty;
-        [ObservableProperty] private string? _phone; // Optional
+        [ObservableProperty] private string? _phone;
         [ObservableProperty] private string _fullName = string.Empty;
-        [ObservableProperty] private string _password;
-        [ObservableProperty] private string _role = "Executive";
+        [ObservableProperty] private string _password = string.Empty;
+        [ObservableProperty] private UserRole _role = UserRole.Executive;
         [ObservableProperty] private int? _seniorId;
-        [ObservableProperty] private decimal _monthlyTarget;
+        [ObservableProperty] private int _departmentId;
         [ObservableProperty] private bool _isActive = true;
+        [ObservableProperty] private double _monthlyTarget = 0.0;
 
-        // Helper for ComboBoxes
+        public DateTime CreatedDate { get; set; } = DateTime.Now;
+
+        // Unmapped relational lookup elements loaded via join queries
+        [NotMapped] public string? SeniorName { get; set; }
+        [NotMapped] public string? DepartmentName { get; set; }
+
         public string DisplayName => $"{FullName} ({Role})";
-
-        public string? SeniorName { get; set; }
     }
 }

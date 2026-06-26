@@ -29,6 +29,7 @@ namespace CallMan.ViewModels
         private readonly OrderService _orderService;
         private readonly OccupiedLocationService _locationService;
         private readonly NotificationRoutingService _routingService;
+        private readonly StaffService _staffService;
         private ICollectionView _leadsCollection;
 
         [ObservableProperty]
@@ -75,12 +76,13 @@ namespace CallMan.ViewModels
         [ObservableProperty] private SettingItem? _targetSelectedLabel;
         [ObservableProperty] private ObservableCollection<SettingItem> _selectedLabelsList = new();
 
-        public LeadFollowupViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService)
+        public LeadFollowupViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService, StaffService staffService)
         {
             _leadService = leadService;
             _settingService = settingService;
             _session = session;
             _dialogService = dialogService;
+            _staffService = staffService;
             _productService = productService;
             _orderService = orderService;
             _locationService = locationService;
@@ -272,7 +274,7 @@ namespace CallMan.ViewModels
 
         private async Task LoadLeads()
         {
-            var users = await _leadService.GetAllUsersAsync();
+            var users = await _staffService.GetAllStaffAsync();
             SystemUsersList = new ObservableCollection<User>(users);
 
             var labels = await _settingService.GetSettingsAsync("LeadLabels");

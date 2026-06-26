@@ -39,5 +39,16 @@ namespace CallMan.Dialogs
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e) => this.Close();
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+
+            // Release the context event listener safely on dialog termination
+            if (DataContext is AddStaffDialogViewModel vm)
+            {
+                vm.Cleanup();
+            }
+        }
     }
 }

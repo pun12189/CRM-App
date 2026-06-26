@@ -62,7 +62,7 @@ namespace CallMan.Services
                 _session.CurrentUserEmail = user.Email;
                 _session.DisplayName = user.FullName;
                 _session.CurrentUser = user.FullName;
-                _session.UserRole = user.Role;
+                _session.UserRole = user.Role.ToString();
                 _session.SeniorId = user.SeniorId;
                 var id = await _logService.RecordLoginAsync(user.UserId);
                 _session.LogId = id;

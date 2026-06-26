@@ -23,6 +23,7 @@ namespace CallMan.ViewModels
         private readonly IDialogService _dialogService;
         private readonly ProductService _productService;
         private readonly OrderService _orderService;
+        private readonly StaffService _staffService;
         private readonly OccupiedLocationService _locationService;
         [ObservableProperty] private decimal _totalOutstanding;
         [ObservableProperty] private CustomerStats _customerStats = new();
@@ -85,12 +86,13 @@ namespace CallMan.ViewModels
 
         private bool _isInitialized;
 
-        public MaturedLeadsViewModel(LeadService service, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService)
+        public MaturedLeadsViewModel(LeadService service, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, StaffService staffService)
         {
             _service = service;
             _settingService = settingService;
             _session = session;
             _dialogService = dialogService;
+            _staffService = staffService;
             _productService = productService;
             _orderService = orderService;
             _locationService = locationService;
@@ -101,7 +103,7 @@ namespace CallMan.ViewModels
 
         private async Task LoadInitialDataAsync()
         {
-            var users = await _service.GetAllUsersAsync();
+            var users = await _staffService.GetAllStaffAsync();
             SystemUsersList = new ObservableCollection<User>(users);
 
             var labels = await _settingService.GetSettingsAsync("LeadLabels");

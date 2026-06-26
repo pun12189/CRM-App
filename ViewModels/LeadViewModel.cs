@@ -24,6 +24,7 @@ namespace CallMan.ViewModels
         private readonly IDialogService _dialogService;
         private readonly OccupiedLocationService _locationService;
         private readonly ProductService _productService;
+        private readonly StaffService _staffService;
         private readonly OrderService _orderService;
         private readonly NotificationRoutingService _routingService;
         private ICollectionView _leadsCollection;
@@ -95,12 +96,13 @@ namespace CallMan.ViewModels
 
         private bool _isInitialized;
 
-        public LeadViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService)
+        public LeadViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService, StaffService staffService)
         {
             _leadService = leadService;
             _settingService = settingService;
             _session = session;
             _dialogService = dialogService;
+            _staffService = staffService;
             _locationService = locationService;
             _productService = productService;
             _orderService = orderService;
@@ -299,7 +301,7 @@ namespace CallMan.ViewModels
 
         private async Task LoadInitialDataAsync()
         {
-            var users = await _leadService.GetAllUsersAsync();
+            var users = await _staffService.GetAllStaffAsync();
             SystemUsersList = new ObservableCollection<User>(users);
 
             var labels = await _settingService.GetSettingsAsync("LeadLabels");

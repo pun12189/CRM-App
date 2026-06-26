@@ -87,6 +87,9 @@ namespace CallMan.ViewModels
                 case "Logs":
                     CurrentSettingView = _serviceProvider.GetRequiredService<LoginLogsViewModel>();
                     break;
+                case "Permissions":
+                    CurrentSettingView = _serviceProvider.GetRequiredService<PermissionsManagementViewModel>();
+                    break;
                 case "Whatsapp":
                 case "CallMan":
                 case "ECom":
@@ -138,10 +141,7 @@ namespace CallMan.ViewModels
 
                     // Set it as the current view
                     CurrentSettingView = genericVM;
-                    break;
-                case "Permissions":
-                    // CurrentSettingView = _serviceProvider.GetRequiredService<PermissionsViewModel>();
-                    break;
+                    break;                
                 // Add cases for Fetch Inquiries, Workflows, etc.
                 default:
                     IsMainGridVisible = true;

@@ -1,0 +1,106 @@
+﻿<UserControl x:Class="CallMan.Views.PermissionsManagementView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:converters="clr-namespace:CallMan.Converters"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" Background="#F8FAFC">
+    <UserControl.Resources>
+        <converters:EnumToIdConverter x:Key="EnumToIdConverter"/>
+    </UserControl.Resources>
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- HEADER BANNER DESCRIPTIONS -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="Role &amp; Permissions Management" FontSize="20" FontWeight="Bold" Foreground="#1E293B"/>
+            <TextBlock Text="Configure and scale system access matrices across specific user groups." FontSize="13" Foreground="#64748B" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- CORE ACCOUNT LIST WRAPPER CONTAINER -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1">
+            <DataGrid ItemsSource="{Binding RoleSummaries}" 
+                      AutoGenerateColumns="False" 
+                      CanUserAddRows="False" 
+                      IsReadOnly="True"
+                      GridLinesVisibility="Horizontal" 
+                      RowHeight="46"
+                      Background="Transparent"
+                      HeadersVisibility="Column">
+
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                        <Setter Property="Background" Value="#F1F5F9"/>
+                        <Setter Property="Foreground" Value="#475569"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Padding" Value="16,10"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+
+                <DataGrid.Columns>
+                    <!-- Column 1: Static Auto Index Placeholder -->
+                    <DataGridTextColumn Header="#" Binding="{Binding Role, Converter={StaticResource EnumToIdConverter}}" Width="60">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Padding" Value="16,0,0,0"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Foreground" Value="#64748B"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Column 2: System Readable Identity Label -->
+                    <DataGridTextColumn Header="Name" Binding="{Binding Name}" Width="*" FontWeight="SemiBold">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Foreground" Value="#1E293B"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Column 3: Aggregate Active Target Users Population Scale Metrics -->
+                    <DataGridTextColumn Header="Total User" Binding="{Binding TotalUser}" Width="150">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Foreground" Value="#475569"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Column 4: Command Interaction Routines Actions Tray Trigger -->
+                    <DataGridTemplateColumn Header="Action" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <!-- Amber/Yellow Pencil Edit Action Trigger Button Panel -->
+                                <Button x:Name="BtnEditPermissions"
+                                        Command="{Binding DataContext.LaunchMatrixEditorCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconButton}" Height="32" Width="32" ToolTip="Configure Module Rights">
+                                    <materialDesign:PackIcon Kind="Pencil" Foreground="#F59E0B" Width="18" Height="18"/>
+                                </Button>
+
+                                <!-- CONDITIONAL VISIBILITY TRIGGER MAP MATCHING SCREENSHOT REQUIREMENTS -->
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding CanEdit}" Value="False">
+                                        <!-- Hides the pencil button completely for Admin profiles, matching image_ca3de0.png -->
+                                        <Setter TargetName="BtnEditPermissions" Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</UserControl>

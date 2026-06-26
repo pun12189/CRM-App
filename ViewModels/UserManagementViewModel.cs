@@ -15,22 +15,37 @@ namespace CallMan.ViewModels
 {
     public partial class UserManagementViewModel : ObservableObject
     {
-        private readonly LeadService _service;
         private readonly IDialogService _dialogService;
+        private readonly StaffService _staffService;
 
         [ObservableProperty] private ObservableCollection<User> _usersList = new();
 
-        public UserManagementViewModel(LeadService service, IDialogService dialogService)
+        public UserManagementViewModel(IDialogService dialogService, StaffService staffService)
         {
             _dialogService = dialogService;
-            _service = service;
+            _staffService = staffService;
             _ = LoadData();
         }
 
         private async Task LoadData()
         {
-            var allUsers = await _service.GetAllUsersAsync();
-            UsersList = new ObservableCollection<User>(allUsers);
+            try
+            {
+                var allUsers = await _staffService.GetAllStaffAsync();
+                UsersList = new ObservableCollection<User>(allUsers);
+            }
+            catch (ApplicationException appEx)
+            {
+                // Intercepts our cleanly wrapped custom exception messages safely
+                MessageBox.Show(appEx.Message, "Database Restriction", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (Exception ex)
+            {
+                // Ultimate fallback safety net: intercepts unexpected critical infrastructure errors (e.g., Server Offline)
+                MessageBox.Show($"A critical communication error occurred while saving to the server:\n\n{ex.Message}",
+                                "System Connection Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+
         }
 
         [RelayCommand]
@@ -68,7 +83,7 @@ namespace CallMan.ViewModels
 
             if (isConfirmed == MessageBoxResult.OK)
             {
-                bool success = await _service.DeleteUserAsync(user.UserId);
+                bool success = await _staffService.SoftDeleteUserAsync(user);
                 if (success)
                 {
                     UsersList.Remove(user);

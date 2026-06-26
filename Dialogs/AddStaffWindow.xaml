@@ -4,81 +4,148 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CallMan.Dialogs"
+        xmlns:converters="clr-namespace:CallMan.Converters"
         mc:Ignorable="d"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="{Binding WindowTitle}" Height="550" Width="450"
+        Title="{Binding WindowTitle}" SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner" Background="#F5F7F9"
         WindowStyle="None" AllowsTransparency="True">
     <Window.Resources>
         <materialDesign:BooleanToVisibilityConverter x:Key="InverseBoolToVis" TrueValue="Collapsed" FalseValue="Visible" />
+        <converters:IntToBoolConverter x:Key="IntToBoolConverter" />
     </Window.Resources>
 
-    <Border BorderThickness="1" BorderBrush="#DDD" CornerRadius="8" Background="White">
-        <Grid Margin="25">
+    <Border BorderThickness="1" BorderBrush="#E2E8F0" CornerRadius="12" Background="White" Margin="2" MinWidth="680">
+        <Grid Margin="28,24,28,24">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0" Text="{Binding WindowTitle}" FontSize="20" 
-                       FontWeight="Bold" Foreground="#1794A1" Margin="0,0,0,20"/>
+                   FontWeight="Bold" Foreground="#1794A1" Margin="0,0,0,20"/>
 
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                <StackPanel>
-                    <TextBox Text="{Binding CurrentUser.FullName}" materialDesign:HintAssist.Hint="Full Name" 
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,15"/>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="32"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                    <TextBox Text="{Binding CurrentUser.Email}" materialDesign:HintAssist.Hint="Email ID (Login)" 
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,15"/>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Personal Identity Details" FontSize="11" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,10"/>
 
-                    <TextBox Text="{Binding CurrentUser.Phone}" materialDesign:HintAssist.Hint="Phone/WhatsApp (Optional)" 
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,15"/>
+                    <TextBox Text="{Binding CurrentUser.FullName, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="Full Name" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                         Margin="0,0,0,16" VerticalContentAlignment="Center"/>
 
-                    <PasswordBox x:Name="PassBox" materialDesign:HintAssist.Hint="Set Password" 
-                                 Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVis}}"
-                                 Style="{StaticResource MaterialDesignOutlinedPasswordBox}" Margin="0,0,0,15"/>
+                    <TextBox Text="{Binding CurrentUser.Email, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="Email ID (System Login Workspace)" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                         Margin="0,0,0,16" VerticalContentAlignment="Center"/>
 
-                    <ComboBox ItemsSource="{Binding Roles}" SelectedValue="{Binding CurrentUser.Role}"
-                              materialDesign:HintAssist.Hint="Assign Role"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,15"/>
+                    <TextBox Text="{Binding CurrentUser.Phone, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="Phone / WhatsApp Number (Optional)" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                         Margin="0,0,0,16" VerticalContentAlignment="Center"/>
+
+                    <PasswordBox x:Name="PassBox" materialDesign:HintAssist.Hint="Set Account Login Password" 
+                             VerticalContentAlignment="Center" Margin="0,0,0,16">
+                        <PasswordBox.Style>
+                            <Style TargetType="PasswordBox" BasedOn="{StaticResource MaterialDesignOutlinedPasswordBox}">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </PasswordBox.Style>
+                    </PasswordBox>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="System Settings &amp; Hierarchy Roles" FontSize="11" FontWeight="Bold" Foreground="#64748B" Margin="2,0,0,10"/>
+
+                    <ComboBox ItemsSource="{Binding DepartmentsList}" 
+                          SelectedValue="{Binding CurrentUser.DepartmentId, UpdateSourceTrigger=PropertyChanged}"
+                          SelectedValuePath="Id" DisplayMemberPath="DeptName"
+                          materialDesign:HintAssist.Hint="Assign Department Location"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                          Margin="0,0,0,16" VerticalContentAlignment="Center"/>
+
+                    <ComboBox ItemsSource="{Binding RolesList}" 
+                          SelectedValue="{Binding CurrentUser.Role, UpdateSourceTrigger=PropertyChanged}"
+                          materialDesign:HintAssist.Hint="Assign System Access Level Role"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                          Margin="0,0,0,16" VerticalContentAlignment="Center"/>
 
                     <ComboBox ItemsSource="{Binding PotentialSeniors}" 
-                              SelectedValue="{Binding CurrentUser.SeniorId}"
-                              SelectedValuePath="UserId" DisplayMemberPath="DisplayName"
-                              materialDesign:HintAssist.Hint="Assign Senior/Team Leader"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,15"/>
+                          SelectedValue="{Binding CurrentUser.SeniorId, UpdateSourceTrigger=PropertyChanged}"
+                          SelectedValuePath="UserId" 
+                          DisplayMemberPath="DisplayName"
+                          IsEnabled="{Binding PotentialSeniors.Count, Converter={StaticResource IntToBoolConverter}}"
+                          materialDesign:HintAssist.Hint="Assign Senior / Reporting Team Leader"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                          Margin="0,0,0,16" VerticalContentAlignment="Center"/>
 
-                    <TextBox Text="{Binding CurrentUser.MonthlyTarget}" materialDesign:HintAssist.Hint="Monthly Target (₹)" 
-                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,10"/>
-
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,20" VerticalAlignment="Center">
-                        <TextBlock Text="Account Status:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#666"/>
-                        <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}" 
-                  IsChecked="{Binding CurrentUser.IsActive}" 
-                  ToolTip="Toggle to Activate/Deactivate User Account"/>
-                        <TextBlock Margin="10,0,0,0" VerticalAlignment="Center">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Text" Value="Inactive"/>
-                                    <Setter Property="Foreground" Value="Red"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding CurrentUser.IsActive}" Value="True">
-                                            <Setter Property="Text" Value="Active"/>
-                                            <Setter Property="Foreground" Value="Green"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </StackPanel>
+                    <TextBox Text="{Binding CurrentUser.MonthlyTarget, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="Monthly Performance Target Amount (₹)" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                         Margin="0,0,0,16" VerticalContentAlignment="Center"/>                    
                 </StackPanel>
-            </ScrollViewer>
+            </Grid>
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-                <Button Content="CANCEL" Click="Cancel_Click" Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,10,0"/>
-                <Button Content="SAVE USER" Command="{Binding SaveCommand}" 
-                        Background="#1794A1" BorderBrush="#1794A1" Width="120"/>
+            <Border Grid.Row="2" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12,0" Background="#F8FAFC" Height="42">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="50"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="AccountCard" Foreground="#64748B" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Account Active Status:" VerticalAlignment="Center" Foreground="#475569" FontWeight="Medium" FontSize="12"/>
+                    </StackPanel>
+
+                    <ToggleButton Grid.Column="1" Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                  IsChecked="{Binding CurrentUser.IsActive, UpdateSourceTrigger=PropertyChanged}" 
+                  VerticalAlignment="Center" Margin="0,0,4,0"/>
+
+                    <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" FontSize="12" FontWeight="Bold">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="Inactive"/>
+                                <Setter Property="Foreground" Value="#EF4444"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CurrentUser.IsActive}" Value="True">
+                                        <Setter Property="Text" Value="Active"/>
+                                        <Setter Property="Foreground" Value="#22C55E"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
+            </Border>
+            
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,24,0,0">
+                <Button Content="CANCEL" Click="Cancel_Click" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#94A3B8" FontWeight="SemiBold" Height="38" Margin="0,0,8,0"/>
+
+                <Button Content="SAVE STAFF PROFILE" 
+                    Command="{Binding SaveCommand}" 
+                    CommandParameter="{Binding ElementName=PassBox}"
+                    Background="#1794A1" BorderBrush="#1794A1" Foreground="White" FontWeight="Bold" Height="38" Padding="20,0">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="6"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
             </StackPanel>
         </Grid>
     </Border>

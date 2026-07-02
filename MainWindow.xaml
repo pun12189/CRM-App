@@ -7,6 +7,7 @@
         xmlns:core="clr-namespace:CallMan.Core"
         xmlns:vm="clr-namespace:CallMan.ViewModels"
         xmlns:views="clr-namespace:CallMan.Views"
+        xmlns:security="clr-namespace:CallMan.Core"
         Icon="/Assets/opn.png"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
@@ -513,7 +514,7 @@
                         <MenuItem Header="VMS" IsEnabled="False" Icon="{materialDesign:PackIcon Kind=HumanWelcome}" Style="{StaticResource SubItemStyle}" />
                     </MenuItem>
 
-                    <MenuItem Header="Admin Settings" Icon="{materialDesign:PackIcon Kind=Settings}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
+                    <MenuItem Header="Admin Settings" security:SecurityGuard.Requires="Admin:View" Icon="{materialDesign:PackIcon Kind=Settings}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
                 </Menu>
                 <Menu Background="Transparent" VerticalAlignment="Stretch" HorizontalAlignment="Right">
                     <Menu.Resources>

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:security="clr-namespace:CallMan.Core"
              mc:Ignorable="d" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              d:DesignHeight="450" d:DesignWidth="800">
@@ -24,7 +25,7 @@
 
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <Button Content="Export" Background="#FF8A3D" BorderBrush="#FF8A3D" Margin="0,0,10,0" Height="32" Visibility="Collapsed"/>
-                <Button Content="Add New Staff" Command="{Binding OpenAddStaffDialogCommand}" 
+                <Button Content="Add New Staff" Command="{Binding OpenAddStaffDialogCommand}" security:SecurityGuard.Requires="User:Create"
                     Background="#1794A1" BorderBrush="#1794A1" Height="32"/>
             </StackPanel>
         </DockPanel>
@@ -122,13 +123,13 @@
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="12,0,12,0">
                                 <Button Style="{StaticResource MaterialDesignIconButton}" Width="32" Height="32" 
                                 Command="{Binding DataContext.EditUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                CommandParameter="{Binding}">
+                                CommandParameter="{Binding}" security:SecurityGuard.Requires="User:Edit">
                                     <materialDesign:PackIcon Kind="Edit" Foreground="#FF8A3D" Width="18" Height="18"/>
                                 </Button>
 
                                 <Button x:Name="BtnDeleteStaff" Width="32" Height="32" 
                                 Command="{Binding DataContext.DeleteUserCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                CommandParameter="{Binding}">
+                                CommandParameter="{Binding}" security:SecurityGuard.Requires="User:Delete">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}">
                                             <Setter Property="Visibility" Value="Visible"/>

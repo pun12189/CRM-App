@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CallMan.Views"
              xmlns:converters="clr-namespace:CallMan.Converters"
+             xmlns:security="clr-namespace:CallMan.Core"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
@@ -24,7 +25,7 @@
             <StackPanel>
                 <TextBlock Text="DIVISIONS" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
                 <ListBox ItemsSource="{Binding Divisions}" SelectedItem="{Binding SelectedDivision}" DisplayMemberPath="Name"/>
-                <Button Content="+ NEW DIVISION" Margin="0,20,0,0" Command="{Binding AddDivisionCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
+                <Button Content="+ NEW DIVISION" security:SecurityGuard.Requires="Divisions:Create" Margin="0,20,0,0" Command="{Binding AddDivisionCommand}" Style="{StaticResource MaterialDesignOutlinedButton}"/>
             </StackPanel>
         </materialDesign:Card>
 
@@ -55,6 +56,7 @@
 
                             <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
                         Command="{Binding SelectLogoCommand}"
+                        security:SecurityGuard.Requires="Divisions:Edit"
                         Content="UPDATE LOGO" 
                         Height="35" FontSize="12"/>
                         </StackPanel>
@@ -85,6 +87,7 @@
 
                             <Button Style="{StaticResource MaterialDesignOutlinedButton}" 
             Command="{Binding SelectStampCommand}"
+            security:SecurityGuard.Requires="Divisions:Edit"
             Content="UPDATE STAMP" 
             Height="35" FontSize="12"/>
                         </StackPanel>
@@ -141,7 +144,7 @@
                 <Button Command="{Binding SaveProfileCommand}" 
                     Content="SAVE SETTINGS" 
                     Width="200" HorizontalAlignment="Right" Height="45" 
-                    Margin="0,10,8,30" Background="#1794A1" BorderBrush="#1794A1"/>
+                    Margin="0,10,8,30" Background="#1794A1" BorderBrush="#1794A1" security:SecurityGuard.Requires="CompanyProfile:Edit"/>
             </StackPanel>
         </ScrollViewer>
     </Grid>

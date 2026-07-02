@@ -6,6 +6,7 @@
              xmlns:local="clr-namespace:CallMan.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:converters="clr-namespace:CallMan.Converters"
+             xmlns:security="clr-namespace:CallMan.Core"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
@@ -29,7 +30,7 @@
 
                 <DockPanel Margin="16" HorizontalAlignment="Stretch">
                     <TextBlock Text="Business Departments" Style="{StaticResource MaterialDesignHeadline6TextBlock}" HorizontalAlignment="Left"/>
-                    <Button Command="{Binding AddNewDepartmentCommand}" Content="ADD DEPARTMENT" HorizontalAlignment="Right"
+                    <Button Command="{Binding AddNewDepartmentCommand}" security:SecurityGuard.Requires="Departments:Create" Content="ADD DEPARTMENT" HorizontalAlignment="Right"
                         Style="{StaticResource MaterialDesignRaisedButton}" Background="#1794A1"/>
                 </DockPanel>
 
@@ -63,7 +64,7 @@
                                 <DataTemplate>
                                     <Button Style="{StaticResource MaterialDesignIconButton}"
                                     Command="{Binding DataContext.DeleteDepartmentCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                    CommandParameter="{Binding}">
+                                    CommandParameter="{Binding}" security:SecurityGuard.Requires="Departments:Delete">
                                         <materialDesign:PackIcon Kind="DeleteOutline" Foreground="Red"/>
                                     </Button>
                                 </DataTemplate>
@@ -98,7 +99,7 @@
 
                 <CheckBox IsChecked="{Binding SelectedDepartment.IsActive}" Content="Active" Margin="0,0,0,20"/>
 
-                <Button Command="{Binding SaveSelectedDepartmentCommand}" Content="SAVE DEPARTMENT" 
+                <Button Command="{Binding SaveSelectedDepartmentCommand}" Content="SAVE DEPARTMENT" security:SecurityGuard.Requires="Departments:Edit"
                 Height="45" Background="#1794A1"/>
             </StackPanel>
         </materialDesign:Card>

@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:security="clr-namespace:CallMan.Core"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
@@ -134,16 +135,16 @@
                     </Expander.Header>
 
                     <UniformGrid Columns="4" VerticalAlignment="Top">
-                        <Button Style="{StaticResource SettingTileStyle}" Content="Divisions" CommandParameter="CProfile" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Style="{StaticResource SettingTileStyle}" Content="Departments" Visibility="Collapsed" CommandParameter="Departments" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Style="{StaticResource SettingTileStyle}" Content="Staff" CommandParameter="Staff" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="Divisions:View" Content="Divisions" CommandParameter="CProfile" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="Departments:View" Content="Departments" Visibility="Collapsed" CommandParameter="Departments" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="User:View" Content="Staff" CommandParameter="Staff" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Permissions" CommandParameter="Permissions" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Style="{StaticResource SettingTileStyle}" Content="Order Stages" CommandParameter="OrderStages" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Content="Custom Fields" Style="{StaticResource SettingTileStyle}" CommandParameter="CustomFields" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Style="{StaticResource SettingTileStyle}" Content="Item Categories" CommandParameter="Category" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="OrderStage:View" Content="Order Stages" CommandParameter="OrderStages" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Content="Custom Fields" Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="CustomFields:View" CommandParameter="CustomFields" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="Categories:View" Content="Item Categories" CommandParameter="Category" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Proforma Settings" IsEnabled="False" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Notice Board" IsEnabled="False" CommandParameter="Notice" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Style="{StaticResource SettingTileStyle}" Content="Login Logs" CommandParameter="Logs" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="LoginLogs:View" Content="Login Logs" CommandParameter="Logs" Command="{Binding NavigateToSettingCommand}"/>
                     </UniformGrid>
                 </Expander>
 
@@ -159,13 +160,13 @@
                     </Expander.Header>
 
                     <UniformGrid Columns="4" VerticalAlignment="Top">
-                        <Button Content="Add New Location" Style="{StaticResource SettingTileStyle}" IsEnabled="False"/>
-                        <Button Content="Dead Reasons" Style="{StaticResource SettingTileStyle}" CommandParameter="Dead Reasons" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Content="Followup Stages" Style="{StaticResource SettingTileStyle}" CommandParameter="Followup Stages" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Content="Mature Stages" Style="{StaticResource SettingTileStyle}" CommandParameter="Mature Stages" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Content="Lead Categories" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Tags" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Content="Lead Source" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Source" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Content="Lead Label" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Labels" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Content="Add New Location" Style="{StaticResource SettingTileStyle}" IsEnabled="False" security:SecurityGuard.Requires="Location:View"/>
+                        <Button Content="Dead Reasons" Style="{StaticResource SettingTileStyle}" CommandParameter="Dead Reasons" Command="{Binding NavigateToSettingCommand}" security:SecurityGuard.Requires="DeadReason:View"/>
+                        <Button Content="Followup Stages" Style="{StaticResource SettingTileStyle}" CommandParameter="Followup Stages" Command="{Binding NavigateToSettingCommand}" security:SecurityGuard.Requires="FollowupStage:View"/>
+                        <Button Content="Mature Stages" Style="{StaticResource SettingTileStyle}" CommandParameter="Mature Stages" Command="{Binding NavigateToSettingCommand}" security:SecurityGuard.Requires="MatureStage:View"/>
+                        <Button Content="Lead Tags" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Tags" Command="{Binding NavigateToSettingCommand}" security:SecurityGuard.Requires="LeadTag:View"/>
+                        <Button Content="Lead Source" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Source" Command="{Binding NavigateToSettingCommand}" security:SecurityGuard.Requires="LeadSource:View"/>
+                        <Button Content="Lead Label" Style="{StaticResource SettingTileStyle}" CommandParameter="Lead Labels" Command="{Binding NavigateToSettingCommand}" security:SecurityGuard.Requires="LeadLabel:View"/>
                     </UniformGrid>
                 </Expander>
 

@@ -146,7 +146,7 @@ namespace CallMan.ViewModels
                 }
 
                 // Assign password safely (Include encryption tools here, e.g., BCrypt/SHA256 hash routines if preferred)
-                CurrentUser.Password = rawTextPassword;
+                CurrentUser.Password = BCrypt.Net.BCrypt.HashPassword(rawTextPassword);
             }
 
             try

@@ -1,4 +1,5 @@
-﻿using CallMan.Data;
+﻿using CallMan.Core;
+using CallMan.Data;
 using CallMan.Interfaces;
 using CallMan.Models;
 using Dapper;
@@ -21,13 +22,15 @@ namespace CallMan.Services
         private readonly CrmDbContext _context;
         private readonly IUserSession _session;
         private readonly LoginLogService _logService;
+        private readonly PermissionService _permissionService;
 
-        public AuthService(ApiService apiService, CrmDbContext context, IUserSession session, LoginLogService logService)
+        public AuthService(ApiService apiService, CrmDbContext context, IUserSession session, LoginLogService logService, PermissionService permissionService)
         {
             _apiService = apiService;
             _context = context;
             _session = session;
             _logService = logService;
+            _permissionService = permissionService;
         }
 
         public async Task<bool> AuthenticateByEmailAsync(string email, string password)
@@ -58,6 +61,11 @@ namespace CallMan.Services
 
             if (user != null && BCrypt.Net.BCrypt.Verify(password, user.Password))
             {
+                SecurityGuard.ActiveUserRole = user.Role;
+
+                // Load the 34 relational module matrix rows straight into the lookup dictionary cache
+                SecurityGuard.SessionRightsCache = await _permissionService.HydrateUserSessionSecurityProfileAsync(user.Role);
+
                 _session.UserId = user.UserId;
                 _session.CurrentUserEmail = user.Email;
                 _session.DisplayName = user.FullName;

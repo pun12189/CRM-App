@@ -7,6 +7,7 @@
         xmlns:conv="clr-namespace:CallMan.Converters"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
+        Icon="/Assets/opn.png"
         Title="{Binding SelectedLead.CustomerName, StringFormat='Profile: {0}', FallbackValue='Loading Profile...', TargetNullValue='New Lead'}"
         Height="700" Width="1024" WindowStartupLocation="CenterOwner">
     <Window.Resources>

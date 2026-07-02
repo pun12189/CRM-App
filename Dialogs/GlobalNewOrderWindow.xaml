@@ -8,6 +8,7 @@
         xmlns:conv="clr-namespace:CallMan.Converters"
         xmlns:models="clr-namespace:CallMan.Models"
         mc:Ignorable="d" x:Name="win"
+        Icon="/Assets/opn.png"
         Title="Create Global Order" Height="700" Width="1024"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>

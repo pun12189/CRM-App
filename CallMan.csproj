@@ -12,7 +12,9 @@
 
   <ItemGroup>
     <None Remove="Assets\logo.png" />
+    <None Remove="Assets\logo1.png" />
     <None Remove="Assets\opn.png" />
+    <None Remove="Assets\opn1.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,7 +36,13 @@
     <Resource Include="Assets\logo.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+    <Resource Include="Assets\logo1.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
     <Resource Include="Assets\opn.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\opn1.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

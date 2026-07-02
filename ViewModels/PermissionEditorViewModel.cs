@@ -39,12 +39,36 @@ namespace CallMan.ViewModels
 
         private async Task LoadPermissionsMatrixAsync()
         {
-            var data = await _permissionService.GetMatrixForRoleAsync(TargetRole);
-
-            PermissionRows.Clear();
-            foreach (var item in data)
+            try
             {
-                PermissionRows.Add(item);
+                // 1. Await the database records query (runs off the UI thread)
+                var data = await _permissionService.GetMatrixForRoleAsync(TargetRole);
+
+                if (data == null) return;
+
+                // 2. FIX: Safely marshal collection updates back onto the Main WPF UI Dispatcher Thread
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    PermissionRows.Clear();
+                    foreach (var item in data)
+                    {
+                        PermissionRows.Add(item);
+                    }
+
+                    // Force the UI grid view interface layers to redraw refresh channels
+                    FilteredRowsView.Refresh();
+                });
+            }
+            catch (Exception ex)
+            {
+                // Catch errors explicitly to prevent them from vanishing silently
+                System.Diagnostics.Debug.WriteLine($"[CRITICAL] Security Matrix Load Crash: {ex.Message}");
+
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show($"Failed to communicate with permission schema registries:\n{ex.Message}",
+                                    "Database Stream Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                });
             }
         }
 

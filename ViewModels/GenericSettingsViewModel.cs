@@ -22,6 +22,13 @@ namespace CallMan.ViewModels
         [ObservableProperty] private string _pageTitle; // e.g., "Dead Reasons"
         [ObservableProperty] private ObservableCollection<SettingItem> _itemsList = new();
 
+        [ObservableProperty] private string _moduleKey = "Admin";
+
+        public string RequiresView => $"{ModuleKey}:View";
+        public string RequiresCreate => $"{ModuleKey}:Create";
+        public string RequiresEdit => $"{ModuleKey}:Edit";
+        public string RequiresDelete => $"{ModuleKey}:Delete";
+
         public GenericSettingsViewModel(SettingService settingService, IDialogService dialogService)
         {
             _settingService = settingService;
@@ -32,6 +39,21 @@ namespace CallMan.ViewModels
         public async Task Initialize(string settingType)
         {
             PageTitle = settingType;
+
+            ModuleKey = settingType switch
+            {
+                "Dead Reasons" => "DeadReason",
+                "Followup Stages" => "FollowupStage",
+                "Mature Stages" => "MatureStage",
+                "Lead Source" => "LeadSource",
+                "Lead Labels" => "LeadLabel",
+                _ => "Admin"
+            };
+
+            OnPropertyChanged(nameof(RequiresView));
+            OnPropertyChanged(nameof(RequiresCreate));
+            OnPropertyChanged(nameof(RequiresEdit));
+            OnPropertyChanged(nameof(RequiresDelete));
 
             // Map UI Name to Database Table Name
             _currentTableName = settingType switch

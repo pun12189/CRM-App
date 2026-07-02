@@ -5,56 +5,72 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CallMan.Dialogs"
         mc:Ignorable="d"
+        Icon="/Assets/opn.png"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="{Binding WindowTitle}" Height="550" Width="650"
+        Title="{Binding WindowTitle}" Height="700" Width="740"
         WindowStartupLocation="CenterOwner" ResizeMode="CanResizeWithGrip">
-    <Grid Margin="16">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
+        <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBox Grid.Row="0" Margin="0,0,0,12" Height="40"
-         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+        <TextBox Grid.Row="0" Margin="0,0,0,12" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
          Style="{StaticResource MaterialDesignOutlinedTextBox}"
          materialDesign:HintAssist.Hint="Search module permissions..." 
          materialDesign:TextFieldAssist.HasClearButton="True"/>
 
         <DataGrid Grid.Row="1" ItemsSource="{Binding FilteredRowsView}" 
                   AutoGenerateColumns="False" CanUserAddRows="False" 
-                  GridLinesVisibility="Horizontal" Background="White" RowHeight="38">
+                  GridLinesVisibility="Horizontal" Background="White" RowHeight="40">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Module Name" Binding="{Binding DisplayName}" Width="*" IsReadOnly="True" FontWeight="SemiBold"/>
 
-                <DataGridTemplateColumn Header="View" Width="75">
+                <DataGridTemplateColumn Header="View" Width=".3*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding CanView, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center"/>
+                            <CheckBox IsChecked="{Binding CanView, UpdateSourceTrigger=PropertyChanged}" 
+                                      Visibility="{Binding AllowView, Converter={StaticResource BoolToVis}}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Edit" Width="75">
+                <DataGridTemplateColumn Header="Create" Width=".3*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding CanEdit, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center"/>
+                            <CheckBox IsChecked="{Binding CanCreate, UpdateSourceTrigger=PropertyChanged}" 
+                                      Visibility="{Binding AllowCreate, Converter={StaticResource BoolToVis}}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Create" Width="75">
+                <DataGridTemplateColumn Header="Edit" Width=".3*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding CanCreate, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center"/>
+                            <CheckBox IsChecked="{Binding CanEdit, UpdateSourceTrigger=PropertyChanged}" 
+                                      Visibility="{Binding AllowEdit, Converter={StaticResource BoolToVis}}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTemplateColumn Header="Delete" Width="75">
+                <DataGridTemplateColumn Header="Update" Width=".3*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding CanDelete, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center"/>
+                            <CheckBox IsChecked="{Binding CanUpdate, UpdateSourceTrigger=PropertyChanged}" 
+                                      Visibility="{Binding AllowUpdate, Converter={StaticResource BoolToVis}}" Foreground="#1794A1"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTemplateColumn Header="Delete" Width=".3*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding CanDelete, UpdateSourceTrigger=PropertyChanged}" 
+                                      Visibility="{Binding AllowDelete, Converter={StaticResource BoolToVis}}"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

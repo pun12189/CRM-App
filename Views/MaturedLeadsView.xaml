@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:security="clr-namespace:CallMan.Core"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:conv="clr-namespace:CallMan.Converters"
              xmlns:icon="http://metro.mahapps.com/winfx/xaml/iconpacks"             
@@ -90,29 +91,28 @@
                         <MenuItem.Items>
                             <MenuItem Header="Batch delete" 
       Command="{Binding BulkDeleteCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Delete"/>
 
                             <MenuItem Header="Change Leadholder" 
       Command="{Binding OpenChangeLeadHolderDialogCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
-
+      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Edit"/>
                             <MenuItem Header="Move to dead" 
       Command="{Binding MoveToDeadCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Edit"/>
 
                             <MenuItem Header="Assign Labels" 
       Command="{Binding OpenAssignLabelsDialogCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155"/>
+      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Edit"/>
                         </MenuItem.Items>
                     </MenuItem>
                 </Menu>
 
                 <Button Grid.Column="2" Content="Import Leads" 
             Command="{Binding OpenImportLeadsDialogCommand}"
-            Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0"/>
+            Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0" security:SecurityGuard.Requires="Customer:View"/>
                 <Button Grid.Column="4" Content="+ New Customer" 
                     Command="{Binding OpenAddLeadDialogCommand}"
-                    Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0"/>
+                    Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0" security:SecurityGuard.Requires="Customer:Create"/>
             </Grid>
         </Border>
 
@@ -195,13 +195,13 @@
                                 </TextBlock>
                                 <TextBlock Text="{Binding CustomerName}" TextWrapping="Wrap" Foreground="CadetBlue" FontSize="16" FontWeight="Bold" HorizontalAlignment="Left"/>
                                 <StackPanel Margin="0,5" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <Button BorderThickness="0" Padding="8" Margin="2" ToolTip="Update Info" Command="{Binding DataContext.OpenLeadProfileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Green" Foreground="White" FontWeight="Bold">
+                                    <Button security:SecurityGuard.Requires="Customer:Update" BorderThickness="0" Padding="8" Margin="2" ToolTip="Update Info" Command="{Binding DataContext.OpenLeadProfileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Green" Foreground="White" FontWeight="Bold">
                                         <icon:BootstrapIcons Kind="JournalText"/>
                                     </Button>
-                                    <Button BorderThickness="0" Padding="8" Margin="2" ToolTip="Edit Info" Command="{Binding DataContext.EditLeadCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="CadetBlue" Foreground="White" FontWeight="Bold">
+                                    <Button security:SecurityGuard.Requires="Customer:Edit" BorderThickness="0" Padding="8" Margin="2" ToolTip="Edit Info" Command="{Binding DataContext.EditLeadCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="CadetBlue" Foreground="White" FontWeight="Bold">
                                         <icon:BootstrapIcons Kind="PencilFill"/>
                                     </Button>
-                                    <Button BorderThickness="0" Padding="8" Margin="2" ToolTip="Delete" Command="{Binding DataContext.DeleteLeadCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="MediumPurple" Foreground="White" FontWeight="Bold">
+                                    <Button security:SecurityGuard.Requires="Customer:Delete" BorderThickness="0" Padding="8" Margin="2" ToolTip="Delete" Command="{Binding DataContext.DeleteLeadCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="MediumPurple" Foreground="White" FontWeight="Bold">
                                         <icon:BootstrapIcons Kind="Trash3Fill"/>
                                     </Button>
                                 </StackPanel>

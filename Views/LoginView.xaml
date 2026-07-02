@@ -3,24 +3,25 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:CallMan.Views"
         mc:Ignorable="d"
-                Title="Secure Login" Height="450" Width="800" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+                Title="Secure Login" Height="500" Width="800" WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         WindowStartupLocation="CenterScreen" MouseDown="Window_MouseDown">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
-    <Border CornerRadius="10" Background="#D3D3D3" BorderThickness="1" BorderBrush="#DDD">
+    <Border CornerRadius="10" Background="Black" BorderThickness="1" BorderBrush="#DDD">
         <Grid Margin="30">
             <StackPanel Visibility="{Binding IsLoginVisible, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <Image Source="/Assets/logo.png" Stretch="Uniform" Height="60"/>
-                <TextBlock Text="WELCOME BACK !" FontSize="24" FontWeight="Bold" Margin="0,0,0,20" HorizontalAlignment="Center"/>
+                <Image Source="/Assets/logo.png" Stretch="Uniform" UseLayoutRounding="True" Height="100" CacheMode="BitmapCache" RenderOptions.EdgeMode="Aliased" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                <TextBlock Text="WELCOME BACK !" Foreground="WhiteSmoke" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" HorizontalAlignment="Center"/>
 
-                <TextBlock Text="Email Address" Margin="0,10,0,5"/>
-                <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Height="35" FontSize="14" VerticalContentAlignment="Center"/>
+                <!--<TextBlock Text="Email Address" Margin="0,10,0,5" Foreground="White"/>-->
+                <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" Margin="0,10" materialDesign:HintAssist.Hint="Enter Email" materialDesign:HintAssist.Foreground="Black" Background="WhiteSmoke" Foreground="Black" Style="{StaticResource MaterialDesignOutlinedTextBox}" Padding="10,0" Height="45" FontSize="14" VerticalContentAlignment="Center"/>
 
-                <TextBlock Text="Password" Margin="0,10,0,5"/>
-                <PasswordBox x:Name="TxtPassword" Height="35" FontSize="14" VerticalContentAlignment="Center"/>
+                <!--<TextBlock Text="Password" Margin="0,10,0,5" Foreground="White"/>-->
+                <PasswordBox x:Name="TxtPassword" Padding="10,0" Height="45" FontSize="14" Margin="0,10" VerticalContentAlignment="Center" Background="White" Foreground="Black" materialDesign:HintAssist.Hint="Enter Password" materialDesign:HintAssist.Foreground="Black" Style="{StaticResource MaterialDesignOutlinedPasswordBox}"/>
 
                 <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" FontSize="11" Margin="0,5"/>
 
@@ -53,24 +54,24 @@
 
                 <Grid>
                     <Button Content="Forgot Password?" Command="{Binding SwitchViewCommand}" 
-                        Background="Transparent" BorderThickness="0" Foreground="Black" HorizontalAlignment="Left"/>
+                        Background="Transparent" BorderThickness="0" Foreground="WhiteSmoke" HorizontalAlignment="Left"/>
                     <Button Content="Exit" Command="{Binding ExitCommand}" 
                         Background="Transparent" BorderThickness="0" Foreground="IndianRed" HorizontalAlignment="Right"/>
                 </Grid>
             </StackPanel>
             <StackPanel Visibility="{Binding IsForgotVisible, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <TextBlock Text="Reset Password" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+                <TextBlock Text="Reset Password" FontSize="20" FontWeight="Bold" Margin="0,0,0,20" Foreground="WhiteSmoke"/>
 
 
-                <TextBlock Text="Enter your registered email to receive a temporary password." TextWrapping="Wrap" Margin="0,0,0,10"/>
-                <TextBox Text="{Binding ResetEmail, UpdateSourceTrigger=PropertyChanged}" Tag="Email Address" Height="35" FontSize="14" VerticalContentAlignment="Center" Margin="0,10"/>
+                <TextBlock Text="Enter your registered email to receive a temporary password." Foreground="WhiteSmoke" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                <TextBox Text="{Binding ResetEmail, UpdateSourceTrigger=PropertyChanged}" Tag="Email Address" Background="WhiteSmoke" Height="45" FontSize="14" Padding="10,0" materialDesign:HintAssist.Hint="Enter Email" materialDesign:HintAssist.Foreground="Black" Style="{StaticResource MaterialDesignOutlinedTextBox}" VerticalContentAlignment="Center" Margin="0,10"/>
                 <TextBlock Text="{Binding ErrorMessage}" Foreground="Red" FontSize="11" Margin="0,5"/>
                 <!--<Button Content="Send Reset Link" Command="{Binding SendResetCommand}" Height="40" Margin="0,20,0,10" Background="#2193b0" Foreground="White" />-->
                 <Button Command="{Binding SendResetCommand}" IsDefault="True"
       CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"
       Height="40" Margin="0,20,0,10" Background="#2193b0" Foreground="White">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Send Reset Link" Margin="0,0,10,0"/>
+                        <TextBlock Text="Send Reset Link" Margin="0,0,10,0" Foreground="WhiteSmoke"/>
                         <Ellipse x:Name="LoadingSpinner1" StrokeThickness="3" Stroke="White" StrokeDashArray="1" Height="20" Width="20"
 Fill="Transparent" RenderTransformOrigin="0.5,0.5"
 Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">

@@ -54,7 +54,7 @@ namespace CallMan.ViewModels
 
                 bool success = await _authService.AuthenticateByEmailAsync(Email, password);
 
-                if (true)
+                if (success)
                 {                    
                     var mainWindow = App.ServiceProvider.GetRequiredService<MainWindow>();
                     mainWindow.Show();
@@ -87,8 +87,13 @@ namespace CallMan.ViewModels
         [RelayCommand]
         private async void SendReset(object obj)
         {
-            if (string.IsNullOrWhiteSpace(ResetEmail)) return;
+            if (string.IsNullOrWhiteSpace(ResetEmail))
+            {
+                ErrorMessage = "Email is required to send your temporary password.";
+                return; 
+            }
 
+            ErrorMessage = "";
             IsBusy = true; // Show your professional spinner!
             var success = await _authService.ResetPasswordAsync(ResetEmail);
             IsBusy = false;

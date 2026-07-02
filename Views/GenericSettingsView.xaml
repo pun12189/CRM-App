@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:CallMan.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:security="clr-namespace:CallMan.Core"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Grid Background="White" Margin="20">
@@ -24,7 +25,7 @@
 
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <Button Content="Export" Background="#FF8A3D" BorderBrush="#FF8A3D" Margin="0,0,10,0" Height="32"/>
-                <Button Content="Add New" Command="{Binding OpenAddDialogCommand}" 
+                <Button Content="Add New" Command="{Binding OpenAddDialogCommand}" security:SecurityGuard.Requires="{Binding RequiresCreate}"
                     Background="#1794A1" BorderBrush="#1794A1" Height="32"/>
             </StackPanel>
         </DockPanel>
@@ -39,7 +40,7 @@
                 <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="40"/>
 
                 <!-- Teal Name Column (Matches image) -->
-                <DataGridTemplateColumn Header="Name" Width="*">
+                <DataGridTemplateColumn Header="Name" Width="2*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding Name}" Foreground="#1794A1" VerticalAlignment="Center" Margin="5,0"/>
@@ -47,10 +48,10 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="Total Leads" Binding="{Binding TotalLeads}" Width="*"/>
+                <DataGridTextColumn Header="Total Leads" Binding="{Binding TotalLeads}" Width=".5*"/>
 
                 <!-- Delete Leads Button (Matches image) -->
-                <DataGridTemplateColumn Width="*">
+                <DataGridTemplateColumn Width="1.5*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Button Content="Delete" Background="#E74C3C" BorderBrush="#E74C3C" Height="25" Width="100" FontSize="10"/>
@@ -59,15 +60,17 @@
                 </DataGridTemplateColumn>
 
                 <!-- Actions (Matches image) -->
-                <DataGridTemplateColumn Header="Action" Width="80">
+                <DataGridTemplateColumn Header="Action" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
                                 <Button Style="{StaticResource MaterialDesignIconButton}" Width="30" Height="30"
+                                    security:SecurityGuard.Requires="{Binding DataContext.RequiresEdit, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                     Command="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
                                     <materialDesign:PackIcon Kind="Edit" Foreground="#FF8A3D" Width="16"/>
                                 </Button>
                                 <Button Style="{StaticResource MaterialDesignIconButton}" Width="30" Height="30"
+                                        security:SecurityGuard.Requires="{Binding DataContext.RequiresDelete, RelativeSource={RelativeSource AncestorType=DataGrid}}"
                                     Command="{Binding DataContext.DeleteItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
                                     <materialDesign:PackIcon Kind="Delete" Foreground="#E74C3C" Width="16"/>
                                 </Button>

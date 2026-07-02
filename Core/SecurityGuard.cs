@@ -47,6 +47,12 @@ namespace CallMan.Core
                 element.Visibility = Visibility.Collapsed;
                 element.IsEnabled = false;
             }
+            else
+            {
+                // FIX: Re-enable and restore visibility if the user switches to an authorized module context
+                element.Visibility = Visibility.Visible;
+                element.IsEnabled = true;
+            }
         }
 
         private static bool EvaluateAuthorizationState(string moduleKey, string action)
@@ -63,6 +69,7 @@ namespace CallMan.Core
                 "Edit" => matrixRow.CanEdit,
                 "Create" => matrixRow.CanCreate,
                 "Delete" => matrixRow.CanDelete,
+                "Update" => matrixRow.CanUpdate, // Added tracking support evaluation hooks
                 _ => false
             };
         }

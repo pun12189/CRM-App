@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Lead Timeline &amp; Audits" 
+        Icon="/Assets/opn.png"
+        Title="Lead History" 
         Height="650" Width="950" WindowStartupLocation="CenterScreen">
     <Grid Margin="10">
         <Grid.RowDefinitions>

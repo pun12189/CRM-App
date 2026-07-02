@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         xmlns:converters="clr-namespace:CallMan.Converters"
         mc:Ignorable="d"
+        Icon="/Assets/opn.png"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="{Binding WindowTitle}" SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterOwner" Background="#F5F7F9"

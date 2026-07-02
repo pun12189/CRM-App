@@ -9,6 +9,7 @@
         Title="Create Custom Field" 
         Height="Auto" 
         Width="480" 
+        Icon="/Assets/opn.png"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner" 
         ResizeMode="NoResize"

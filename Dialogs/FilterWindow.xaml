@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
+        Icon="/Assets/opn.png"
         xmlns:conv="clr-namespace:CallMan.Converters"
         Title="Filter" Width="600" Height="650" 
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"

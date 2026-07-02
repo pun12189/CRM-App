@@ -2,11 +2,6 @@
 using CallMan.Models;
 using CallMan.Models.Enums;
 using Dapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CallMan.Services
 {
@@ -15,36 +10,79 @@ namespace CallMan.Services
         private readonly CrmDbContext _context;
         public PermissionService(CrmDbContext context) => _context = context;
 
+        /// <summary>
+        /// Fetches the role's permission matrix during login initialization and maps it into a quick-lookup dictionary.
+        /// </summary>
+        public async Task<Dictionary<string, PermissionRow>> HydrateUserSessionSecurityProfileAsync(UserRole role)
+        {
+            using var db = _context.CreateConnection();
+
+            const string sql = @"
+        SELECT m.ModuleKey,
+               COALESCE(p.CanView, 0) AS CanView,
+               COALESCE(p.CanCreate, 0) AS CanCreate,
+               COALESCE(p.CanEdit, 0) AS CanEdit,
+               COALESCE(p.CanUpdate, 0) AS CanUpdate,
+               COALESCE(p.CanDelete, 0) AS CanDelete
+        FROM SystemModules m
+        LEFT JOIN RolePermissions p ON m.ModuleId = p.ModuleId AND p.RoleId = @RoleId;";
+
+            try
+            {
+                var rows = await db.QueryAsync<PermissionRow>(sql, new { RoleId = (byte)role });
+
+                // Transforms the flat database rows into a lightning-fast memory lookup dictionary
+                return rows.ToDictionary(r => r.ModuleKey, r => r);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error hydrating security session: {ex.Message}");
+                // Returns an empty dictionary fallback to safely prevent an application crash while logging the issue
+                return new Dictionary<string, PermissionRow>();
+            }
+        }
+
         public async Task<IEnumerable<PermissionRow>> GetMatrixForRoleAsync(UserRole role)
         {
             using var db = _context.CreateConnection();
             const string sql = @"
-                SELECT m.ModuleId, m.ModuleKey, m.DisplayName,
-                       COALESCE(p.CanView, 0) AS CanView,
-                       COALESCE(p.CanEdit, 0) AS CanEdit,
-                       COALESCE(p.CanCreate, 0) AS CanCreate,
-                       COALESCE(p.CanDelete, 0) AS CanDelete
-                FROM SystemModules m
-                LEFT JOIN RolePermissions p ON m.ModuleId = p.ModuleId AND p.RoleId = @RoleId
-                ORDER BY m.DisplayOrder ASC, m.DisplayName ASC;";
+        SELECT m.*,
+               COALESCE(p.CanView, 0) AS CanView,
+               COALESCE(p.CanEdit, 0) AS CanEdit,
+               COALESCE(p.CanCreate, 0) AS CanCreate,
+               COALESCE(p.CanDelete, 0) AS CanDelete,
+               COALESCE(p.CanUpdate, 0) AS CanUpdate
+        FROM SystemModules m
+        LEFT JOIN RolePermissions p ON m.ModuleId = p.ModuleId AND p.RoleId = @RoleId
+        ORDER BY m.DisplayOrder ASC, m.DisplayName ASC;";
+
             return await db.QueryAsync<PermissionRow>(sql, new { RoleId = (byte)role });
         }
 
         public async Task SaveMatrixForRoleAsync(UserRole role, IEnumerable<PermissionRow> matrix)
         {
             using var db = _context.CreateConnection();
-            db.Open();
             using var trans = db.BeginTransaction();
             try
             {
                 await db.ExecuteAsync("DELETE FROM RolePermissions WHERE RoleId = @RoleId;", new { RoleId = (byte)role }, trans);
+
                 const string insertSql = @"
-                    INSERT INTO RolePermissions (RoleId, ModuleId, CanView, CanEdit, CanCreate, CanDelete)
-                    VALUES (@RoleId, @ModuleId, @CanView, @CanEdit, @CanCreate, @CanDelete);";
+            INSERT INTO RolePermissions (RoleId, ModuleId, CanView, CanEdit, CanCreate, CanDelete, CanUpdate)
+            VALUES (@RoleId, @ModuleId, @CanView, @CanEdit, @CanCreate, @CanDelete, @CanUpdate);";
 
                 foreach (var row in matrix)
                 {
-                    await db.ExecuteAsync(insertSql, new { RoleId = (byte)role, row.ModuleId, row.CanView, row.CanEdit, row.CanCreate, row.CanDelete }, trans);
+                    await db.ExecuteAsync(insertSql, new
+                    {
+                        RoleId = (byte)role,
+                        row.ModuleId,
+                        row.CanView,
+                        row.CanEdit,
+                        row.CanCreate,
+                        row.CanDelete,
+                        row.CanUpdate
+                    }, trans);
                 }
                 trans.Commit();
             }

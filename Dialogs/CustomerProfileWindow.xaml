@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         xmlns:conv="clr-namespace:CallMan.Converters"
         mc:Ignorable="d"
+        Icon="/Assets/opn.png"
         Title="Customer Section" Height="700" Width="1024" WindowStartupLocation="CenterOwner"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
     <Window.Resources>

@@ -6,8 +6,9 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         mc:Ignorable="d"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Exit SofricONE" 
+        Title="Exit TIJORI" 
         Width="480" 
+        Icon="/Assets/opn.png"
         SizeToContent="Height" WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" WindowStyle="None"
         AllowsTransparency="True" Background="Transparent">

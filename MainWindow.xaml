@@ -7,9 +7,10 @@
         xmlns:core="clr-namespace:CallMan.Core"
         xmlns:vm="clr-namespace:CallMan.ViewModels"
         xmlns:views="clr-namespace:CallMan.Views"
+        Icon="/Assets/opn.png"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="SofricONE CRM" WindowState="Maximized" WindowStartupLocation="CenterScreen">
+        Title="TIJORI" WindowState="Maximized" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <DataTemplate DataType="{x:Type vm:LeadViewModel}">
@@ -138,7 +139,7 @@
          Foreground="#2563EB" FontSize="11" FontWeight="Bold" Padding="0" Height="22"/>
             </Grid>
         </Border>
-        <Border Grid.Row="1" Background="#008080" BorderBrush="#DCDDE1" BorderThickness="0,0,0,1">
+        <Border Grid.Row="1" Background="Black"  BorderBrush="#DCDDE1" BorderThickness="0,0,0,1">
             <Grid Margin="20,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -147,7 +148,7 @@
                 </Grid.ColumnDefinitions>
 
                 
-                <Image Source="/Assets/logo.png" Width="190" Stretch="Uniform" CacheMode="BitmapCache" UseLayoutRounding="True" RenderOptions.BitmapScalingMode="HighQuality" Margin="0,0,10,0"/>                
+                <Image Source="/Assets/logo1.png" Height="50" Stretch="Uniform" CacheMode="BitmapCache" UseLayoutRounding="True" RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" Margin="0,0,10,0"/>                
 
                 <!--<Border Grid.Column="1" HorizontalAlignment="Center" Background="#F1F3F6" CornerRadius="18" Width="400" Height="36">
                     <Grid>
@@ -156,7 +157,7 @@
                     </Grid>
                 </Border>-->
 
-                <Border Grid.Column="1" Height="60" Padding="15,0">
+                <Border Grid.Column="1" Height="60" Padding="15,0" HorizontalAlignment="Center">
                     <Grid>
                         <Grid.ColumnDefinitions>                            
                             <ColumnDefinition Width="*"/>

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:CallMan.Dialogs"
         mc:Ignorable="d"
+        Icon="/Assets/opn.png"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Create New Order" Height="400" Width="400"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize">

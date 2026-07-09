@@ -77,6 +77,12 @@
         <DataTemplate DataType="{x:Type vm:PermissionsManagementViewModel}">
             <views:PermissionsManagementView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CategorySettingsViewModel}">
+            <views:CategorySettingsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SchemeManagementViewModel}">
+            <views:SchemeManagementView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>

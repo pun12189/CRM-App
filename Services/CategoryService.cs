@@ -1,8 +1,10 @@
 ﻿using CallMan.Data;
 using CallMan.Models;
+using CallMan.Models.Enums;
 using Dapper;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -89,6 +91,128 @@ namespace CallMan.Services
             using var db = _context.CreateConnection();
             string sql = "DELETE FROM Categories WHERE Id = @id";
             return await db.ExecuteAsync(sql, new { id }) > 0;
+        }
+
+        public async Task<IEnumerable<BusinessCategory>> GetCategoriesByContextAsync(CategoryContext context)
+        {
+            // Simplified Query: No inner loops tracking sub-rules anymore
+            const string categoryQuery = "SELECT * FROM BusinessCategories WHERE TargetContext = @TargetContext;";
+            using var db = _context.CreateConnection();
+            return await db.QueryAsync<BusinessCategory>(categoryQuery, new { TargetContext = context.ToString() });
+        }
+
+        public async Task<bool> SaveCategoryAsync(BusinessCategory category)
+        {
+            const string insertCategorySql = @"
+                INSERT INTO BusinessCategories (CategoryName, TargetContext, MspDiscountPercentage, CreditLimitAmount, CreditGraceDays, SettlementModel, IsSystemDefined)
+                VALUES (@CategoryName, @TargetContext, @MspDiscountPercentage, @CreditLimitAmount, @CreditGraceDays, @SettlementModel, @IsSystemDefined);";
+
+            using var db = _context.CreateConnection();
+            // Simplified execution: Directly execute a single flat write query statement safely
+            var affectedRows = await db.ExecuteAsync(insertCategorySql, new
+            {
+                category.CategoryName,
+                TargetContext = category.TargetContext.ToString(),
+                category.MspDiscountPercentage,
+                category.CreditLimitAmount,
+                category.CreditGraceDays,
+                category.SettlementModel,
+                category.IsSystemDefined
+            });
+            return affectedRows > 0;
+        }
+
+        public async Task<bool> DeleteBusinessCategoryAsync(int categoryId)
+        {
+            const string sql = "DELETE FROM BusinessCategories WHERE CategoryId = @CategoryId AND IsSystemDefined = 0;";
+            using var db = _context.CreateConnection();
+            var affectedRows = await db.ExecuteAsync(sql, new { CategoryId = categoryId });
+            return affectedRows > 0;
+        }
+
+        public async Task<bool> UpdateCategoryAsync(BusinessCategory category)
+        {
+            const string sql = @"
+        UPDATE BusinessCategories 
+        SET CategoryName = @CategoryName, 
+            MspDiscountPercentage = @MspDiscountPercentage, 
+            CreditLimitAmount = @CreditLimitAmount, 
+            CreditGraceDays = @CreditGraceDays, 
+            SettlementModel = @SettlementModel
+        WHERE CategoryId = @CategoryId;";
+
+            using var db = _context.CreateConnection();
+            return await db.ExecuteAsync(sql, category) > 0;
+        }
+
+        public async Task<bool> SaveDocumentCategoryWithLinksAsync(BusinessCategory category, List<string> modules)
+        {
+            using var db = _context.CreateConnection();
+            if (db.State == ConnectionState.Closed) db.Open();
+            using var tx = db.BeginTransaction();
+
+            try
+            {
+                const string catSql = @"
+            INSERT INTO BusinessCategories (CategoryName, TargetContext, IsSystemDefined)
+            VALUES (@CategoryName, 'Documents', 0);
+            SELECT LAST_INSERT_ID();";
+
+                int categoryId = await db.ExecuteScalarAsync<int>(catSql, category, tx);
+
+                foreach (var module in modules)
+                {
+                    await db.ExecuteAsync("INSERT INTO DocumentModuleLinks (CategoryId, ModuleName) VALUES (@CategoryId, @Module);",
+                        new { CategoryId = categoryId, Module = module }, tx);
+                }
+
+                tx.Commit();
+                return true;
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
+        }
+
+        public async Task<List<string>> GetModulesLinkedToCategoryAsync(int categoryId)
+        {
+            const string sql = "SELECT ModuleName FROM DocumentModuleLinks WHERE CategoryId = @CategoryId;";
+            using var db = _context.CreateConnection();
+            return (await db.QueryAsync<string>(sql, new { CategoryId = categoryId })).ToList();
+        }
+
+        public async Task<bool> UpdateDocumentCategoryWithLinksAsync(BusinessCategory category, List<string> modules)
+        {
+            using var db = _context.CreateConnection();
+            if (db.State == ConnectionState.Closed) db.Open();
+            using var tx = db.BeginTransaction();
+
+            try
+            {
+                // 1. Update core label info
+                const string updateCatSql = "UPDATE BusinessCategories SET CategoryName = @CategoryName WHERE CategoryId = @CategoryId;";
+                await db.ExecuteAsync(updateCatSql, category, tx);
+
+                // 2. Clear old mapping configurations down
+                await db.ExecuteAsync("DELETE FROM DocumentModuleLinks WHERE CategoryId = @CategoryId;", new { CategoryId = category.CategoryId }, tx);
+
+                // 3. Insert fresh checkbox intersections
+                foreach (var mod in modules)
+                {
+                    await db.ExecuteAsync("INSERT INTO DocumentModuleLinks (CategoryId, ModuleName) VALUES (@CategoryId, @Module);",
+                        new { CategoryId = category.CategoryId, Module = mod }, tx);
+                }
+
+                tx.Commit();
+                return true;
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
         }
     }
 }

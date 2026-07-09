@@ -10,7 +10,7 @@
 ;#define public Version "1.0.0.25"
 ;#endif
 ;#ifndef SourceFileDir
-;#define public SourceFileDir "C:\Users\Kishant\Source\Repos\TIJORI\bin\Release\net6.0-windows\"
+;#define public SourceFileDir "C:\Users\Kishant\Source\Repos\TIJORI-Online\bin\Release\net6.0-windows\"
 ;#endif
 
 #include "CodeDependencies.iss"
@@ -21,12 +21,12 @@ ChangesAssociations=yes
 ChangesEnvironment=yes
 PrivilegesRequired=admin
 DisableReadyPage=yes
-AppName=TIJORI      
+AppName=TIJORI-Online      
 ;DefaultDialogFontName=Segoe UI     
 ;repeat name of application. (otherwise you get
 ;multiple entries in add/remove programs)
-AppVerName=TIJORI
-AppId=TIJORI
+AppVerName=TIJORI-Online
+AppId=TIJORI-Online
 AppCopyright=Copyright © 2026
 ;app publisher name
 AppPublisher=sofric.com
@@ -38,10 +38,10 @@ AppSupportURL=https://sofric.com/support
 AppUpdatesURL=https://sofric.com/download
 ;default directory {pf} is a constant for
 ;program files. See INNO help for all constants
-DefaultDirName={autopf}\TIJORI
+DefaultDirName={autopf}\TIJORI-Online
 ;default group name in the programs
 ; section of the start menu
-DefaultGroupName=TIJORI
+DefaultGroupName=TIJORI-Online
 ;Boolean to disable allowing user to customize
 ;start menu entry during installation
 DisableProgramGroupPage=yes
@@ -62,7 +62,7 @@ LicenseFile={#SourceFileDir}SetupFiles\eula.rtf
 ;InfoAfterFile={#SourceFileDir}readme.txt
 ;Custom image to show on left side of installer
 WizardImageFile={#SourceFileDir}SetupFiles\CRM.bmp
-WizardSmallImageFile={#SourceFileDir}SetupFiles\Online-Icon.bmp
+WizardSmallImageFile={#SourceFileDir}SetupFiles\tijori.png
 ;I use whatever my apps icon is                               
 ;UninstallDisplayIcon={app}\CallMan.exe
 ;Version number of your installer (not your app)
@@ -72,13 +72,13 @@ AppVersion={#Version}
 ArchitecturesAllowed = x86compatible and x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 ;without the framework included
-OutputBaseFilename=TIJORI
+OutputBaseFilename=TIJORI-Online
 ;Directory where setup.exe will be compiled to
 ;OutputDir="C:\Users\Kishant\OneDrive\Desktop\setup"
 WizardStyle=modern
 WindowShowCaption=no 
 WindowResizable=yes
-SetupIconFile={#SourceFileDir}SetupFiles\tlogo.ico
+SetupIconFile={#SourceFileDir}SetupFiles\tijori.ico
 SetupLogging=yes
 ;#include <idp.iss>
  SignTool=signtool
@@ -121,7 +121,7 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 
    [Dirs]
  ;Name: "{app}\Assets"
- Name: "{commonappdata}\TIJORI"; Permissions: everyone-modify
+ Name: "{commonappdata}\TIJORI-Online"; Permissions: everyone-modify
  ;Name: "{app}\TxtFile"
  Name: "{app}\runtimes"
 [Files]
@@ -257,7 +257,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 InstallingDependencies=Installing Dependencies
 viewhelpfile = View Help File
 optimizingperformance = Optimizing performance
-launchtemplatetoaster = Launch TIJORI
+launchtemplatetoaster = Launch TIJORI-Online
 settingpermission = Setting Program Access Permissions
 
 ;da.StandardVersion=Standard Edition
@@ -406,12 +406,12 @@ settingpermission = Setting Program Access Permissions
 ;uk.StandardVersion=стандарт версія
 ;uk.StarterVersion=стартер версія
 [icons]
-Name: "{group}\TIJORI"; Filename: "{app}\CallMan.exe"; IconFilename: "{#SourceFileDir}SetupFiles\tlogo.ico"; IconIndex: 0
-;Name: {group}\TIJORI; Filename: {app}\CallMan.exe; WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\tlogo.ico";
+Name: "{group}\TIJORI-Online"; Filename: "{app}\CallMan.exe"; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico"; IconIndex: 0
+;Name: {group}\TIJORI-Online; Filename: {app}\CallMan.exe; WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico";
 Name: "{group}\Help"; Filename: "http://sofric.com/"; 
-Name: {group}\Uninstall; Filename: {uninstallexe};  WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\tlogo.ico";
-Name: "{autodesktop}\TIJORI"; Filename: "{app}\CallMan.exe"; IconFilename: "{#SourceFileDir}SetupFiles\tlogo.ico"; IconIndex: 0; Tasks: desktopicon
-;Name: {commondesktop}\TIJORI;  Filename: {app}\CallMan.exe; IconFilename: "{#SourceFileDir}SetupFiles\tlogo.ico"; Tasks: desktopicon
+Name: {group}\Uninstall; Filename: {uninstallexe};  WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico";
+Name: "{autodesktop}\TIJORI-Online"; Filename: "{app}\CallMan.exe"; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico"; IconIndex: 0; Tasks: desktopicon
+;Name: {commondesktop}\TIJORI-Online;  Filename: {app}\CallMan.exe; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico"; Tasks: desktopicon
 
 ;[Tasks]
 ;Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"
@@ -491,18 +491,18 @@ Type: filesandordirs; Name: "{app}\Resources";
     
 Type: filesandordirs; Name: "{app}"
 Type: filesandordirs; Name: "{app}\Resources"
-Type:files;  Name:{commondesktop}\TIJORI
+Type:files;  Name:{commondesktop}\TIJORI-Online
 [UninstallRun]
-;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""TIJORI"""; Flags: skipifdoesntexist runhidden;
-;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""TIJORI"""; Flags: skipifdoesntexist runhidden;
+;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""TIJORI-Online"""; Flags: skipifdoesntexist runhidden;
+;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""TIJORI-Online"""; Flags: skipifdoesntexist runhidden;
 ;Filename: {app}\Deactivator.exe; 
 ;Filename: "https://templatetoaster.com/survey5/survey.php/?v={# Version}"; Flags: shellexec  waituntilterminated
 
 [Registry]
-;Root: HKCR; Subkey: ".ttr"; ValueType: string; ValueName: ""; ValueData: "TIJORI"; Flags: uninsdeletevalue 
-Root: HKCR; Subkey: "TIJORI"; ValueType: string; ValueName: ""; ValueData: "TIJORI"; Flags: uninsdeletekey 
-Root: HKCR; Subkey: "TIJORI\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\CallMan.exe,1" 
-Root: HKCR; Subkey: "TIJORI\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\CallMan.exe"" ""%1""" 
+;Root: HKCR; Subkey: ".ttr"; ValueType: string; ValueName: ""; ValueData: "TIJORI-Online"; Flags: uninsdeletevalue 
+Root: HKCR; Subkey: "TIJORI-Online"; ValueType: string; ValueName: ""; ValueData: "TIJORI-Online"; Flags: uninsdeletekey 
+Root: HKCR; Subkey: "TIJORI-Online\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\CallMan.exe,1" 
+Root: HKCR; Subkey: "TIJORI-Online\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\CallMan.exe"" ""%1""" 
 ;Root: HKLM; Subkey: "SOFTWARE\Platform\Brand"; ValueType: string; ValueName: "Colours7"; ValueData:  "{code:RegisteredUser}"; 
  [Code]
    
@@ -874,8 +874,8 @@ end;
        
     //if NeedsFramework() then 
     //begin
-      //  if MsgBox('TIJORI requires Microsoft .NET 6 Desktop Runtime.'#13#13
-        //    'Please download this file to run TIJORI. Click Yes to download it.',  mbConfirmation, MB_YESNO) = IDYES
+      //  if MsgBox('TIJORI-Online requires Microsoft .NET 6 Desktop Runtime.'#13#13
+        //    'Please download this file to run TIJORI-Online. Click Yes to download it.',  mbConfirmation, MB_YESNO) = IDYES
           //  then 
     //ShellExec('open', 'https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.36-windows-x64-installer',
       //'', '', SW_SHOW, ewNoWait, ErrCode);
@@ -938,12 +938,12 @@ begin
 
 if ((CurStep = ssInstall) and IsWin64) then 
    begin
-    DelTree(ExpandConstant('{autopf}\TIJORI'), True, True, True);
+    DelTree(ExpandConstant('{autopf}\TIJORI-Online'), True, True, True);
 end;
 
 if CurStep = ssInstall then 
    begin
-    DelTree(ExpandConstant('{app}\TIJORI\Resources'), True, True, True);
+    DelTree(ExpandConstant('{app}\TIJORI-Online\Resources'), True, True, True);
 end;
 
 //if CurStep = ssPostInstall then 

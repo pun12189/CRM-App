@@ -10,7 +10,7 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </UserControl.Resources>
-    <Grid Margin="20">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <!-- Entry Form -->
@@ -21,7 +21,7 @@
         <!-- 1. ENTRY FORM -->
         <materialDesign:Card Grid.Row="0" Padding="15" Margin="0,0,0,20">
             <StackPanel>
-                <TextBlock Text="Add / Edit Category" Style="{StaticResource MaterialDesignHeadline6TextBlock}" Margin="0,0,0,15"/>
+                <TextBlock Text="Add / Edit Category" Style="{StaticResource MaterialDesignBody2TextBlock}" Margin="0,0,0,15"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
@@ -31,8 +31,8 @@
 
                     <!-- Category Name -->
                     <TextBox Grid.Column="0" Text="{Binding NewCategoryName}" 
-                         materialDesign:HintAssist.Hint="Category Name (e.g., MTB, Tires)" 
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0"/>
+                         materialDesign:HintAssist.Hint="Category Name (e.g., Actives, Raw)" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" Height="45" Padding="10,0,0,0"/>
 
                     <!-- Parent Selection -->
                     <ComboBox Grid.Column="1" ItemsSource="{Binding AllCategories}" 
@@ -40,14 +40,14 @@
                           DisplayMemberPath="CategoryName"
                           materialDesign:HintAssist.Hint="Parent Category (Leave blank for Main)" 
                           materialDesign:TextFieldAssist.HasClearButton="True"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,10,0"/>
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,10,0" Height="45" Padding="10,0,10,0"/>
 
                     <!-- Add Button -->
                     <StackPanel Orientation="Horizontal" Grid.Column="2">
-                        <Button Command="{Binding SaveCategoryCommand}" Content="{Binding SubmitButtonContent}" Height="50" Width="150" Margin="0,0,10,0"/>
+                        <Button Command="{Binding SaveCategoryCommand}" Content="{Binding SubmitButtonContent}" Height="40" Margin="0,0,10,0"/>
 
                         <!-- Only shows up when editing to let the user "Escape" the edit state -->
-                        <Button Command="{Binding ClearFormCommand}" Content="CANCEL" Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="50" Width="100"/>
+                        <Button Command="{Binding ClearFormCommand}" Content="CANCEL" Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="40"/>
                     </StackPanel>
                 </Grid>
             </StackPanel>
@@ -55,7 +55,7 @@
 
         <!-- 2. DATA TABLE -->
         <DataGrid Grid.Row="1" ItemsSource="{Binding AllCategories}" 
-              AutoGenerateColumns="False" CanUserAddRows="False"
+              AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="40"
               Style="{StaticResource MaterialDesignDataGrid}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Category Name" Binding="{Binding CategoryName}" Width="2*" IsReadOnly="True"/>
@@ -69,13 +69,13 @@
                             <StackPanel Orientation="Horizontal">
                                 <Button Style="{StaticResource MaterialDesignIconButton}" 
                                     Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                    CommandParameter="{Binding}" Foreground="Orange">
-                                    <materialDesign:PackIcon Kind="Edit" />
+                                    CommandParameter="{Binding}" Foreground="Orange" Height="32" Width="32">
+                                    <materialDesign:PackIcon Kind="Edit" Height="15" Width="15" />
                                 </Button>
                                 <Button Style="{StaticResource MaterialDesignIconButton}" 
                                     Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                    CommandParameter="{Binding}" Foreground="Red">
-                                    <materialDesign:PackIcon Kind="Delete" />
+                                    CommandParameter="{Binding}" Foreground="Red" Height="32" Width="32">
+                                    <materialDesign:PackIcon Kind="Delete" Height="15" Width="15"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>

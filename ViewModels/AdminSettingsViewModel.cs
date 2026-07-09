@@ -73,7 +73,7 @@ namespace CallMan.ViewModels
                     CurrentSettingView = _serviceProvider.GetRequiredService<CompanyProfileViewModel>();
                     break;
                 case "Category":
-                    CurrentSettingView = _serviceProvider.GetRequiredService<ManageCategoriesViewModel>();
+                    CurrentSettingView = _serviceProvider.GetRequiredService<CategorySettingsViewModel>();
                     break;
                 case "OrderStages":
                     CurrentSettingView = _serviceProvider.GetRequiredService<OrderStagesViewModel>();
@@ -89,6 +89,9 @@ namespace CallMan.ViewModels
                     break;
                 case "Permissions":
                     CurrentSettingView = _serviceProvider.GetRequiredService<PermissionsManagementViewModel>();
+                    break;
+                case "Schemes":
+                    CurrentSettingView = _serviceProvider.GetRequiredService<SchemeManagementViewModel>();
                     break;
                 case "Whatsapp":
                 case "CallMan":

@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CallMan.Models.Enums;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +13,12 @@ namespace CallMan.Models
         [ObservableProperty] private string _systemId = string.Empty;
         [ObservableProperty] private bool _isFullVersion;
         [ObservableProperty] private int _daysRemaining;
-        [ObservableProperty] private int _maxTrialDays = 7; // Set trial configuration duration here
-
+        [ObservableProperty] private int _maxTrialDays = 7;
         [ObservableProperty] private bool _isOnlineServicesEnabled;
         [ObservableProperty] private bool _isLocalDatabase;
+        [ObservableProperty] private LicensePackageType _packageType = LicensePackageType.Trial;
+        [ObservableProperty] private DateTime _expirationDate = DateTime.Today;
+        [ObservableProperty] private bool _allowSoftwareUpdates;
 
         // Feature gating flags derived from current subscription thresholds
         public bool IsTrialActive => !IsFullVersion && DaysRemaining > 0;

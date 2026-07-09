@@ -54,6 +54,8 @@ namespace CallMan
 
         protected override async void OnStartup(StartupEventArgs e)
         {
+            FrameworkElement.LanguageProperty.OverrideMetadata(typeof(FrameworkElement), new FrameworkPropertyMetadata(System.Windows.Markup.XmlLanguage.GetLanguage("en-IN")));
+
             base.OnStartup(e);
 
             // ====================================================================
@@ -132,6 +134,7 @@ namespace CallMan
             services.AddSingleton<BackupService>();
             services.AddSingleton<PermissionService>();
             services.AddSingleton<StaffService>();
+            services.AddSingleton<SchemeService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();
@@ -156,6 +159,8 @@ namespace CallMan
             services.AddTransient<ImportViewModel>();
             services.AddTransient<E2EReportsDashboardViewModel>();
             services.AddTransient<ToastPollingWorker>();
+            services.AddTransient<CategorySettingsViewModel>();
+            services.AddTransient<SchemeManagementViewModel>();
 
             services.AddTransient<UserManagementViewModel>();
             services.AddTransient<AddStaffDialogViewModel>();

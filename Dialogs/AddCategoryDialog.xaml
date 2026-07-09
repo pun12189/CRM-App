@@ -1,0 +1,130 @@
+﻿<Window x:Class="CallMan.Dialogs.AddCategoryDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CallMan.Dialogs"
+        mc:Ignorable="d"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Add Category" Height="590" Width="650"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Background="{DynamicResource MaterialDesignPaper}">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <md:BooleanToVisibilityConverter x:Key="InvertBoolToVisibilityConverter" TrueValue="Collapsed" FalseValue="Visible"/>
+    </Window.Resources>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,0">
+            <StackPanel>
+
+                <TextBlock Text="Basic Details" Style="{StaticResource MaterialDesignHeadline6TextBlock}" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                <Grid Margin="0,0,0,15">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Text="{Binding CategoryName, UpdateSourceTrigger=PropertyChanged}" 
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                             md:HintAssist.Hint="Category Name (e.g., VIP Customer, Premium Lead)" 
+                             VerticalContentAlignment="Center" Height="50"/>
+
+                    <CheckBox Grid.Column="1" IsChecked="{Binding ApplyToAllContexts}" 
+                              Visibility="{Binding CanShowApplyToAll, Converter={StaticResource BoolToVis}}" 
+                              Style="{StaticResource MaterialDesignCheckBox}" 
+                              Content="Apply to All" Margin="20,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                </Grid>
+
+                <md:Card Padding="25" UniformCornerRadius="8" Margin="0,5,0,0"
+                         Visibility="{Binding IsLeadsOrCustomersContext, Converter={StaticResource InvertBoolToVisibilityConverter}}">
+                    <StackPanel>
+                        <md:PackIcon Kind="FolderAlert" Width="40" Height="40" Foreground="{DynamicResource PrimaryHueMidBrush}" Margin="0,0,0,10"/>
+                        <TextBlock Text="Document Categories" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" FontWeight="SemiBold"/>
+                        <TextBlock Text="This category acts as a simple label for sorting items or documents. No special financial or credit limits apply to this type." 
+                                   Style="{StaticResource MaterialDesignBody2TextBlock}" Opacity="0.6" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </md:Card>
+
+                <StackPanel Visibility="{Binding IsLeadsOrCustomersContext, Converter={StaticResource BoolToVis}}">
+                    <Separator Background="{DynamicResource MaterialDesignDivider}" Margin="0,5,0,10"/>
+
+                    <TextBlock Text="Default Discount" Style="{StaticResource MaterialDesignHeadline6TextBlock}" FontWeight="Bold" Margin="0,0,0,4"/>
+                    <TextBlock Text="This automatic percentage discount will apply to items added to invoices for this category." Style="{StaticResource MaterialDesignBody2TextBlock}" TextWrapping="Wrap" Opacity="0.6" Margin="0,0,0,10"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,15">
+                        <TextBox Text="{Binding MspDiscountPercentage}" Style="{StaticResource MaterialDesignOutlinedTextBox}" md:HintAssist.Hint="0.00" Width="140" Height="48" VerticalContentAlignment="Center" HorizontalContentAlignment="Right"/>
+                        <TextBlock Text="%" Style="{StaticResource MaterialDesignHeadline5TextBlock}" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6" FontWeight="SemiBold"/>
+                    </StackPanel>
+
+                    <Separator Background="{DynamicResource MaterialDesignDivider}" Margin="0,5,0,10"/>
+
+                    <TextBlock Text="Credit &amp; Payment Rules" Style="{StaticResource MaterialDesignHeadline6TextBlock}" FontWeight="Bold" Margin="0,0,0,15"/>
+
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Row="0" Grid.Column="0" Text="{Binding CreditLimitAmount}" 
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                 md:HintAssist.Hint="Credit Limit (₹)" Margin="0,0,10,20" VerticalContentAlignment="Center"/>
+
+                        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding CreditGraceDays}" 
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                 md:HintAssist.Hint="Credit Due (Days)" Margin="10,0,0,20" VerticalContentAlignment="Center"/>
+
+                        <ComboBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                                  SelectedIndex="{Binding SelectedSettlementModelIndex}" 
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                                  md:HintAssist.Hint="How should invoices be cleared and paid?" Height="50">
+                            <ComboBoxItem Content="Bill-to-Bill (Each invoice must be paid individually)"/>
+                            <ComboBoxItem Content="Credit Balance (Paid against the total running balance due)"/>
+                            <ComboBoxItem Content="Both Validation (Applies both rules for strict control)"/>
+                        </ComboBox>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Visibility="{Binding IsDocumentsContext, Converter={StaticResource BoolToVis}}" Margin="0,15,0,0">
+                    <Separator Background="{DynamicResource MaterialDesignDivider}" Margin="0,5,0,20"/>
+
+                    <TextBlock Text="Assign to Modules" Style="{StaticResource MaterialDesignHeadline6TextBlock}" FontWeight="Bold" Margin="0,0,0,4"/>
+                    <TextBlock Text="Select which sections of the application can accept and store documents under this category label." TextWrapping="Wrap" Style="{StaticResource MaterialDesignBody2TextBlock}" Opacity="0.6" Margin="0,0,0,15"/>
+
+                    <!-- WrapPanel cleanly places checkboxes horizontally and wraps them if needed -->
+                    <ItemsControl ItemsSource="{Binding ModuleCheckboxes}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" 
+                          Style="{StaticResource MaterialDesignFilterChipCheckBox}"
+                          Content="{Binding ModuleName}" 
+                          Margin="0,0,12,12" Height="36"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
+            <Button Content="DISCARD" IsCancel="True" Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,15,0" FontWeight="SemiBold"/>
+            <Button Content="SAVE CATEGORY" Command="{Binding SaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource MaterialDesignRaisedButton}" Background="#1794A1" BorderBrush="#1794A1" Width="150" Height="40" FontWeight="Bold"/>
+        </StackPanel>
+    </Grid>
+</Window>

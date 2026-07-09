@@ -38,10 +38,23 @@
                 <StackPanel Margin="6">
                     <TextBlock Text="Enter Activation Serial Key:" FontSize="12" FontWeight="SemiBold" Foreground="#475569" HorizontalAlignment="Left"/>
                     <TextBox Text="{Binding EnteredSerialResponseKey, UpdateSourceTrigger=PropertyChanged}" 
-                             materialDesign:HintAssist.Hint="XXXX-XXXX-XXXX-XXXX"
-                             materialDesign:HintAssist.IsFloating="True"
-                             CharacterCasing="Upper" MaxLength="19" FontWeight="SemiBold"
+                             materialDesign:HintAssist.Hint="Paste your activation key here" Height="100" 
+                             TextWrapping="Wrap"
+                             AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto"
+                             Padding="8"
+                             FontSize="13"
+                             Background="#F9FAFC"
+                             BorderBrush="#CCCCCC"
+                             BorderThickness="1"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}" VerticalContentAlignment="Center"/>
+                    <TextBlock Name="TxtPlaceholderTip" 
+                               Text="Paste the full encrypted block provided by your vendor."
+                               FontSize="11" 
+                               FontStyle="Italic"
+                               Foreground="#888888"
+                               Margin="0,3,0,10"
+                               HorizontalAlignment="Left"/>
                 </StackPanel>
 
                 <!-- System Runtime Validation Feedback Messaging Element Field Box -->

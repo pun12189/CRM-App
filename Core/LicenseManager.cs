@@ -50,9 +50,9 @@ namespace CallMan.Core
                     Current = deepStateCopy;
                 });
             }
-            catch
+            catch (Exception ex)
             {
-                // Gracefully contain network connectivity failures out of user view
+                System.Diagnostics.Debug.WriteLine($"[LICENSE MANAGER ERROR] Cache refresh failed: {ex.Message}");
             }
         }
     }

@@ -1,0 +1,187 @@
+﻿<Window x:Class="CallMan.Dialogs.AddSchemeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CallMan.Dialogs"
+        xmlns:enums="clr-namespace:CallMan.Models.Enums"
+        mc:Ignorable="d"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Configure Incentive Policy Rule" Height="700" Width="720"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Background="{DynamicResource MaterialDesignPaper}">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        <md:BooleanToVisibilityConverter x:Key="InvertBoolToVisibilityConverter" TrueValue="Collapsed" FalseValue="Visible"/>
+    </Window.Resources>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Common Configuration Header -->
+            <RowDefinition Height="*"/>
+            <!-- Target Scope Tabs Area -->
+            <RowDefinition Height="Auto"/>
+            <!-- Action Footer buttons -->
+        </Grid.RowDefinitions>
+
+        <!-- HEADER CRITICAL META INPUTS (Common Fields Group 1) -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox Text="{Binding Scheme.Title, UpdateSourceTrigger=PropertyChanged}" 
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                     md:HintAssist.Hint="Enter Strategy Scheme Title (e.g., Q3 Festival Bonanza)" Height="50"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
+                <ToggleButton IsChecked="{Binding Scheme.IsActive}" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Center"/>
+                <TextBlock Text="Policy Active" Style="{StaticResource MaterialDesignBody1TextBlock}" Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- SEGMENTED TARGET WORKSPACE TABS -->
+        <TabControl Grid.Row="1" Style="{StaticResource MaterialDesignUniformTabControl}"
+                    SelectedIndex="{Binding SelectedTabScopeIndex, Mode=TwoWay}"
+                    BorderThickness="0,1,0,0" BorderBrush="{DynamicResource MaterialDesignDivider}">
+
+            <TabItem Header="🤝 LEADS &amp; CUSTOMERS">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10,20,10,10">
+                    <StackPanel>
+                        <TextBlock Text="Customer Order Milestone Rules" Style="{StaticResource MaterialDesignHeadline6TextBlock}" FontWeight="Bold"/>
+                        <TextBlock Text="This scheme triggers on checkout operations based on target order totals." Style="{StaticResource MaterialDesignBody2TextBlock}" Opacity="0.6" Margin="0,2,0,20"/>
+
+                        <!-- Timeline Durations -->
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <DatePicker Grid.Column="0" SelectedDate="{Binding Scheme.StartDate}" Style="{StaticResource MaterialDesignOutlinedDatePicker}" md:HintAssist.Hint="Activation Date" Margin="0,0,10,0" Height="50"/>
+                            <DatePicker Grid.Column="1" SelectedDate="{Binding Scheme.EndDate}" Style="{StaticResource MaterialDesignOutlinedDatePicker}" md:HintAssist.Hint="Expiration Date" Margin="10,0,0,0" Height="50"/>
+                        </Grid>
+
+                        <!-- Activation Threshold Field (Numeric Only) -->
+                        <TextBox Text="{Binding Scheme.MinimumOrderThreshold, UpdateSourceTrigger=PropertyChanged}" 
+                                 PreviewTextInput="NumericTextBox_PreviewTextInput"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                 md:HintAssist.Hint="Required Order Target Value (₹)" Margin="0,0,0,20" Height="50"/>
+
+                        <!-- Reward Selection Configuration Rows -->
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Updated: Expanded to 3 distinct selection states -->
+                            <ComboBox Grid.Column="0" SelectedIndex="{Binding SelectedRewardTypeIndex}" Style="{StaticResource MaterialDesignOutlinedComboBox}" md:HintAssist.Hint="Reward Framework Model" Margin="0,0,10,0" Height="50">
+                                <ComboBoxItem Content="Percentage Rebate Override (%)"/>
+                                <ComboBoxItem Content="Fixed Flat Payout Cash Value (₹)"/>
+                                <ComboBoxItem Content="Material Gift Item (AC, Bike, Tour)"/>
+                            </ComboBox>
+
+                            <!-- Dynamic Input boxes governed by type indexes -->
+                            <TextBox Grid.Column="1" Text="{Binding RewardValueString, UpdateSourceTrigger=PropertyChanged}" 
+                                     PreviewTextInput="NumericTextBox_PreviewTextInput"
+                                     Visibility="{Binding IsNumericReward, Converter={StaticResource BoolToVis}}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                     md:HintAssist.Hint="Enter Value Amount" Margin="10,0,0,0" Height="50"/>
+
+                            <TextBox Grid.Column="1" Text="{Binding Scheme.GiftItemName}" 
+                                     Visibility="{Binding IsGiftReward, Converter={StaticResource BoolToVis}}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                     md:HintAssist.Hint="Gift Item Specifications (e.g. AC, Bike)" Margin="10,0,0,0" Height="50"/>
+                        </Grid>
+
+                        <!-- MISSING REDEMPTION OPTIONS (Direct Discount vs Wallet Cashback) -->
+                        <StackPanel Visibility="{Binding IsGiftReward, Converter={StaticResource InvertBoolToVisibilityConverter}}" Margin="0,5,0,0">
+                            <TextBlock Text="Value Redemption Execution Channel" Style="{StaticResource MaterialDesignBody2TextBlock}" FontWeight="SemiBold" Opacity="0.7" Margin="2,0,0,8"/>
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="Apply as Direct Order Discount" IsChecked="{Binding IsInstantDiscountSelected}" Style="{StaticResource MaterialDesignRadioButton}" Margin="0,0,30,0"/>
+                                <RadioButton Content="Deposit into Customer's Wallet" IsChecked="{Binding IsWalletCashbackSelected}" Style="{StaticResource MaterialDesignRadioButton}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,20,0,0">
+                            <Separator Background="{DynamicResource MaterialDesignDivider}" Margin="0,5,0,15"/>
+
+                            <TextBlock Text="Customer Categories" Style="{StaticResource MaterialDesignBody2TextBlock}" FontWeight="Bold" Opacity="0.8" Margin="2,0,0,4"/>
+                            <TextBlock Text="Select which customer/lead groups qualify for this promotional framework." Style="{StaticResource MaterialDesignBody2TextBlock}" Opacity="0.5" Margin="2,0,0,12"/>
+
+                            <ItemsControl ItemsSource="{Binding CustomerCategoriesChecklist}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}" 
+                                          Style="{StaticResource MaterialDesignFilterChipCheckBox}"
+                                          Content="{Binding CategoryName}" 
+                                          Margin="0,0,10,10" Height="34"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ==================================================================== -->
+            <!-- TAB 2: STAFF INCENTIVES -->
+            <!-- ==================================================================== -->
+            <TabItem Header="🎯 STAFF INCENTIVES">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10,20,10,10">
+                    <StackPanel>
+                        <TextBlock Text="Internal Staff Milestone Framework" Style="{StaticResource MaterialDesignHeadline6TextBlock}" FontWeight="Bold"/>
+                        <TextBlock Text="Incentive policies calculated automatically upon completion of monthly target goals." Style="{StaticResource MaterialDesignBody2TextBlock}" Opacity="0.6" Margin="0,2,0,20"/>
+
+                        <!-- Durations (Common) -->
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <DatePicker Grid.Column="0" SelectedDate="{Binding Scheme.StartDate}" Style="{StaticResource MaterialDesignOutlinedDatePicker}" md:HintAssist.Hint="Target Month Start" Margin="0,0,10,0" Height="50"/>
+                            <DatePicker Grid.Column="1" SelectedDate="{Binding Scheme.EndDate}" Style="{StaticResource MaterialDesignOutlinedDatePicker}" md:HintAssist.Hint="Target Month End" Margin="10,0,0,0" Height="50"/>
+                        </Grid>
+
+                        <!-- Rewards Configuration Row (Cleaned Layout) -->
+                        <Grid Margin="0,0,0,20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <ComboBox Grid.Column="0" SelectedIndex="{Binding SelectedRewardTypeIndex}" Style="{StaticResource MaterialDesignOutlinedComboBox}" md:HintAssist.Hint="Reward Framework Model" Margin="0,0,10,0" Height="50">
+                                <ComboBoxItem Content="Percentage Incentive over Total Sales (%)"/>
+                                <ComboBoxItem Content="Fixed Flat Payout Cash Value (₹)"/>
+                                <ComboBoxItem Content="Material Gift Item (AC, Bike, Tour, etc.)"/>
+                            </ComboBox>
+
+                            <TextBox Grid.Column="1" Text="{Binding RewardValueString, UpdateSourceTrigger=PropertyChanged}" 
+                                     PreviewTextInput="NumericTextBox_PreviewTextInput"
+                                     Visibility="{Binding IsNumericReward, Converter={StaticResource BoolToVis}}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" md:HintAssist.Hint="Enter Value Amount" Margin="10,0,0,0" Height="50"/>
+
+                            <TextBox Grid.Column="1" Text="{Binding Scheme.GiftItemName}" 
+                                     Visibility="{Binding IsGiftReward, Converter={StaticResource BoolToVis}}" 
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" md:HintAssist.Hint="Gift Reward Details" Margin="10,0,0,0" Height="50"/>
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+        </TabControl>
+
+        <!-- DIALOG ACTIONS CONTROL FOOTER -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="CANCEL" IsCancel="True" Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,15,0" FontWeight="SemiBold"/>
+            <Button Content="SUBMIT RULE" Command="{Binding SaveSchemeCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource MaterialDesignRaisedButton}" Background="#1794A1" BorderBrush="#1794A1" Width="150" Height="40" FontWeight="Bold"/>
+        </StackPanel>
+    </Grid>
+</Window>

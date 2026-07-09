@@ -144,6 +144,7 @@
                         <Button Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="Categories:View" Content="Item Categories" CommandParameter="Category" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Proforma Settings" IsEnabled="False" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Notice Board" IsEnabled="False" CommandParameter="Notice" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Style="{StaticResource SettingTileStyle}" Content="Schemes/Incentives" CommandParameter="Schemes" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="LoginLogs:View" Content="Login Logs" CommandParameter="Logs" Command="{Binding NavigateToSettingCommand}"/>
                     </UniformGrid>
                 </Expander>

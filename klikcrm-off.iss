@@ -10,7 +10,7 @@
 ;#define public Version "1.0.0.25"
 ;#endif
 ;#ifndef SourceFileDir
-;#define public SourceFileDir "C:\Users\Kishant\Source\Repos\SofricERP-Offline\bin\Release\net6.0-windows\"
+;#define public SourceFileDir "C:\Users\Kishant\Source\Repos\TIJORI-Offline\bin\Release\net6.0-windows\"
 ;#endif
 
 #include "CodeDependencies.iss"
@@ -21,13 +21,13 @@ ChangesAssociations=yes
 ChangesEnvironment=yes
 PrivilegesRequired=admin
 DisableReadyPage=yes
-AppName=SofricERP-Offline      
+AppName=TIJORI-Offline      
 ;DefaultDialogFontName=Segoe UI     
 ;repeat name of application. (otherwise you get
 ;multiple entries in add/remove programs)
-AppVerName=SofricERP-Offline
-AppId=SofricERP-Offline
-AppCopyright=Copyright © 2024
+AppVerName=TIJORI-Offline
+AppId=TIJORI-Offline
+AppCopyright=Copyright © 2026
 ;app publisher name
 AppPublisher=sofric.com
 ;app publisher website URL
@@ -38,10 +38,10 @@ AppSupportURL=https://sofric.com/support
 AppUpdatesURL=https://sofric.com/download
 ;default directory {pf} is a constant for
 ;program files. See INNO help for all constants
-DefaultDirName={autopf}\SofricERP-Offline
+DefaultDirName={autopf}\TIJORI-Offline
 ;default group name in the programs
 ; section of the start menu
-DefaultGroupName=SofricERP-Offline
+DefaultGroupName=TIJORI-Offline
 ;Boolean to disable allowing user to customize
 ;start menu entry during installation
 DisableProgramGroupPage=yes
@@ -62,7 +62,7 @@ LicenseFile={#SourceFileDir}SetupFiles\eula.rtf
 ;InfoAfterFile={#SourceFileDir}readme.txt
 ;Custom image to show on left side of installer
 WizardImageFile={#SourceFileDir}SetupFiles\CRM.bmp
-WizardSmallImageFile={#SourceFileDir}SetupFiles\Offline-Icon.bmp
+WizardSmallImageFile={#SourceFileDir}SetupFiles\tijori.png
 ;I use whatever my apps icon is                               
 ;UninstallDisplayIcon={app}\CallMan.exe
 ;Version number of your installer (not your app)
@@ -72,13 +72,13 @@ AppVersion={#Version}
 ArchitecturesAllowed = x86compatible and x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 ;without the framework included
-OutputBaseFilename=SofricERP-Offline
+OutputBaseFilename=TIJORI-Offline
 ;Directory where setup.exe will be compiled to
 ;OutputDir="C:\Users\Kishant\OneDrive\Desktop\setup"
 WizardStyle=modern
 WindowShowCaption=no 
 WindowResizable=yes
-SetupIconFile={#SourceFileDir}SetupFiles\Offline.ico
+SetupIconFile={#SourceFileDir}SetupFiles\tijori.ico
 SetupLogging=yes
 ;#include <idp.iss>
  SignTool=signtool
@@ -121,7 +121,7 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 
    [Dirs]
  ;Name: "{app}\Assets"
- Name: "{commonappdata}\SofricERP-Offline"; Permissions: everyone-modify
+ Name: "{commonappdata}\TIJORI-Offline"; Permissions: everyone-modify
  ;Name: "{app}\TxtFile"
  Name: "{app}\runtimes"
 [Files]
@@ -257,7 +257,7 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 InstallingDependencies=Installing Dependencies
 viewhelpfile = View Help File
 optimizingperformance = Optimizing performance
-launchtemplatetoaster = Launch SofricERP-Offline
+launchtemplatetoaster = Launch TIJORI-Offline
 settingpermission = Setting Program Access Permissions
 
 ;da.StandardVersion=Standard Edition
@@ -406,10 +406,12 @@ settingpermission = Setting Program Access Permissions
 ;uk.StandardVersion=стандарт версія
 ;uk.StarterVersion=стартер версія
 [icons]
-Name: "{group}\SofricERP-Offline"; Filename: "{app}\CallMan.exe"; IconFilename: "{#SourceFileDir}SetupFiles\Offline.ico"; IconIndex: 0
+Name: "{group}\TIJORI-Offline"; Filename: "{app}\CallMan.exe"; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico"; IconIndex: 0
+;Name: {group}\TIJORI-Offline; Filename: {app}\CallMan.exe; WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico";
 Name: "{group}\Help"; Filename: "http://sofric.com/"; 
-Name: {group}\Uninstall; Filename: {uninstallexe};  WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\Offline.ico";
-Name: "{autodesktop}\SofricERP-Offline"; Filename: "{app}\CallMan.exe"; IconFilename: "{#SourceFileDir}SetupFiles\Offline.ico"; IconIndex: 0; Tasks: desktopicon
+Name: {group}\Uninstall; Filename: {uninstallexe};  WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico";
+Name: "{autodesktop}\TIJORI-Offline"; Filename: "{app}\CallMan.exe"; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico"; IconIndex: 0; Tasks: desktopicon
+;Name: {commondesktop}\TIJORI-Offline;  Filename: {app}\CallMan.exe; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico"; Tasks: desktopicon
 
 ;[Tasks]
 ;Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"
@@ -489,18 +491,18 @@ Type: filesandordirs; Name: "{app}\Resources";
     
 Type: filesandordirs; Name: "{app}"
 Type: filesandordirs; Name: "{app}\Resources"
-Type:files;  Name:{commondesktop}\SofricERP-Offline
+Type:files;  Name:{commondesktop}\TIJORI-Offline
 [UninstallRun]
-;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""SofricERP-Offline"""; Flags: skipifdoesntexist runhidden;
-;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""SofricERP-Offline"""; Flags: skipifdoesntexist runhidden;
+;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""TIJORI-Offline"""; Flags: skipifdoesntexist runhidden;
+;Filename: {win}\Microsoft.NET\Framework\v4.0.30319\CasPol.exe; Parameters: "-q -machine -remgroup ""TIJORI-Offline"""; Flags: skipifdoesntexist runhidden;
 ;Filename: {app}\Deactivator.exe; 
 ;Filename: "https://templatetoaster.com/survey5/survey.php/?v={# Version}"; Flags: shellexec  waituntilterminated
 
 [Registry]
-;Root: HKCR; Subkey: ".ttr"; ValueType: string; ValueName: ""; ValueData: "SofricERP-Offline"; Flags: uninsdeletevalue 
-Root: HKCR; Subkey: "SofricERP-Offline"; ValueType: string; ValueName: ""; ValueData: "SofricERP-Offline"; Flags: uninsdeletekey 
-Root: HKCR; Subkey: "SofricERP-Offline\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\CallMan.exe,1" 
-Root: HKCR; Subkey: "SofricERP-Offline\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\CallMan.exe"" ""%1""" 
+;Root: HKCR; Subkey: ".ttr"; ValueType: string; ValueName: ""; ValueData: "TIJORI-Offline"; Flags: uninsdeletevalue 
+Root: HKCR; Subkey: "TIJORI-Offline"; ValueType: string; ValueName: ""; ValueData: "TIJORI-Offline"; Flags: uninsdeletekey 
+Root: HKCR; Subkey: "TIJORI-Offline\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\CallMan.exe,1" 
+Root: HKCR; Subkey: "TIJORI-Offline\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\CallMan.exe"" ""%1""" 
 ;Root: HKLM; Subkey: "SOFTWARE\Platform\Brand"; ValueType: string; ValueName: "Colours7"; ValueData:  "{code:RegisteredUser}"; 
  [Code]
    
@@ -872,8 +874,8 @@ end;
        
     //if NeedsFramework() then 
     //begin
-      //  if MsgBox('SofricERP-Offline requires Microsoft .NET 6 Desktop Runtime.'#13#13
-        //    'Please download this file to run SofricERP-Offline. Click Yes to download it.',  mbConfirmation, MB_YESNO) = IDYES
+      //  if MsgBox('TIJORI-Offline requires Microsoft .NET 6 Desktop Runtime.'#13#13
+        //    'Please download this file to run TIJORI-Offline. Click Yes to download it.',  mbConfirmation, MB_YESNO) = IDYES
           //  then 
     //ShellExec('open', 'https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-6.0.36-windows-x64-installer',
       //'', '', SW_SHOW, ewNoWait, ErrCode);
@@ -936,12 +938,12 @@ begin
 
 if ((CurStep = ssInstall) and IsWin64) then 
    begin
-    DelTree(ExpandConstant('{autopf}\SofricERP-Offline'), True, True, True);
+    DelTree(ExpandConstant('{autopf}\TIJORI-Offline'), True, True, True);
 end;
 
 if CurStep = ssInstall then 
    begin
-    DelTree(ExpandConstant('{app}\SofricERP-Offline\Resources'), True, True, True);
+    DelTree(ExpandConstant('{app}\TIJORI-Offline\Resources'), True, True, True);
 end;
 
 //if CurStep = ssPostInstall then 

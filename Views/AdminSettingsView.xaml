@@ -141,7 +141,7 @@
                         <Button Style="{StaticResource SettingTileStyle}" Content="Permissions" CommandParameter="Permissions" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="OrderStage:View" Content="Order Stages" CommandParameter="OrderStages" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Content="Custom Fields" Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="CustomFields:View" CommandParameter="CustomFields" Command="{Binding NavigateToSettingCommand}"/>
-                        <Button Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="Categories:View" Content="Item Categories" CommandParameter="Category" Command="{Binding NavigateToSettingCommand}"/>
+                        <Button Style="{StaticResource SettingTileStyle}" security:SecurityGuard.Requires="Categories:View" Content="All Categories" CommandParameter="Category" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Proforma Settings" IsEnabled="False" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Notice Board" IsEnabled="False" CommandParameter="Notice" Command="{Binding NavigateToSettingCommand}"/>
                         <Button Style="{StaticResource SettingTileStyle}" Content="Schemes/Incentives" CommandParameter="Schemes" Command="{Binding NavigateToSettingCommand}"/>

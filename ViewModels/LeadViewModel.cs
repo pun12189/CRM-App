@@ -96,6 +96,9 @@ namespace CallMan.ViewModels
 
         private bool _isInitialized;
 
+        [ObservableProperty]
+        private object _tabsDataContext;
+
         public LeadViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService, StaffService staffService)
         {
             _leadService = leadService;
@@ -504,11 +507,11 @@ namespace CallMan.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService);
+            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, false);
 
             if (selectedLead.Status?.ToLower() == "matured")
             {
-                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead, _locationService);
+                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead, _locationService, false);
             }
 
             // 2. Initialize the Window
@@ -612,6 +615,15 @@ namespace CallMan.ViewModels
         {
             if (selectedLead == null) return;
             ActiveProfileLead = selectedLead;
+
+            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, true);
+
+            if (selectedLead.Status?.ToLower() == "matured")
+            {
+                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead, _locationService, true);
+            }
+
+            this.TabsDataContext = profileVm;
             WorkspaceViewIsActive = true; // Swaps grid out for profile workspace view layout instantly
         }
 
@@ -619,6 +631,7 @@ namespace CallMan.ViewModels
         public void HideLeadWorkspace()
         {
             WorkspaceViewIsActive = false;
+            this.TabsDataContext = null;
             ActiveProfileLead = null;
         }
 

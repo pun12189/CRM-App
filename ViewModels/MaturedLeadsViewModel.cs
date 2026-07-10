@@ -86,6 +86,9 @@ namespace CallMan.ViewModels
 
         private bool _isInitialized;
 
+        [ObservableProperty]
+        private bool _isInEditMode;
+
         public MaturedLeadsViewModel(LeadService service, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, StaffService staffService)
         {
             _service = service;
@@ -471,7 +474,7 @@ namespace CallMan.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            var profileVm = new CustomerProfileViewModel(_service, _session, _settingService, _productService, _orderService, selectedLead, _locationService);
+            var profileVm = new CustomerProfileViewModel(_service, _session, _settingService, _productService, _orderService, selectedLead, _locationService, false);
 
             // 2. Initialize the Window
             var profileWindow = new CustomerProfileWindow();

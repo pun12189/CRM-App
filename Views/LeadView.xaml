@@ -137,7 +137,19 @@
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
-                                        <TextBlock Text="{Binding CustomerName}" TextWrapping="Wrap" Cursor="Hand" Foreground="CadetBlue" FontSize="16" FontWeight="Bold" HorizontalAlignment="Left"/>
+                                        <TextBlock Text="{Binding CustomerName}" 
+                                               TextWrapping="Wrap" 
+                                               Cursor="Hand" 
+                                               Foreground="CadetBlue" 
+                                               FontSize="16" 
+                                               FontWeight="Bold" 
+                                               HorizontalAlignment="Left">
+                                            <TextBlock.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" 
+                                                  Command="{Binding DataContext.ShowLeadWorkspaceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                  CommandParameter="{Binding}" />
+                                            </TextBlock.InputBindings>
+                                        </TextBlock>
                                         <StackPanel Margin="0,5" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
                                             <Button security:SecurityGuard.Requires="Lead:Update" BorderThickness="0" Padding="8" Margin="2" ToolTip="Update Info" Command="{Binding DataContext.OpenLeadProfileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Green" Foreground="White" FontWeight="Bold">
                                                 <icon:BootstrapIcons Kind="JournalText"/>
@@ -501,7 +513,7 @@
         </DataTemplate>
 
         <DataTemplate x:Key="ProfileDetailWorkspaceTemplate">
-            <local:LeadCustomerProfileView />
+            <local:LeadCustomerProfileView TabsDataContext="{Binding TabsDataContext}"/>
         </DataTemplate>
     </UserControl.Resources>
     <Grid>

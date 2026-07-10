@@ -108,8 +108,9 @@ namespace CallMan.ViewModels
 
         // Core transactional context object mapping
         [ObservableProperty] private ProformaHeader _activeProforma = new();
+        [ObservableProperty] private bool _isInEditMode;
 
-        public LeadProfileViewModel(LeadService service, SettingService settingService, IUserSession session, Lead lead, OccupiedLocationService locationService, NotificationRoutingService notificationRoutingService, ProductService productService, OrderService orderService)
+        public LeadProfileViewModel(LeadService service, SettingService settingService, IUserSession session, Lead lead, OccupiedLocationService locationService, NotificationRoutingService notificationRoutingService, ProductService productService, OrderService orderService, bool isInEditMode = false)
         {
             _leadService = service;
             _settingService = settingService;
@@ -120,6 +121,7 @@ namespace CallMan.ViewModels
             _orderService = orderService;
             _selectedLead = lead;
             _customerId = lead.LeadId;
+            _isInEditMode = isInEditMode;
             _ = LoadCollections();
         }
 

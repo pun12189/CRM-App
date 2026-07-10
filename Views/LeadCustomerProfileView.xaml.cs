@@ -20,9 +20,29 @@ namespace CallMan.Views
     /// </summary>
     public partial class LeadCustomerProfileView : UserControl
     {
+        // Using a DependencyProperty as the backing store for TabsDataContext.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty TabsDataContextProperty =
+            DependencyProperty.Register("TabsDataContext", typeof(object), typeof(LeadCustomerProfileView), new PropertyMetadata(null));
+
+        // Using a DependencyProperty as the backing store for IsInEditModel.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty IsInEditModelProperty =
+            DependencyProperty.Register("IsInEditModel", typeof(bool), typeof(LeadCustomerProfileView), new PropertyMetadata(false));
+
         public LeadCustomerProfileView()
         {
             InitializeComponent();
+        }
+
+        public bool IsInEditModel
+        {
+            get { return (bool)GetValue(IsInEditModelProperty); }
+            set { SetValue(IsInEditModelProperty, value); }
+        }
+
+        public object TabsDataContext
+        {
+            get { return (object)GetValue(TabsDataContextProperty); }
+            set { SetValue(TabsDataContextProperty, value); }
         }
     }
 }

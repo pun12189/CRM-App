@@ -1,0 +1,94 @@
+﻿<UserControl x:Class="CallMan.Views.DriveView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CallMan.Views"
+             mc:Ignorable="d" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Background="#F8FAFC">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <materialDesign:Card Grid.Row="0" UniformCornerRadius="6" Padding="16,12" Margin="0,0,0,15" Background="White" BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,20,0">
+                    <materialDesign:PackIcon Kind="FolderNetwork" Foreground="#0284C7" Width="24" Height="24" VerticalAlignment="Center"/>
+                    <TextBlock Text="Central Drive" FontSize="15" FontWeight="Black" Foreground="#1E293B" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <TextBlock Text="Active Module:" Foreground="#475569" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <ComboBox ItemsSource="{Binding ModuleOptionsList}"
+                              SelectedValue="{Binding SelectedModuleFilter}"
+                              DisplayMemberPath="Key"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                              Width="220" Height="38" Padding="12,5"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <materialDesign:PackIcon Kind="Magnify" Foreground="#64748B" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                             materialDesign:HintAssist.Hint="Search category or file names..." 
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="260" Height="38" Padding="10,6" FontSize="12"/>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding IteratedCategoriesCollection}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,0,0,25">
+
+                            <StackPanel Orientation="Horizontal" Margin="4,0,0,10">
+                                <Border Width="4" Height="16" Background="{Binding ColorHex}" CornerRadius="2" Margin="0,0,8,0"/>
+                                <TextBlock Text="{Binding CategoryName}" FontSize="14" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <DataGrid ItemsSource="{Binding Documents}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}" Background="White">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Document Attached Name" Binding="{Binding FileName}" Width="4*" IsReadOnly="True" FontWeight="Medium"/>
+                                    <DataGridTextColumn Header="Uploaded By User" Binding="{Binding UploadedBy}" Width="1.5*" IsReadOnly="True"/>
+                                    <DataGridTextColumn Header="Timestamp Log Date" Binding="{Binding UpdatedAt, StringFormat={}{0:dd-MM-yyyy hh:mm tt}}" Width="2*" IsReadOnly="True"/>
+
+                                    <DataGridTemplateColumn Header="Actions" Width="1.5*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                                    <Button Command="{Binding DataContext.ReplaceDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                            Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#F59E0B" BorderBrush="Transparent" Padding="0" Width="26" Height="26" Margin="0,0,5,0" ToolTip="Replace File">
+                                                        <materialDesign:PackIcon Kind="FileReplace" Foreground="White" Width="13" Height="13"/>
+                                                    </Button>
+
+                                                    <Button Command="{Binding DataContext.DownloadDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                            Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#0284C7" BorderBrush="Transparent" Padding="0" Width="26" Height="26" Margin="0,0,5,0" ToolTip="Download File">
+                                                        <materialDesign:PackIcon Kind="Download" Foreground="White" Width="13" Height="13"/>
+                                                    </Button>
+
+                                                    <Button Command="{Binding DataContext.DeleteDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}"
+                                                            Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#DC2626" BorderBrush="Transparent" Padding="0" Width="26" Height="26" ToolTip="Delete File">
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="White" Width="13" Height="13"/>
+                                                    </Button>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

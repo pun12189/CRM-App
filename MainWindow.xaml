@@ -83,6 +83,9 @@
         <DataTemplate DataType="{x:Type vm:SchemeManagementViewModel}">
             <views:SchemeManagementView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DriveViewModel}">
+            <views:DriveView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -519,7 +522,7 @@
                         <MenuItem Header="HRMS" IsEnabled="False" Icon="{materialDesign:PackIcon Kind=HumanWelcome}" Style="{StaticResource SubItemStyle}" />
                         <MenuItem Header="VMS" IsEnabled="False" Icon="{materialDesign:PackIcon Kind=HumanWelcome}" Style="{StaticResource SubItemStyle}" />
                     </MenuItem>
-
+                    <MenuItem Header="Drive" Icon="{materialDesign:PackIcon Kind=FolderNetwork}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Drive"/>
                     <MenuItem Header="Admin Settings" security:SecurityGuard.Requires="Admin:View" Icon="{materialDesign:PackIcon Kind=Settings}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
                 </Menu>
                 <Menu Background="Transparent" VerticalAlignment="Stretch" HorizontalAlignment="Right">

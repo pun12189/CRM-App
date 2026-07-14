@@ -164,6 +164,7 @@ namespace CallMan
 
             services.AddTransient<UserManagementViewModel>();
             services.AddTransient<AddStaffDialogViewModel>();
+            services.AddTransient<DriveViewModel>();
 
             // Views/Modules
             services.AddTransient<DashboardViewModel>();

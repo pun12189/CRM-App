@@ -16,6 +16,8 @@ namespace CallMan.Core
         // Globally accessible active connection string cache pointer
         public static string CachedConnectionString { get; private set; } = string.Empty;
 
+        public static string ConnectionHost { get; private set; } = string.Empty;
+
         public static bool LoadConfiguration()
         {
             try
@@ -27,6 +29,7 @@ namespace CallMan.Core
 
                 if (config != null)
                 {
+                    ConnectionHost = config.Server;
                     CachedConnectionString = config.ToConnectionString();
                     return true;
                 }

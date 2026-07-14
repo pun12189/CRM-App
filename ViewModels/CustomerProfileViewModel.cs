@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media.Imaging;
 
 namespace CallMan.ViewModels
@@ -25,6 +26,7 @@ namespace CallMan.ViewModels
         private readonly ProductService _productService;
         private readonly OrderService _orderService;
         private readonly OccupiedLocationService _locationService;
+        private readonly CategoryService _categoryService;
 
         [ObservableProperty] private CustomerAnalytics _data;
 
@@ -32,7 +34,7 @@ namespace CallMan.ViewModels
         [ObservableProperty] private string _followupTimeLabel;
 
         [ObservableProperty] private Lead _selectedLead;
-        [ObservableProperty] private int _selectedTabWorkspaceIndex = 2;
+        [ObservableProperty] private int _selectedTabWorkspaceIndex = 3;
         [ObservableProperty] private bool _isInfoTabSelected;
         [ObservableProperty] private CustomerSummaryMetrics _metrics;
 
@@ -90,12 +92,21 @@ namespace CallMan.ViewModels
         [ObservableProperty] private ProformaHeader _activeProforma = new();
         [ObservableProperty] private bool _isInEditMode;
 
-        public CustomerProfileViewModel(LeadService service, IUserSession session, SettingService settingService, ProductService productService, OrderService orderService, Lead lead, OccupiedLocationService locationService, bool isInEditMode = false)
+        [ObservableProperty] private ObservableCollection<UploadedDocumentRow> _unifiedDocumentsCollection = new();
+
+        // Dropdown lookup source for the upload dialog header section
+        [ObservableProperty] private ObservableCollection<BusinessCategory> _availableDocumentCategories = new();
+        [ObservableProperty] private BusinessCategory? _selectedUploadCategory;
+
+        [ObservableProperty] private string _documentCountSummaryText = "0 Files Total";
+
+        public CustomerProfileViewModel(LeadService service, IUserSession session, SettingService settingService, ProductService productService, OrderService orderService, Lead lead, OccupiedLocationService locationService, CategoryService categoryService, bool isInEditMode = false)
         {
             _service = service;
             _session = session;
             _isInEditMode = isInEditMode;
             _settingService = settingService;
+            _categoryService = categoryService;
             _productService = productService;
             _orderService = orderService;
             _customerId = lead.LeadId;
@@ -124,6 +135,12 @@ namespace CallMan.ViewModels
                 IsInfoTabSelected = false; // Ensure info panel is closed
                 _ = LoadTimelineDataAsync();
             }
+            else if (value == 7)
+            {
+                // Timeline Tab clicked: Load the timeline data
+                IsInfoTabSelected = false; // Ensure info panel is closed
+                _ = LoadUnifiedDocumentsWorkspaceAsync(SelectedLead.LeadId, "Customer");
+            }
             else
             {
                 // Any other functional tab item clicked: Collapse the drawer overlay
@@ -142,6 +159,34 @@ namespace CallMan.ViewModels
         private void CalculateBalance()
         {
             BalancePayment = OrderValue - PaymentReceived;
+        }
+
+        /// <summary>
+        /// Invoke this inside ShowLeadWorkspace to cleanly build the single document grid.
+        /// Pass "lead" or "customer" as the activeModule string parameter context.
+        /// </summary>
+        public async Task LoadUnifiedDocumentsWorkspaceAsync(int entityId, string activeModule)
+        {
+
+
+            var categoriesList = await _categoryService.GetCategoriesByModulesAsync(activeModule);
+
+            // 2. Fetch all files currently uploaded for this specific profile ID            
+
+            var filesList = await _categoryService.GetFilesByProfileIdAsync(activeModule, entityId);
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                AvailableDocumentCategories = new ObservableCollection<BusinessCategory>(categoriesList);
+                SelectedUploadCategory = AvailableDocumentCategories.FirstOrDefault();
+
+                UnifiedDocumentsCollection.Clear();
+                foreach (var file in filesList)
+                {
+                    UnifiedDocumentsCollection.Add(file);
+                }
+
+                DocumentCountSummaryText = $"{filesList.Count()} Total Document Attachments Registered";
+            });
         }
 
         private async Task LoadCustomerData(int leadId)
@@ -547,6 +592,146 @@ namespace CallMan.ViewModels
                         // Error handling agar browser open na ho sake
                         Debug.WriteLine(ex.Message);
                     }
+                }
+            }
+        }
+
+        [RelayCommand]
+        private async Task ExecuteNewFileUpload()
+        {
+            if (SelectedLead == null || SelectedUploadCategory == null)
+            {
+                MessageBox.Show("Please choose a target Document Category from the dropdown selector first.", "Context Missing", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var fileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Multiselect = true, // Bulk multi-uploads to a single category made simple!
+                Filter = "Compliance Formats|*.pdf;*.jpg;*.jpeg;*.png;*.xlsx;*.docx"
+            };
+
+            if (fileDialog.ShowDialog() == true)
+            {
+                string moduleContext = SelectedLead.Status?.ToLower() == "matured" ? "Customer" : "Lead";
+                var success = await _categoryService.UploadDocumentAsync(fileDialog.FileNames, moduleContext, SelectedUploadCategory, SelectedLead, _session.CurrentUser);
+
+                if (success)
+                {
+                    MessageBox.Show("File(s) uploaded successfully!", "Upload Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    MessageBox.Show("File upload failed. Please check the logs for details.", "Upload Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+                // Refresh grid matrix instantly
+                await LoadUnifiedDocumentsWorkspaceAsync(SelectedLead.LeadId, moduleContext);
+            }
+        }
+
+        [RelayCommand]
+        private async Task DeleteDocumentFile(UploadedDocumentRow selectedRow)
+        {
+            if (selectedRow == null) return;
+
+            var result = MessageBox.Show($"Are you sure you want to permanently delete '{selectedRow.FileName}'?", "Confirm Purge", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result != MessageBoxResult.Yes) return;
+
+            try
+            {
+                // 1. Clean up physical host disk block
+                if (System.IO.File.Exists(selectedRow.StoragePath))
+                {
+                    System.IO.File.Delete(selectedRow.StoragePath);
+                }
+
+                // 2. Clear out database pointer record
+                await _categoryService.DeleteDocumentRecordAsync(selectedRow.DocumentId);
+
+                // 3. Refresh display layout
+                string moduleContext = SelectedLead.Status?.ToLower() == "matured" ? "Customer" : "Lead";
+                await LoadUnifiedDocumentsWorkspaceAsync(SelectedLead.LeadId, moduleContext);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error while purging file instance: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
+        private async Task ReplaceDocumentFile(UploadedDocumentRow selectedRow)
+        {
+            if (selectedRow == null || SelectedLead == null) return;
+
+            var fileDialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Supported Files|*.pdf;*.jpg;*.jpeg;*.png;*.xlsx;*.docx",
+                Title = $"Replace Document: {selectedRow.FileName}"
+            };
+
+            if (fileDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    // 1. Delete the old physical file to prevent disk bloat
+                    if (System.IO.File.Exists(selectedRow.StoragePath))
+                    {
+                        System.IO.File.Delete(selectedRow.StoragePath);
+                    }
+
+                    // 2. Write the new file instance exactly to the same vault directory layout path
+                    string newLocalPath = fileDialog.FileName;
+                    string extension = System.IO.Path.GetExtension(newLocalPath);
+                    string cleanName = System.IO.Path.GetFileName(newLocalPath);
+
+                    string targetDir = System.IO.Path.GetDirectoryName(selectedRow.StoragePath)!;
+                    string dynamicStoragePath = System.IO.Path.Combine(targetDir, $"{Guid.NewGuid()}_{cleanName}");
+
+                    System.IO.File.Copy(newLocalPath, dynamicStoragePath, true);
+
+                    // 3. Update the tracking row properties inside MySQL server records mapping
+                    await _categoryService.ReplaceUploadDocumentAsync(cleanName, dynamicStoragePath, _session.CurrentUser, selectedRow.DocumentId);
+
+                    // 4. Instantly refresh the UI matrix grid list
+                    string moduleContext = SelectedLead.Status?.ToLower() == "matured" ? "Customer" : "Lead";
+                    await LoadUnifiedDocumentsWorkspaceAsync(SelectedLead.LeadId, moduleContext);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Failed to replace document attachment: {ex.Message}", "IO Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void DownloadDocumentFile(UploadedDocumentRow selectedRow)
+        {
+            if (selectedRow == null || string.IsNullOrEmpty(selectedRow.StoragePath)) return;
+
+            if (!System.IO.File.Exists(selectedRow.StoragePath))
+            {
+                MessageBox.Show("The source document file could not be discovered on server storage paths.", "File Missing", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            // Initialize native save dialog frame
+            var saveDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                FileName = selectedRow.FileName, // Prefills original filename automatically
+                Filter = $"File Extension (*{System.IO.Path.GetExtension(selectedRow.StoragePath)})|*{System.IO.Path.GetExtension(selectedRow.StoragePath)}",
+                Title = "Download Document Reference Copy As"
+            };
+
+            if (saveDialog.ShowDialog() == true)
+            {
+                try
+                {
+                    System.IO.File.Copy(selectedRow.StoragePath, saveDialog.FileName, true);
+                    MessageBox.Show("File copied and saved locally successfully!", "Download Complete", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Could not export document file copy: {ex.Message}", "Download Fault", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }

@@ -1,9 +1,13 @@
-﻿using CallMan.Data;
+﻿using CallMan.Core;
+using CallMan.Data;
 using CallMan.Models;
 using CallMan.Models.Enums;
 using Dapper;
+using Microsoft.Win32;
+using MySqlX.XDevAPI;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Text;
@@ -91,6 +95,34 @@ namespace CallMan.Services
             using var db = _context.CreateConnection();
             string sql = "DELETE FROM Categories WHERE Id = @id";
             return await db.ExecuteAsync(sql, new { id }) > 0;
+        }
+
+        public async Task<IEnumerable<BusinessCategory>> GetCategoriesByModulesAsync(string activeModule)
+        {
+            // Simplified Query: No inner loops tracking sub-rules anymore
+            const string catSql = @"
+                SELECT DISTINCT bc.CategoryId, bc.CategoryName
+                FROM BusinessCategories bc
+                INNER JOIN DocumentModuleLinks dml ON bc.CategoryId = dml.CategoryId
+                WHERE dml.ModuleName = @Module;";
+            using var db = _context.CreateConnection();
+            return (await db.QueryAsync<BusinessCategory>(catSql, new { Module = activeModule })).ToList();
+        }
+
+        public async Task<IEnumerable<UploadedDocumentRow>> GetFilesByProfileIdAsync(string activeModule, int entityId)
+        {
+            using var db = _context.CreateConnection();
+            // Simplified Query: No inner loops tracking sub-rules anymore
+            const string filesSql = @"
+        SELECT 
+            mud.DocumentId, mud.CategoryId, bc.CategoryName,
+            mud.OriginalFileName AS FileName, mud.ServerStoragePath AS StoragePath,
+            mud.UploadedBy, mud.UploadedAt
+        FROM ModuleUploadedDocuments mud
+        INNER JOIN BusinessCategories bc ON mud.CategoryId = bc.CategoryId
+        WHERE mud.ModuleType = @Module AND mud.EntityId = @EntityId;";
+
+            return (await db.QueryAsync<UploadedDocumentRow>(filesSql, new { Module = activeModule, EntityId = entityId })).ToList();
         }
 
         public async Task<IEnumerable<BusinessCategory>> GetCategoriesByContextAsync(CategoryContext context)
@@ -213,6 +245,95 @@ namespace CallMan.Services
                 tx.Rollback();
                 throw;
             }
+        }
+
+        public async Task<bool> UploadDocumentAsync(string[] fileNames, string moduleContext, BusinessCategory selectedUploadCategory, Lead selectedLead, string currentUser)
+        {
+            using var db = _context.CreateConnection();
+            if (db.State == ConnectionState.Closed) db.Open();
+            using var tx = db.BeginTransaction();
+
+            try
+            {
+                foreach (string fileSourcePath in fileNames)
+                {
+                    string centralNetworkVault = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData); // Default to My Documents if not a local database
+                    if (Core.LicenseManager.Current.IsLocalDatabase)
+                    {
+                        var server = DbConfigManager.ConnectionHost;
+                        centralNetworkVault = $@"\\{server}\CompanyStorage";
+                    } // Replace with your central server name or IP
+                    
+                    string rawName = System.IO.Path.GetFileName(fileSourcePath);
+                    string destinationDirectory = System.IO.Path.Combine(centralNetworkVault, "VaultStorage", moduleContext, selectedLead.LeadId.ToString());
+                    if (!System.IO.Directory.Exists(destinationDirectory))
+                        System.IO.Directory.CreateDirectory(destinationDirectory);
+
+                    string finalStoragePath = System.IO.Path.Combine(destinationDirectory, $"{Guid.NewGuid()}_{rawName}");
+                    System.IO.File.Copy(fileSourcePath, finalStoragePath, true);
+
+                    const string insertSql = @"
+                INSERT INTO ModuleUploadedDocuments (ModuleType, EntityId, CategoryId, OriginalFileName, ServerStoragePath, UploadedBy)
+                VALUES (@Module, @EntityId, @CatId, @FileName, @Path, @User);";
+
+                    await db.ExecuteAsync(insertSql, new
+                    {
+                        Module = moduleContext,
+                        EntityId = selectedLead.LeadId,
+                        CatId = selectedUploadCategory.CategoryId,
+                        FileName = rawName,
+                        Path = finalStoragePath,
+                        User = currentUser ?? "Admin"
+                    }, tx);
+                }
+
+                tx.Commit();
+                return true;
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
+        }
+
+        public async Task<bool> ReplaceUploadDocumentAsync(string fileName, string path, string currentUser, int docid)
+        {
+            using var db = _context.CreateConnection();
+            if (db.State == ConnectionState.Closed) db.Open();
+            using var tx = db.BeginTransaction();
+
+            try
+            {
+                    const string updateSql = @"
+                UPDATE ModuleUploadedDocuments 
+                SET OriginalFileName = @FileName, ServerStoragePath = @Path, UploadedBy = @User, UpdatedAt = CURRENT_TIMESTAMP
+                WHERE DocumentId = @DocId;";
+
+                    await db.ExecuteAsync(updateSql, new
+                    {
+                        FileName = fileName,
+                        Path = path,
+                        User = currentUser ?? "Admin",
+                        DocId = docid
+                    }, tx);
+
+                tx.Commit();
+                return true;
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
+        }
+
+        public async Task<bool> DeleteDocumentRecordAsync(int documentId)
+        {
+            const string sql = "DELETE FROM ModuleUploadedDocuments WHERE DocumentId = @DocId;";
+            using var db = _context.CreateConnection();
+            var affectedRows = await db.ExecuteAsync(sql, new { DocId = documentId });
+            return affectedRows > 0;
         }
     }
 }

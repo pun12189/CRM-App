@@ -30,6 +30,7 @@ namespace CallMan.ViewModels
         private readonly OccupiedLocationService _locationService;
         private readonly NotificationRoutingService _routingService;
         private readonly StaffService _staffService;
+        private readonly CategoryService _categoryService;
         private ICollectionView _leadsCollection;
 
         [ObservableProperty]
@@ -76,7 +77,7 @@ namespace CallMan.ViewModels
         [ObservableProperty] private SettingItem? _targetSelectedLabel;
         [ObservableProperty] private ObservableCollection<SettingItem> _selectedLabelsList = new();
 
-        public LeadFollowupViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService, StaffService staffService)
+        public LeadFollowupViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService, StaffService staffService, CategoryService categoryService)
         {
             _leadService = leadService;
             _settingService = settingService;
@@ -87,6 +88,7 @@ namespace CallMan.ViewModels
             _orderService = orderService;
             _locationService = locationService;
             _routingService = routingService;
+            _categoryService = categoryService;
             LoadLeads();
         }
 
@@ -416,11 +418,11 @@ namespace CallMan.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService);
+            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, _categoryService);
 
             if (selectedLead.Status?.ToLower() == "matured")
             {
-                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead, _locationService);
+                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead, _locationService, _categoryService);
             }
 
             // 2. Initialize the Window

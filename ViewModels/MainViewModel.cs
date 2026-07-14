@@ -252,6 +252,14 @@ namespace CallMan.ViewModels
                         }, DispatcherPriority.Background);
                         
                         break;
+                    case "Drive":
+                        var vm6 = _serviceProvider.GetRequiredService<DriveViewModel>();
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm6;
+                        }, DispatcherPriority.Background);
+
+                        break;
                         // Add other cases as you build them
                 }
             }

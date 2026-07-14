@@ -24,6 +24,7 @@ namespace CallMan.ViewModels
         private readonly ProductService _productService;
         private readonly OrderService _orderService;
         private readonly StaffService _staffService;
+        private readonly CategoryService _categoryService;
         private readonly OccupiedLocationService _locationService;
         [ObservableProperty] private decimal _totalOutstanding;
         [ObservableProperty] private CustomerStats _customerStats = new();
@@ -89,12 +90,17 @@ namespace CallMan.ViewModels
         [ObservableProperty]
         private bool _isInEditMode;
 
-        public MaturedLeadsViewModel(LeadService service, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, StaffService staffService)
+        [ObservableProperty] private bool _workspaceViewIsActive;
+        [ObservableProperty] private Lead? _activeProfileLead;
+        [ObservableProperty] private object _tabsDataContext;
+
+        public MaturedLeadsViewModel(LeadService service, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, StaffService staffService, CategoryService categoryService)
         {
             _service = service;
             _settingService = settingService;
             _session = session;
             _dialogService = dialogService;
+            _categoryService = categoryService;
             _staffService = staffService;
             _productService = productService;
             _orderService = orderService;
@@ -474,7 +480,7 @@ namespace CallMan.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            var profileVm = new CustomerProfileViewModel(_service, _session, _settingService, _productService, _orderService, selectedLead, _locationService, false);
+            var profileVm = new CustomerProfileViewModel(_service, _session, _settingService, _productService, _orderService, selectedLead, _locationService, _categoryService, false);
 
             // 2. Initialize the Window
             var profileWindow = new CustomerProfileWindow();
@@ -656,6 +662,26 @@ namespace CallMan.ViewModels
             {
                 CurrentPage--;
             }
+        }
+
+        [RelayCommand]
+        public void ShowLeadWorkspace(Lead selectedLead)
+        {
+            if (selectedLead == null) return;
+            ActiveProfileLead = selectedLead;
+             var profileVm = new CustomerProfileViewModel(_service, _session, _settingService, _productService, _orderService, selectedLead, _locationService, _categoryService, true);
+            
+
+            this.TabsDataContext = profileVm;
+            WorkspaceViewIsActive = true; // Swaps grid out for profile workspace view layout instantly
+        }
+
+        [RelayCommand]
+        public void HideLeadWorkspace()
+        {
+            WorkspaceViewIsActive = false;
+            this.TabsDataContext = null;
+            ActiveProfileLead = null;
         }
     }
 }

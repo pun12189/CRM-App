@@ -13,389 +13,40 @@
     <UserControl.Resources>
         <conv:IndexToNumberConverter x:Key="IndexToNumberConverter"/>
         <conv:GreaterThanZeroConverter x:Key="GreaterThanZeroConverter"/>
-    </UserControl.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Margin="0,0,0,15" Padding="10" Background="White" CornerRadius="8">
+        <DataTemplate x:Key="MainGridLeadLayoutTemplate">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="300"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
-                <StackPanel Orientation="Horizontal" Grid.Column="0" Visibility="Collapsed">
-                    <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="Gray"/>
-                    <Grid Width="250">
-                        <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
-                     VerticalContentAlignment="Center" Height="30"
-                     Padding="5,0"/>
-                        <TextBlock Text="Search by Name, City, Phone..." 
-                       IsHitTestVisible="False" VerticalAlignment="Center" 
-                       Margin="10,0" Foreground="LightGray">
-                            <TextBlock.Style>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding SearchText}" Value="">
-                                            <Setter Property="Visibility" Value="Visible"/>
-                                        </DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </TextBlock.Style>
-                        </TextBlock>
-                    </Grid>
-                </StackPanel>
+                <Border Grid.Row="0" Margin="0,0,0,15" Padding="10" Background="White" CornerRadius="8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="300"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
 
-                <Menu Grid.Column="3"
-      Background="#FF8A3D" 
-      Foreground="White"
-      VerticalAlignment="Center" 
-      Margin="0,0,10,0">
-                    <!--<Menu.Resources>
-        <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
-            <Setter Property="Background" Value="#FF8A3D"/>
-            <Setter Property="Foreground" Value="White"/>
-        </Style>
-    </Menu.Resources>-->
-
-                    <Menu.Style>
-                        <Style TargetType="Menu">
-                            <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="4"/>
-                            <Setter Property="IsEnabled" Value="{Binding SelectedLeadsCount, Converter={StaticResource GreaterThanZeroConverter}}"/>
-                        </Style>
-                    </Menu.Style>
-
-                    <MenuItem  
-          Header="Action" 
-          FontWeight="SemiBold" 
-          FontSize="13"
-        Height="32"
-          Padding="20,5"
-          VerticalAlignment="Center" 
-          HorizontalAlignment="Center"/>
-
-                    <MenuItem Height="32" Width="30" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
-                        <MenuItem.Header>
-                            <materialDesign:PackIcon Kind="MenuDown" Width="20" Height="20" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,2,0,0"/>
-                        </MenuItem.Header>
-
-                        <MenuItem.Items>
-                            <MenuItem Header="Batch delete" 
-      Command="{Binding BulkDeleteCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Delete"/>
-
-                            <MenuItem Header="Change Leadholder" 
-      Command="{Binding OpenChangeLeadHolderDialogCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Edit"/>
-                            <MenuItem Header="Move to dead" 
-      Command="{Binding MoveToDeadCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Edit"/>
-
-                            <MenuItem Header="Assign Labels" 
-      Command="{Binding OpenAssignLabelsDialogCommand}"
-      Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Edit"/>
-                        </MenuItem.Items>
-                    </MenuItem>
-                </Menu>
-
-                <Button Grid.Column="2" Content="Import Leads" 
-            Command="{Binding OpenImportLeadsDialogCommand}"
-            Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0" security:SecurityGuard.Requires="Customer:View"/>
-                <Button Grid.Column="4" Content="+ New Customer" 
-                    Command="{Binding OpenAddLeadDialogCommand}"
-                    Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0" security:SecurityGuard.Requires="Customer:Create"/>
-            </Grid>
-        </Border>
-
-        <materialDesign:Card Background="Goldenrod" Grid.Row="1" Foreground="White" Padding="15" Margin="10">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
-                    <materialDesign:PackIcon Kind="AccountGroup" Foreground="SaddleBrown" Width="22" Height="22" VerticalAlignment="Center" Margin="0,0,10,0"/>
-
-                    <TextBlock Foreground="SaddleBrown" FontSize="20" FontWeight="Bold" VerticalAlignment="Center">
-            <Run Text="{Binding CustomerStats.TotalCustomers, Mode=OneWay}"/>
-            <Run Text=" | "/>
-            <Run Text="{Binding CustomerStats.TotalFirstOrders, StringFormat=C2, ConverterCulture=en-IN}"/>
-            <Run Text=" + "/>
-            <Run Text="{Binding CustomerStats.TotalOtherOrders, StringFormat=C2, ConverterCulture=en-IN}"/>
-            <Run Text=" = "/>
-            <Run Text="{Binding CustomerStats.TotalBusiness, StringFormat=C2, ConverterCulture=en-IN}"/>            
-                    </TextBlock>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
-                    <TextBlock Text="Market Outstanding: " Foreground="Brown" FontSize="16" VerticalAlignment="Center"/>
-                    <TextBlock Text="{Binding CustomerStats.TotalOutstanding, StringFormat='₹ {0:N2}'}" Foreground="Brown" FontSize="20" FontWeight="Bold" Margin="10,0,0,0"/>
-                </StackPanel>
-            </DockPanel>
-        </materialDesign:Card>
-
-        <DataGrid Grid.Row="2" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" SelectedItem="{Binding SelectedLead}" AlternationCount="9999" AutoGenerateColumns="False" IsReadOnly="True" Margin="10"
-                  VirtualizingPanel.IsVirtualizing="True"
-          VirtualizingPanel.VirtualizationMode="Recycling"
-          VirtualizingPanel.ScrollUnit="Pixel"
-          VirtualizingPanel.CacheLengthUnit="Item"
-          VirtualizingPanel.CacheLength="10,20"
-          ScrollViewer.CanContentScroll="True">
-            <DataGrid.Columns>
-                <DataGridTemplateColumn Width="60">
-                    <DataGridTemplateColumn.Header>
-                        <CheckBox Command="{Binding DataContext.ToggleSelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                          CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
-                    </DataGridTemplateColumn.Header>
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Grid Background="Transparent" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-
-                                <TextBlock x:Name="TxtSerialNumber" 
-                                   Text="{Binding SerialNumber}" 
-                                   VerticalAlignment="Center" 
-                                   HorizontalAlignment="Center" 
-                                   Foreground="DarkSlateGray"/>
-
-                                <CheckBox Grid.Row="1" IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}" 
-                                  HorizontalAlignment="Center" VerticalAlignment="Center" Click="CheckBox_Click"/>
-                            </Grid>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Name" MinWidth="170" MaxWidth="200" IsReadOnly="True">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <TextBlock HorizontalAlignment="Left" FontSize="14" Margin="0,5,0,0">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
-                                            <Setter Property="Text" Value="{Binding CompanyName, StringFormat=({0})}"/>
-                                            <Setter Property="TextWrapping" Value="Wrap"/>
-
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding CompanyName}" Value="">
-                                                    <Setter Property="Text" Value=""/>
-                                                </DataTrigger>
-
-                                                <DataTrigger Binding="{Binding CompanyName}" Value="{x:Null}">
-                                                    <Setter Property="Text" Value=""/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <TextBlock Text="{Binding CustomerName}" TextWrapping="Wrap" Foreground="CadetBlue" FontSize="16" FontWeight="Bold" HorizontalAlignment="Left"/>
-                                <StackPanel Margin="0,5" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                    <Button security:SecurityGuard.Requires="Customer:Update" BorderThickness="0" Padding="8" Margin="2" ToolTip="Update Info" Command="{Binding DataContext.OpenLeadProfileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Green" Foreground="White" FontWeight="Bold">
-                                        <icon:BootstrapIcons Kind="JournalText"/>
-                                    </Button>
-                                    <Button security:SecurityGuard.Requires="Customer:Edit" BorderThickness="0" Padding="8" Margin="2" ToolTip="Edit Info" Command="{Binding DataContext.EditLeadCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="CadetBlue" Foreground="White" FontWeight="Bold">
-                                        <icon:BootstrapIcons Kind="PencilFill"/>
-                                    </Button>
-                                    <Button security:SecurityGuard.Requires="Customer:Delete" BorderThickness="0" Padding="8" Margin="2" ToolTip="Delete" Command="{Binding DataContext.DeleteLeadCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="MediumPurple" Foreground="White" FontWeight="Bold">
-                                        <icon:BootstrapIcons Kind="Trash3Fill"/>
-                                    </Button>
-                                </StackPanel>
-                                <TextBlock VerticalAlignment="Bottom" HorizontalAlignment="Left" Text="{Binding CreatedAt, StringFormat={}Added: {0:dd/MM/yyyy}}" FontSize="10" Margin="0,5,0,5"/>
-                                <!--<TextBlock HorizontalAlignment="Center" Text="{Binding Id, StringFormat=ID: {0}}" FontWeight="Bold" Margin="0,0,0,10"/>-->
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Contact" Width="Auto" IsReadOnly="True">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Grid HorizontalAlignment="Left" VerticalAlignment="Center">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition/>
-                                    <ColumnDefinition Width="5"/>
-                                    <ColumnDefinition/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                    <RowDefinition/>
-                                </Grid.RowDefinitions>
-                                <materialDesign:PackIcon Kind="Phone" Grid.Row="1" Grid.Column="0" FontSize="12" FontWeight="Bold" Visibility="{Binding ElementName=WhatsApp, Path=Visibility}" VerticalAlignment="Center"/>
-                                <materialDesign:PackIcon Kind="Mailbox" Grid.Row="2" Grid.Column="0" FontSize="12" FontWeight="Bold" Visibility="{Binding ElementName=Email, Path=Visibility}" VerticalAlignment="Center"/>
-                                <materialDesign:PackIcon Kind="MapMarker" Grid.Row="3" Grid.Column="0" FontSize="12" FontWeight="Bold" Visibility="{Binding ElementName=Map, Path=Visibility}" VerticalAlignment="Top"/>
-                                <StackPanel x:Name="WhatsApp" Grid.Row="1" Grid.Column="2" Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Phone}" TextWrapping="Wrap" FontSize="12" Margin="0" VerticalAlignment="Center"/>
-                                    <Button BorderThickness="0" Command="{Binding DataContext.WhatsappCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" Margin="5,0" Padding="5" Foreground="Green">
-                                        <materialDesign:PackIcon Kind="Whatsapp"/>
-                                    </Button>
-                                </StackPanel>
-                                <TextBlock x:Name="Email" Text="{Binding Email}" Grid.Row="2" Grid.Column="2" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                                <StackPanel x:Name="Map" Orientation="Vertical" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding AddressLine}" FontSize="12" TextWrapping="Wrap"/>
-                                        <TextBlock Text="{Binding City, StringFormat='{}{0}\, '}" FontSize="12" Margin="0" TextWrapping="Wrap"/>
-                                        <TextBlock Text="{Binding District, StringFormat='{}{0}\, '}" FontSize="12" Margin="0" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding State, StringFormat='{}{0}\, '}" FontSize="12" Margin="0" TextWrapping="Wrap"/>
-                                        <TextBlock Text="{Binding Pincode, StringFormat='{}{0}\, '}" FontSize="12" Margin="0" TextWrapping="Wrap"/>
-                                    </StackPanel>
-                                    <TextBlock Text="{Binding Country}" FontSize="12" Margin="0"/>
-                                </StackPanel>
-                            </Grid>
-                            <DataTemplate.Triggers>
-                                <DataTrigger Binding="{Binding Phone}" Value="{x:Null}">
-                                    <Setter TargetName="WhatsApp" Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Phone}" Value="">
-                                    <Setter TargetName="WhatsApp" Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Email}" Value="{x:Null}">
-                                    <Setter TargetName="Email" Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding Email}" Value="">
-                                    <Setter TargetName="Email" Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding State}" Value="{x:Null}">
-                                    <Setter TargetName="Map" Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding State}" Value="">
-                                    <Setter TargetName="Map" Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </DataTemplate.Triggers>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Info" Width="150">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding LeadSource, StringFormat='{}Source: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding LeadTag, StringFormat='{}Tag: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding LeadHolder, StringFormat='{}LeadHolder: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Label" Width="100">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <ItemsControl ItemsSource="{Binding LeadLabels}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="#b6f9fa" Margin="2" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                            <TextBlock Text="{Binding}" FontSize="10" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTemplateColumn Header="Divisions" Width="100">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <ItemsControl ItemsSource="{Binding AssignedDivisions}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="#E1F5FE" CornerRadius="5" Padding="8,2" Margin="2">
-                                            <TextBlock Text="{Binding Name}" FontSize="10" Foreground="#0288D1" FontWeight="Bold"/>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <!--<DataGridTemplateColumn Header="Lead Holder" Width="*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Border CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <StackPanel Orientation="Vertical">
-                                    <TextBlock Text="{Binding LeadHolder}" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>-->
-                <DataGridTemplateColumn Header="Summary" Width="150">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
-                                <TextBlock Text="{Binding TotalOrderAmount, StringFormat='Business: ₹ {0:N0}'}" TextWrapping="Wrap" Foreground="DarkSlateGray" FontWeight="DemiBold" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <!--<TextBlock Text="{Binding TotalPaidAmount, StringFormat='₹ {0:N0}'}" Foreground="ForestGreen" FontWeight="DemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>-->
-                                <TextBlock Text="{Binding TotalBalanceDue, StringFormat='Balance: ₹ {0:N0}'}" TextWrapping="Wrap" Foreground="DarkRed" Margin="0,5,0,0" FontWeight="DemiBold" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <TextBlock Text="{Binding OrderCount, StringFormat='{}{0} Orders'}" TextWrapping="Wrap" FontSize="12" Foreground="Black" Margin="0,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>                
-                <DataGridTemplateColumn Header="Followup Date/Time" Width="*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="{Binding LatestUpdate.FollowupStage}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,10"/>
-                                <TextBlock Text="{Binding LatestUpdate.NextFollowUpDate, StringFormat={}{0:dd-MM-yyyy hh:mm tt}}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                <Border Background="LightSkyBlue" CornerRadius="5" Margin="0,10,0,0" VerticalAlignment="Center" HorizontalAlignment="Left">
-                                    <TextBlock Text="{Binding HistoryCount, StringFormat='{}{0} followup'}" FontSize="12" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                </Border>
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <!--<DataGridTemplateColumn Width="120">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="Manage Orders" Command="{Binding DataContext.OpenOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>-->
-                <DataGridTemplateColumn Header="Last Message" Width="*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Grid>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding LatestUpdate.Message}" 
-                               TextWrapping="Wrap" FontSize="13" Foreground="#2C3E50"/>
-
-                                    <StackPanel Orientation="Vertical" Margin="0,5,0,0">
-                                        <TextBlock Text="{Binding LatestUpdate.LogDate, StringFormat=d}" TextWrapping="Wrap"
-                                   FontSize="11" Foreground="#7F8C8D" Margin="0,0,10,0"/>
-                                        <TextBlock Text="{Binding LatestUpdate.UpdatedBy}" TextWrapping="Wrap"
-                                   FontSize="11" Foreground="#7F8C8D" FontWeight="SemiBold"/>
-                                    </StackPanel>
-
-                                    <Button Content="Lead History" 
-                            Margin="0,10,0,0" FontSize="10" Height="22" Padding="0"
-                            Background="#1794A1" Foreground="White" BorderThickness="0"
-                            Command="{Binding DataContext.ShowHistoryDialogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                            CommandParameter="{Binding}"/>
-                                </StackPanel>
-
-                                <TextBlock Text="No message yet" Visibility="Collapsed" 
-                           IsHitTestVisible="False" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" Grid.Column="0" Visibility="Collapsed">
+                            <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="Gray"/>
+                            <Grid Width="250">
+                                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                 VerticalContentAlignment="Center" Height="30"
+                 Padding="5,0"/>
+                                <TextBlock Text="Search by Name, City, Phone..." 
+                   IsHitTestVisible="False" VerticalAlignment="Center" 
+                   Margin="10,0" Foreground="LightGray">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding LatestUpdate}" Value="{x:Null}">
+                                                <DataTrigger Binding="{Binding SearchText}" Value="">
                                                     <Setter Property="Visibility" Value="Visible"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
@@ -403,161 +54,545 @@
                                     </TextBlock.Style>
                                 </TextBlock>
                             </Grid>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Other Info" Binding="{Binding CustomInfoSummary}" Width="*">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="TextWrapping" Value="Wrap"/>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+                        </StackPanel>
 
-        <Grid Grid.Row="3" Background="#F8FAFC" Margin="5,10,5,10">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <!-- Summary meta data context row info string -->
-                <ColumnDefinition Width="Auto"/>
-                <!-- Combobox entry dropdown configuration selector -->
-                <ColumnDefinition Width="Auto"/>
-                <!-- Dynamic page elements control switch layout box -->
-            </Grid.ColumnDefinitions>
+                        <Menu Grid.Column="3"
+  Background="#FF8A3D" 
+  Foreground="White"
+  VerticalAlignment="Center" 
+  Margin="0,0,10,0">
+                            <!--<Menu.Resources>
+    <Style TargetType="MenuItem" BasedOn="{StaticResource MaterialDesignMenuItem}">
+        <Setter Property="Background" Value="#FF8A3D"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+</Menu.Resources>-->
 
-            <!-- Left Component Block Summary Context -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="Showing " Foreground="#64748B" FontSize="13"/>
-                <TextBlock Text="{Binding StartEntry}" FontWeight="Bold" Foreground="#334155" FontSize="13"/>
-                <TextBlock Text=" to " Foreground="#64748B" FontSize="13"/>
-                <TextBlock Text="{Binding EndEntry}" FontWeight="Bold" Foreground="#334155" FontSize="13"/>
-                <TextBlock Text=" of " Foreground="#64748B" FontSize="13"/>
-                <TextBlock Text="{Binding TotalEntries}" FontWeight="Bold" Foreground="#334155" FontSize="13"/>
-                <TextBlock Text=" entries" Foreground="#64748B" FontSize="13"/>
-            </StackPanel>
+                            <Menu.Style>
+                                <Style TargetType="Menu">
+                                    <Setter Property="materialDesign:ButtonAssist.CornerRadius" Value="4"/>
+                                    <Setter Property="IsEnabled" Value="{Binding SelectedLeadsCount, Converter={StaticResource GreaterThanZeroConverter}}"/>
+                                </Style>
+                            </Menu.Style>
 
-            <!-- Center Component Block Items Density Dropdown Config -->
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="30,0">
-                <TextBlock Text="Show " Foreground="#64748B" FontSize="13" VerticalAlignment="Center"/>
-                <ComboBox ItemsSource="{Binding PageSizeOptions}" SelectedItem="{Binding PageSize, Mode=TwoWay}"
-      Width="65" Height="28" Padding="6,2" FontSize="13" FontWeight="Bold" Background="White" BorderBrush="#CBD5E1" 
-      HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-                <TextBlock Text=" entries" Foreground="#64748B" FontSize="13" VerticalAlignment="Center" Margin="6,0,0,0"/>
-            </StackPanel>
+                            <MenuItem  
+      Header="Action" 
+      FontWeight="SemiBold" 
+      FontSize="13"
+    Height="32"
+      Padding="20,5"
+      VerticalAlignment="Center" 
+      HorizontalAlignment="Center"/>
 
-            <!-- Right Component Block Context Routing Index Trays Buttons -->
-            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Content="Previous" Command="{Binding NavigatePreviousCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" 
-    Height="32" Padding="12,0" BorderBrush="#E2E8F0" Foreground="#475569" Background="White" FontSize="13"/>
+                            <MenuItem Height="32" Width="30" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                <MenuItem.Header>
+                                    <materialDesign:PackIcon Kind="MenuDown" Width="20" Height="20" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,2,0,0"/>
+                                </MenuItem.Header>
 
-                <ItemsControl ItemsSource="{Binding PageItemsCollection}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Content="{Binding DisplayText}" Command="{Binding DataContext.NavigateToSelectedPageCommand, RelativeSource={RelativeSource AncestorType=Grid}}" CommandParameter="{Binding}"
-                Height="32" Width="36" Padding="0" FontSize="13" BorderThickness="1,1,0,1">
-                                <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
-                                        <Setter Property="Background" Value="White"/>
-                                        <Setter Property="BorderBrush" Value="#E2E8F0"/>
-                                        <Setter Property="Foreground" Value="#1794A1"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                                                <Setter Property="Background" Value="#1794A1"/>
-                                                <Setter Property="BorderBrush" Value="#1794A1"/>
-                                                <Setter Property="Foreground" Value="White"/>
-                                                <Setter Property="FontWeight" Value="Black"/>
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding IsClickable}" Value="False">
-                                                <Setter Property="IsEnabled" Value="False"/>
-                                                <Setter Property="Background" Value="#F8FAFC"/>
+                                <MenuItem.Items>
+                                    <MenuItem Header="Batch delete" 
+  Command="{Binding BulkDeleteCommand}"
+  Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Delete"/>
+
+                                    <MenuItem Header="Change Leadholder" 
+  Command="{Binding OpenChangeLeadHolderDialogCommand}"
+  Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Edit"/>
+                                    <MenuItem Header="Move to dead" 
+  Command="{Binding MoveToDeadCommand}"
+  Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Edit"/>
+
+                                    <MenuItem Header="Assign Labels" 
+  Command="{Binding OpenAssignLabelsDialogCommand}"
+  Height="38" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#334155" security:SecurityGuard.Requires="Customer:Edit"/>
+                                </MenuItem.Items>
+                            </MenuItem>
+                        </Menu>
+
+                        <Button Grid.Column="2" Content="Import Leads" 
+        Command="{Binding OpenImportLeadsDialogCommand}"
+        Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0" security:SecurityGuard.Requires="Customer:View"/>
+                        <Button Grid.Column="4" Content="+ New Customer" 
+                Command="{Binding OpenAddLeadDialogCommand}"
+                Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0" security:SecurityGuard.Requires="Customer:Create"/>
+                    </Grid>
+                </Border>
+
+                <materialDesign:Card Background="Goldenrod" Grid.Row="1" Foreground="White" Padding="15" Margin="10">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <materialDesign:PackIcon Kind="AccountGroup" Foreground="SaddleBrown" Width="22" Height="22" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                            <TextBlock Foreground="SaddleBrown" FontSize="20" FontWeight="Bold" VerticalAlignment="Center">
+        <Run Text="{Binding CustomerStats.TotalCustomers, Mode=OneWay}"/>
+        <Run Text=" | "/>
+        <Run Text="{Binding CustomerStats.TotalFirstOrders, StringFormat=C2, ConverterCulture=en-IN}"/>
+        <Run Text=" + "/>
+        <Run Text="{Binding CustomerStats.TotalOtherOrders, StringFormat=C2, ConverterCulture=en-IN}"/>
+        <Run Text=" = "/>
+        <Run Text="{Binding CustomerStats.TotalBusiness, StringFormat=C2, ConverterCulture=en-IN}"/>
+                            </TextBlock>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <TextBlock Text="Market Outstanding: " Foreground="Brown" FontSize="16" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding CustomerStats.TotalOutstanding, StringFormat='₹ {0:N2}'}" Foreground="Brown" FontSize="20" FontWeight="Bold" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </DockPanel>
+                </materialDesign:Card>
+
+                <DataGrid Grid.Row="2" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" SelectedItem="{Binding SelectedLead}" AlternationCount="9999" AutoGenerateColumns="False" IsReadOnly="True" Margin="10"
+              VirtualizingPanel.IsVirtualizing="True"
+      VirtualizingPanel.VirtualizationMode="Recycling"
+      VirtualizingPanel.ScrollUnit="Pixel"
+      VirtualizingPanel.CacheLengthUnit="Item"
+      VirtualizingPanel.CacheLength="10,20"
+      ScrollViewer.CanContentScroll="True">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="60">
+                            <DataGridTemplateColumn.Header>
+                                <CheckBox Command="{Binding DataContext.ToggleSelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                      CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid Background="Transparent" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock x:Name="TxtSerialNumber" 
+                               Text="{Binding SerialNumber}" 
+                               VerticalAlignment="Center" 
+                               HorizontalAlignment="Center" 
+                               Foreground="DarkSlateGray"/>
+
+                                        <CheckBox Grid.Row="1" IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}" 
+                              HorizontalAlignment="Center" VerticalAlignment="Center" Click="CheckBox_Click"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Name" MinWidth="170" MaxWidth="200" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
+                                        <TextBlock HorizontalAlignment="Left" FontSize="14" Margin="0,5,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                                    <Setter Property="Text" Value="{Binding CompanyName, StringFormat=({0})}"/>
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding CompanyName}" Value="">
+                                                            <Setter Property="Text" Value=""/>
+                                                        </DataTrigger>
+
+                                                        <DataTrigger Binding="{Binding CompanyName}" Value="{x:Null}">
+                                                            <Setter Property="Text" Value=""/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding CustomerName}" 
+                                           TextWrapping="Wrap" 
+                                           Cursor="Hand" 
+                                           Foreground="CadetBlue" 
+                                           FontSize="16" 
+                                           FontWeight="Bold" 
+                                           HorizontalAlignment="Left">
+                                            <TextBlock.InputBindings>
+                                                <MouseBinding MouseAction="LeftClick" 
+                                                  Command="{Binding DataContext.ShowLeadWorkspaceCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                  CommandParameter="{Binding}" />
+                                            </TextBlock.InputBindings>
+                                        </TextBlock>
+                                        <StackPanel Margin="0,5" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                            <Button security:SecurityGuard.Requires="Customer:Update" BorderThickness="0" Padding="8" Margin="2" ToolTip="Update Info" Command="{Binding DataContext.OpenLeadProfileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Green" Foreground="White" FontWeight="Bold">
+                                                <icon:BootstrapIcons Kind="JournalText"/>
+                                            </Button>
+                                            <Button security:SecurityGuard.Requires="Customer:Edit" BorderThickness="0" Padding="8" Margin="2" ToolTip="Edit Info" Command="{Binding DataContext.EditLeadCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="CadetBlue" Foreground="White" FontWeight="Bold">
+                                                <icon:BootstrapIcons Kind="PencilFill"/>
+                                            </Button>
+                                            <Button security:SecurityGuard.Requires="Customer:Delete" BorderThickness="0" Padding="8" Margin="2" ToolTip="Delete" Command="{Binding DataContext.DeleteLeadCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="MediumPurple" Foreground="White" FontWeight="Bold">
+                                                <icon:BootstrapIcons Kind="Trash3Fill"/>
+                                            </Button>
+                                        </StackPanel>
+                                        <TextBlock VerticalAlignment="Bottom" HorizontalAlignment="Left" Text="{Binding CreatedAt, StringFormat={}Added: {0:dd/MM/yyyy}}" FontSize="10" Margin="0,5,0,5"/>
+                                        <!--<TextBlock HorizontalAlignment="Center" Text="{Binding Id, StringFormat=ID: {0}}" FontWeight="Bold" Margin="0,0,0,10"/>-->
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Contact" Width="Auto" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition/>
+                                            <ColumnDefinition Width="5"/>
+                                            <ColumnDefinition/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <materialDesign:PackIcon Kind="Phone" Grid.Row="1" Grid.Column="0" FontSize="12" FontWeight="Bold" Visibility="{Binding ElementName=WhatsApp, Path=Visibility}" VerticalAlignment="Center"/>
+                                        <materialDesign:PackIcon Kind="Mailbox" Grid.Row="2" Grid.Column="0" FontSize="12" FontWeight="Bold" Visibility="{Binding ElementName=Email, Path=Visibility}" VerticalAlignment="Center"/>
+                                        <materialDesign:PackIcon Kind="MapMarker" Grid.Row="3" Grid.Column="0" FontSize="12" FontWeight="Bold" Visibility="{Binding ElementName=Map, Path=Visibility}" VerticalAlignment="Top"/>
+                                        <StackPanel x:Name="WhatsApp" Grid.Row="1" Grid.Column="2" Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Phone}" TextWrapping="Wrap" FontSize="12" Margin="0" VerticalAlignment="Center"/>
+                                            <Button BorderThickness="0" Command="{Binding DataContext.WhatsappCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Background="Transparent" Margin="5,0" Padding="5" Foreground="Green">
+                                                <materialDesign:PackIcon Kind="Whatsapp"/>
+                                            </Button>
+                                        </StackPanel>
+                                        <TextBlock x:Name="Email" Text="{Binding Email}" Grid.Row="2" Grid.Column="2" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                        <StackPanel x:Name="Map" Orientation="Vertical" Grid.Row="3" Grid.Column="2" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding AddressLine}" FontSize="12" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding City, StringFormat='{}{0}\, '}" FontSize="12" Margin="0" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding District, StringFormat='{}{0}\, '}" FontSize="12" Margin="0" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding State, StringFormat='{}{0}\, '}" FontSize="12" Margin="0" TextWrapping="Wrap"/>
+                                                <TextBlock Text="{Binding Pincode, StringFormat='{}{0}\, '}" FontSize="12" Margin="0" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Country}" FontSize="12" Margin="0"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding Phone}" Value="{x:Null}">
+                                            <Setter TargetName="WhatsApp" Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Phone}" Value="">
+                                            <Setter TargetName="WhatsApp" Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Email}" Value="{x:Null}">
+                                            <Setter TargetName="Email" Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding Email}" Value="">
+                                            <Setter TargetName="Email" Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding State}" Value="{x:Null}">
+                                            <Setter TargetName="Map" Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding State}" Value="">
+                                            <Setter TargetName="Map" Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Info" Width="150">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding LeadSource, StringFormat='{}Source: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding LeadTag, StringFormat='{}Tag: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding LeadHolder, StringFormat='{}LeadHolder: {0}'}" TextWrapping="Wrap" Foreground="Black" FontSize="12" Margin="0,5" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Label" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ItemsControl ItemsSource="{Binding LeadLabels}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#b6f9fa" Margin="2" CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding}" FontSize="10" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Divisions" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ItemsControl ItemsSource="{Binding AssignedDivisions}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#E1F5FE" CornerRadius="5" Padding="8,2" Margin="2">
+                                                    <TextBlock Text="{Binding Name}" FontSize="10" Foreground="#0288D1" FontWeight="Bold"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!--<DataGridTemplateColumn Header="Lead Holder" Width="*">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <Border CornerRadius="10" Padding="5" VerticalAlignment="Center" HorizontalAlignment="Left">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock Text="{Binding LeadHolder}" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>-->
+                        <DataGridTemplateColumn Header="Summary" Width="150">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
+                                        <TextBlock Text="{Binding TotalOrderAmount, StringFormat='Business: ₹ {0:N0}'}" TextWrapping="Wrap" Foreground="DarkSlateGray" FontWeight="DemiBold" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                        <!--<TextBlock Text="{Binding TotalPaidAmount, StringFormat='₹ {0:N0}'}" Foreground="ForestGreen" FontWeight="DemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>-->
+                                        <TextBlock Text="{Binding TotalBalanceDue, StringFormat='Balance: ₹ {0:N0}'}" TextWrapping="Wrap" Foreground="DarkRed" Margin="0,5,0,0" FontWeight="DemiBold" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding OrderCount, StringFormat='{}{0} Orders'}" TextWrapping="Wrap" FontSize="12" Foreground="Black" Margin="0,10,0,0" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Followup Date/Time" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding LatestUpdate.FollowupStage}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,0,10"/>
+                                        <TextBlock Text="{Binding LatestUpdate.NextFollowUpDate, StringFormat={}{0:dd-MM-yyyy hh:mm tt}}" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                        <Border Background="LightSkyBlue" CornerRadius="5" Margin="0,10,0,0" VerticalAlignment="Center" HorizontalAlignment="Left">
+                                            <TextBlock Text="{Binding HistoryCount, StringFormat='{}{0} followup'}" FontSize="12" TextWrapping="Wrap" Foreground="Black" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <!--<DataGridTemplateColumn Width="120">
+                <DataGridTemplateColumn.CellTemplate>
+                    <DataTemplate>
+                        <Button Content="Manage Orders" Command="{Binding DataContext.OpenOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}"/>
+                    </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+            </DataGridTemplateColumn>-->
+                        <DataGridTemplateColumn Header="Last Message" Width="*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding LatestUpdate.Message}" 
+                           TextWrapping="Wrap" FontSize="13" Foreground="#2C3E50"/>
+
+                                            <StackPanel Orientation="Vertical" Margin="0,5,0,0">
+                                                <TextBlock Text="{Binding LatestUpdate.LogDate, StringFormat=d}" TextWrapping="Wrap"
+                               FontSize="11" Foreground="#7F8C8D" Margin="0,0,10,0"/>
+                                                <TextBlock Text="{Binding LatestUpdate.UpdatedBy}" TextWrapping="Wrap"
+                               FontSize="11" Foreground="#7F8C8D" FontWeight="SemiBold"/>
+                                            </StackPanel>
+
+                                            <Button Content="Lead History" 
+                        Margin="0,10,0,0" FontSize="10" Height="22" Padding="0"
+                        Background="#1794A1" Foreground="White" BorderThickness="0"
+                        Command="{Binding DataContext.ShowHistoryDialogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding}"/>
+                                        </StackPanel>
+
+                                        <TextBlock Text="No message yet" Visibility="Collapsed" 
+                       IsHitTestVisible="False" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding LatestUpdate}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Grid>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Other Info" Binding="{Binding CustomInfoSummary}" Width="*">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <Grid Grid.Row="3" Background="#F8FAFC" Margin="5,10,5,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <!-- Summary meta data context row info string -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Combobox entry dropdown configuration selector -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Dynamic page elements control switch layout box -->
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left Component Block Summary Context -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Showing " Foreground="#64748B" FontSize="13"/>
+                        <TextBlock Text="{Binding StartEntry}" FontWeight="Bold" Foreground="#334155" FontSize="13"/>
+                        <TextBlock Text=" to " Foreground="#64748B" FontSize="13"/>
+                        <TextBlock Text="{Binding EndEntry}" FontWeight="Bold" Foreground="#334155" FontSize="13"/>
+                        <TextBlock Text=" of " Foreground="#64748B" FontSize="13"/>
+                        <TextBlock Text="{Binding TotalEntries}" FontWeight="Bold" Foreground="#334155" FontSize="13"/>
+                        <TextBlock Text=" entries" Foreground="#64748B" FontSize="13"/>
+                    </StackPanel>
+
+                    <!-- Center Component Block Items Density Dropdown Config -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="30,0">
+                        <TextBlock Text="Show " Foreground="#64748B" FontSize="13" VerticalAlignment="Center"/>
+                        <ComboBox ItemsSource="{Binding PageSizeOptions}" SelectedItem="{Binding PageSize, Mode=TwoWay}"
+  Width="65" Height="28" Padding="6,2" FontSize="13" FontWeight="Bold" Background="White" BorderBrush="#CBD5E1" 
+  HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+                        <TextBlock Text=" entries" Foreground="#64748B" FontSize="13" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                    </StackPanel>
+
+                    <!-- Right Component Block Context Routing Index Trays Buttons -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="Previous" Command="{Binding NavigatePreviousCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" 
+Height="32" Padding="12,0" BorderBrush="#E2E8F0" Foreground="#475569" Background="White" FontSize="13"/>
+
+                        <ItemsControl ItemsSource="{Binding PageItemsCollection}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding DisplayText}" Command="{Binding DataContext.NavigateToSelectedPageCommand, RelativeSource={RelativeSource AncestorType=Grid}}" CommandParameter="{Binding}"
+            Height="32" Width="36" Padding="0" FontSize="13" BorderThickness="1,1,0,1">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                                                <Setter Property="Background" Value="White"/>
                                                 <Setter Property="BorderBrush" Value="#E2E8F0"/>
-                                                <Setter Property="Foreground" Value="#94A3B8"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                            </Button>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                                                <Setter Property="Foreground" Value="#1794A1"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="Background" Value="#1794A1"/>
+                                                        <Setter Property="BorderBrush" Value="#1794A1"/>
+                                                        <Setter Property="Foreground" Value="White"/>
+                                                        <Setter Property="FontWeight" Value="Black"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsClickable}" Value="False">
+                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                        <Setter Property="Background" Value="#F8FAFC"/>
+                                                        <Setter Property="BorderBrush" Value="#E2E8F0"/>
+                                                        <Setter Property="Foreground" Value="#94A3B8"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
-                <Button Content="Next" Command="{Binding NavigateNextCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" 
-                Height="32" Padding="12,0" BorderBrush="#E2E8F0" Foreground="#475569" Background="White" FontSize="13" Margin="-1,0,0,0"/>
-            </StackPanel>
-        </Grid>
-        <Grid Grid.RowSpan="4">
-            <materialDesign:DialogHost IsOpen="{Binding IsChangeLeadHolderOpen}" CloseOnClickAway="True">
-                <materialDesign:DialogHost.DialogContent>
-                    <Border Width="420" Padding="24" Background="White" CornerRadius="8">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,20">
-                                <TextBlock Text="Change Leadholder" FontSize="16" FontWeight="Bold" Foreground="#374151"/>
-                                <Button Style="{StaticResource MaterialDesignFlatButton}" Command="{Binding CloseAllDialogsCommand}" HorizontalAlignment="Right" Padding="0" Width="30" Height="30">
-                                    <materialDesign:PackIcon Kind="Close" Foreground="#9CA3AF" Width="20" Height="20"/>
-                                </Button>
-                            </Grid>
+                        <Button Content="Next" Command="{Binding NavigateNextCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" 
+            Height="32" Padding="12,0" BorderBrush="#E2E8F0" Foreground="#475569" Background="White" FontSize="13" Margin="-1,0,0,0"/>
+                    </StackPanel>
+                </Grid>
+                <Grid Grid.RowSpan="4">
+                    <materialDesign:DialogHost IsOpen="{Binding IsChangeLeadHolderOpen}" CloseOnClickAway="True">
+                        <materialDesign:DialogHost.DialogContent>
+                            <Border Width="420" Padding="24" Background="White" CornerRadius="8">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,20">
+                                        <TextBlock Text="Change Leadholder" FontSize="16" FontWeight="Bold" Foreground="#374151"/>
+                                        <Button Style="{StaticResource MaterialDesignFlatButton}" Command="{Binding CloseAllDialogsCommand}" HorizontalAlignment="Right" Padding="0" Width="30" Height="30">
+                                            <materialDesign:PackIcon Kind="Close" Foreground="#9CA3AF" Width="20" Height="20"/>
+                                        </Button>
+                                    </Grid>
 
-                            <TextBlock Text="Select User To Assign" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,6"/>
-                            <ComboBox ItemsSource="{Binding SystemUsersList}" SelectedItem="{Binding TargetSelectedUser}" DisplayMemberPath="DisplayName" materialDesign:HintAssist.Hint="Select..." Margin="0,0,0,16" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                                    <TextBlock Text="Select User To Assign" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,6"/>
+                                    <ComboBox ItemsSource="{Binding SystemUsersList}" SelectedItem="{Binding TargetSelectedUser}" DisplayMemberPath="DisplayName" materialDesign:HintAssist.Hint="Select..." Margin="0,0,0,16" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
-                            <CheckBox Content="Transfer as New" IsChecked="{Binding TransferAsNew}" Margin="0,0,0,20" FontWeight="SemiBold" Foreground="#4B5563"/>
+                                    <CheckBox Content="Transfer as New" IsChecked="{Binding TransferAsNew}" Margin="0,0,0,20" FontWeight="SemiBold" Foreground="#4B5563"/>
 
-                            <TextBlock Text="Select Date" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,6"/>
-                            <DatePicker SelectedDate="{Binding TransferSelectedDate}" Margin="0,0,0,20"/>
+                                    <TextBlock Text="Select Date" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,6"/>
+                                    <DatePicker SelectedDate="{Binding TransferSelectedDate}" Margin="0,0,0,20"/>
 
-                            <CheckBox Content="Send Notification to User" IsChecked="{Binding SendNotificationToUser}" Margin="0,0,0,10" FontWeight="SemiBold" Foreground="#4B5563"/>
+                                    <CheckBox Content="Send Notification to User" IsChecked="{Binding SendNotificationToUser}" Margin="0,0,0,10" FontWeight="SemiBold" Foreground="#4B5563"/>
 
-                            <!--<TextBlock Text="Select Option:" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,8"/>
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
-                <RadioButton Content="Today's Priority" IsChecked="{Binding IsTodayPriority}" Margin="0,0,24,0" FontWeight="SemiBold"/>
-                <RadioButton Content="Tomorrow's Followup" IsChecked="{Binding IsTodayPriority, Converter={StaticResource InvertedBooleanConverter}}" FontWeight="SemiBold"/>
-            </StackPanel>-->
+                                    <!--<TextBlock Text="Select Option:" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="0,0,0,8"/>
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,24">
+            <RadioButton Content="Today's Priority" IsChecked="{Binding IsTodayPriority}" Margin="0,0,24,0" FontWeight="SemiBold"/>
+            <RadioButton Content="Tomorrow's Followup" IsChecked="{Binding IsTodayPriority, Converter={StaticResource InvertedBooleanConverter}}" FontWeight="SemiBold"/>
+        </StackPanel>-->
 
-                            <Button Content="Submit" Command="{Binding SubmitChangeLeadHolderCommand}" Height="42" Background="#FF8A3D" BorderBrush="#FF8A3D" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Border>
-                </materialDesign:DialogHost.DialogContent>
-            </materialDesign:DialogHost>
-            <materialDesign:DialogHost IsOpen="{Binding IsAssignLabelsOpen}" CloseOnClickAway="True">
-                <materialDesign:DialogHost.DialogContent>
-                    <Border Width="400" Padding="24" Background="White" CornerRadius="8">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,24">
-                                <TextBlock Text="Assign Labels" FontSize="16" FontWeight="Bold" Foreground="#374151"/>
-                                <Button Style="{StaticResource MaterialDesignFlatButton}" Command="{Binding CloseAllDialogsCommand}" HorizontalAlignment="Right" Padding="0" Width="30" Height="30">
-                                    <materialDesign:PackIcon Kind="Close" Foreground="#9CA3AF" Width="20" Height="20"/>
-                                </Button>
-                            </Grid>
+                                    <Button Content="Submit" Command="{Binding SubmitChangeLeadHolderCommand}" Height="42" Background="#FF8A3D" BorderBrush="#FF8A3D" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Border>
+                        </materialDesign:DialogHost.DialogContent>
+                    </materialDesign:DialogHost>
+                    <materialDesign:DialogHost IsOpen="{Binding IsAssignLabelsOpen}" CloseOnClickAway="True">
+                        <materialDesign:DialogHost.DialogContent>
+                            <Border Width="400" Padding="24" Background="White" CornerRadius="8">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,24">
+                                        <TextBlock Text="Assign Labels" FontSize="16" FontWeight="Bold" Foreground="#374151"/>
+                                        <Button Style="{StaticResource MaterialDesignFlatButton}" Command="{Binding CloseAllDialogsCommand}" HorizontalAlignment="Right" Padding="0" Width="30" Height="30">
+                                            <materialDesign:PackIcon Kind="Close" Foreground="#9CA3AF" Width="20" Height="20"/>
+                                        </Button>
+                                    </Grid>
 
-                            <TextBlock Text="Lead Label" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="2,0,0,6"/>
-                            <ComboBox ItemsSource="{Binding AvailableLabelsList}" SelectedItem="{Binding TargetSelectedLabel}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Select..." Margin="0,0,0,28" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
-                            <ItemsControl Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" ItemsSource="{Binding SelectedLabelsList}" Margin="0,0,0,4">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <WrapPanel Orientation="Horizontal"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <materialDesign:Chip Content="{Binding Name}" Margin="2" IsDeletable="True"
-                            DeleteCommand="{Binding DataContext.RemoveLabelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                            DeleteCommandParameter="{Binding}"/>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                                    <TextBlock Text="Lead Label" FontSize="12" FontWeight="SemiBold" Foreground="#4B5563" Margin="2,0,0,6"/>
+                                    <ComboBox ItemsSource="{Binding AvailableLabelsList}" SelectedItem="{Binding TargetSelectedLabel}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Select..." Margin="0,0,0,28" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                                    <ItemsControl Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" ItemsSource="{Binding SelectedLabelsList}" Margin="0,0,0,4">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <materialDesign:Chip Content="{Binding Name}" Margin="2" IsDeletable="True"
+                        DeleteCommand="{Binding DataContext.RemoveLabelCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        DeleteCommandParameter="{Binding}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
 
-                            <Button Content="Submit" Command="{Binding SubmitAssignLabelsCommand}" Height="42" Background="#FF8A3D" BorderBrush="#FF8A3D" FontWeight="Bold"/>
-                        </StackPanel>
-                    </Border>
-                </materialDesign:DialogHost.DialogContent>
-            </materialDesign:DialogHost>
-        </Grid>
+                                    <Button Content="Submit" Command="{Binding SubmitAssignLabelsCommand}" Height="42" Background="#FF8A3D" BorderBrush="#FF8A3D" FontWeight="Bold"/>
+                                </StackPanel>
+                            </Border>
+                        </materialDesign:DialogHost.DialogContent>
+                    </materialDesign:DialogHost>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ProfileDetailWorkspaceTemplate">
+            <local:LeadCustomerProfileView TabsDataContext="{Binding TabsDataContext}"/>
+        </DataTemplate>
+        
+    </UserControl.Resources>
+    <Grid>
+        <ContentControl Content="{Binding}">
+            <ContentControl.Style>
+                <Style TargetType="ContentControl">
+                    <Setter Property="ContentTemplate" Value="{StaticResource MainGridLeadLayoutTemplate}"/>
+
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding DataContext.WorkspaceViewIsActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                            <Setter Property="ContentTemplate" Value="{StaticResource ProfileDetailWorkspaceTemplate}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ContentControl.Style>
+        </ContentControl>
     </Grid>
 </UserControl>

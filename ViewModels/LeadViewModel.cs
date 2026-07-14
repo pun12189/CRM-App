@@ -27,6 +27,7 @@ namespace CallMan.ViewModels
         private readonly StaffService _staffService;
         private readonly OrderService _orderService;
         private readonly NotificationRoutingService _routingService;
+        private readonly CategoryService _categoryService;
         private ICollectionView _leadsCollection;
 
         // 1. Pagination Core State Tracking Variables
@@ -99,7 +100,7 @@ namespace CallMan.ViewModels
         [ObservableProperty]
         private object _tabsDataContext;
 
-        public LeadViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService, StaffService staffService)
+        public LeadViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService, StaffService staffService, CategoryService categoryService)
         {
             _leadService = leadService;
             _settingService = settingService;
@@ -110,6 +111,7 @@ namespace CallMan.ViewModels
             _productService = productService;
             _orderService = orderService;
             _routingService = routingService;
+            _categoryService = categoryService;
             PageSize = 10;
             CurrentPage = 1;
             Task.Run(async () => await LoadInitialDataAsync());
@@ -507,11 +509,11 @@ namespace CallMan.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, false);
+            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, _categoryService, false);
 
             if (selectedLead.Status?.ToLower() == "matured")
             {
-                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead, _locationService, false);
+                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead, _locationService, _categoryService, false);
             }
 
             // 2. Initialize the Window
@@ -616,11 +618,11 @@ namespace CallMan.ViewModels
             if (selectedLead == null) return;
             ActiveProfileLead = selectedLead;
 
-            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, true);
+            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, _categoryService, true);
 
             if (selectedLead.Status?.ToLower() == "matured")
             {
-                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead, _locationService, true);
+                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead, _locationService, _categoryService, true);
             }
 
             this.TabsDataContext = profileVm;

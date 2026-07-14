@@ -271,7 +271,7 @@ namespace CallMan.Services
         /// <summary>
         /// Saves a new product along with its first inventory batch in a single atomic transaction.
         /// </summary>
-        public async Task<bool> SaveProductAssemblyAsync(Product product, ProductBatch initialBatch)
+        public async Task<int> SaveProductAssemblyAsync(Product product, ProductBatch initialBatch)
         {
             using var conn = _context.CreateConnection();
 
@@ -311,7 +311,7 @@ namespace CallMan.Services
                 await conn.ExecuteAsync(batchSql, initialBatch, transaction);
 
                 transaction.Commit();
-                return true;
+                return generatedProductId;
             }
             catch (Exception ex)
             {

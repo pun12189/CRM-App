@@ -126,5 +126,19 @@ namespace CallMan.Models
         [ObservableProperty] private int? _matureStageId;
         [ObservableProperty] private int? _leadSourceId;    // To replace raw text matching if needed
         [ObservableProperty] private int? _leadTagId;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(AssignedCategoryLabelDisplay))]
+        private int? _categoryId;
+
+        // Code-linked helper text property used directly by your clickable XAML DialogHost label string
+        public string AssignedCategoryLabelDisplay => string.IsNullOrWhiteSpace(CategoryName)
+            ? "None Assigned [ Click to Set ]"
+            : CategoryName;
+
+        // Populated dynamically during join queries
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(AssignedCategoryLabelDisplay))]
+        private string? _categoryName;
     }
 }

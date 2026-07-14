@@ -1,4 +1,5 @@
-﻿using CallMan.Interfaces;
+﻿using CallMan.Core;
+using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Services;
 using CallMan.Views;
@@ -34,6 +35,23 @@ namespace CallMan.ViewModels
         [RelayCommand]
         private async Task Login(object passwordBox)
         {
+            await LicenseManager.RefreshCacheAsync();
+
+            // Check your model's native properties directly
+            if (LicenseManager.Current.IsExpired)
+            {
+                MessageBox.Show(
+                    "Your software application evaluation trial phase has expired.\n\n" +
+                    "Please contact administration to activate the Full Enterprise Version.",
+                    "Trial License Expired - Tijori",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Stop
+                );
+
+                // STOPS EXECUTION IN ITS TRACKS: Prevents login routing and credentials checks
+                return;
+            }
+
             if (IsBusy) return; // Prevent double-clicking
 
             IsBusy = true; // Show Spinner, Disable Button
@@ -55,7 +73,18 @@ namespace CallMan.ViewModels
                 bool success = await _authService.AuthenticateByEmailAsync(Email, password);
 
                 if (success)
-                {                    
+                {
+                    if (!LicenseManager.Current.IsFullVersion && LicenseManager.Current.DaysRemaining <= 2)
+                    {
+                        MessageBox.Show(
+                            $"Attention: You are currently executing on a temporary trial phase.\n" +
+                            $"Remaining time: {LicenseManager.Current.DaysRemaining} Day(s) left.",
+                            "Trial Lifecycle Countdown Alert",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Warning
+                        );
+                    }
+
                     var mainWindow = App.ServiceProvider.GetRequiredService<MainWindow>();
                     mainWindow.Show();
 

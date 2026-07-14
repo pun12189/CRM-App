@@ -86,6 +86,12 @@
         <DataTemplate DataType="{x:Type vm:DriveViewModel}">
             <views:DriveView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:VendorViewModel}">
+            <views:VendorView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:PurchaseViewModel}">
+            <views:PurchaseView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -513,14 +519,14 @@
                         <MenuItem Header="Dead" Icon="{materialDesign:PackIcon Kind=CloseCircle}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dead"/>
                         <MenuItem Header="Winback Pool" Icon="{materialDesign:PackIcon Kind=Pool}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="WinbackPool"/>
                     </MenuItem>
-                    <MenuItem Header="Purchase" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}" IsEnabled="False" Visibility="Collapsed"/>
+                    <MenuItem Header="Purchase" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Purchase"/>
                     <MenuItem Header="SAP" Icon="{materialDesign:PackIcon Kind=Briefcase}" Click="TopLevelMenuItem_Click">
                         <MenuItem Header="Orders" Icon="{materialDesign:PackIcon Kind=CartCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Orders"/>
                         <MenuItem Header="Item/Product List" Icon="{materialDesign:PackIcon Kind=PackageVariant}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>
                         <MenuItem Header="Ledger" Icon="{materialDesign:PackIcon Kind=BookOpenPageVariant}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Ledger"/>
                         <MenuItem Header="Proforma" Icon="{materialDesign:PackIcon Kind=FileDocumentCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Proforma"/>
-                        <MenuItem Header="HRMS" IsEnabled="False" Icon="{materialDesign:PackIcon Kind=HumanWelcome}" Style="{StaticResource SubItemStyle}" />
-                        <MenuItem Header="VMS" IsEnabled="False" Icon="{materialDesign:PackIcon Kind=HumanWelcome}" Style="{StaticResource SubItemStyle}" />
+                        <MenuItem Header="HRMS" IsEnabled="False" Icon="{materialDesign:PackIcon Kind=HumanFemale}" Style="{StaticResource SubItemStyle}" />
+                        <MenuItem Header="Vendors" Icon="{materialDesign:PackIcon Kind=PersonBox}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Vendor"/>
                     </MenuItem>
                     <MenuItem Header="Drive" Icon="{materialDesign:PackIcon Kind=FolderNetwork}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Drive"/>
                     <MenuItem Header="Admin Settings" security:SecurityGuard.Requires="Admin:View" Icon="{materialDesign:PackIcon Kind=Settings}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>

@@ -260,6 +260,22 @@ namespace CallMan.ViewModels
                         }, DispatcherPriority.Background);
 
                         break;
+                    case "Purchase":
+                        var vm7 = _serviceProvider.GetRequiredService<PurchaseViewModel>();
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm7;
+                        }, DispatcherPriority.Background);
+
+                        break;
+                    case "Vendor":
+                        var vm8 = _serviceProvider.GetRequiredService<VendorViewModel>();
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm8;
+                        }, DispatcherPriority.Background);
+
+                        break;
                         // Add other cases as you build them
                 }
             }

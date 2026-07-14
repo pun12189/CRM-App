@@ -1,0 +1,155 @@
+﻿<Window x:Class="CallMan.Dialogs.CreatePoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CallMan.Dialogs"
+        mc:Ignorable="d"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Create Purchase Order" 
+        Width="680" Height="600"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        Background="White">
+    <Window.Resources>
+        <Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="true">
+                    <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}"/>
+                    <Setter Property="BorderBrush" Value="#DC2626"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="25">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Purchase Order" FontSize="16" FontWeight="Bold" Margin="0,0,0,15"/>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,15">
+            <TextBlock Text="Target Supplier Account: *" Foreground="#475569" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <ComboBox ItemsSource="{Binding VendorsList, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" SelectedItem="{Binding SelectedVendor}" DisplayMemberPath="CompanyName" Style="{StaticResource MaterialDesignOutlinedComboBox}" Width="260" Height="36" Padding="10,0,10,0"/>
+        </StackPanel>
+
+        <Border Grid.Row="2" Background="#F1F5F9" Padding="10" CornerRadius="4" Margin="0,0,0,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2.2*"/>
+                        <ColumnDefinition Width="0.8*"/>
+                        <ColumnDefinition Width="1.2*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <ComboBox Grid.Column="0" ItemsSource="{Binding ProductsList}" SelectedItem="{Binding SelectedProduct}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Select Catalog Product" Margin="0,0,5,0" Height="38" VerticalAlignment="Center" Padding="10,0,10,0">
+                        <ComboBox.Style>
+                            <Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsCustomProductMode}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ComboBox.Style>
+                    </ComboBox>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,5,0">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsCustomProductMode}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBox Text="{Binding CustomProductName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="New Product Name *" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="160" Margin="0,0,4,0" Height="38" Padding="10,0,10,0"/>
+                        <TextBox Text="{Binding CustomProductSku, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Supplier SKU" Style="{StaticResource MaterialDesignOutlinedTextBox}" Width="100" Height="38" Padding="10,0,10,0"/>
+                    </StackPanel>
+
+                    <TextBox Grid.Column="1" Text="{Binding QuantityInput, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Qty" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="4,0" Height="38" VerticalAlignment="Center" Padding="10,0,10,0"/>
+                    <TextBox Grid.Column="2" Text="{Binding PriceInput, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Unit Cost" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="4,0" Height="38" VerticalAlignment="Center" Padding="10,0,10,0"/>
+
+                    <Button Grid.Column="3" Command="{Binding AddItemLineCommand}" Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#2563EB" BorderBrush="Transparent" Content="Add Item" Padding="12,0" Height="38" VerticalAlignment="Center"/>
+                </Grid>
+
+                <Button Grid.Row="1" Command="{Binding ToggleCustomProductModeCommand}" Padding="0" Height="22" HorizontalAlignment="Left" FontSize="11" Foreground="#4F46E5">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatButton}">
+                            <Setter Property="Content" Value="[ + Product not in list? Add Custom New Item ]"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsCustomProductMode}" Value="True">
+                                    <Setter Property="Content" Value="[ Back to standard Catalog Dropdown Selection ]"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+            </Grid>
+        </Border>
+
+        <DataGrid Grid.Row="3" ItemsSource="{Binding PoLines}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}" Background="White">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Item Description" Binding="{Binding ProductName}" Width="3*" IsReadOnly="True" FontWeight="Medium"/>
+
+                <DataGridTemplateColumn Header="Qty" Width="1.2*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" 
+                                     HorizontalAlignment="Center" Width="60" TextAlignment="Center" Padding="2"
+                                     materialDesign:TextFieldAssist.DecorationVisibility="Hidden">
+                                <TextBox.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding DataContext.UpdateGridItemQtyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"/>
+                                </TextBox.InputBindings>
+                            </TextBox>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, StringFormat='₹ {0:N2}'}" Width="1.5*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Subtotal Total" Binding="{Binding TotalCost, StringFormat='₹ {0:N2}'}" Width="1.5*" IsReadOnly="True" FontWeight="Bold" Foreground="#1E293B"/>
+
+                <DataGridTemplateColumn Header="Actions" Width="1.2*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                <Button Command="{Binding DataContext.UpdateGridItemQtyCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#0284C7" BorderBrush="Transparent" Padding="0" Width="24" Height="24" Margin="0,0,4,0" ToolTip="Recalculate Row Total">
+                                    <materialDesign:PackIcon Kind="Refresh" Foreground="White" Width="12" Height="12"/>
+                                </Button>
+                                <Button Command="{Binding DataContext.DeleteGridItemRowCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#DC2626" BorderBrush="Transparent" Padding="0" Width="24" Height="24" ToolTip="Remove Item">
+                                    <materialDesign:PackIcon Kind="Delete" Foreground="White" Width="12" Height="12"/>
+                                </Button>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <DockPanel Grid.Row="4" Margin="0,15,0,0">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="Total Gross Amount: " FontSize="13" Foreground="#475569"/>
+                <TextBlock Text="{Binding PoTotalAmount, StringFormat='₹ {0:N2}'}" FontSize="15" FontWeight="Black" Foreground="#2563EB" Margin="5,0,0,0"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
+                <Button Content="Discard" Command="{Binding CloseWindowCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,10,0"/>
+                <Button Content="Save PO" Command="{Binding SavePurchaseOrderCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Background="#2563EB" BorderBrush="Transparent"/>
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>

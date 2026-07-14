@@ -135,6 +135,8 @@ namespace CallMan
             services.AddSingleton<PermissionService>();
             services.AddSingleton<StaffService>();
             services.AddSingleton<SchemeService>();
+            services.AddSingleton<VendorService>();
+            services.AddSingleton<PurchaseService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();
@@ -173,6 +175,8 @@ namespace CallMan
             services.AddTransient<CreateFieldViewModel>();
             services.AddTransient<ActivationViewModel>();
             services.AddTransient<PermissionsManagementViewModel>();
+            services.AddTransient<VendorViewModel>();
+            services.AddTransient<PurchaseViewModel>();
 
             // 4. Register Views
             services.AddTransient<LoginView>();

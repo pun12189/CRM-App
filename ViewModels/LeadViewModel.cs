@@ -5,6 +5,7 @@ using CallMan.Models.Enums;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
@@ -83,6 +84,9 @@ namespace CallMan.ViewModels
         // Tracks properties to bind dynamically to our modal popup overlays
         [ObservableProperty] private bool _isChangeLeadHolderOpen;
         [ObservableProperty] private bool _isAssignLabelsOpen;
+        [ObservableProperty] private bool _isAssignCategoryOpen;
+        [ObservableProperty] private ObservableCollection<BusinessCategory> _categoriesList = new();
+        [ObservableProperty] private BusinessCategory? _assignedCategory;
 
         // Dropdown lookup source lists
         [ObservableProperty] private ObservableCollection<User> _systemUsersList = new();
@@ -227,6 +231,37 @@ namespace CallMan.ViewModels
             IsAssignLabelsOpen = true;
         }
 
+        [RelayCommand(CanExecute = nameof(HasSelection))]
+        private void OpenAssignCategoryDialog()
+        {
+            _ = LoadCategoryDependenciesAsync();
+            IsAssignCategoryOpen = true;
+        }
+
+        /// <summary>
+        /// Prepares and populates category drop-down items from the database service tier
+        /// </summary>
+        public async Task LoadCategoryDependenciesAsync()
+        {
+            try
+            {
+                var categories = await _categoryService.GetCategoriesByContextAsync(CategoryContext.Leads);
+                App.Current.Dispatcher.Invoke(() =>
+                {
+                    CategoriesList = new ObservableCollection<BusinessCategory>(categories);
+                    if (SelectedLead != null)
+                    {
+                        // Pre-select current category of the lead if it exists
+                        AssignedCategory = CategoriesList.FirstOrDefault(c => c.CategoryId == SelectedLead.CategoryId);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CATEGORY LOAD ERROR] Failed to fetch elements: {ex.Message}");
+            }
+        }
+
         [RelayCommand]
         private async Task SubmitChangeLeadHolder()
         {
@@ -268,6 +303,33 @@ namespace CallMan.ViewModels
             IsAssignLabelsOpen = false;
             await LoadLeads();
             RecalculateSelectionStates();
+        }
+
+        [RelayCommand]
+        private async Task SubmitCategoryAssignmentChangeAsync()
+        {
+            if (SelectedLead == null || AssignedCategory == null) return;
+
+            try
+            {
+                var selectedLeads = LeadsCollection.Cast<Lead>().Where(x => x.IsSelectedForAction).ToList();
+
+                foreach (var lead in selectedLeads)
+                {
+                    lead.CategoryId = AssignedCategory.CategoryId;
+                    lead.CategoryName = AssignedCategory.CategoryName;
+                    await _leadService.UpdateLeadCategoryAsync(lead, AssignedCategory.CategoryId);
+                }
+
+                IsAssignCategoryOpen = false;
+                await LoadLeads();
+                RecalculateSelectionStates();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed to assign category to database column: {ex.Message}",
+                                "Database Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         partial void OnTargetSelectedLabelChanged(SettingItem? value)

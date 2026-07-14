@@ -1,0 +1,33 @@
+﻿<UserControl x:Class="CallMan.Views.VendorView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CallMan.Views"
+             mc:Ignorable="d" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Background="White">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#F8FAFC" Padding="15,10" Margin="0,0,0,15" CornerRadius="6" BorderThickness="1" BorderBrush="#E2E8F0">
+            <DockPanel>
+                <Button Content="+ Add New Vendor" Style="{StaticResource MaterialDesignFlatMidBgButton}" DockPanel.Dock="Right" Command="{Binding OpenAddVendorWindowCommand}"/>
+                <TextBlock Text="Vendor Directory" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
+
+        <DataGrid Grid.Row="1" ItemsSource="{Binding VendorsList}" SelectedItem="{Binding SelectedVendor}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Company Name" Binding="{Binding CompanyName}" Width="2*" IsReadOnly="True" FontWeight="Bold"/>
+                <DataGridTextColumn Header="Contact Person" Binding="{Binding ContactPerson}" Width="1.5*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="1.2*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="GSTIN" Binding="{Binding GstNumber}" Width="1.3*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="1*" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

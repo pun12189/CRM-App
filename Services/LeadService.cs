@@ -116,6 +116,17 @@ namespace CallMan.Services
             return rows > 0;
         }
 
+        public async Task<bool> UpdateLeadCategoryAsync(Lead lead, int categoryId)
+        {
+            using var db = _context.CreateConnection();
+
+            string sql = @"UPDATE Leads SET CategoryId = @CategoryId WHERE LeadId = @LeadId;";
+
+            var rows = await db.ExecuteAsync(sql, new { CategoryId = categoryId, LeadId = lead.LeadId });
+
+            return rows > 0;
+        }
+
         public async Task<bool> DeleteLeadDivisionsAsync(int leadId)
         {
             using var db = _context.CreateConnection();
@@ -231,6 +242,7 @@ namespace CallMan.Services
                     l.*, 
                     COALESCE(hc.HistCount, 0) AS HistoryCount,
                     COALESCE(oc.OrdCount, 0) AS OrderCount,
+                    bc.*,
                     h.*, 
                     d.*
                 FROM (
@@ -252,6 +264,7 @@ namespace CallMan.Services
     
                 LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId 
                 LEFT JOIN Divisions d ON ld.DivisionId = d.Id
+                LEFT JOIN BusinessCategories bc ON l.CategoryId = bc.CategoryId
     
                 LEFT JOIN (
                     SELECT LeadId, COUNT(*) - 1 AS HistCount FROM LeadHistory GROUP BY LeadId

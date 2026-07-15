@@ -113,6 +113,9 @@ namespace CallMan
             services.AddSingleton<IAuthService, AuthService>();
             services.AddSingleton<IDialogService, DialogService>();
             services.AddSingleton<IUserSession, UserSession>();
+            services.AddSingleton<ITwoFactorService, TwoFactorService>();
+            services.AddSingleton<IGlobalSettingsService, GlobalSettingsService>();
+            services.AddSingleton<IActionSecurityGuard, ActionSecurityGuard>();
             services.AddSingleton<LeadService>();// Our Lead Management service
             services.AddSingleton<SettingService>();
             services.AddSingleton<CategoryService>();

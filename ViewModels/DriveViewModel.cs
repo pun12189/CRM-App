@@ -18,6 +18,7 @@ namespace CallMan.ViewModels
     {
         private readonly CrmDbContext _context;
         private readonly IUserSession _session;
+        private readonly IActionSecurityGuard _securityGuard;
 
         // Dropdown tracking variables
         public ObservableCollection<KeyValuePair<string, string>> ModuleOptionsList { get; } = new()
@@ -27,7 +28,8 @@ namespace CallMan.ViewModels
             new("Vendors", "Vendor"),
             new("Staffs", "Staff"),
             new("Purchase", "Purchase"),
-            new("Orders", "Order")
+            new("Orders", "Order"),
+            new("Products", "Product")
         };
 
         [ObservableProperty] private KeyValuePair<string, string> _selectedModuleFilter;
@@ -36,10 +38,11 @@ namespace CallMan.ViewModels
         // The layout target source that your dynamic XAML container binds to
         [ObservableProperty] private ObservableCollection<DriveCategoryGroup> _iteratedCategoriesCollection = new();
 
-        public DriveViewModel(CrmDbContext context, IUserSession session)
+        public DriveViewModel(CrmDbContext context, IUserSession session, IActionSecurityGuard securityGuard)
         {
             _context = context;
             _session = session;
+            _securityGuard = securityGuard;
 
             // Set default view selection block on startup
             SelectedModuleFilter = ModuleOptionsList.First();
@@ -122,8 +125,11 @@ namespace CallMan.ViewModels
         }
 
         [RelayCommand]
-        private void DownloadDocumentFile(UploadedDocumentRow selectedRow)
+        private async Task DownloadDocumentFile(UploadedDocumentRow selectedRow)
         {
+            bool accessGranted = await _securityGuard.IsActionAuthorizedAsync();
+            if (!accessGranted) return; // Halt execution path immediately
+
             if (selectedRow == null || !System.IO.File.Exists(selectedRow.StoragePath)) return;
             var saveDialog = new Microsoft.Win32.SaveFileDialog { FileName = selectedRow.FileName };
 

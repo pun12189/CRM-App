@@ -1,4 +1,5 @@
-﻿using CallMan.Interfaces;
+﻿using CallMan.Core;
+using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -27,6 +28,7 @@ namespace CallMan.ViewModels
         private readonly OrderService _orderService;
         private readonly OccupiedLocationService _locationService;
         private readonly CategoryService _categoryService;
+        private readonly IActionSecurityGuard _securityGuard;
 
         [ObservableProperty] private CustomerAnalytics _data;
 
@@ -100,7 +102,7 @@ namespace CallMan.ViewModels
 
         [ObservableProperty] private string _documentCountSummaryText = "0 Files Total";
 
-        public CustomerProfileViewModel(LeadService service, IUserSession session, SettingService settingService, ProductService productService, OrderService orderService, Lead lead, OccupiedLocationService locationService, CategoryService categoryService, bool isInEditMode = false)
+        public CustomerProfileViewModel(LeadService service, IUserSession session, SettingService settingService, ProductService productService, OrderService orderService, Lead lead, OccupiedLocationService locationService, CategoryService categoryService, IActionSecurityGuard securityGuard, bool isInEditMode = false)
         {
             _service = service;
             _session = session;
@@ -112,6 +114,7 @@ namespace CallMan.ViewModels
             _customerId = lead.LeadId;
             _selectedLead = lead;
             _locationService = locationService;
+            _securityGuard = securityGuard;
             _ = LoadCustomerData(lead.LeadId);
         }
 
@@ -704,8 +707,11 @@ namespace CallMan.ViewModels
         }
 
         [RelayCommand]
-        private void DownloadDocumentFile(UploadedDocumentRow selectedRow)
+        private async Task DownloadDocumentFile(UploadedDocumentRow selectedRow)
         {
+            bool accessGranted = await _securityGuard.IsActionAuthorizedAsync();
+            if (!accessGranted) return; // Halt execution path immediately
+
             if (selectedRow == null || string.IsNullOrEmpty(selectedRow.StoragePath)) return;
 
             if (!System.IO.File.Exists(selectedRow.StoragePath))

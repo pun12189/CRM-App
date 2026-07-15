@@ -1,4 +1,5 @@
-﻿using CallMan.Interfaces;
+﻿using CallMan.Core;
+using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Models.Enums;
 using CallMan.Services;
@@ -30,6 +31,7 @@ namespace CallMan.ViewModels
         private readonly ProductService _productService;
         private readonly OrderService _orderService;
         private readonly CategoryService _categoryService;
+        private readonly IActionSecurityGuard _securityGuard;
 
         [ObservableProperty] private CustomerAnalytics _data;
 
@@ -120,7 +122,7 @@ namespace CallMan.ViewModels
 
         [ObservableProperty] private string _documentCountSummaryText = "0 Files Total";
 
-        public LeadProfileViewModel(LeadService service, SettingService settingService, IUserSession session, Lead lead, OccupiedLocationService locationService, NotificationRoutingService notificationRoutingService, ProductService productService, OrderService orderService, CategoryService categoryService, bool isInEditMode = false)
+        public LeadProfileViewModel(LeadService service, SettingService settingService, IUserSession session, Lead lead, OccupiedLocationService locationService, NotificationRoutingService notificationRoutingService, ProductService productService, OrderService orderService, CategoryService categoryService, IActionSecurityGuard securityGuard, bool isInEditMode = false)
         {
             _leadService = service;
             _settingService = settingService;
@@ -133,6 +135,7 @@ namespace CallMan.ViewModels
             _selectedLead = lead;
             _customerId = lead.LeadId;
             _isInEditMode = isInEditMode;
+            _securityGuard = securityGuard;
             _ = LoadCollections();
         }
 
@@ -827,8 +830,11 @@ namespace CallMan.ViewModels
         }
 
         [RelayCommand]
-        private void DownloadDocumentFile(UploadedDocumentRow selectedRow)
+        private async Task DownloadDocumentFile(UploadedDocumentRow selectedRow)
         {
+            bool accessGranted = await _securityGuard.IsActionAuthorizedAsync();
+            if (!accessGranted) return; // Halt execution path immediately
+
             if (selectedRow == null || string.IsNullOrEmpty(selectedRow.StoragePath)) return;
 
             if (!System.IO.File.Exists(selectedRow.StoragePath))

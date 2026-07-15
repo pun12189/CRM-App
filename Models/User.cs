@@ -24,6 +24,8 @@ namespace CallMan.Models
         [ObservableProperty] private int _departmentId;
         [ObservableProperty] private bool _isActive = true;
         [ObservableProperty] private double _monthlyTarget = 0.0;
+        [ObservableProperty] private string _twoFactorSecret = string.Empty;
+        [ObservableProperty] private bool _isTwoFactorEnabled = false;
 
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 

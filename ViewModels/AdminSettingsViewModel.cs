@@ -1,9 +1,11 @@
 ﻿using CallMan.Dialogs;
+using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using QRCoder;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,6 +14,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using System.Xml.Linq;
 
 namespace CallMan.ViewModels
@@ -21,6 +24,11 @@ namespace CallMan.ViewModels
         private readonly IServiceProvider _serviceProvider;
 
         private readonly LicenseService _licenseService;
+
+        private readonly IGlobalSettingsService _settingsRepository;
+
+        [ObservableProperty]
+        private bool _isMaster2FAEnabled;
 
         [ObservableProperty] private object? _currentSettingView;
         [ObservableProperty] private bool _isMainGridVisible = true;
@@ -51,13 +59,15 @@ namespace CallMan.ViewModels
         public bool IsExpander3Open => OpenExpanderIndex == 3;
         public bool IsExpander4Open => OpenExpanderIndex == 4;
 
-        public AdminSettingsViewModel(IServiceProvider serviceProvider, LicenseService licenseService)
+        public AdminSettingsViewModel(IServiceProvider serviceProvider, LicenseService licenseService, IGlobalSettingsService settingsRepository)
         {
             _serviceProvider = serviceProvider;
             _licenseService = licenseService;
-
+            _settingsRepository = settingsRepository;
             ToggleOnlineServices = Core.LicenseManager.Current.IsOnlineServicesEnabled;
             IsToggleVisible = Core.LicenseManager.Current.IsLocalDatabase;
+
+            Task.Run(async () => IsMaster2FAEnabled = await _settingsRepository.GetMaster2FAStatusAsync());
         }
 
         [RelayCommand]
@@ -168,6 +178,12 @@ namespace CallMan.ViewModels
 
             // Set it as the current view
             CurrentSettingView = genericVM;
+        }
+
+        [RelayCommand]
+        private async Task TogglePolicy()
+        {
+            await _settingsRepository.UpdateMaster2FAStatusAsync(IsMaster2FAEnabled);
         }
 
         [RelayCommand]

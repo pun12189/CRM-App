@@ -2,6 +2,7 @@
 using CallMan.Models;
 using CallMan.Models.Enums;
 using Dapper;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -114,6 +115,54 @@ namespace CallMan.Services
         }
 
         /// <summary>
+        /// Reads a user record by email within a clean, isolated read-committed transaction space.
+        /// </summary>
+        public async Task<User> GetUserByEmailAsync(string email)
+        {
+            using var db = _context.CreateConnection();
+            using var transaction = db.BeginTransaction(IsolationLevel.ReadCommitted);
+
+            try
+            {
+                const string sql = @"
+                    SELECT u.*, d.DeptName, s.FullName as SeniorName
+                    FROM Users u
+                    LEFT JOIN Departments d ON u.DepartmentId = d.Id
+                    LEFT JOIN Users s ON u.SeniorId = s.UserId
+                    WHERE u.IsActive = 1 AND u.Email = @Email
+                    ORDER BY u.UserId ASC;";
+
+                var user = await db.QuerySingleOrDefaultAsync<User>(sql, new { Email = email }, transaction: transaction);
+
+                transaction.Commit();
+                return user;
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                System.Diagnostics.Debug.WriteLine($"Error in GetUserByEmailAsync: {ex.Message}");
+                throw new ApplicationException("Failed to retrieve system staff registry lists data streams.", ex);
+            }
+        }
+
+        public async Task<string> GetAdminSecretKeyAsync()
+        {
+            using (IDbConnection db = _context.CreateConnection())
+            {
+                // Query filters for active system profile where Role code equals 1 (Admin)
+                string sql = @"SELECT TwoFactorSecret 
+                           FROM Users 
+                           WHERE Role = 0 AND IsActive = 1 
+                           LIMIT 1;";
+
+                // Execute scalar query to pull only the matching text row value block
+                string? adminSecret = await db.ExecuteScalarAsync<string?>(sql);
+
+                return adminSecret ?? string.Empty;
+            }
+        }
+
+        /// <summary>
         /// Fetches higher-ranking personnel choices within a secure database transaction context.
         /// </summary>
         public async Task<IEnumerable<User>> GetEligibleSeniorsAsync(UserRole targetRole)
@@ -196,6 +245,19 @@ namespace CallMan.Services
                 transaction.Rollback();
                 System.Diagnostics.Debug.WriteLine($"Error in DeleteUserAsync: {ex.Message}");
                 throw new ApplicationException($"Failed to run physical purge parameters for target User ID {userId}.", ex);
+            }
+        }
+
+        public async Task UpdateUser2FAStatusAsync(int userId, bool isEnabled, string secretKey)
+        {
+            using (IDbConnection db = _context.CreateConnection())
+            {
+                string sql = @"UPDATE Users 
+                           SET IsTwoFactorEnabled = @IsEnabled, 
+                               TwoFactorSecret = @SecretKey 
+                           WHERE UserId = @UserId;";
+
+                await db.ExecuteAsync(sql, new { UserId = userId, IsEnabled = isEnabled, SecretKey = secretKey });
             }
         }
     }

@@ -26,6 +26,7 @@ namespace CallMan.ViewModels
         private readonly StaffService _staffService;
         private readonly CategoryService _categoryService;
         private readonly OccupiedLocationService _locationService;
+        private readonly IActionSecurityGuard _securityGuard;
         [ObservableProperty] private decimal _totalOutstanding;
         [ObservableProperty] private CustomerStats _customerStats = new();
 
@@ -94,7 +95,7 @@ namespace CallMan.ViewModels
         [ObservableProperty] private Lead? _activeProfileLead;
         [ObservableProperty] private object _tabsDataContext;
 
-        public MaturedLeadsViewModel(LeadService service, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, StaffService staffService, CategoryService categoryService)
+        public MaturedLeadsViewModel(LeadService service, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, StaffService staffService, CategoryService categoryService, IActionSecurityGuard securityGuard)
         {
             _service = service;
             _settingService = settingService;
@@ -105,6 +106,7 @@ namespace CallMan.ViewModels
             _productService = productService;
             _orderService = orderService;
             _locationService = locationService;
+            _securityGuard = securityGuard;
             PageSize = 10;
             CurrentPage = 1;
             Task.Run(async () => await LoadInitialDataAsync());
@@ -480,7 +482,7 @@ namespace CallMan.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            var profileVm = new CustomerProfileViewModel(_service, _session, _settingService, _productService, _orderService, selectedLead, _locationService, _categoryService, false);
+            var profileVm = new CustomerProfileViewModel(_service, _session, _settingService, _productService, _orderService, selectedLead, _locationService, _categoryService, _securityGuard, false);
 
             // 2. Initialize the Window
             var profileWindow = new CustomerProfileWindow();
@@ -669,7 +671,7 @@ namespace CallMan.ViewModels
         {
             if (selectedLead == null) return;
             ActiveProfileLead = selectedLead;
-             var profileVm = new CustomerProfileViewModel(_service, _session, _settingService, _productService, _orderService, selectedLead, _locationService, _categoryService, true);
+             var profileVm = new CustomerProfileViewModel(_service, _session, _settingService, _productService, _orderService, selectedLead, _locationService, _categoryService, _securityGuard, true);
             
 
             this.TabsDataContext = profileVm;

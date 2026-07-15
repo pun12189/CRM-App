@@ -123,6 +123,29 @@
                     </Grid>
                 </materialDesign:Card>
 
+                <Grid Margin="10">
+                    <StackPanel VerticalAlignment="Top">
+                        <TextBlock Text="Security &amp; Policy Settings" Style="{StaticResource MaterialDesignBodyLargeTextBlock}" Margin="0,0,0,8" FontWeight="SemiBold"/>
+                        <TextBlock Text="Manage global access restrictions and multi-factor authentication requirements." Style="{StaticResource MaterialDesignBody2TextBlock}" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,24"/>
+
+                        <materialDesign:Card Padding="16">
+                            <DockPanel HorizontalAlignment="Stretch">
+                                <StackPanel DockPanel.Dock="Left" MaxWidth="800">
+                                    <TextBlock Text="Enforce Global 2FA Authentication" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" FontWeight="Bold"/>
+                                    <TextBlock Text="When enabled, all users across the LAN network must provide a valid 6-digit verification token upon entering credentials." Style="{StaticResource MaterialDesignBody2TextBlock}" TextWrapping="Wrap" Margin="0,4,0,0" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                                </StackPanel>
+
+                                <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                                  IsChecked="{Binding IsMaster2FAEnabled}" 
+                                  Command="{Binding TogglePolicyCommand}"
+                                  DockPanel.Dock="Right" 
+                                  HorizontalAlignment="Right" 
+                                  VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </materialDesign:Card>
+                    </StackPanel>
+                </Grid>
+
                 <Expander Background="Transparent" Tag="1" Margin="5,10" BorderThickness="1" BorderBrush="Black" HorizontalContentAlignment="Stretch" IsExpanded="{Binding IsExpander1Open, Mode=OneWay}">
                     <Expander.Header>
                         <StackPanel Orientation="Horizontal" Margin="10">

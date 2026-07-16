@@ -125,7 +125,7 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
  ;Name: "{app}\TxtFile"
  Name: "{app}\runtimes"
 [Files]
-    Source: {#SourceFileDir}SetupFiles\SofricCert.cer; DestDir: "{tmp}"; Flags: deleteafterinstall
+    Source: {#SourceFileDir}SetupFiles\Tijori.cer; DestDir: "{tmp}"; Flags: deleteafterinstall
    ;Source: {#SourceFileDir}\Assets\*;  DestDir: "{app}\Assets"; Flags:ignoreversion recursesubdirs
    Source: {#SourceFileDir}\runtimes\*;  DestDir: "{app}\runtimes"; Flags:ignoreversion recursesubdirs
    ;Source: {#SourceFileDir}\TxtFile\*;  DestDir: "{app}\TxtFile"; Flags:ignoreversion recursesubdirs
@@ -183,7 +183,7 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
 ;Source: {#SourceFileDir}SA\ja\* ;DestDir:"{app}\ja" ;   Flags:ignoreversion
 ;Source: {#SourceFileDir}SA\pt\* ;DestDir:"{app}\pt" ;  Flags:ignoreversion
 ;Source: {#SourceFileDir}SA\es\* ;DestDir:"{app}\es" ; Flags:ignoreversion
-;;Source: {#SourceFileDir}SA\fi\* ;DestDir:"{app}\fi" ; Flags:ignoreversion
+;Source: {#SourceFileDir}SA\fi\* ;DestDir:"{app}\fi" ; Flags:ignoreversion
 ;Source: {#SourceFileDir}SA\ar\* ;DestDir:"{app}\ar" ;  Flags:ignoreversion
 ;Source: {#SourceFileDir}SA\cs\* ;DestDir:"{app}\cs" ;  Flags:ignoreversion
 ;Source: {#SourceFileDir}SA\pl\* ;DestDir:"{app}\pl" ;  Flags:ignoreversion
@@ -420,7 +420,9 @@ Name: "{autodesktop}\TIJORI-Online"; Filename: "{app}\CallMan.exe"; IconFilename
 ;Filename: "{tmp}\net8runtime.exe"; Parameters: "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"; Flags: runhidden waituntilterminated
 Filename: "{app}\CallMan.exe"; Description: "{cm:launchtemplatetoaster}"; Flags: nowait skipifsilent postinstall ; 
 Filename: explorer.exe; Parameters: "http://sofric.com/"; Description: "{cm:viewhelpfile}"; Flags: Shellexec skipifsilent  postinstall unchecked; 
-Filename: "certutil.exe"; Parameters: "-addstore ""Root"" ""{tmp}\SofricCert.cer"""; Flags: runhidden runascurrentuser; StatusMsg: "Installing secure system certificates..."
+Filename: "certutil.exe"; Parameters: "-addstore ""Root"" ""{tmp}\Tijori.cer"""; Flags: runhidden; StatusMsg: "Installing secure system certificates (Root)..."
+
+Filename: "certutil.exe"; Parameters: "-addstore ""TrustedPublisher"" ""{tmp}\Tijori.cer"""; Flags: runhidden; StatusMsg: "Installing secure system certificates (Publisher)..."
 
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v Edition /t REG_SZ /d ""Starter"" /f"; Flags: runasoriginaluser; Tasks: starterversion
 ;Filename: Reg.exe; Parameters: "add ""HKLM\Software\TemplateToaster"" /v Edition /t REG_SZ /d ""Standard"" /f"; Flags: runasoriginaluser runhidden;  Tasks: standardversion

@@ -26,7 +26,7 @@
             </DockPanel>
         </materialDesign:Card>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding OrdersList}" AutoGenerateColumns="False" 
+        <DataGrid Grid.Row="1" ItemsSource="{Binding OrdersList, IsAsync=True}" AutoGenerateColumns="False" 
               IsReadOnly="True" SelectedItem="{Binding SelectedOrder}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Order Date" Binding="{Binding OrderDate, StringFormat='dd-MM-yyyy'}" Width="120"/>

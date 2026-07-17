@@ -127,7 +127,7 @@
             </Grid>
         </Border>
 
-        <DataGrid Grid.Row="1" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" AlternationCount="9999" SelectedItem="{Binding SelectedLead}"
+        <DataGrid Grid.Row="1" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection, IsAsync=True}" AlternationCount="9999" SelectedItem="{Binding SelectedLead}"
       AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single" VirtualizingPanel.IsVirtualizing="True"
           VirtualizingPanel.VirtualizationMode="Recycling"
           VirtualizingPanel.ScrollUnit="Pixel"

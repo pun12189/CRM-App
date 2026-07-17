@@ -11,7 +11,7 @@
         Icon="/Assets/opn.png"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="TIJORI" WindowState="Maximized" WindowStartupLocation="CenterScreen">
+        Title="Tijori" WindowState="Maximized" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <DataTemplate DataType="{x:Type vm:LeadViewModel}">

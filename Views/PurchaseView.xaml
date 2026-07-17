@@ -20,7 +20,7 @@
             </DockPanel>
         </Border>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding PurchaseOrdersList}" SelectedItem="{Binding SelectedOrder}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
+        <DataGrid Grid.Row="1" ItemsSource="{Binding PurchaseOrdersList, IsAsync=True}" SelectedItem="{Binding SelectedOrder}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="PO Number" Binding="{Binding PoNumber}" Width="1.5*" IsReadOnly="True" FontWeight="Bold"/>
                 <DataGridTextColumn Header="Vendor / Supplier" Binding="{Binding VendorName}" Width="2.5*" IsReadOnly="True"/>

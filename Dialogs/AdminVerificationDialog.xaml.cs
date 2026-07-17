@@ -23,7 +23,7 @@ namespace CallMan.Dialogs
         public AdminVerificationDialog()
         {
             InitializeComponent();
-            this.Loaded += AdminVerificationDialog_Loaded   ;
+            this.Loaded += AdminVerificationDialog_Loaded;
         }
 
         private void AdminVerificationDialog_Loaded(object sender, RoutedEventArgs e)

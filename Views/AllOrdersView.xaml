@@ -214,7 +214,7 @@
             </UniformGrid>
         </Border>
 
-        <DataGrid Grid.Row="3" ItemsSource="{Binding OrderCollection}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All" VirtualizingPanel.IsVirtualizing="True"
+        <DataGrid Grid.Row="3" ItemsSource="{Binding OrderCollection, IsAsync=True}" AutoGenerateColumns="False" IsReadOnly="True" GridLinesVisibility="All" VirtualizingPanel.IsVirtualizing="True"
           VirtualizingPanel.VirtualizationMode="Recycling"
           VirtualizingPanel.ScrollUnit="Pixel"
           VirtualizingPanel.CacheLengthUnit="Item"

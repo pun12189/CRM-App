@@ -53,7 +53,7 @@
                     <Style TargetType="ContentControl">
                         <Setter Property="Content">
                             <Setter.Value>
-                                <DataGrid RowHeight="40" VerticalContentAlignment="Center" ItemsSource="{Binding FilteredCategories}" AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource MaterialDesignDataGrid}">
+                                <DataGrid RowHeight="40" VerticalContentAlignment="Center" ItemsSource="{Binding FilteredCategories, IsAsync=True}" AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource MaterialDesignDataGrid}">
                                     <DataGrid.Columns>
                                         <DataGridTextColumn Header="Category Name" Binding="{Binding CategoryName}" Width="*"/>
                                         <DataGridTextColumn Header="Product Discount" Binding="{Binding MspDiscountPercentage, StringFormat={}{0}%}" Width="130"/>
@@ -93,7 +93,7 @@
                             <DataTrigger Binding="{Binding SelectedContext}" Value="{x:Static enums:CategoryContext.Documents}">
                                 <Setter Property="Content">
                                     <Setter.Value>
-                                        <DataGrid RowHeight="40" VerticalContentAlignment="Center" ItemsSource="{Binding DocumentCategoriesDisplayCollection}" AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource MaterialDesignDataGrid}">
+                                        <DataGrid RowHeight="40" VerticalContentAlignment="Center" ItemsSource="{Binding DocumentCategoriesDisplayCollection, IsAsync=True}" AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource MaterialDesignDataGrid}">
                                             <DataGrid.Columns>
                                                 <DataGridTextColumn Header="Document Category Name" Binding="{Binding CategoryName}" Width="220"/>
 

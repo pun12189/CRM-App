@@ -54,7 +54,7 @@
         </materialDesign:Card>
 
         <!-- 2. DATA TABLE -->
-        <DataGrid Grid.Row="1" ItemsSource="{Binding AllCategories}" 
+        <DataGrid Grid.Row="1" ItemsSource="{Binding AllCategories, IsAsync=True}" 
               AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="40"
               Style="{StaticResource MaterialDesignDataGrid}">
             <DataGrid.Columns>

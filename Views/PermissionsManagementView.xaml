@@ -25,7 +25,7 @@
 
         <!-- CORE ACCOUNT LIST WRAPPER CONTAINER -->
         <Border Grid.Row="1" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1">
-            <DataGrid ItemsSource="{Binding RoleSummaries}" 
+            <DataGrid ItemsSource="{Binding RoleSummaries, IsAsync=True}" 
                       AutoGenerateColumns="False" 
                       CanUserAddRows="False" 
                       IsReadOnly="True"

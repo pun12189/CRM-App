@@ -33,7 +33,7 @@
         </materialDesign:Card>
 
         <materialDesign:Card Grid.Row="1">
-            <DataGrid ItemsSource="{Binding Logs}" AlternationCount="9999" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" AutoGenerateColumns="False" IsReadOnly="True" 
+            <DataGrid ItemsSource="{Binding Logs, IsAsync=True}" AlternationCount="9999" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" AutoGenerateColumns="False" IsReadOnly="True" 
                   SelectionMode="Single" Style="{StaticResource MaterialDesignDataGrid}">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="#" Width="50">

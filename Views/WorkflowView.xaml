@@ -25,7 +25,7 @@
                      FontSize="16"/>
                             
                             <!-- Event Selection -->
-                            <ComboBox ItemsSource="{Binding EventList}" 
+                            <ComboBox ItemsSource="{Binding EventList, IsAsync=True}" 
                                   SelectedItem="{Binding NewWorkflow.EventName}"
                                   materialDesign:HintAssist.Hint="Select Trigger Event" 
                                   Style="{StaticResource MaterialDesignFloatingHintComboBox}" 
@@ -84,7 +84,7 @@
 
                 <!-- TAB 2: VIEW WORKFLOWS -->
                 <TabItem Header="VIEW WORKFLOWS">
-                    <DataGrid ItemsSource="{Binding Workflows}" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" AutoGenerateColumns="False" IsReadOnly="True" 
+                    <DataGrid ItemsSource="{Binding Workflows, IsAsync=True}" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" AutoGenerateColumns="False" IsReadOnly="True" 
                           CanUserAddRows="False" Margin="10">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Workflow Name" Binding="{Binding WorkflowName}" Width="*"/>

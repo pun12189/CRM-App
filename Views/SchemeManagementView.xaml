@@ -43,7 +43,7 @@
 
             <TabItem Header="🤝 LEADS &amp; CUSTOMERS OFFERS">
                 <Grid Margin="10">
-                    <DataGrid ItemsSource="{Binding CustomerSchemesCollection}" AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource MaterialDesignDataGrid}">
+                    <DataGrid ItemsSource="{Binding CustomerSchemesCollection, IsAsync=True}" AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource MaterialDesignDataGrid}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Scheme Title" Binding="{Binding Title}" Width="*"/>
                             <DataGridTextColumn Header="Start Date" Binding="{Binding StartDate, StringFormat={}{0:dd-MM-yyyy}}" Width="130"/>
@@ -124,7 +124,7 @@
 
             <TabItem Header="🎯 STAFF ACHIEVEMENT CONTROLS">
                 <Grid Margin="10">
-                    <DataGrid ItemsSource="{Binding StaffSchemesCollection}" AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource MaterialDesignDataGrid}">
+                    <DataGrid ItemsSource="{Binding StaffSchemesCollection, IsAsync=True}" AutoGenerateColumns="False" IsReadOnly="True" Style="{StaticResource MaterialDesignDataGrid}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Incentive Program" Binding="{Binding Title}" Width="*"/>
                             <DataGridTextColumn Header="Start Date" Binding="{Binding StartDate, StringFormat={}{0:dd-MM-yyyy}}" Width="140"/>

@@ -202,7 +202,7 @@
                                 <!-- SECTION 1: LABELS (Soft Teal / Mint Accent) -->
                                 <StackPanel Grid.Column="0" Margin="0,0,10,0">
                                     <TextBlock Text="Labels" FontSize="11" FontWeight="Bold" Foreground="#0F766E"/>
-                                    <ItemsControl ItemsSource="{Binding SelectedLead.LeadLabels}">
+                                    <ItemsControl ItemsSource="{Binding SelectedLead.LeadLabels, IsAsync=True}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <WrapPanel Orientation="Horizontal"/>
@@ -452,7 +452,7 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
 
-                                            <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableProducts}" SelectedItem="{Binding SelectedProduct}" Text="{Binding CustomProductNameText, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Search Catalog or Type Custom Item..." IsEditable="True" Margin="4" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                                            <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableProducts, IsAsync=True}" SelectedItem="{Binding SelectedProduct}" Text="{Binding CustomProductNameText, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Search Catalog or Type Custom Item..." IsEditable="True" Margin="4" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                                             <TextBox Grid.Column="1" Text="{Binding InputBatchNo, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Batch No" Margin="4" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                                             <TextBox Grid.Column="2" Text="{Binding InputQuantity, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Qty" Margin="4" HorizontalContentAlignment="Center" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                                             <TextBox Grid.Column="3" Text="{Binding InputRate, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Rate (₹)" Margin="4" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
@@ -472,7 +472,7 @@
                                     </StackPanel>
                                 </materialDesign:Card>
 
-                                <DataGrid MinHeight="140" MaxHeight="240" GridLinesVisibility="All" ItemsSource="{Binding ActiveProforma.Items}" AutoGenerateColumns="False" CanUserAddRows="False" Background="White" RowBackground="White" HorizontalContentAlignment="Stretch" Margin="0,0,0,16">
+                                <DataGrid MinHeight="140" MaxHeight="240" GridLinesVisibility="All" ItemsSource="{Binding ActiveProforma.Items, IsAsync=True}" AutoGenerateColumns="False" CanUserAddRows="False" Background="White" RowBackground="White" HorizontalContentAlignment="Stretch" Margin="0,0,0,16">
                                     <DataGrid.Columns>
                                         <DataGridTemplateColumn Header="Preview" Width="Auto">
                                             <DataGridTemplateColumn.CellTemplate>
@@ -557,7 +557,7 @@
                                     </materialDesign:Card>
 
                                     <materialDesign:Card Grid.Column="1" Padding="12" Margin="8,0,0,0" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" UniformCornerRadius="6">
-                                        <ListBox ItemsSource="{Binding ActiveProforma.ExtraCharges}" 
+                                        <ListBox ItemsSource="{Binding ActiveProforma.ExtraCharges, IsAsync=True}" 
              MaxHeight="95" 
              ScrollViewer.CanContentScroll="True"
              HorizontalContentAlignment="Stretch"
@@ -725,7 +725,7 @@
                     <TextBlock Grid.Row="0" Text="Lead History" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="10">
-                        <ItemsControl ItemsSource="{Binding HistoryItems}">
+                        <ItemsControl ItemsSource="{Binding HistoryItems, IsAsync=True}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="0,0,0,0">
@@ -850,7 +850,7 @@
                     </Border>
 
                     <DataGrid Grid.Row="1"
-                    ItemsSource="{Binding AssociatedProformas}"
+                    ItemsSource="{Binding AssociatedProformas, IsAsync=True}"
                     SelectedItem="{Binding SelectedHistoricalProforma}"
                     AutoGenerateColumns="False"
                     CanUserAddRows="False"
@@ -979,7 +979,7 @@
                                 <TextBlock Text="Target Category Slot:" Foreground="#475569" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
                                 <!-- Dynamic Category Selection Dropdown Dropdown -->
-                                <ComboBox ItemsSource="{Binding AvailableDocumentCategories}"
+                                <ComboBox ItemsSource="{Binding AvailableDocumentCategories, IsAsync=True}"
                               DisplayMemberPath="CategoryName"
                               SelectedValue="{Binding SelectedUploadCategory}"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}" 
@@ -1000,7 +1000,7 @@
                     </materialDesign:Card>
 
                     <!-- BOTTOM PORTION: CENTRAL COMPLIANCE DATA TABLE GRID -->
-                    <DataGrid Grid.Row="1" ItemsSource="{Binding UnifiedDocumentsCollection}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding UnifiedDocumentsCollection, IsAsync=True}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
                         <DataGrid.Columns>
                             <!-- Color-Coded Category Label Column -->
                             <DataGridTemplateColumn Header="Category Classification" Width="2*">

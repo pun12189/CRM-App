@@ -117,7 +117,7 @@ namespace CallMan.Services
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress("sofricerp@gmail.com"),
-                    Subject = "Password Reset - CallMan",
+                    Subject = "Password Reset - Tijori",
                     Body = $"<h1>Security Update</h1><p>Your temporary password is: <b>{tempPass}</b></p>",
                     IsBodyHtml = true,
                 };

@@ -21,7 +21,7 @@
         <DockPanel Grid.Row="0" Margin="20,10">
             <StackPanel VerticalAlignment="Center">
                 <TextBlock Text="Dashboard" FontSize="20" FontWeight="Bold" Foreground="#333"/>
-                <TextBlock Text="Welcome to CallMan Dashboard" FontSize="11" Foreground="#888"/>
+                <TextBlock Text="Welcome to Tijori Dashboard" FontSize="11" Foreground="#888"/>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
@@ -337,7 +337,7 @@
                             </materialDesign:Card>
 
                             <Expander Header="Reminders" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">
-                                <ItemsControl ItemsSource="{Binding ReminderCounters}" Margin="10,5">
+                                <ItemsControl ItemsSource="{Binding ReminderCounters, IsAsync=True}" Margin="10,5">
                                     <ItemsControl.ItemsPanel>
                                         <ItemsPanelTemplate>
                                             <WrapPanel Orientation="Horizontal"/>
@@ -357,8 +357,8 @@
                                 </ItemsControl>
                             </Expander>
 
-                            <Expander Header="Followup Stages" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">                                
-                                    <ItemsControl ItemsSource="{Binding FollowupStagesCounters}" Margin="10,5">
+                            <Expander Header="Followup Stages" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">
+                                <ItemsControl ItemsSource="{Binding FollowupStagesCounters, IsAsync=True}" Margin="10,5">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <WrapPanel Orientation="Horizontal"/>
@@ -387,8 +387,8 @@
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                             </Expander>
-                            <Expander Header="Mature Stages" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">                                
-                                    <ItemsControl ItemsSource="{Binding MatureStagesCounters}" Margin="10,5">
+                            <Expander Header="Mature Stages" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">
+                                <ItemsControl ItemsSource="{Binding MatureStagesCounters, IsAsync=True}" Margin="10,5">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <WrapPanel Orientation="Horizontal"/>
@@ -417,8 +417,8 @@
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                             </Expander>
-                            <Expander Header="Lead Labels" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">                                
-                                    <ItemsControl ItemsSource="{Binding LeadLabelsCounters}" Margin="10,5">
+                            <Expander Header="Lead Labels" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">
+                                <ItemsControl ItemsSource="{Binding LeadLabelsCounters, IsAsync=True}" Margin="10,5">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
                                                 <WrapPanel Orientation="Horizontal"/>

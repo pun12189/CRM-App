@@ -32,7 +32,7 @@
                     <Button Command="{Binding AddNewStageCommand}" HorizontalAlignment="Right" Content="ADD STAGE" Style="{StaticResource MaterialDesignRaisedButton}"/>
                 </DockPanel>
 
-                <DataGrid Grid.Row="1" ItemsSource="{Binding Stages}" SelectedItem="{Binding SelectedStage}"
+                <DataGrid Grid.Row="1" ItemsSource="{Binding Stages, IsAsync=True}" SelectedItem="{Binding SelectedStage}"
                       AutoGenerateColumns="False" CanUserAddRows="False" SelectionMode="Single"
                       HeadersVisibility="Column" Background="Transparent">
                     <DataGrid.Columns>

@@ -79,7 +79,7 @@
 
             <!-- DATA TABLE -->
             <materialDesign:Card Grid.Row="1" VerticalAlignment="Stretch">
-                <DataGrid ItemsSource="{Binding Locations}" AutoGenerateColumns="False" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black"
+                <DataGrid ItemsSource="{Binding Locations, IsAsync=True}" AutoGenerateColumns="False" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black"
                       CanUserAddRows="False" Background="White">
                     <DataGrid.ColumnHeaderStyle>
                         <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">

@@ -92,7 +92,7 @@
         </Border>
 
         <!-- 3. DATA LIST -->
-        <DataGrid Grid.Row="3" x:Name="ProductsGrid" ItemsSource="{Binding FilteredProducts}" SelectedItem="{Binding SelectedProduct, Mode=TwoWay}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
+        <DataGrid Grid.Row="3" x:Name="ProductsGrid" ItemsSource="{Binding FilteredProducts, IsAsync=True}" SelectedItem="{Binding SelectedProduct, Mode=TwoWay}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
                   GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black"
                   VerticalGridLinesBrush="Black" AlternationCount="9999" SelectionUnit="FullRow">
             <DataGrid.Style>

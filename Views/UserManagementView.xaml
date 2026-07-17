@@ -30,7 +30,7 @@
             </StackPanel>
         </DockPanel>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding UsersList}" AutoGenerateColumns="False" 
+        <DataGrid Grid.Row="1" ItemsSource="{Binding UsersList, IsAsync=True}" AutoGenerateColumns="False" 
           CanUserAddRows="False" SelectionMode="Single"
           Background="White" BorderThickness="1" BorderBrush="#E2E8F0"
           RowHeight="65" ColumnHeaderHeight="42" GridLinesVisibility="Horizontal"

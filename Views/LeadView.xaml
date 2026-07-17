@@ -76,7 +76,7 @@
                 <!-- ==================================================================== -->
                 <!-- ROW 1: PRIMARY HARDWARE VIRTUALIZED LEAD DATA GRID MATRIX            -->
                 <!-- ==================================================================== -->
-                <DataGrid Grid.Row="1" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection}" AlternationCount="9999" SelectedItem="{Binding SelectedLead}"
+                <DataGrid Grid.Row="1" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection, IsAsync=True}" AlternationCount="9999" SelectedItem="{Binding SelectedLead}"
               AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionUnit="FullRow" VirtualizingPanel.IsVirtualizing="True"
               VirtualizingPanel.VirtualizationMode="Recycling" VirtualizingPanel.ScrollUnit="Pixel" VirtualizingPanel.CacheLengthUnit="Item" VirtualizingPanel.CacheLength="10,20" ScrollViewer.CanContentScroll="True">
                     <DataGrid.RowStyle>

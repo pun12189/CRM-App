@@ -424,7 +424,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
 
-                                        <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableProducts}" SelectedItem="{Binding SelectedProduct}" Text="{Binding CustomProductNameText, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Search Catalog or Type Custom Item..." IsEditable="True" Margin="4" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                                        <ComboBox Grid.Column="0" ItemsSource="{Binding AvailableProducts, IsAsync=True}" SelectedItem="{Binding SelectedProduct}" Text="{Binding CustomProductNameText, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="Name" materialDesign:HintAssist.Hint="Search Catalog or Type Custom Item..." IsEditable="True" Margin="4" Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                                         <TextBox Grid.Column="1" Text="{Binding InputBatchNo, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Batch No" Margin="4" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                                         <TextBox Grid.Column="2" Text="{Binding InputQuantity, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Qty" Margin="4" HorizontalContentAlignment="Center" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                                         <TextBox Grid.Column="3" Text="{Binding InputRate, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Rate (₹)" Margin="4" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
@@ -529,7 +529,7 @@
                                 </materialDesign:Card>
 
                                 <materialDesign:Card Grid.Column="1" Padding="12" Margin="8,0,0,0" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" UniformCornerRadius="6">
-                                    <ListBox ItemsSource="{Binding ActiveProforma.ExtraCharges}" 
+                                    <ListBox ItemsSource="{Binding ActiveProforma.ExtraCharges, IsAsync=True}" 
                                      MaxHeight="95" 
                                      ScrollViewer.CanContentScroll="True"
                                      HorizontalContentAlignment="Stretch"
@@ -697,7 +697,7 @@
                     <TextBlock Grid.Row="0" Text="Lead History" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="10">
-                        <ItemsControl ItemsSource="{Binding HistoryItems}">
+                        <ItemsControl ItemsSource="{Binding HistoryItems, IsAsync=True}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Margin="0,0,0,0">
@@ -822,7 +822,7 @@
                     </Border>
 
                     <DataGrid Grid.Row="1"
-          ItemsSource="{Binding AssociatedProformas}"
+          ItemsSource="{Binding AssociatedProformas, IsAsync=True}"
           SelectedItem="{Binding SelectedHistoricalProforma}"
           AutoGenerateColumns="False"
           CanUserAddRows="False"

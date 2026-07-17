@@ -45,7 +45,7 @@
         </materialDesign:Card>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding IteratedCategoriesCollection}">
+            <ItemsControl ItemsSource="{Binding IteratedCategoriesCollection, IsAsync=True}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Margin="0,0,0,25">
@@ -55,7 +55,7 @@
                                 <TextBlock Text="{Binding CategoryName}" FontSize="14" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
                             </StackPanel>
 
-                            <DataGrid ItemsSource="{Binding Documents}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}" Background="White">
+                            <DataGrid ItemsSource="{Binding Documents, IsAsync=True}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}" Background="White">
                                 <DataGrid.Columns>
                                     <DataGridTextColumn Header="Document Attached Name" Binding="{Binding FileName}" Width="4*" IsReadOnly="True" FontWeight="Medium"/>
                                     <DataGridTextColumn Header="Uploaded By User" Binding="{Binding UploadedBy}" Width="1.5*" IsReadOnly="True"/>

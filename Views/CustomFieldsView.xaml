@@ -51,7 +51,7 @@
             </DockPanel>
         </Border>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding CustomFieldsSource}" AutoGenerateColumns="False" 
+        <DataGrid Grid.Row="1" ItemsSource="{Binding CustomFieldsSource, IsAsync=True}" AutoGenerateColumns="False" 
           IsReadOnly="True" GridLinesVisibility="All" BorderBrush="#CBD5E1" BorderThickness="1" 
           HorizontalGridLinesBrush="#E2E8F0" VerticalGridLinesBrush="#E2E8F0" Background="White"
           RowHeight="46" HeadersVisibility="Column">

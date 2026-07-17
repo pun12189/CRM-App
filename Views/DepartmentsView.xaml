@@ -34,7 +34,7 @@
                         Style="{StaticResource MaterialDesignRaisedButton}" Background="#1794A1"/>
                 </DockPanel>
 
-                <DataGrid Grid.Row="1" ItemsSource="{Binding Departments}" SelectedItem="{Binding SelectedDepartment}"
+                <DataGrid Grid.Row="1" ItemsSource="{Binding Departments, IsAsync=True}" SelectedItem="{Binding SelectedDepartment}"
                       AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Sequence" Binding="{Binding SequenceOrder}" Width="*"/>

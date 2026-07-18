@@ -24,11 +24,15 @@ namespace CallMan.ViewModels
         private readonly IServiceProvider _serviceProvider;
 
         private readonly LicenseService _licenseService;
-
+        private readonly IUserSession _userSession;
         private readonly IGlobalSettingsService _settingsRepository;
+        private readonly ITwoFactorService _twoFactorService;
 
-        [ObservableProperty]
-        private bool _isMaster2FAEnabled;
+        [ObservableProperty] private bool _isMaster2FAEnabled;
+        [ObservableProperty] private bool _isRegistrationPending = false;
+        [ObservableProperty] private string _verificationCodeInput;
+        [ObservableProperty] private string _securityErrorMessage;
+        [ObservableProperty] private BitmapImage _adminQrCodeSource;        
 
         [ObservableProperty] private object? _currentSettingView;
         [ObservableProperty] private bool _isMainGridVisible = true;
@@ -59,11 +63,15 @@ namespace CallMan.ViewModels
         public bool IsExpander3Open => OpenExpanderIndex == 3;
         public bool IsExpander4Open => OpenExpanderIndex == 4;
 
-        public AdminSettingsViewModel(IServiceProvider serviceProvider, LicenseService licenseService, IGlobalSettingsService settingsRepository)
+        private string _newGeneratedSecret;
+
+        public AdminSettingsViewModel(IServiceProvider serviceProvider, LicenseService licenseService, IGlobalSettingsService settingsRepository, ITwoFactorService twoFactorService, IUserSession userSession)
         {
             _serviceProvider = serviceProvider;
             _licenseService = licenseService;
             _settingsRepository = settingsRepository;
+            _twoFactorService = twoFactorService;
+            _userSession = userSession;
             ToggleOnlineServices = Core.LicenseManager.Current.IsOnlineServicesEnabled;
             IsToggleVisible = Core.LicenseManager.Current.IsLocalDatabase;
 
@@ -181,9 +189,90 @@ namespace CallMan.ViewModels
         }
 
         [RelayCommand]
-        private async Task TogglePolicy()
+        private async Task ProcessPolicyToggle()
         {
-            await _settingsRepository.UpdateMaster2FAStatusAsync(IsMaster2FAEnabled);
+            SecurityErrorMessage = string.Empty;
+
+            if (IsMaster2FAEnabled)
+            {
+                // Flow: Admin wants to switch it ON. Don't save yet! 
+                // Generate a brand new, clean base secret token on the spot.
+                var adminUser = _userSession.CurrentUser + "@" + _userSession.UserRole;
+                var setup = _twoFactorService.GenerateSetupInfo(adminUser ?? "admin@tijori");
+
+                _newGeneratedSecret = setup.secretKey;
+                AdminQrCodeSource = GenerateQrCodeVisual(setup.qrCodeUri);
+
+                // Present the registration validation box container frame
+                IsRegistrationPending = true;
+            }
+            else
+            {
+                // Flow: Admin wants to turn it OFF. Wipes out the data immediately.
+                await _settingsRepository.SaveGlobal2FAPolicyAsync(false);
+                IsRegistrationPending = false;
+                AdminQrCodeSource = null;
+                _newGeneratedSecret = null;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ConfirmAdminRegistration()
+        {
+            SecurityErrorMessage = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(VerificationCodeInput) || VerificationCodeInput.Length != 6)
+            {
+                SecurityErrorMessage = "Enter a valid 6-digit confirmation code.";
+                return;
+            }
+
+            // Validate the newly scanned secret sequence context matches
+            bool codeMatch = _twoFactorService.VerifyAdminCode(_newGeneratedSecret, VerificationCodeInput);
+            if (codeMatch)
+            {
+                // Commit structural policies and lock secret securely into database parameters
+                await _settingsRepository.SaveGlobal2FAPolicyAsync(true, _newGeneratedSecret);
+                IsRegistrationPending = false;
+                VerificationCodeInput = string.Empty;
+                AdminQrCodeSource = null; // Clean registration graphical buffer layout
+            }
+            else
+            {
+                SecurityErrorMessage = "Invalid validation code token. Please try again.";
+                VerificationCodeInput = string.Empty;
+            }
+        }
+
+        [RelayCommand]
+        private async Task CancelRegistrationChange()
+        {
+            // Revert UI component settings status indicators cleanly
+            IsMaster2FAEnabled = false;
+            IsRegistrationPending = false;
+            AdminQrCodeSource = null;
+            _newGeneratedSecret = null;
+            VerificationCodeInput = string.Empty;
+            SecurityErrorMessage = string.Empty;
+
+            await _settingsRepository.SaveGlobal2FAPolicyAsync(false);
+        }
+
+        private BitmapImage GenerateQrCodeVisual(string url)
+        {
+            using (QRCodeGenerator qrGen = new QRCodeGenerator())
+            using (QRCodeData data = qrGen.CreateQrCode(url, QRCodeGenerator.ECCLevel.Q))
+            using (PngByteQRCode qr = new PngByteQRCode(data))
+            {
+                byte[] bytes = qr.GetGraphic(20);
+                BitmapImage bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.StreamSource = new MemoryStream(bytes);
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.EndInit();
+                bmp.Freeze();
+                return bmp;
+            }
         }
 
         [RelayCommand]

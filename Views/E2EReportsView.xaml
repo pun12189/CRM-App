@@ -15,102 +15,164 @@
     </UserControl.Resources>
     <Grid Background="#F9FAFB">
         <Grid.RowDefinitions>
+            <!-- The top row height can now be dynamically resized via the splitter -->
+            <RowDefinition Height="Auto" MinHeight="120"/>
             <RowDefinition Height="Auto"/>
+            <!-- Row dedicated entirely to the GridSplitter -->
             <RowDefinition Height="*"/>
+            <!-- BOTTOM VIEW: Report Data Results -->
         </Grid.RowDefinitions>
 
-        <materialDesign:Card Grid.Row="0" Margin="15" Padding="20" UniformCornerRadius="6" Background="White">
+        <!-- ==================== TOP VIEW ==================== -->
+        <materialDesign:Card Grid.Row="0" Margin="15,15,15,5" Padding="20" UniformCornerRadius="6" Background="White">
             <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
-                    <TextBlock Text="Primary Category:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#4B5563" Width="130" FontSize="13"/>
-                    <ListBox Style="{StaticResource MaterialDesignToolToggleFlatListBox}" 
-         SelectedValue="{Binding SelectedMainFilter, UpdateSourceTrigger=PropertyChanged}" SelectedValuePath="Tag">
-                        <ListBoxItem Content="Sales" Tag="{x:Static models:E2EMainFilter.Sales}" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipPrimaryListBoxItem}"/>
-                        <ListBoxItem Content="Purchases" Tag="{x:Static models:E2EMainFilter.Purchases}" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipPrimaryListBoxItem}"/>
-                        <ListBoxItem Content="Items &amp; Inventory" Tag="{x:Static models:E2EMainFilter.Items}" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipPrimaryListBoxItem}"/>
-                        <ListBoxItem Content="Staff &amp; Execs" Tag="{x:Static models:E2EMainFilter.Staff}" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipPrimaryListBoxItem}"/>
-                        <ListBoxItem Content="Payments" Tag="{x:Static models:E2EMainFilter.Payments}" FontWeight="ExtraBold" Style="{StaticResource MaterialDesignFilterChipPrimaryListBoxItem}"/>
-                    </ListBox>
-                </StackPanel>
+                <!-- Core Parameter Bar (Horizontal layout) -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Primary Selection Zone -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Mid Label Context -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Comparison Selection Zone -->
+                        <ColumnDefinition Width="*"/>
+                        <!-- Date Filters Spacer -->
+                        <ColumnDefinition Width="Auto"/>
+                        <!-- Actions Layout Panel -->
+                    </Grid.ColumnDefinitions>
 
-                <Separator Background="#F3F4F6" Margin="0,0,0,16"/>
+                    <!-- Primary Parameter Selection -->
+                    <StackPanel Grid.Column="0" Orientation="Vertical" Width="220" VerticalAlignment="Top">
+                        <TextBlock Text="Primary Parameter" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding PrimaryDropdownOptions}"
+                              SelectedItem="{Binding SelectedPrimaryOption}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Height="40" Padding="10,0"/>
+                    </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                    <TextBlock Text="Cross Compare With:" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#4B5563" Width="130" FontSize="13"/>
-                    <WrapPanel Orientation="Horizontal" MaxWidth="1100">
-                        <RadioButton Content="Customers" FontWeight="ExtraBold" 
-                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
-                 IsEnabled="{Binding IsCustomerEnabled}" Margin="0,2,8,2" Padding="12,6"
-                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Customer}}"/>
+                    <!-- Comparative Text Label Anchor -->
+                    <TextBlock Grid.Column="1" Text="compare with" VerticalAlignment="Center" 
+                           HorizontalAlignment="Center" Margin="15,15,15,0" 
+                           FontWeight="Medium" FontStyle="Italic" Foreground="#94A3B8"/>
 
-                        <RadioButton Content="Lead Holder" FontWeight="ExtraBold" 
-                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
-                 IsEnabled="{Binding IsLeadHolderEnabled}" Margin="0,2,8,2" Padding="12,6"
-                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.LeadHolder}}"/>
+                    <!-- Comparison Parameter Selection -->
+                    <StackPanel Grid.Column="2" Orientation="Vertical" Width="220" VerticalAlignment="Top">
+                        <TextBlock Text="Comparison Parameter" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4"/>
+                        <ComboBox ItemsSource="{Binding ComparisonDropdownOptions}"
+                              SelectedItem="{Binding SelectedComparisonOption}"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              Height="40" Padding="10,0"/>
+                    </StackPanel>
 
-                        <RadioButton Content="Items" FontWeight="ExtraBold" 
-                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
-                 IsEnabled="{Binding IsItemsEnabled}" Margin="0,2,8,2" Padding="12,6"
-                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Items}}"/>
+                    <!-- Date Range Configuration Layout Elements -->
+                    <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top" Margin="30,0,0,0">
+                        <StackPanel Orientation="Vertical" Margin="0,0,10,0">
+                            <TextBlock Text="From Date" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4"/>
+                            <!-- FIX: Increased Width from 120 to 150 to resolve text truncation -->
+                            <DatePicker SelectedDate="{Binding FromDate}" Width="150" Height="40" Padding="10,0" VerticalContentAlignment="Center" Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Text="To Date" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,4"/>
+                            <!-- FIX: Increased Width from 120 to 150 to resolve text truncation -->
+                            <DatePicker SelectedDate="{Binding ToDate}" Width="150" Height="40" Padding="10,0" VerticalContentAlignment="Center" Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                        </StackPanel>
+                    </StackPanel>
 
-                        <RadioButton Content="Business" FontWeight="ExtraBold" 
-                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
-                 IsEnabled="{Binding IsBusinessEnabled}" Margin="0,2,8,2" Padding="12,6"
-                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Business}}"/>
+                    <!-- Direct Execution Interactive Button Elements -->
+                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,2">
+                        <Button Content="GENERATE" Command="{Binding GenerateStandardReportCommand}" 
+                            Height="40" Padding="20,0" Background="#1794A1" BorderBrush="#1794A1" 
+                            Style="{StaticResource MaterialDesignRaisedButton}" Margin="0,0,10,0"/>
+                        <Button Content="AI REPORT" Command="{Binding GenerateAIReportCommand}" 
+                            Height="40" Padding="20,0" Background="#6366F1" BorderBrush="#6366F1" 
+                            Style="{StaticResource MaterialDesignRaisedButton}"/>
+                    </StackPanel>
+                </Grid>
 
-                        <RadioButton Content="Ledger" FontWeight="ExtraBold" 
-                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
-                 IsEnabled="{Binding IsLedgersEnabled}" Margin="0,2,8,2" Padding="12,6"
-                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Ledgers}}"/>
+                <!-- DYNAMIC SUB-SELECTION ELEMENT LISTS -->
+                <Grid Margin="0,15,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="105"/>
+                        <ColumnDefinition Width="220"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                        <RadioButton Content="Locations" FontWeight="ExtraBold" 
-                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
-                 IsEnabled="{Binding IsAreasEnabled}" Margin="0,2,8,2" Padding="12,6"
-                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Areas}}"/>
+                    <!-- Primary Target Entity Checklist Viewport -->
+                    <!-- FIX: Set MaxHeight to 140 to optimize space usage -->
+                    <Border Grid.Column="0" BorderThickness="1" BorderBrush="#E2E8F0" Background="#F8FAFC" CornerRadius="4" MaxHeight="140" MinHeight="0">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ShowPrimaryEntitiesList}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <CheckBox Grid.Row="0" Content="Select All Items" IsChecked="{Binding PrimarySelectAll, UpdateSourceTrigger=PropertyChanged}" FontWeight="SemiBold" Margin="4,0,0,6"/>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding PrimaryEntitiesCollection}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox Content="{Binding DisplayName}" IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}" Margin="4,2"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
 
-                        <RadioButton Content="Vendors" FontWeight="ExtraBold" 
-                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
-                 IsEnabled="{Binding IsVendorsEnabled}" Margin="0,2,8,2" Padding="12,6"
-                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.Vendors}}"/>
-
-                        <RadioButton Content="P &amp; L Statement" FontWeight="ExtraBold" 
-                 Style="{StaticResource MaterialDesignFilterChipSecondaryOutlineCheckBox}" 
-                 IsEnabled="{Binding IsPLEnabled}" Margin="0,2,8,2" Padding="12,6"
-                 IsChecked="{Binding SelectedComparisonTarget, Converter={StaticResource EnumToBooleanConverter}, ConverterParameter={x:Static models:E2EComparisonTarget.PL}}"/>
-                    </WrapPanel>
-                </StackPanel>
+                    <!-- Secondary Comparison Entity Checklist Viewport -->
+                    <!-- FIX: Set MaxHeight to 140 to optimize space usage -->
+                    <Border Grid.Column="2" BorderThickness="1" BorderBrush="#E2E8F0" Background="#F8FAFC" CornerRadius="4" MaxHeight="140" MinHeight="0">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ShowComparisonEntitiesList}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <CheckBox Grid.Row="0" Content="Select All Items" IsChecked="{Binding ComparisonSelectAll, UpdateSourceTrigger=PropertyChanged}" FontWeight="SemiBold" Margin="4,0,0,6"/>
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding ComparisonEntitiesCollection}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <CheckBox Content="{Binding DisplayName}" IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}" Margin="4,2"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
             </StackPanel>
         </materialDesign:Card>
 
-        <Grid Grid.Row="1" Margin="15,0,15,15">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <!-- ==================== GRID SPLITTER ==================== -->
+        <!-- FIX: Provides draggable control to resize top and bottom panes manually -->
+        <GridSplitter Grid.Row="1" Height="6" HorizontalAlignment="Stretch" VerticalAlignment="Center" 
+                  Background="#E2E8F0" ShowsPreview="True" Margin="15,0,15,0"/>
 
-            <materialDesign:Card Grid.Row="0" Padding="12,8" Margin="0,0,0,12" Background="#F3F4F6" UniformCornerRadius="4">
-                <Grid>
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                        <materialDesign:PackIcon Kind="CalendarMonth" Foreground="Gray" Width="16" Height="16" VerticalAlignment="Center"/>
-                        <TextBlock Text="Date Filters:" FontWeight="Medium" Foreground="#374151" Margin="6,0,15,0" VerticalAlignment="Center"/>
-
-                        <DatePicker SelectedDate="{Binding FromDate}" Width="130" Style="{StaticResource MaterialDesignFloatingHintDatePicker}"/>
-                        <TextBlock Text="to" Margin="10,0" Foreground="Gray" VerticalAlignment="Center"/>
-                        <DatePicker SelectedDate="{Binding ToDate}" Width="130" Style="{StaticResource MaterialDesignFloatingHintDatePicker}"/>
-                    </StackPanel>
-
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="GENERATE REPORT" Command="{Binding GenerateE2EReportCommand}" 
-                            Height="32" Padding="16,0" Background="#1794A1" BorderBrush="#1794A1" Style="{StaticResource MaterialDesignRaisedButton}"/>
-                    </StackPanel>
-                </Grid>
-            </materialDesign:Card>
-
-            <materialDesign:Card Grid.Row="1" Background="White" UniformCornerRadius="6" Padding="10">
-                <DataGrid ItemsSource="{Binding ReportGridSource}" AutoGenerateColumns="True" IsReadOnly="True" ColumnWidth="*"
-                      Background="White" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
-                </DataGrid>
-            </materialDesign:Card>
-        </Grid>
+        <!-- ==================== BOTTOM VIEW ==================== -->
+        <materialDesign:Card Grid.Row="2" Margin="15,5,15,15" Background="White" UniformCornerRadius="6" Padding="10">
+            <DataGrid ItemsSource="{Binding ReportGridSource}" AutoGenerateColumns="True" IsReadOnly="True" ColumnWidth="*"
+                  Background="White" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            </DataGrid>
+        </materialDesign:Card>
     </Grid>
 </UserControl>

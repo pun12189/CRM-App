@@ -140,6 +140,7 @@ namespace CallMan
             services.AddSingleton<SchemeService>();
             services.AddSingleton<VendorService>();
             services.AddSingleton<PurchaseService>();
+            services.AddSingleton<ReportEntityService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();

@@ -14,7 +14,7 @@ namespace CallMan.Services
         {
             byte[] secretBytes = KeyGeneration.GenerateRandomKey(20);
             string secretBase32 = Base32Encoding.ToString(secretBytes);
-            string qrCodeUri = $"otpauth://totp/SofricERP:{userEmail}?secret={secretBase32}&issuer=SofricERP";
+            string qrCodeUri = $"otpauth://totp/TIJORI:{userEmail}?secret={secretBase32}&issuer=TIJORI";
             return (secretBase32, qrCodeUri);
         }
 

@@ -1,5 +1,6 @@
 ﻿using CallMan.Dialogs;
 using CallMan.Interfaces;
+using CallMan.Models.Enums;
 using CallMan.Services;
 using CallMan.ViewModels;
 using System;
@@ -35,39 +36,19 @@ namespace CallMan.Core
             bool isGlobal2FAEnabled = await _securityRepo.GetMaster2FAStatusAsync();
             if (!isGlobal2FAEnabled) return true;
 
-            // 2. Immediately drop out if the acting operational user profile is an Admin
-            var currentUser = await _staffService.GetUserByEmailAsync(_session.CurrentUserEmail);
-            if (currentUser != null && currentUser.Role == Models.Enums.UserRole.Admin) return true; // Assuming 1 = Admin
+            // 2. Automatically allow access if the current logged-in employee is the Administrator
+            var currentUser = _session;
+            if (currentUser != null && currentUser.UserRole == UserRole.Admin.ToString()) return true;
 
-            // Fetch the Admin structural secret row values securely over local LAN database instance
+            // 3. Fetch the active Admin secret key context values safely over the LAN database layer
             string adminSecret = await _staffService.GetAdminSecretKeyAsync();
-            if (string.IsNullOrEmpty(adminSecret))
-            {
-                Application.Current.Dispatcher.Invoke(() =>
-                {
-                    MessageBox.Show(
-                        "System Action Aborted:\n" +
-                        "The Global Security Switch is active, but the System Administrator has not configured their personal 2FA Key.\n\n" +
-                        "Please request the Admin to complete onboarding setup first.",
-                        "Security Policy Failure - Tijori",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Stop
-                    );
-                });
+            if (string.IsNullOrEmpty(adminSecret)) return false;
 
-                return false; // Halted: Blocks operation safely over LAN environment
-            }
-
-            // 3. Intercept: Run dialog interface challenges on the visual presentation main thread
+            // 4. Challenge: Present the global authorization modal dialog input window interface components
             return Application.Current.Dispatcher.Invoke(() =>
             {
                 var dialogViewModel = new AdminVerificationViewModel(_2faService, _securityRepo, adminSecret);
-                var dialogWindow = new AdminVerificationDialog()
-                {
-                    Owner = Application.Current.MainWindow,
-                    DataContext = dialogViewModel
-                };
-
+                var dialogWindow = new AdminVerificationDialog() { Owner = Application.Current.MainWindow, DataContext = dialogViewModel };
                 dialogWindow.ShowDialog();
                 return dialogViewModel.IsAuthorized;
             });

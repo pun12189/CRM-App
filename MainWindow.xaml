@@ -163,8 +163,18 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
+
+                <Button Click="SecretButton_Click" Padding="0" Height="50">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="Transparent" SnapsToDevicePixels="True">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <Image Source="/Assets/logo1.png" Height="50" Stretch="Uniform" CacheMode="BitmapCache" UseLayoutRounding="True" RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" Margin="0,0,10,0"/>
+                </Button>
                 
-                <Image Source="/Assets/logo1.png" Height="50" Stretch="Uniform" CacheMode="BitmapCache" UseLayoutRounding="True" RenderOptions.BitmapScalingMode="NearestNeighbor" RenderOptions.EdgeMode="Aliased" Margin="0,0,10,0"/>                
 
                 <!--<Border Grid.Column="1" HorizontalAlignment="Center" Background="#F1F3F6" CornerRadius="18" Width="400" Height="36">
                     <Grid>
@@ -643,7 +653,7 @@
             </Grid>
         </materialDesign:ColorZone>
         <ContentControl Grid.Row="3" Content="{Binding CurrentView}"/>
-        <materialDesign:DrawerHost Grid.RowSpan="4" IsRightDrawerOpen="{Binding IsAdminMenuOpen, Mode=TwoWay}" Visibility="Collapsed">
+        <materialDesign:DrawerHost Grid.RowSpan="4" IsRightDrawerOpen="{Binding IsAdminMenuOpen, Mode=TwoWay}" Visibility="Visible">
 
             <materialDesign:DrawerHost.RightDrawerContent>
                 <Grid Width="300" Background="{DynamicResource MaterialDesignPaper}" Margin="20,40">
@@ -703,7 +713,7 @@
                 </Grid>
             </materialDesign:DrawerHost.RightDrawerContent>
 
-            <Grid>
+            <!--<Grid>
                 <Button HorizontalAlignment="Right" 
                 VerticalAlignment="Bottom"
                 Width="100" 
@@ -728,7 +738,7 @@
                         </Style>
                     </Button.Style>
                 </Button>
-            </Grid>
+            </Grid>-->
         </materialDesign:DrawerHost>
         <Grid Grid.RowSpan="4" Visibility="{Binding IsGlobalLoadingActive, Converter={StaticResource BooleanToVisibilityConverter}}">
 

@@ -124,26 +124,71 @@
                 </materialDesign:Card>
 
                 <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
                     <StackPanel VerticalAlignment="Top">
                         <TextBlock Text="Security &amp; Policy Settings" Style="{StaticResource MaterialDesignBodyLargeTextBlock}" Margin="0,0,0,8" FontWeight="SemiBold"/>
                         <TextBlock Text="Manage global access restrictions and multi-factor authentication requirements." Style="{StaticResource MaterialDesignBody2TextBlock}" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,24"/>
-
-                        <materialDesign:Card Padding="16">
-                            <DockPanel HorizontalAlignment="Stretch">
-                                <StackPanel DockPanel.Dock="Left" MaxWidth="800">
-                                    <TextBlock Text="Enforce Global 2FA Authentication" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" FontWeight="Bold"/>
-                                    <TextBlock Text="When enabled, all users across the LAN network must provide a valid 6-digit verification token upon entering credentials." Style="{StaticResource MaterialDesignBody2TextBlock}" TextWrapping="Wrap" Margin="0,4,0,0" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
-                                </StackPanel>
-
-                                <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}" 
-                                  IsChecked="{Binding IsMaster2FAEnabled}" 
-                                  Command="{Binding TogglePolicyCommand}"
-                                  DockPanel.Dock="Right" 
-                                  HorizontalAlignment="Right" 
-                                  VerticalAlignment="Center"/>
-                            </DockPanel>
-                        </materialDesign:Card>
                     </StackPanel>
+                    <Grid Grid.Row="1" VerticalAlignment="Top">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- LEFT SIDE: Policy Toggle Switch Card -->
+                        <materialDesign:Card Grid.Column="0" Padding="20" Margin="0,0,16,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <StackPanel>
+                                <TextBlock Text="Enforce Global Action-Level 2FA" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" FontWeight="Bold" Margin="0,0,0,8"/>
+                                <TextBlock Text="When activated, protected buttons (Downloads, Document Views, etc) demand an administrative token confirmation window sequence." 
+                               Style="{StaticResource MaterialDesignBody2TextBlock}" 
+                               TextWrapping="Wrap" 
+                               Foreground="{DynamicResource MaterialDesignBodyLight}" 
+                               Margin="0,0,0,24"/>
+
+                                <DockPanel LastChildFill="False">
+                                    <TextBlock Text="2FA Switch" VerticalAlignment="Center" Style="{StaticResource MaterialDesignBody2TextBlock}" FontWeight="Medium"/>
+                                    <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                                      IsChecked="{Binding IsMaster2FAEnabled}" 
+                                      Command="{Binding ProcessPolicyToggleCommand}"
+                                      IsEnabled="{Binding IsRegistrationPending, Converter={StaticResource InverseBoolToVis}}"
+                                      DockPanel.Dock="Right"/>
+                                </DockPanel>
+                            </StackPanel>
+                        </materialDesign:Card>
+
+                        <!-- RIGHT SIDE: Admin Onboarding Registration Drawer (Fades/Slides In dynamically) -->
+                        <materialDesign:Card Grid.Column="1" Padding="16" Background="#1E1E1E" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                                Visibility="{Binding IsRegistrationPending, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- QR Display Frame -->
+                                <Border Grid.Column="0" BorderThickness="1" BorderBrush="#444" Background="White" Padding="8" CornerRadius="4" Width="140" Height="140" VerticalAlignment="Center">
+                                    <Image Source="{Binding AdminQrCodeSource}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                                </Border>
+
+                                <!-- Validation / Pair input side element block -->
+                                <StackPanel Grid.Column="1" Margin="20,0,0,0">
+                                    <TextBlock Text="PAIR ADMINISTRATOR ACCOUNT" Foreground="White" FontWeight="Bold" FontSize="13" Margin="0,0,0,4"/>
+                                    <TextBlock Text="Scan the graphic token matrix using your phone's Authenticator Application, then enter the resulting code." Foreground="LightGray" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                    <TextBox Text="{Binding VerificationCodeInput, UpdateSourceTrigger=PropertyChanged}" MaxLength="6" FontSize="18" TextAlignment="Center" FontWeight="Bold" Width="160" HorizontalAlignment="Left" Height="42" Padding="10,0" VerticalContentAlignment="Center" materialDesign:HintAssist.Hint="XXXXXX" materialDesign:HintAssist.Foreground="Black" Background="WhiteSmoke" Foreground="Black" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                    <TextBlock Text="{Binding SecurityErrorMessage}" Foreground="OrangeRed" FontSize="11" Margin="4,4,0,0"/>
+
+                                    <StackPanel Orientation="Horizontal" >
+                                        <Button Content="VERIFY &amp; ACTIVATE" Command="{Binding ConfirmAdminRegistrationCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Background="#2193b0" Foreground="White" Margin="0,0,10,0" Height="36" FontSize="12"/>
+                                        <Button Content="CANCEL" Command="{Binding CancelRegistrationChangeCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="DarkGray" Height="36" FontSize="12"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </materialDesign:Card>
+                    </Grid>
                 </Grid>
 
                 <Expander Background="Transparent" Tag="1" Margin="5,10" BorderThickness="1" BorderBrush="Black" HorizontalContentAlignment="Stretch" IsExpanded="{Binding IsExpander1Open, Mode=OneWay}">

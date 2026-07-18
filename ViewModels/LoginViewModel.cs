@@ -68,109 +68,33 @@ namespace CallMan.ViewModels
                 return;
             }
 
-            if (IsBusy) return; // Prevent double-clicking
-
-            IsBusy = true; // Show Spinner, Disable Button
+            if (IsBusy) return;
+            IsBusy = true;
+            IsLoggingIn = true;
+            ErrorMessage = string.Empty;
 
             try
             {
-                // =================================================================
-                // PHASE 1: STANDARD CREDENTIAL IDENTIFICATION
-                // =================================================================
-                if (IsLoginVisible)
+                var passwordContainer = passwordBox as System.Windows.Controls.PasswordBox;
+                string password = passwordContainer?.Password ?? "";
+
+                if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(password))
                 {
-                    var passwordContainer = passwordBox as System.Windows.Controls.PasswordBox;
-                    string password = passwordContainer?.Password ?? "";
-
-                    if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(password))
-                    {
-                        ErrorMessage = "Email and Password are required.";
-                        IsBusy = false;
-                        return;
-                    }
-
-                    IsLoggingIn = true;
-                    bool success = await _authService.AuthenticateByEmailAsync(Email, password);
-
-                    if (success)
-                    {
-                        _currentUser = await _userRepository.GetUserByEmailAsync(Email);
-                        bool global2FA = await _settingsRepository.GetMaster2FAStatusAsync();
-
-                        if (global2FA)
-                        {
-                            // Intercept: If 2FA is mandatory but this employee has no secret key yet
-                            if (!_currentUser.IsTwoFactorEnabled || string.IsNullOrEmpty(_currentUser.TwoFactorSecret))
-                            {
-                                var setup = _2faService.GenerateSetupInfo(_currentUser.Email);
-                                _tempSecret = setup.secretKey;
-                                QrCodeSource = GenerateQrCodeBytes(setup.qrCodeUri);
-
-                                IsLoginVisible = false;
-                                IsRegistrationVisible = true;
-                            }
-                            else
-                            {
-                                // Returning user with active 2FA secret
-                                IsLoginVisible = false;
-                                IsTwoFactorVisible = true;
-                            }
-                            TwoFactorCode = string.Empty;
-                        }
-                        else
-                        {
-                            FinalizeSuccessRoute();
-                        }
-                    }
-                    else
-                    {
-                        ErrorMessage = "Invalid credentials.";
-                    }
+                    ErrorMessage = "Email and Password are required.";
+                    return;
                 }
-                // =================================================================
-                // PHASE 2: NEW USER ONBOARDING REGISTRATION (ON THEIR OWN TERMINAL)
-                // =================================================================
-                else if (IsRegistrationVisible)
+
+                // Simple, single-step credential check
+                bool success = await _authService.AuthenticateByEmailAsync(Email, password);
+
+                if (success)
                 {
-                    if (string.IsNullOrWhiteSpace(TwoFactorCode) || TwoFactorCode.Length != 6)
-                    {
-                        ErrorMessage = "Enter valid 6-digit code.";
-                        IsBusy = false;
-                        return;
-                    }
-
-                    if (_2faService.VerifyCode(_tempSecret, TwoFactorCode))
-                    {
-                        // 1. Save the generated keys permanently to the database
-                        await _userRepository.UpdateUser2FAStatusAsync(_currentUser.UserId, true, _tempSecret);
-
-                        // 2. CRITICAL FIX: Update the local variable instance flags in memory!
-                        _currentUser.IsTwoFactorEnabled = true; // Or true, matching your model data type
-                        _currentUser.TwoFactorSecret = _tempSecret;
-
-                        // 3. Launch application dashboard
-                        FinalizeSuccessRoute();
-                    }
-                    else
-                    {
-                        ErrorMessage = "Verification failed. Re-scan the barcode token.";
-                        TwoFactorCode = string.Empty;
-                    }
+                    // Bypasses all 2FA interception screens entirely and opens the app shell dashboard
+                    FinalizeSuccessRoute();
                 }
-                // =================================================================
-                // PHASE 3: STANDARD LOGINS CHALLENGE RESPONSE
-                // =================================================================
-                else if (IsTwoFactorVisible)
+                else
                 {
-                    if (_2faService.VerifyCode(_currentUser.TwoFactorSecret, TwoFactorCode))
-                    {
-                        FinalizeSuccessRoute();
-                    }
-                    else
-                    {
-                        ErrorMessage = "Invalid code context.";
-                        TwoFactorCode = string.Empty;
-                    }
+                    ErrorMessage = "Invalid credentials.";
                 }
             }
             catch (Exception ex)
@@ -184,78 +108,16 @@ namespace CallMan.ViewModels
             }
         }
 
-        [RelayCommand]
-        private void RevertToCredentials()
-        {
-            _currentUser = null;
-            _tempSecret = null;
-            TwoFactorCode = string.Empty;
-            ErrorMessage = string.Empty;
-            IsTwoFactorVisible = false;
-            IsRegistrationVisible = false;
-            IsLoginVisible = true;
-        }
-
-        private BitmapImage GenerateQrCodeBytes(string uri)
-        {
-            using (QRCodeGenerator qrGen = new QRCodeGenerator())
-            using (QRCodeData data = qrGen.CreateQrCode(uri, QRCodeGenerator.ECCLevel.Q))
-            using (PngByteQRCode qr = new PngByteQRCode(data))
-            {
-                byte[] bytes = qr.GetGraphic(20);
-                BitmapImage bmp = new BitmapImage();
-                bmp.BeginInit();
-                bmp.StreamSource = new MemoryStream(bytes);
-                bmp.CacheOption = BitmapCacheOption.OnLoad;
-                bmp.EndInit();
-                bmp.Freeze();
-                return bmp;
-            }
-        }
-
         private void FinalizeSuccessRoute()
         {
             if (!LicenseManager.Current.IsFullVersion && LicenseManager.Current.DaysRemaining <= 2)
             {
                 MessageBox.Show($"Attention: You are currently executing on a temporary trial phase.\nRemaining time: {LicenseManager.Current.DaysRemaining} Day(s) left.", "Trial Lifecycle Countdown Alert", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+
             var main = App.ServiceProvider.GetRequiredService<MainWindow>();
             main.Show();
             Application.Current.MainWindow = main;
-            CloseCurrentWindow();
-            Application.Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
-        }
-
-        [RelayCommand]
-        private void Cancel2FA()
-        {
-            ResetToStepOne();
-        }
-
-        private void ResetToStepOne()
-        {
-            _currentUser = null;
-            TwoFactorCode = string.Empty;
-            ErrorMessage = string.Empty;
-            IsTwoFactorVisible = false;
-            IsLoginVisible = true;
-        }
-
-        private void FinalizeAuthorizationPipeline()
-        {
-            if (!LicenseManager.Current.IsFullVersion && LicenseManager.Current.DaysRemaining <= 2)
-            {
-                MessageBox.Show(
-                    $"Attention: You are currently executing on a temporary trial phase.\n" +
-                    $"Remaining time: {LicenseManager.Current.DaysRemaining} Day(s) left.",
-                    "Trial Lifecycle Countdown Alert",
-                    MessageBoxButton.OK, MessageBoxImage.Warning);
-            }
-
-            var mainWindow = App.ServiceProvider.GetRequiredService<MainWindow>();
-            mainWindow.Show();
-
-            Application.Current.MainWindow = mainWindow;
             CloseCurrentWindow();
             Application.Current.ShutdownMode = ShutdownMode.OnMainWindowClose;
         }

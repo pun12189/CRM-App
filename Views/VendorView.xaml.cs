@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CallMan.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,6 +24,12 @@ namespace CallMan.Views
         public VendorView()
         {
             InitializeComponent();
+            this.Loaded += VendorView_Loaded;
+        }
+
+        private void VendorView_Loaded(object sender, RoutedEventArgs e)
+        {
+            LoadingService.Hide();
         }
     }
 }

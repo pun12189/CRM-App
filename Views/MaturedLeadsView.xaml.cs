@@ -1,4 +1,5 @@
-﻿using CallMan.ViewModels;
+﻿using CallMan.Services;
+using CallMan.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,12 @@ namespace CallMan.Views
         public MaturedLeadsView()
         {
             InitializeComponent();
+            this.Loaded += MaturedLeadsView_Loaded;
+        }
+
+        private void MaturedLeadsView_Loaded(object sender, RoutedEventArgs e)
+        {
+            LoadingService.Hide();
         }
 
         private void CheckBox_Click(object sender, RoutedEventArgs e)

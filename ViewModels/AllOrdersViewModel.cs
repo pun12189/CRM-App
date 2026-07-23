@@ -292,6 +292,7 @@ namespace CallMan.ViewModels
         [RelayCommand]
         public void ShowOrderDetails(Order selectedOrder)
         {
+            LoadingService.Show("Loading view... Please wait.");
             if (selectedOrder == null) return;
 
             dynamic profileVm = new OrderDetailsViewModel(this, selectedOrder, _service, _orderService, _categoryService, _userSession, _orderHistoryService, _actionSecurityGuard);

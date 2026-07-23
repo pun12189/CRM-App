@@ -47,18 +47,18 @@
                                 </TextBlock>
                             </Grid>
                             <Button Grid.Column="1" Content="IMPORT ORDER's" Command="{Binding ImportOrdersCommand}" HorizontalAlignment="Right"
-            Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0"/>
+                                Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0"/>
                             <Button Grid.Column="2" Content="NEW ORDER" Command="{Binding AddNewOrderCommand}" 
-             Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" HorizontalAlignment="Right"/>
+                                 Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" HorizontalAlignment="Right"/>
 
                             <ToggleButton Grid.Column="3" 
-                  IsChecked="{Binding IsCounterPanelExpanded}" 
-                  Cursor="Hand"
+                              IsChecked="{Binding IsCounterPanelExpanded}" 
+                              Cursor="Hand"
                               Margin="5,0"
-                  ToolTip="Toggle Counter &amp; Summary Panels"
-                  Style="{StaticResource MaterialDesignFlatButton}"
-                  Height="32" Width="32" Padding="0" 
-                  Background="Transparent" Foreground="#2C3E50" VerticalAlignment="Center">
+                                  ToolTip="Toggle Counter &amp; Summary Panels"
+                                  Style="{StaticResource MaterialDesignFlatButton}"
+                                  Height="32" Width="32" Padding="0" 
+                                  Background="Transparent" Foreground="#2C3E50" VerticalAlignment="Center">
                                 <materialDesign:PackIcon Width="22" Height="22" HorizontalAlignment="Center" VerticalAlignment="Center">
                                     <materialDesign:PackIcon.Style>
                                         <Style TargetType="materialDesign:PackIcon">
@@ -135,100 +135,100 @@
                     </UniformGrid>
 
                     <Border Background="#FFFBEB" 
-    BorderBrush="#FEF3C7" 
-    BorderThickness="1" 
-    CornerRadius="6" 
-    Padding="20,15" 
-    Effect="{DynamicResource MaterialDesignShadowDepth1}">
+                        BorderBrush="#FEF3C7" 
+                        BorderThickness="1" 
+                        CornerRadius="6" 
+                        Padding="20,15" 
+                        Effect="{DynamicResource MaterialDesignShadowDepth1}">
 
                         <UniformGrid Columns="5" VerticalAlignment="Center">
 
                             <StackPanel Orientation="Vertical" HorizontalAlignment="Left" VerticalAlignment="Center">
                                 <TextBlock Text="TOTAL:" 
-                FontSize="16" FontWeight="SemiBold" 
-                Foreground="#92400E" HorizontalAlignment="Left" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                    FontSize="16" FontWeight="SemiBold" 
+                                    Foreground="#92400E" HorizontalAlignment="Left" Margin="0,0,4,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="(NEW + REPEAT):" 
-                FontSize="14" FontWeight="SemiBold" 
-                Foreground="#78350F" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                    FontSize="14" FontWeight="SemiBold" 
+                                    Foreground="#78350F" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                             </StackPanel>
 
                             <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Orders:" 
-                   FontSize="16" FontWeight="SemiBold" 
-                   Foreground="#92400E" HorizontalAlignment="Center" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                       FontSize="16" FontWeight="SemiBold" 
+                                       Foreground="#92400E" HorizontalAlignment="Center" Margin="0,0,4,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding TotalOrderCount}" 
-                   FontSize="18" FontWeight="Bold" 
-                   Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="18" FontWeight="Bold" 
+                                       Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding NewOrdersCount, StringFormat=({0} New}" 
-                   FontSize="14" FontWeight="SemiBold" 
-                   Foreground="#92400E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="14" FontWeight="SemiBold" 
+                                       Foreground="#92400E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Foreground="#92400E" Height="12" Width="12"/>
                                     <TextBlock Text="{Binding RepeatOrdersCount, StringFormat={}{0} Repeat)}" 
-                   FontSize="14" FontWeight="SemiBold" 
-                   Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="14" FontWeight="SemiBold" 
+                                       Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </StackPanel>
 
                             <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Business:" 
-                   FontSize="16" FontWeight="SemiBold" 
-                   Foreground="#92400E" HorizontalAlignment="Center" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                       FontSize="16" FontWeight="SemiBold" 
+                                       Foreground="#92400E" HorizontalAlignment="Center" Margin="0,0,4,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding TotalOrderVolume, StringFormat=C2, ConverterCulture=en-IN}" 
-                   FontSize="18" FontWeight="Bold" 
-                   Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="18" FontWeight="Bold" 
+                                       Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding CustomerStats.TotalFirstOrders, StringFormat=({0:C2}, ConverterCulture=en-IN}" 
-                   FontSize="14" FontWeight="SemiBold" 
-                   Foreground="#92400E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="14" FontWeight="SemiBold" 
+                                       Foreground="#92400E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Foreground="#92400E" Height="12" Width="12"/>
                                     <TextBlock Text="{Binding CustomerStats.TotalOtherOrders, StringFormat={}{0:C2}), ConverterCulture=en-IN}" 
-                   FontSize="14" FontWeight="SemiBold" 
-                   Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="14" FontWeight="SemiBold" 
+                                       Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </StackPanel>
 
                             <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Paid:" 
-                   FontSize="16" FontWeight="SemiBold" 
-                   Foreground="#92400E" HorizontalAlignment="Center" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                       FontSize="16" FontWeight="SemiBold" 
+                                       Foreground="#92400E" HorizontalAlignment="Center" Margin="0,0,4,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding TotalPaymentsReceived, StringFormat=C2, ConverterCulture=en-IN}" 
-                   FontSize="18" FontWeight="Bold" 
-                   Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="18" FontWeight="Bold" 
+                                       Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding CustomerStats.TotalFirstOrderAmountPaid, StringFormat=({0:C2}, ConverterCulture=en-IN}" 
-                   FontSize="14" FontWeight="SemiBold" 
-                   Foreground="#92400E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="14" FontWeight="SemiBold" 
+                                       Foreground="#92400E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Foreground="#92400E" Height="12" Width="12"/>
                                     <TextBlock Text="{Binding CustomerStats.TotalOtherOrderAmountPaid, StringFormat={}{0:C2}), ConverterCulture=en-IN}" 
-                   FontSize="14" FontWeight="SemiBold" 
-                   Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="14" FontWeight="SemiBold" 
+                                       Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </StackPanel>
 
                             <StackPanel Orientation="Vertical" HorizontalAlignment="Right">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Balance:" 
-                   FontSize="16" FontWeight="SemiBold" 
-                   Foreground="#92400E" HorizontalAlignment="Center" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                       FontSize="16" FontWeight="SemiBold" 
+                                       Foreground="#92400E" HorizontalAlignment="Center" Margin="0,0,4,0" VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding TotalOutstandingBalance, StringFormat=C2, ConverterCulture=en-IN}" 
-                   FontSize="18" FontWeight="Bold" 
-                   Foreground="#92400E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="18" FontWeight="Bold" 
+                                       Foreground="#92400E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding CustomerStats.TotalFirstOrderOutstanding, StringFormat=({0:C2}, ConverterCulture=en-IN}" 
-                   FontSize="14" FontWeight="SemiBold" 
-                   Foreground="#92400E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="14" FontWeight="SemiBold" 
+                                       Foreground="#92400E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     <materialDesign:PackIcon Kind="Plus" VerticalAlignment="Center" Foreground="#92400E" Height="12" Width="12"/>
                                     <TextBlock Text="{Binding CustomerStats.TotalOtherOrderOutstanding, StringFormat={}{0:C2}), ConverterCulture=en-IN}" 
-                   FontSize="14" FontWeight="SemiBold" 
-                   Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                       FontSize="14" FontWeight="SemiBold" 
+                                       Foreground="#78350F" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </StackPanel>
 
@@ -237,16 +237,16 @@
                 </StackPanel>
 
                 <DataGrid Grid.Row="2" 
-          ItemsSource="{Binding OrderCollection, IsAsync=True}" 
-          AutoGenerateColumns="False" 
-          IsReadOnly="True" 
-          GridLinesVisibility="Horizontal"
-          HorizontalGridLinesBrush="#E2E8F0"
-          VirtualizingPanel.IsVirtualizing="True"
-          VirtualizingPanel.VirtualizationMode="Recycling"
-          VirtualizingPanel.ScrollUnit="Pixel"
-          ScrollViewer.CanContentScroll="True"
-          ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                      ItemsSource="{Binding OrderCollection, IsAsync=True}" 
+                      AutoGenerateColumns="False" 
+                      IsReadOnly="True" 
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#E2E8F0"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling"
+                      VirtualizingPanel.ScrollUnit="Pixel"
+                      ScrollViewer.CanContentScroll="True"
+                      ScrollViewer.HorizontalScrollBarVisibility="Auto">
 
                     <DataGrid.ColumnHeaderStyle>
                         <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource {x:Type DataGridColumnHeader}}">
@@ -271,8 +271,8 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding FormattedOrderId}" 
-                                   Foreground="#2563EB" FontWeight="Bold" FontSize="12"
-                                   HorizontalAlignment="Center" Cursor="Hand">
+                                               Foreground="#2563EB" FontWeight="Bold" FontSize="12"
+                                               HorizontalAlignment="Center" Cursor="Hand">
                                             <TextBlock.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" 
                                               Command="{Binding DataContext.ShowOrderDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
@@ -449,11 +449,11 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <Button Style="{StaticResource MaterialDesignIconButton}" Width="22" Height="22" Padding="0"
-                                Command="{Binding DataContext.EditOrderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                            Command="{Binding DataContext.EditOrderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
                                             <materialDesign:PackIcon Kind="Pencil" Width="13" Height="13" Foreground="#D97706"/>
                                         </Button>
                                         <Button Style="{StaticResource MaterialDesignIconButton}" Width="22" Height="22" Margin="3,0,0,0" Padding="0"
-                                Command="{Binding DataContext.DeleteOrderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
+                                            Command="{Binding DataContext.DeleteOrderCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{Binding}">
                                             <materialDesign:PackIcon Kind="Delete" Width="13" Height="13" Foreground="#EF4444"/>
                                         </Button>
                                     </StackPanel>

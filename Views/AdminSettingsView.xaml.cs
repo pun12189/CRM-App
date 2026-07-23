@@ -1,4 +1,5 @@
-﻿using CallMan.ViewModels;
+﻿using CallMan.Services;
+using CallMan.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +28,12 @@ namespace CallMan.Views
         public AdminSettingsView()
         {
             InitializeComponent();
+            this.Loaded += AdminSettingsView_Loaded;
+        }
+
+        private void AdminSettingsView_Loaded(object sender, RoutedEventArgs e)
+        {
+            LoadingService.Hide();
         }
 
         #region CLICK-TO-SCROLL INTERACTION WITH WEB-APP EASING

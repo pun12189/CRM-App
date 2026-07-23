@@ -2,6 +2,9 @@
 using CallMan.Models;
 using CallMan.ViewModels;
 using Dapper;
+using DocumentFormat.OpenXml.Wordprocessing;
+using MySql.Data.MySqlClient;
+using MySqlX.XDevAPI;
 using Org.BouncyCastle.Utilities.Collections;
 using System;
 using System.Collections.Generic;
@@ -292,6 +295,25 @@ namespace CallMan.Services
                     IsPriority = false
                 }, transaction);
 
+                string ohsql = @"
+                INSERT INTO OrderHistory 
+                (OrderId, LeadId, ActionTitle, Description, ActionType, NewState, TransactionAmount, PerformedBy, IsImportant)
+                VALUES 
+                (@OrderId, @LeadId, @ActionTitle, @Description, @ActionType, @NewState, @TransactionAmount, @PerformedBy, @IsImportant);";
+
+                await conn.ExecuteAsync(ohsql, new
+                {
+                    OrderId = orderId,
+                    LeadId = vm.SelectedCustomer?.LeadId,
+                    ActionTitle = "Order Created",
+                    Description = $"Order #{orderId} created for {vm.SelectedCustomer?.CustomerName ?? "Customer"} with total value ₹ {vm.CalculatedGrandValue:N2}.",
+                    ActionType = "OrderCreated",
+                    NewState = "Pending",
+                    TransactionAmount = vm.CalculatedGrandValue,
+                    PerformedBy = vm.CurrentUser ?? "Admin",
+                    IsImportant = true
+                }, transaction);
+
                 // 2. Insert Order Items (with BatchId context) & Update Batch Stocks
                 foreach (var item in vm.CartItems)
                 {
@@ -428,6 +450,95 @@ namespace CallMan.Services
 
             // 3. Format to SO/26-27/0001
             return $"{settings.Prefix}/{settings.FinancialYear}/{((int)settings.LastNumber).ToString("D4")}";
+        }
+
+        /// <summary>
+        /// Retrieves all payment entries recorded against a specific Order ID.
+        /// </summary>
+        /// <param name="orderId">The unique identifier of the order.</param>
+        /// <returns>A list of PaymentEntry objects ordered by date.</returns>
+        public async Task<List<PaymentEntry>> GetPaymentsByOrderIdAsync(int orderId)
+        {
+            if (orderId <= 0) return new List<PaymentEntry>();
+
+            const string query = @"
+                SELECT * FROM Payments WHERE OrderId = @OrderId ORDER BY PaymentDate DESC;";
+
+            using (IDbConnection db = _context.CreateConnection())
+            {
+                var payments = await db.QueryAsync<PaymentEntry>(query, new { OrderId = orderId });
+                return payments.ToList();
+            }
+        }
+
+        public async Task<bool> UpdateOrderStatusAsync(int orderId, string newStatus)
+        {
+            if (orderId <= 0 || string.IsNullOrWhiteSpace(newStatus)) return false;
+
+            const string sql = @"
+                UPDATE `Orders` 
+                SET `Status` = @Status 
+                WHERE `OrderId` = @OrderId;";
+
+            using (IDbConnection db = _context.CreateConnection())
+            {
+                int rowsAffected = await db.ExecuteAsync(sql, new { Status = newStatus, OrderId = orderId });
+                return rowsAffected > 0;
+            }
+        }
+
+        /// <summary>
+        /// Fetches the complete Order record along with its child Items and ExtraCharges.
+        /// </summary>
+        public async Task<Order?> GetOrderDetailsByIdAsync(int orderId)
+        {
+            if (orderId <= 0) return null;
+
+            const string sql = @"
+                -- Query 1: Main Order Record
+                SELECT * FROM `Orders` WHERE OrderId = @OrderId;
+
+                -- Query 2: Order Items
+                SELECT oi.*,
+                    p.Name AS ProductName,
+                    pb.BatchNumber AS BatchNumber,
+                    pb.ExpiryDate AS ExpiryDate
+                    FROM `OrderItems` oi
+                    LEFT JOIN `Products` p ON oi.ProductId = p.ProductId
+                    LEFT JOIN `ProductBatches` pb ON oi.BatchId = pb.BatchId
+                    WHERE oi.OrderId = @OrderId;
+
+                -- Query 3: Extra Charges & Discounts
+                SELECT 
+                    ChargeName AS Name,
+                    Amount AS Value,
+                    GSTPercent AS GstPercent,
+                    CASE 
+                        WHEN IsDiscount = 1 THEN 'Subtract (-)' 
+                        ELSE 'Add (+)' 
+                    END AS Action
+                FROM `OrderExtraCharges` 
+                WHERE OrderId = @OrderId;";
+
+            using (IDbConnection db = _context.CreateConnection())
+            {
+                using (var multi = await db.QueryMultipleAsync(sql, new { OrderId = orderId }))
+                {
+                    // Read Order
+                    var order = await multi.ReadFirstOrDefaultAsync<Order>();
+                    if (order == null) return null;
+
+                    // Read Items
+                    var items = await multi.ReadAsync<OrderItem>();
+                    order.Items = new System.Collections.ObjectModel.ObservableCollection<OrderItem>(items);
+
+                    // Read Extra Charges
+                    var charges = await multi.ReadAsync<ExtraCharge>();
+                    order.ExtraCharges = new System.Collections.ObjectModel.ObservableCollection<ExtraCharge>(charges);
+
+                    return order;
+                }
+            }
         }
     }
 }

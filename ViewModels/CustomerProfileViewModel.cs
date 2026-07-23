@@ -286,6 +286,7 @@ namespace CallMan.ViewModels
                             LeadId = SelectedLead.LeadId,
                             TotalOrderValue = OrderValue,
                             AmountReceived = PaymentReceived,
+                            BalanceAmount = OrderValue - PaymentReceived,
                             Remarks = $"Payment Entry for Order. Balance: {BalancePayment}"
                         };
 
@@ -617,7 +618,7 @@ namespace CallMan.ViewModels
             if (fileDialog.ShowDialog() == true)
             {
                 string moduleContext = SelectedLead.Status?.ToLower() == "matured" ? "Customer" : "Lead";
-                var success = await _categoryService.UploadDocumentAsync(fileDialog.FileNames, moduleContext, SelectedUploadCategory, SelectedLead, _session.CurrentUser);
+                var success = await _categoryService.UploadDocumentAsync(fileDialog.FileNames, moduleContext, SelectedUploadCategory, SelectedLead.LeadId, _session.CurrentUser);
 
                 if (success)
                 {

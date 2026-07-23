@@ -247,7 +247,7 @@ namespace CallMan.Services
             }
         }
 
-        public async Task<bool> UploadDocumentAsync(string[] fileNames, string moduleContext, BusinessCategory selectedUploadCategory, Lead selectedLead, string currentUser)
+        public async Task<bool> UploadDocumentAsync(string[] fileNames, string moduleContext, BusinessCategory selectedUploadCategory, int entityId, string currentUser)
         {
             using var db = _context.CreateConnection();
             if (db.State == ConnectionState.Closed) db.Open();
@@ -265,7 +265,7 @@ namespace CallMan.Services
                     } // Replace with your central server name or IP
                     
                     string rawName = System.IO.Path.GetFileName(fileSourcePath);
-                    string destinationDirectory = System.IO.Path.Combine(centralNetworkVault, "VaultStorage", moduleContext, selectedLead.LeadId.ToString());
+                    string destinationDirectory = System.IO.Path.Combine(centralNetworkVault, "VaultStorage", moduleContext, entityId.ToString());
                     if (!System.IO.Directory.Exists(destinationDirectory))
                         System.IO.Directory.CreateDirectory(destinationDirectory);
 
@@ -279,7 +279,7 @@ namespace CallMan.Services
                     await db.ExecuteAsync(insertSql, new
                     {
                         Module = moduleContext,
-                        EntityId = selectedLead.LeadId,
+                        EntityId = entityId,
                         CatId = selectedUploadCategory.CategoryId,
                         FileName = rawName,
                         Path = finalStoragePath,

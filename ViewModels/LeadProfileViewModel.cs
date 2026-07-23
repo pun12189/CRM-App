@@ -194,8 +194,6 @@ namespace CallMan.ViewModels
         /// </summary>
         public async Task LoadUnifiedDocumentsWorkspaceAsync(int entityId, string activeModule)
         {
-
-
             var categoriesList = await _categoryService.GetCategoriesByModulesAsync(activeModule);
 
             // 2. Fetch all files currently uploaded for this specific profile ID            
@@ -335,6 +333,7 @@ namespace CallMan.ViewModels
                                 LeadId = SelectedLead.LeadId,
                                 TotalOrderValue = OrderValue,
                                 AmountReceived = PaymentReceived,
+                                BalanceAmount = OrderValue - PaymentReceived,
                                 Remarks = $"Payment Entry for Order. Balance: {BalancePayment}"
                             };
 
@@ -740,7 +739,7 @@ namespace CallMan.ViewModels
             if (fileDialog.ShowDialog() == true)
             {
                 string moduleContext = SelectedLead.Status?.ToLower() == "matured" ? "Customer" : "Lead";
-                var success = await _categoryService.UploadDocumentAsync(fileDialog.FileNames, moduleContext, SelectedUploadCategory, SelectedLead, _session.CurrentUser);
+                var success = await _categoryService.UploadDocumentAsync(fileDialog.FileNames, moduleContext, SelectedUploadCategory, SelectedLead.LeadId, _session.CurrentUser);
 
                 if (success)
                 {

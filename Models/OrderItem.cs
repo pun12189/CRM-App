@@ -16,7 +16,8 @@ namespace CallMan.Models
 
         // Form Display Context Fields
         [ObservableProperty] private string _productName;
-        [ObservableProperty] private string _batchNumber; // NEW: Displayed inline (e.g. "LOT-2026-A")
+        [ObservableProperty] private string _batchNumber;
+        [ObservableProperty] private DateTime? _expiryDate;// NEW: Displayed inline (e.g. "LOT-2026-A")
 
         // Quantities & Calculations
         [ObservableProperty] private int _quantity = 1;

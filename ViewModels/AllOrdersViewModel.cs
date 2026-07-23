@@ -1,4 +1,5 @@
-﻿using CallMan.Dialogs;
+﻿using CallMan.Core;
+using CallMan.Dialogs;
 using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Models.Enums;
@@ -6,6 +7,7 @@ using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using MySqlX.XDevAPI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -22,6 +24,11 @@ namespace CallMan.ViewModels
     {
         private readonly LeadService _service;
         private readonly IDialogService _dialogService;
+        private readonly OrderService _orderService;
+        private readonly CategoryService _categoryService;
+        private readonly IUserSession _userSession;
+        private readonly IOrderHistoryService _orderHistoryService;
+        private readonly IActionSecurityGuard _actionSecurityGuard;
 
         [ObservableProperty] private ObservableCollection<Order> _allOrders = new();
         [ObservableProperty] private bool _isLoading;
@@ -34,6 +41,7 @@ namespace CallMan.ViewModels
 
         [ObservableProperty] private bool _isCounterPanelExpanded = true;
         [ObservableProperty] private CustomerStats _customerStats = new();
+        [ObservableProperty] private bool _workspaceViewIsActive;
 
         // --- ACCUMULATED SPECIALIZED METRIC COUNTERS ---
         [ObservableProperty] private int _newOrdersCount;
@@ -52,10 +60,18 @@ namespace CallMan.ViewModels
 
         private bool _isInitialized;
 
-        public AllOrdersViewModel(LeadService service, IDialogService dialogService)
+        [ObservableProperty]
+        private object _tabsDataContext;
+
+        public AllOrdersViewModel(LeadService service, IDialogService dialogService, OrderService orderService, CategoryService categoryService, IUserSession userSession, IOrderHistoryService orderHistoryService, IActionSecurityGuard actionSecurityGuard)
         {
             _service = service;
             _dialogService = dialogService;
+            _orderService = orderService;
+            _categoryService = categoryService;
+            _orderHistoryService = orderHistoryService;
+            _userSession = userSession;
+            _actionSecurityGuard = actionSecurityGuard;
 
             // Initial Load
             _ = LoadInitialDataAsync();
@@ -271,6 +287,23 @@ namespace CallMan.ViewModels
             {
                 Debug.WriteLine($"Orders Dashboard Drilldown Sync Failure: {ex.Message}");
             }
+        }
+
+        [RelayCommand]
+        public void ShowOrderDetails(Order selectedOrder)
+        {
+            if (selectedOrder == null) return;
+
+            dynamic profileVm = new OrderDetailsViewModel(this, selectedOrder, _service, _orderService, _categoryService, _userSession, _orderHistoryService, _actionSecurityGuard);
+
+            this.TabsDataContext = profileVm;
+            WorkspaceViewIsActive = true; // Swaps grid out for profile workspace view layout instantly
+        }
+
+        [RelayCommand]
+        public void HideLeadWorkspace()
+        {
+            WorkspaceViewIsActive = false;
         }
     }
 }

@@ -26,8 +26,8 @@ namespace CallMan.Models
         [ObservableProperty]
         private decimal _amountReceived;
 
-        // The balance is calculated dynamically
-        public decimal BalanceAmount => TotalOrderValue - AmountReceived;
+        [ObservableProperty]
+        public decimal _balanceAmount;
 
         [ObservableProperty]
         private DateTime _paymentDate = DateTime.Now;

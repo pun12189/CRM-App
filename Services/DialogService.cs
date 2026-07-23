@@ -17,12 +17,14 @@ namespace CallMan.Services
     {
         private readonly LeadService _leadService;
         private readonly IUserSession _session;
+        private readonly IOrderHistoryService _orderHistoryService;
 
         // Inject LeadService here so it can be passed to ViewModels
-        public DialogService(LeadService leadService, IUserSession session)
+        public DialogService(LeadService leadService, IUserSession session, IOrderHistoryService orderHistoryService)
         {
             _leadService = leadService;
             _session = session;
+            _orderHistoryService = orderHistoryService;
         }
 
         public async Task<bool?> ShowNewOrderDialog(int leadId)
@@ -35,7 +37,7 @@ namespace CallMan.Services
 
         public async Task<bool?> ShowAddPaymentDialog(Order order)
         {
-            var vm = new AddPaymentViewModel(order, _leadService, _session);
+            var vm = new AddPaymentViewModel(order, _leadService, _session, _orderHistoryService);
             var win = new AddPaymentWindow { DataContext = vm };
             vm.RequestClose += (res) => { win.DialogResult = res; win.Close(); };
             return win.ShowDialog();

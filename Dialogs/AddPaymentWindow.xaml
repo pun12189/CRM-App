@@ -7,40 +7,102 @@
         mc:Ignorable="d"
         Icon="/Assets/opn.png"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Receive Payment" Height="450" Width="400"
+        Title="Receive Payment" Width="400" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
 
     <Grid Margin="20">
         <StackPanel>
-            <TextBlock Text="RECEIVE PAYMENT" FontSize="18" FontWeight="Bold" 
-                       Foreground="#27AE60" Margin="0,0,0,10"/>
+            <!-- Title -->
+            <TextBlock Text="RECEIVE PAYMENT" FontSize="18" FontWeight="Bold" Foreground="#27AE60" Margin="0,0,0,12"/>
 
-            <Border Background="#F9F9F9" Padding="10" CornerRadius="4" Margin="0,0,0,20">
+            <!-- Order Summary & Live Balance Card -->
+            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" Padding="12" CornerRadius="6" Margin="0,0,0,16">
                 <StackPanel>
-                    <TextBlock Text="Order Details:" FontWeight="Bold" FontSize="12"/>
-                    <TextBlock Text="{Binding SelectedOrder.Description}" Opacity="0.7"/>
-                    <TextBlock Text="{Binding SelectedOrder.TotalAmount, StringFormat='Total: ₹ {0:N2}'}" FontWeight="SemiBold"/>
+                    <DockPanel Margin="0,0,0,6">
+                        <TextBlock Text="Order ID:" FontWeight="Bold" Foreground="#475569" DockPanel.Dock="Left"/>
+                        <TextBlock Text="{Binding SelectedOrder.FormattedOrderId, FallbackValue='ORD00001071'}" FontWeight="Bold" Foreground="#0F172A" DockPanel.Dock="Right" HorizontalAlignment="Right"/>
+                    </DockPanel>
+
+                    <DockPanel Margin="0,0,0,6">
+                        <TextBlock Text="Total Invoice Value:" Foreground="#64748B" DockPanel.Dock="Left"/>
+                        <TextBlock Text="{Binding TargetInvoiceValue, StringFormat='₹ {0:N2}', FallbackValue='₹ 0.00'}" FontWeight="SemiBold" Foreground="#0F172A" DockPanel.Dock="Right" HorizontalAlignment="Right"/>
+                    </DockPanel>
+
+                    <Separator Background="#E2E8F0" Margin="0,4,0,8"/>
+
+                    <!-- Dynamic Remaining Balance Indicator -->
+                    <DockPanel>
+                        <TextBlock Text="Remaining Balance:" FontWeight="Bold" VerticalAlignment="Center" DockPanel.Dock="Left"/>
+
+                        <Border CornerRadius="4" Padding="8,4" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#DCFCE7"/>
+                                    <!-- Green default -->
+                                    <Style.Triggers>
+                                        <!-- Switch to Red background if Remaining Balance is negative (Overpaid) -->
+                                        <DataTrigger Binding="{Binding IsOverpaid}" Value="True">
+                                            <Setter Property="Background" Value="#FEE2E2"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+
+                            <TextBlock Text="{Binding RemainingBalance, StringFormat='₹ {0:N2}'}" FontWeight="Black" FontSize="14">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#15803D"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsOverpaid}" Value="True">
+                                                <Setter Property="Foreground" Value="#DC2626"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Border>
+                    </DockPanel>
+
+                    <!-- Overpayment Warning Text -->
+                    <TextBlock Text="⚠️ Entered amount exceeds outstanding balance. Balance is negative." 
+                           Foreground="#DC2626" FontSize="11" FontWeight="SemiBold" Margin="0,6,0,0" TextWrapping="Wrap"
+                           Visibility="{Binding IsOverpaid, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Collapsed}"/>
                 </StackPanel>
             </Border>
 
-            <TextBlock Text="Amount Received *" Foreground="Red" FontSize="12" Margin="0,5"/>
-            <TextBox Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged}" 
-                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                     materialDesign:HintAssist.Hint="Enter Payment Amount"
-                     Margin="0,0,0,15"/>
+            <!-- Amount Input Field -->
+            <TextBlock Text="Amount Received *" Foreground="#DC2626" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding Amount, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:0.##}'}" 
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                 materialDesign:HintAssist.Hint="Enter Payment Amount (e.g. 1500)"
+                 Margin="0,0,0,14"/>
 
-            <TextBlock Text="Payment Method" Foreground="#555" Margin="0,5"/>
+            <!-- Payment Method Field -->
+            <TextBlock Text="Payment Method" Foreground="#475569" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,4"/>
             <ComboBox ItemsSource="{Binding Methods}" 
-                      SelectedItem="{Binding Method}"
-                      Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                      Margin="0,0,0,20"/>
+                  SelectedItem="{Binding Method}"
+                  Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                  Margin="0,0,0,14"/>
 
+            <!-- Remarks / Notes Input Field -->
+            <TextBlock Text="Remarks / Notes" Foreground="#475569" FontSize="12" FontWeight="SemiBold" Margin="0,0,0,4"/>
+            <TextBox Text="{Binding Remarks, UpdateSourceTrigger=PropertyChanged}" 
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                 materialDesign:HintAssist.Hint="Enter transaction reference or note..."
+                 AcceptsReturn="True" Height="60"
+                 Margin="0,0,0,20"/>
+
+            <!-- Action Buttons -->
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="CANCEL" IsCancel="True" 
-                        Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,10,0"/>
+                    Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,10,0"/>
+
                 <Button Content="SUBMIT PAYMENT" Command="{Binding SubmitPaymentCommand}"
-                        Style="{StaticResource MaterialDesignRaisedButton}" 
-                        Background="#27AE60" BorderBrush="#27AE60"/>
+                    Style="{StaticResource MaterialDesignRaisedButton}" 
+                    Background="#27AE60" BorderBrush="#27AE60"/>
             </StackPanel>
         </StackPanel>
     </Grid>

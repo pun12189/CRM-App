@@ -116,6 +116,7 @@ namespace CallMan
             services.AddSingleton<ITwoFactorService, TwoFactorService>();
             services.AddSingleton<IGlobalSettingsService, GlobalSettingsService>();
             services.AddSingleton<IActionSecurityGuard, ActionSecurityGuard>();
+            services.AddSingleton<IOrderHistoryService, OrderHistoryService>();
             services.AddSingleton<LeadService>();// Our Lead Management service
             services.AddSingleton<SettingService>();
             services.AddSingleton<CategoryService>();

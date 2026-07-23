@@ -74,6 +74,9 @@
             <TabItem Header="Products Not Ordered">
                 <!-- Similar DataGrid for potential products -->
             </TabItem>
+            <TabItem Header="Product not ordered in last 3 months">
+                <!-- Similar DataGrid for potential products -->
+            </TabItem>
         </TabControl>
     </Grid>
 </Window>

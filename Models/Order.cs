@@ -33,6 +33,9 @@ namespace CallMan.Models
         [ObservableProperty] private decimal _amountPaid;
         [ObservableProperty] private string _leadHolder; // e.g., "Arun"
 
+        [ObservableProperty] private string _preferedTransport; // New or Repeat
+        [ObservableProperty] private string _remarks; // Paid, Unpaid, Partially paid
+
         // Sub-Collections
         [ObservableProperty] private ObservableCollection<OrderItem> _items = new();
         [ObservableProperty] private ObservableCollection<ExtraCharge> _extraCharges = new(); // NEW: Hooked into total calculations

@@ -142,6 +142,7 @@ namespace CallMan
             services.AddSingleton<VendorService>();
             services.AddSingleton<PurchaseService>();
             services.AddSingleton<ReportEntityService>();
+            services.AddSingleton<LedgerService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();
@@ -172,6 +173,7 @@ namespace CallMan
             services.AddTransient<UserManagementViewModel>();
             services.AddTransient<AddStaffDialogViewModel>();
             services.AddTransient<DriveViewModel>();
+            services.AddTransient<LedgerViewModel>();
 
             // Views/Modules
             services.AddTransient<DashboardViewModel>();

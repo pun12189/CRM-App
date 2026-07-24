@@ -92,6 +92,9 @@
         <DataTemplate DataType="{x:Type vm:PurchaseViewModel}">
             <views:PurchaseView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:LedgerViewModel}">
+            <views:LedgerView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>

@@ -67,7 +67,8 @@ namespace CallMan.ViewModels
         [ObservableProperty] private DateTime _nextFollowupDate = DateTime.Now.AddDays(1);
         [ObservableProperty] private ObservableCollection<ExtraCharge> _otherCharges = new();
 
-        [ObservableProperty] private string _currentUser = "Admin"; // Placeholder, replace with actual user context
+        [ObservableProperty] private string _currentUser = "Admin";
+        [ObservableProperty] private int _currentUserId;// Placeholder, replace with actual user context
 
         [ObservableProperty] private List<Product> _allMasterProducts = new();
 
@@ -98,6 +99,7 @@ namespace CallMan.ViewModels
             _orderService = orderService;
             _productService = productService;
             _currentUser = userSession.CurrentUser;
+            _currentUserId = userSession.UserId;
             // Initialize Collections
             CartItems.CollectionChanged += (s, e) => {
                 OrderValue = CartItems.Sum(x => x.Total);

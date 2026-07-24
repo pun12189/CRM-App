@@ -276,6 +276,14 @@ namespace CallMan.ViewModels
                         }, DispatcherPriority.Background);
 
                         break;
+                    case "Ledger":
+                        var vm9 = _serviceProvider.GetRequiredService<LedgerViewModel>();
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm9;
+                        }, DispatcherPriority.Background);
+
+                        break;
                         // Add other cases as you build them
                 }
             }

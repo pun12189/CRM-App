@@ -1,0 +1,217 @@
+﻿<UserControl x:Class="CallMan.Views.LedgerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:converters="clr-namespace:CallMan.Converters"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             d:DesignHeight="700" d:DesignWidth="1200" Background="#F8FAFC">
+    <UserControl.Resources>
+        <converters:AddOneConverter x:Key="AddOneConverter" />
+    </UserControl.Resources>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Top Bar -->
+            <RowDefinition Height="*"/>
+            <!-- Main DataGrid -->
+        </Grid.RowDefinitions>
+
+        <!-- TOP BAR: TITLE & BUTTONS -->
+        <DockPanel Grid.Row="0" Margin="0,0,0,16">
+            <TextBlock Text="Ledgers" FontSize="22" FontWeight="Bold" Foreground="#1E293B" DockPanel.Dock="Left" VerticalAlignment="Center"/>
+
+            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <!-- Delete Selected Button -->
+                <Button Command="{Binding DeleteSelectedCommand}" 
+                        Content="Delete Ledger" 
+                        Background="#F43F5E" BorderBrush="#F43F5E" Foreground="White" 
+                        FontWeight="Bold" Margin="0,0,10,0" Padding="14,6"
+                        Style="{StaticResource MaterialDesignRaisedButton}"/>
+
+                <!-- Add New Button -->
+                <Button Content="Add New" Command="{Binding AddNewCommand}"
+                        Background="#0D9488" BorderBrush="#0D9488" Foreground="White" 
+                        FontWeight="Bold" Padding="14,6"
+                        Style="{StaticResource MaterialDesignRaisedButton}"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- MAIN TABLE CARD -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4">
+            <DataGrid ItemsSource="{Binding LedgerEntries}" 
+                      AutoGenerateColumns="False" 
+                      IsReadOnly="False" 
+                      GridLinesVisibility="All"
+                      HorizontalGridLinesBrush="#E2E8F0"
+                      VerticalGridLinesBrush="#E2E8F0"
+                      HeadersVisibility="Column"
+                      CanUserAddRows="False"
+                      Background="White"
+                      RowHeaderWidth="0">
+
+                <!-- HEADER STYLE MATCHING SCREENSHOT -->
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#E2E8F0"/>
+                        <Setter Property="Foreground" Value="#1E293B"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                        <Setter Property="VerticalContentAlignment" Value="Center"/>
+                        <Setter Property="Padding" Value="6,10"/>
+                        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                        <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
+
+                <DataGrid.Columns>
+
+                    <!-- SELECT ALL CHECKBOX -->
+                    <DataGridTemplateColumn Width="Auto">
+                        <DataGridTemplateColumn.Header>
+                            <CheckBox IsChecked="{Binding DataContext.IsSelectAll, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay}" 
+                  HorizontalAlignment="Center" 
+                  VerticalAlignment="Center"/>
+                        </DataGridTemplateColumn.Header>
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                      HorizontalAlignment="Center" 
+                      VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- ID -->
+                    <DataGridTextColumn Header="ID" Binding="{Binding PaymentId, StringFormat='PAY-{0:D6}'}" Width="100">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Foreground" Value="#475569"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- CUSTOMER -->
+                    <DataGridTemplateColumn Header="Customer" Width="1.8*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Vertical" VerticalAlignment="Center" Margin="6,2">
+                                    <TextBlock Text="{Binding CompanyName, StringFormat='({0})'}" FontSize="11" Foreground="#64748B" HorizontalAlignment="Left"/>
+                                    <TextBlock Text="{Binding CustomerName}" Foreground="#2563EB" FontWeight="SemiBold" FontSize="12" HorizontalAlignment="Left"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- ORDER ID -->
+                    <DataGridTextColumn Header="Order Id" Binding="{Binding OrderId}" Width="80">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Foreground" Value="#334155"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- ORDER TYPE BADGE -->
+                    <DataGridTemplateColumn Header="Order Type" Width="90">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border x:Name="TypeBadge" CornerRadius="3" Padding="6,2" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#16A34A">
+                                    <TextBlock Text="{Binding OrderType}" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding OrderType}" Value="Repeat">
+                                        <Setter TargetName="TypeBadge" Property="Background" Value="#EAB308"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- AMOUNT -->
+                    <DataGridTextColumn Header="Amount" Binding="{Binding AmountReceived, StringFormat='₹ {0:G0}'}" Width="100">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Left"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="8,0,0,0"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Foreground" Value="#0F172A"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- MESSAGE / REMARKS -->
+                    <DataGridTextColumn Header="Message" Binding="{Binding Remarks}" Width="1.5*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="6,0"/>
+                                <Setter Property="Foreground" Value="#334155"/>
+                                <Setter Property="TextWrapping" Value="Wrap"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- CREDIT / DEBIT BADGE -->
+                    <DataGridTemplateColumn Header="Type" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border x:Name="TypeBadge" CornerRadius="3" Padding="6,2" HorizontalAlignment="Center" VerticalAlignment="Center" Background="#16A34A">
+                                    <TextBlock Text="{Binding TransactionType}" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding TransactionType}" Value="Debit">
+                                        <Setter TargetName="TypeBadge" Property="Background" Value="#F43F5E"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- RECORDED BY NAME -->
+                    <DataGridTextColumn Header="Name" Binding="{Binding RecordedBy}" Width="1.2*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Margin" Value="6,0"/>
+                                <Setter Property="Foreground" Value="#475569"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- TRANSACTION DATE -->
+                    <DataGridTextColumn Header="Transaction date" Binding="{Binding DisplayDate}" Width="110">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Foreground" Value="#475569"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- ACTION (DELETE) -->
+                    <DataGridTemplateColumn Header="Action" Width="60">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding DataContext.DeleteSingleCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="{Binding}"
+                                        Style="{StaticResource MaterialDesignIconButton}" Width="24" Height="24" Padding="0" HorizontalAlignment="Center">
+                                    <materialDesign:PackIcon Kind="Delete" Width="14" Height="14" Foreground="#F43F5E"/>
+                                </Button>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</UserControl>

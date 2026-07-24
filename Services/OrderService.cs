@@ -193,8 +193,8 @@ namespace CallMan.Services
 
                 // 5. Append transaction entry straight into your core Payments table
                 string insertPaymentSql = @"
-                    INSERT INTO Payments (LeadId, OrderId, TotalOrderValue, AmountReceived, Remarks, PaymentDate)
-                    VALUES (@LeadId, @OrderId, @GrandTotal, @Deposit, @Remarks, NOW());";
+                    INSERT INTO Payments (LeadId, OrderId, TotalOrderValue, AmountReceived, BalanceAmount, UserId, Remarks, PaymentDate)
+                    VALUES (@LeadId, @OrderId, @GrandTotal, @Deposit, @Balance, @UserId, @Remarks, NOW());";
 
                 await conn.ExecuteAsync(insertPaymentSql, new
                 {
@@ -202,6 +202,8 @@ namespace CallMan.Services
                     OrderId = orderId,
                     GrandTotal = proforma.GrandTotal,
                     Deposit = incomingDeposit,
+                    Balance = proforma.GrandTotal - incomingDeposit,
+                    UserId = 1,
                     Remarks = $"Initial deposit collected via {paymentMode} against {proforma.ProformaNumber}"
                 }, transaction);
 
@@ -393,8 +395,8 @@ namespace CallMan.Services
                 if (vm.AmountReceived > 0)
                 {
                     string paymentSql = @"
-                INSERT INTO Payments (DivisionId, LeadId, OrderId, TotalOrderValue, AmountReceived, PaymentDate, PaymentMethod, Remarks)
-                VALUES (@DivisionId, @LeadId, @OrderId, @Total, @Received, NOW(), @Method, @Remarks)";
+                INSERT INTO Payments (DivisionId, LeadId, OrderId, TotalOrderValue, AmountReceived, BalanceAmount, UserId, PaymentDate, PaymentMethod, Remarks)
+                VALUES (@DivisionId, @LeadId, @OrderId, @Total, @Received, @Balance, @UserId, NOW(), @Method, @Remarks)";
 
                     await conn.ExecuteAsync(paymentSql, new
                     {
@@ -403,6 +405,8 @@ namespace CallMan.Services
                         OrderId = orderId,
                         Total = Math.Round(vm.CalculatedGrandValue, 2),
                         Received = Math.Round(vm.AmountReceived, 2),
+                        Balance = Math.Round(vm.CalculatedGrandValue - vm.AmountReceived, 2),
+                        UserId = vm.CurrentUserId,
                         Method = vm.PaymentMode,
                         Remarks = vm.Remarks
                     }, transaction);

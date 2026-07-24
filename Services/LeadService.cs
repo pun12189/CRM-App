@@ -494,8 +494,8 @@ ORDER BY l.LeadId DESC;";
 
                 // 3. Record First Payment linked to that Order
                 payment.OrderId = newOrderId;
-                string paySql = @"INSERT INTO Payments (LeadId, OrderId, TotalOrderValue, AmountReceived, BalanceAmount, Remarks) 
-                          VALUES (@LeadId, @OrderId, @TotalOrderValue, @AmountReceived, @BalanceAmount, @Remarks)";
+                string paySql = @"INSERT INTO Payments (LeadId, OrderId, TotalOrderValue, AmountReceived, BalanceAmount, UserId, Remarks) 
+                          VALUES (@LeadId, @OrderId, @TotalOrderValue, @AmountReceived, @BalanceAmount, @UserId, @Remarks)";
                 await db.ExecuteAsync(paySql, payment, trans);
 
                 // 4. Add History Milestone
@@ -528,8 +528,8 @@ ORDER BY l.LeadId DESC;";
 
                 // 3. Record First Payment linked to that Order
                 payment.OrderId = newOrderId;
-                string paySql = @"INSERT INTO Payments (LeadId, OrderId, TotalOrderValue, AmountReceived, BalanceAmount, Remarks) 
-                          VALUES (@LeadId, @OrderId, @TotalOrderValue, @AmountReceived, @BalanceAmount, @Remarks)";
+                string paySql = @"INSERT INTO Payments (LeadId, OrderId, TotalOrderValue, AmountReceived, BalanceAmount, UserId, Remarks) 
+                          VALUES (@LeadId, @OrderId, @TotalOrderValue, @AmountReceived, @BalanceAmount, @UserId, @Remarks)";
                 await db.ExecuteAsync(paySql, payment, trans);
 
                 // 3. ENTRY #1: The Maturity Milestone (System Entry)                
@@ -768,21 +768,22 @@ ORDER BY l.LeadId DESC;";
         }
 
         // Record a payment and auto-update Order status
-        public async Task RecordPaymentAsync(PaymentEntry p, LeadHistoryEntry initialHistoryEntry)
+        public async Task<bool> RecordPaymentAsync(PaymentEntry p, LeadHistoryEntry initialHistoryEntry)
         {
             using var db = _context.CreateConnection();
             using var trans = db.BeginTransaction();
             try
             {
-                await db.ExecuteAsync("INSERT INTO Payments (OrderId, LeadId, TotalOrderValue, AmountReceived, BalanceAmount, PaymentMethod, Remarks) VALUES (@OrderId, @LeadId, @TotalOrderValue, @AmountReceived, @BalanceAmount, @PaymentMethod, @Remarks)", p, trans);
+                await db.ExecuteAsync("INSERT INTO Payments (OrderId, LeadId, TotalOrderValue, AmountReceived, BalanceAmount, PaymentMethod, UserId, Remarks, PaymentDate) VALUES (@OrderId, @LeadId, @TotalOrderValue, @AmountReceived, @BalanceAmount, @PaymentMethod, @UserId, @Remarks, @PaymentDate)", p, trans);
                 string updateOrder = "UPDATE Orders o SET PaymentStatus = IF((SELECT SUM(AmountReceived) FROM Payments WHERE OrderId = o.OrderId) >= o.TotalAmount, 'Fully Paid', 'Partially Paid'), AmountPaid = (SELECT SUM(AmountReceived) FROM Payments WHERE OrderId = o.OrderId) WHERE OrderId = @OrderId";
                 await db.ExecuteAsync(updateOrder, new { p.OrderId }, trans);
 
                 await AddHistoryAsync(p.LeadId, initialHistoryEntry);
 
                 trans.Commit();
+                return true;
             }
-            catch { trans.Rollback(); throw; }
+            catch { trans.Rollback(); return false; }
         }
 
         // Fetch all orders for a specific customer

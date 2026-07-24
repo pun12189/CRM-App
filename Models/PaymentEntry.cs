@@ -9,6 +9,15 @@ namespace CallMan.Models
 {
     public partial class PaymentEntry : ObservableObject
     {
+        public Action? OnSelectionChanged { get; set; }
+
+        [ObservableProperty] private bool _isSelected;
+
+        partial void OnIsSelectedChanged(bool value)
+        {
+            OnSelectionChanged?.Invoke();
+        }
+
         [ObservableProperty]
         private int _paymentId;
 
@@ -38,7 +47,17 @@ namespace CallMan.Models
         [ObservableProperty]
         private string? _remarks;
 
+        [ObservableProperty]
+        private int _userId;
+
         // Helper for UI Display
         public string DisplayDate => PaymentDate.ToString("dd MMM yyyy");
+        public string FormattedOrderId => $"ORD{OrderId:D8}";
+
+        public string CustomerName { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
+        public string OrderType { get; set; } = "New"; // "New" or "Repeat"
+        public string TransactionType { get; set; } = "Credit";
+        public string RecordedBy { get; set; } = string.Empty;
     }
 }

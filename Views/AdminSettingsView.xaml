@@ -202,7 +202,7 @@
                 <TextBlock Text="Admin Settings Workspace" FontSize="26" FontWeight="Bold" Foreground="#1794A1" HorizontalAlignment="Left"/>
                 <Button Command="{Binding BackToGridCommand}" 
                         Visibility="{Binding IsMainGridVisible, Converter={StaticResource InverseBoolToVis}}"
-                        Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Right" Content="↑ Back to Settings Dashboard" FontSize="14" FontWeight="SemiBold"/>
+                        Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Right" Content="{Binding BackButtonContent, FallbackValue='↑ Back to Settings Dashboard'}" FontSize="14" FontWeight="SemiBold"/>
             </DockPanel>
 
             <!-- DYNAMIC SCREEN ROUTER INTERFACE CONTAINER CONTROLS -->

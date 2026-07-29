@@ -95,6 +95,9 @@
         <DataTemplate DataType="{x:Type vm:LedgerViewModel}">
             <views:LedgerView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StaffDetailsViewModel}">
+            <views:StaffDetailsView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>

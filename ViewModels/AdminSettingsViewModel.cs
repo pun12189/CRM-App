@@ -24,7 +24,9 @@ namespace CallMan.ViewModels
         private readonly IServiceProvider _serviceProvider;
 
         private readonly LicenseService _licenseService;
+        private readonly StaffService _staffService;
         private readonly IUserSession _userSession;
+        private readonly IDialogService _dialogService;
         private readonly IGlobalSettingsService _settingsRepository;
         private readonly ITwoFactorService _twoFactorService;
 
@@ -36,19 +38,25 @@ namespace CallMan.ViewModels
 
         [ObservableProperty] private object? _currentSettingView;
         [ObservableProperty] private bool _isMainGridVisible = true;
+        [ObservableProperty] private string _backButtonContent = "↑ Back to Settings Dashboard";
+
+        // Track sub-level depth (e.g., Level 1: Staff Directory, Level 2: Staff Details)
+        private bool _isInSubDetailView = false;
 
         [ObservableProperty] private bool _toggleOnlineServices;
         [ObservableProperty] private bool _isToggleVisible;        
 
         private string _newGeneratedSecret;
 
-        public AdminSettingsViewModel(IServiceProvider serviceProvider, LicenseService licenseService, IGlobalSettingsService settingsRepository, ITwoFactorService twoFactorService, IUserSession userSession)
+        public AdminSettingsViewModel(IServiceProvider serviceProvider, LicenseService licenseService, IGlobalSettingsService settingsRepository, ITwoFactorService twoFactorService, IUserSession userSession, IDialogService dialogService, StaffService staffService )
         {
             _serviceProvider = serviceProvider;
             _licenseService = licenseService;
             _settingsRepository = settingsRepository;
             _twoFactorService = twoFactorService;
+            _dialogService = dialogService;
             _userSession = userSession;
+            _staffService = staffService;
             ToggleOnlineServices = Core.LicenseManager.Current.IsOnlineServicesEnabled;
             IsToggleVisible = Core.LicenseManager.Current.IsLocalDatabase;
 
@@ -56,13 +64,14 @@ namespace CallMan.ViewModels
         }
 
         [RelayCommand]
-        private async void NavigateToSetting(string settingType)
+        private async Task NavigateToSetting(string settingType)
         {
             IsMainGridVisible = false;
             switch (settingType)
             {
                 case "Staff":
-                    CurrentSettingView = _serviceProvider.GetRequiredService<UserManagementViewModel>();
+                    CurrentSettingView = new UserManagementViewModel(_dialogService, _staffService, this);
+                    _isInSubDetailView = false;
                     break;
                 case "CProfile":
                     CurrentSettingView = _serviceProvider.GetRequiredService<CompanyProfileViewModel>();
@@ -145,24 +154,50 @@ namespace CallMan.ViewModels
                     IsMainGridVisible = true;
                     break;
             }
+
+            await Task.CompletedTask;
         }
 
         [RelayCommand]
         private void BackToGrid()
         {
-            CurrentSettingView = null;
-            IsMainGridVisible = true;
+            if (_isInSubDetailView)
+            {
+                // If in Level 2 (Staff Details), step back to Level 1 (Staff Directory)
+                BackToStaffDirectory();
+            }
+            else
+            {
+                // If in Level 1 (Staff Directory), step back to Main Settings Grid
+                CurrentSettingView = null;
+                IsMainGridVisible = true;
+            }
         }
 
-        private async void CommonNavigateGeneric(string name)
+        public async Task OpenStaffDetailsAsync(User user)
         {
-            var genericVM = _serviceProvider.GetRequiredService<GenericSettingsViewModel>();
+            var detailsVm = _serviceProvider.GetRequiredService<StaffDetailsViewModel>();
 
-            // Initialize it for the specific type (e.g., "Dead Reasons")
-            await genericVM.Initialize(name);
+            // Wire up inner back arrow if clicked inside StaffDetailsView
+            detailsVm.OnNavigateBackRequested += () => BackToStaffDirectory();
 
-            // Set it as the current view
-            CurrentSettingView = genericVM;
+            await detailsVm.InitializeAsync(user);
+
+            // Swap CurrentSettingView to the Staff Details VM
+            IsMainGridVisible = false; // <--- ADD THIS LINE!
+            CurrentSettingView = detailsVm;
+            _isInSubDetailView = true;
+            BackButtonContent = "↑ Back to Staff Directory";
+        }
+
+        // Step back from Details -> Directory
+        public void BackToStaffDirectory()
+        {
+            var staffVm = new UserManagementViewModel(_dialogService, _staffService, this);
+            IsMainGridVisible = false; // Keep ContentControl visible for Staff Grid
+            CurrentSettingView = staffVm;
+            _isInSubDetailView = false;
+            BackButtonContent = "↑ Back to Settings Dashboard";
         }
 
         [RelayCommand]

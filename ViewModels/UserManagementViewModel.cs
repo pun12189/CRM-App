@@ -1,4 +1,5 @@
-﻿using CallMan.Interfaces;
+﻿using CallMan.Core;
+using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -17,13 +18,15 @@ namespace CallMan.ViewModels
     {
         private readonly IDialogService _dialogService;
         private readonly StaffService _staffService;
+        private readonly AdminSettingsViewModel _adminSettingsViewModel;
 
         [ObservableProperty] private ObservableCollection<User> _usersList = new();
 
-        public UserManagementViewModel(IDialogService dialogService, StaffService staffService)
+        public UserManagementViewModel(IDialogService dialogService, StaffService staffService, AdminSettingsViewModel adminSettingsViewModel)
         {
             _dialogService = dialogService;
             _staffService = staffService;
+            _adminSettingsViewModel = adminSettingsViewModel;
             _ = LoadData();
         }
 
@@ -89,6 +92,15 @@ namespace CallMan.ViewModels
                     UsersList.Remove(user);
                 }
             }
+        }
+
+        [RelayCommand]
+        public async Task ShowStaffDetails(User selectedUser)
+        {
+            if (selectedUser == null) return;
+
+            // Tell AdminSettingsViewModel to swap CurrentSettingView to StaffDetailsViewModel
+            await _adminSettingsViewModel.OpenStaffDetailsAsync(selectedUser);
         }
     }
 }

@@ -1,0 +1,304 @@
+﻿<UserControl x:Class="CallMan.Views.StaffDetailsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Background="#F8FAFC">
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Top Profile Banner -->
+            <RowDefinition Height="*"/>
+            <!-- Tabs Workspace -->
+        </Grid.RowDefinitions>
+
+        <!-- ================================================================= -->
+        <!-- 1. TOP PROFILE HEADER BANNER                                      -->
+        <!-- ================================================================= -->
+        <Border Background="White" CornerRadius="8" Padding="20,16" Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Back Icon -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Avatar -->
+                    <ColumnDefinition Width="*"/>
+                    <!-- Core Info -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Performance Badges -->
+                </Grid.ColumnDefinitions>
+
+                <!-- Back Arrow -->
+                <!--<Button Grid.Column="0" Command="{Binding NavigateBackCommand}" Style="{StaticResource MaterialDesignIconButton}" Margin="0,0,16,0">
+                    <materialDesign:PackIcon Kind="ArrowLeft" Width="22" Height="22" Foreground="#475569"/>
+                </Button>-->
+
+                <!-- Avatar Circle -->
+                <Border Grid.Column="1" Width="52" Height="52" CornerRadius="26" Background="#EEF2FF" Margin="0,0,16,0">
+                    <TextBlock Text="{Binding StaffUser.FullName[0]}" FontSize="22" FontWeight="Bold" Foreground="#4F46E5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+
+                <!-- Name & Role -->
+                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding StaffUser.FullName}" FontSize="20" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,12,0"/>
+                        <Border Background="#F1F5F9" CornerRadius="12" Padding="10,2" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding StaffUser.Role}" FontSize="12" FontWeight="SemiBold" Foreground="#475569"/>
+                        </Border>
+                    </StackPanel>
+                    <TextBlock Text="{Binding StaffUser.Email, StringFormat='Login ID: {0}'}" FontSize="13" Foreground="#64748B" Margin="0,2,0,0"/>
+                </StackPanel>
+
+                <!-- Target & Status Badges -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#F0FDF4" CornerRadius="8" Padding="12,6" Margin="0,0,12,0">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Target" Foreground="#16A34A" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding StaffUser.MonthlyTarget, StringFormat='Monthly Target: ₹{0:N0}'}" FontWeight="Bold" FontSize="13" Foreground="#15803D" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ================================================================= -->
+        <!-- 2. TABBED WORKSPACE                                               -->
+        <!-- ================================================================= -->
+        <TabControl Grid.Row="1" SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent" BorderThickness="0">
+
+            <!-- TAB 1: INFO / PROFILE & PERFORMANCE -->
+            <TabItem Header="Info / Profile" FontSize="14" FontWeight="SemiBold">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,16,0,0">
+                    <StackPanel>
+                        <!-- Grid Matrix -->
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Card A: Basic Identity & Department Info -->
+                            <Border Grid.Column="0" Background="White" CornerRadius="8" Padding="16" Margin="0,0,8,0">
+                                <StackPanel>
+                                    <TextBlock Text="Basic Profile Details" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,12"/>
+                                    <TextBlock Text="{Binding StaffUser.FullName, StringFormat='Full Name: {0}'}" FontSize="13" Margin="0,0,0,6" Foreground="#475569"/>
+                                    <TextBlock Text="{Binding StaffUser.Phone, StringFormat='Phone: {0}'}" FontSize="13" Margin="0,0,0,6" Foreground="#475569"/>
+                                    <TextBlock Text="{Binding StaffUser.Email, StringFormat='Email: {0}'}" FontSize="13" Margin="0,0,0,6" Foreground="#475569"/>
+                                    <TextBlock Text="{Binding StaffUser.DepartmentName, StringFormat='Department: {0}'}" FontSize="13" Margin="0,0,0,6" Foreground="#475569"/>
+                                    <TextBlock Text="{Binding StaffUser.SeniorName, StringFormat='Reporting Senior: {0}', TargetNullValue='Reporting Senior: —'}" FontSize="13" Foreground="#475569"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card B: Monthly Target Achievement -->
+                            <Border Grid.Column="1" Background="White" CornerRadius="8" Padding="16" Margin="4,0,4,0">
+                                <StackPanel>
+                                    <TextBlock Text="Monthly Target Progress" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,8"/>
+                                    <Grid Margin="0,0,0,6">
+                                        <TextBlock Text="Sales Achieved:" Foreground="#64748B" FontSize="12"/>
+                                        <TextBlock Text="{Binding MonthlySalesAchieved, StringFormat='₹{0:N2}'}" FontWeight="Bold" HorizontalAlignment="Right" Foreground="#0284C7"/>
+                                    </Grid>
+
+                                    <ProgressBar Value="{Binding TargetAchievementPercentage}" Maximum="100" Height="8" Foreground="#0284C7" Background="#E2E8F0" Margin="0,4,0,8"/>
+
+                                    <Grid>
+                                        <TextBlock Text="{Binding TargetAchievementPercentage, StringFormat='{}{0}% Achieved'}" FontSize="11" FontWeight="Bold" Foreground="#0284C7"/>
+                                        <TextBlock Text="{Binding TargetShortfallSurplus, StringFormat='Diff: ₹{0:N0}'}" FontSize="11" HorizontalAlignment="Right" Foreground="#64748B"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Card C: Incentives & Schemes -->
+                            <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="16" Margin="8,0,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="Incentives &amp; Schemes" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,8"/>
+
+                                    <!-- Scheme Title -->
+                                    <TextBlock Text="{Binding ActiveSchemeName}" FontWeight="SemiBold" FontSize="13" Foreground="#0284C7" Margin="0,0,0,4" TextWrapping="Wrap"/>
+
+                                    <!-- Scheme Reward Text (e.g., Reward: Air Conditioner) -->
+                                    <TextBlock Text="{Binding SchemeRewardText}" FontSize="12" Foreground="#64748B" Margin="0,0,0,10" TextWrapping="Wrap"/>
+
+                                    <!-- Eligibility Badge -->
+                                    <Border CornerRadius="6" Padding="8,4" HorizontalAlignment="Left">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#DCFCE7"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsEligibleForScheme}" Value="False">
+                                                        <Setter Property="Background" Value="#FEF3C7"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,4,0">
+                                                <materialDesign:PackIcon.Style>
+                                                    <Style TargetType="materialDesign:PackIcon">
+                                                        <Setter Property="Kind" Value="CheckCircleOutline"/>
+                                                        <Setter Property="Foreground" Value="#15803D"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsEligibleForScheme}" Value="False">
+                                                                <Setter Property="Kind" Value="ClockOutline"/>
+                                                                <Setter Property="Foreground" Value="#B45309"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </materialDesign:PackIcon.Style>
+                                            </materialDesign:PackIcon>
+
+                                            <TextBlock FontSize="12" FontWeight="Bold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Text" Value="Eligible for Bonus Scheme"/>
+                                                        <Setter Property="Foreground" Value="#15803D"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsEligibleForScheme}" Value="False">
+                                                                <Setter Property="Text" Value="Target Milestone Pending"/>
+                                                                <Setter Property="Foreground" Value="#B45309"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+
+                        <!-- Leads & Customers Ownership Summary Bar -->
+                        <Border Background="White" CornerRadius="8" Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="Leads &amp; Customer Portfolio Ownership" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,12"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Total Assigned Leads" FontSize="12" Foreground="#64748B"/>
+                                        <TextBlock Text="{Binding TotalLeadsHeld}" FontSize="20" FontWeight="Bold" Foreground="#0F172A" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="Converted Leads" FontSize="12" Foreground="#64748B"/>
+                                        <TextBlock Text="{Binding ConvertedLeadsCount}" FontSize="20" FontWeight="Bold" Foreground="#16A34A" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="Conversion Rate" FontSize="12" Foreground="#64748B"/>
+                                        <TextBlock Text="{Binding LeadConversionRate, StringFormat='{}{0}%'}" FontSize="20" FontWeight="Bold" Foreground="#0284C7" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="3">
+                                        <TextBlock Text="Managed Customers" FontSize="12" Foreground="#64748B"/>
+                                        <TextBlock Text="{Binding ManagedCustomersCount}" FontSize="20" FontWeight="Bold" Foreground="#6D28D9" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TAB 2: DOCUMENTS -->
+            <TabItem Header="Documents" FontSize="14" FontWeight="SemiBold">
+                <Grid Margin="15">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <!-- Top Inline Mini-Upload Dialog Block -->
+                        <RowDefinition Height="*"/>
+                        <!-- Single Central DataGrid Workspace -->
+                    </Grid.RowDefinitions>
+
+                    <!-- TOP BAR: STREAMLINED MINI-UPLOAD BAR PANEL -->
+                    <materialDesign:Card Grid.Row="0" UniformCornerRadius="6" Padding="14,10" Margin="0,0,0,15" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1">
+                        <DockPanel LastChildFill="True">
+
+                            <!-- Right Side Interactive Core Actions -->
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                                <TextBlock Text="Target Category Slot:" Foreground="#475569" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+
+                                <!-- Dynamic Category Selection Dropdown Dropdown -->
+                                <ComboBox ItemsSource="{Binding AvailableDocumentCategories, IsAsync=True}"
+                                  DisplayMemberPath="CategoryName"
+                                  SelectedValue="{Binding SelectedUploadCategory}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                                  Width="220" Height="36" Padding="10,4" Margin="0,0,10,0"/>
+
+                                <!-- Bulk/Single File Upload Trigger Command Switch Button -->
+                                <Button Command="{Binding UploadDocumentCommand}"
+                                    Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#059669" BorderBrush="Transparent"
+                                    Padding="12,0" Height="36" Content="Upload Document File"/>
+                            </StackPanel>
+
+                            <!-- Left Title Component Parameter Info Labels -->
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <materialDesign:PackIcon Kind="FolderFile" Foreground="#2563EB" Width="22" Height="22" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding DocumentCountSummaryText}" FontSize="13" FontWeight="Bold" Foreground="#1E293B" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </materialDesign:Card>
+
+                    <!-- BOTTOM PORTION: CENTRAL COMPLIANCE DATA TABLE GRID -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding UnifiedDocumentsCollection, IsAsync=True}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
+                        <DataGrid.Columns>
+                            <!-- Color-Coded Category Label Column -->
+                            <DataGridTemplateColumn Header="Category Classification" Width="2*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding CategoryName}" FontWeight="Bold" Foreground="#334155"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+
+                            <!-- Dynamic filename metadata column rows values mapping -->
+                            <DataGridTextColumn Header="File Name" Binding="{Binding FileName}" Width="3.5*" IsReadOnly="True" FontWeight="Medium"/>
+                            <DataGridTextColumn Header="Uploaded By User" Binding="{Binding UploadedBy}" Width="1.5*" IsReadOnly="True"/>
+                            <DataGridTextColumn Header="Date Logged" Binding="{Binding UploadedAt, StringFormat={}{0:dd-MM-yyyy hh:mm tt}}" Width="2*" IsReadOnly="True"/>
+
+                            <!-- CONTEXT COMPONENT ACTIONS PANEL ROUTE -->
+                            <DataGridTemplateColumn Header="Actions" Width="1.5*">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+
+                                            <Button Command="{Binding DataContext.ReplaceDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#F59E0B" BorderBrush="Transparent" 
+                                                Padding="0" Width="28" Height="28" Margin="0,0,6,0" ToolTip="Replace / Overwrite File">
+                                                <materialDesign:PackIcon Kind="FileReplace" Foreground="White" Width="14" Height="14"/>
+                                            </Button>
+
+                                            <Button Command="{Binding DataContext.DownloadDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#0284C7" BorderBrush="Transparent" 
+                                                Padding="0" Width="28" Height="28" Margin="0,0,6,0" ToolTip="Download File to System">
+                                                <materialDesign:PackIcon Kind="Download" Foreground="White" Width="14" Height="14"/>
+                                            </Button>
+
+                                            <Button Command="{Binding DataContext.DeleteDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                                CommandParameter="{Binding}"
+                                                Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#DC2626" BorderBrush="Transparent" 
+                                                Padding="0" Width="28" Height="28" ToolTip="Delete Document Permanently">
+                                                <materialDesign:PackIcon Kind="Delete" Foreground="White" Width="14" Height="14"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</UserControl>

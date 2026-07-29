@@ -260,5 +260,99 @@ namespace CallMan.Services
                 await db.ExecuteAsync(sql, new { UserId = userId, IsEnabled = isEnabled, SecretKey = secretKey });
             }
         }
+
+        // 1. CALCULATE MONTHLY SALES ACHIEVED BY STAFF MEMBER (ProcessedBy = Email/FullName)
+        public async Task<decimal> GetMonthlySalesAchievedAsync(string identifier, int year, int month)
+        {
+            try
+            {
+                using var db = _context.CreateConnection();
+                const string sql = @"
+                    SELECT COALESCE(SUM(TotalAmount), 0)
+                    FROM Orders
+                    WHERE (ProcessedBy = @identifier OR ProcessedBy = @identifier)
+                      AND YEAR(OrderDate) = @year
+                      AND MONTH(OrderDate) = @month
+                      AND Status != 'Cancelled';";
+
+                return await db.ExecuteScalarAsync<decimal>(sql, new { identifier, year, month });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[STAFF SERVICE ERROR] GetMonthlySalesAchievedAsync: {ex.Message}");
+                return 0m;
+            }
+        }
+
+        // 2. FETCH LEAD STATS HELD BY THIS STAFF (LeadHolder = FullName)
+        public async Task<(int TotalLeads, int ConvertedLeads)> GetLeadStatsByStaffAsync(string staffFullName)
+        {
+            try
+            {
+                using var db = _context.CreateConnection();
+                const string sql = @"
+                    SELECT 
+                        COUNT(1) AS TotalLeads,
+                        COALESCE(SUM(CASE WHEN Status = 'Matured' THEN 1 ELSE 0 END), 0) AS ConvertedLeads
+                    FROM Leads
+                    WHERE LeadHolder = @staffFullName;";
+
+                var result = await db.QueryFirstOrDefaultAsync<dynamic>(sql, new { staffFullName });
+                if (result != null)
+                {
+                    return ((int)result.TotalLeads, (int)result.ConvertedLeads);
+                }
+                return (0, 0);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[STAFF SERVICE ERROR] GetLeadStatsByStaffAsync: {ex.Message}");
+                return (0, 0);
+            }
+        }
+
+        // 3. FETCH TOTAL ACTIVE ACCOUNTS / CUSTOMERS MANAGED BY STAFF
+        public async Task<int> GetManagedCustomersCountAsync(string staffFullName)
+        {
+            try
+            {
+                using var db = _context.CreateConnection();
+                const string sql = "SELECT COUNT(1) FROM Leads WHERE Status = 'Matured' AND LeadHolder = @staffFullName;";
+                return await db.ExecuteScalarAsync<int>(sql, new { staffFullName });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[STAFF SERVICE ERROR] GetManagedCustomersCountAsync: {ex.Message}");
+                return 0;
+            }
+        }
+
+        public async Task<IEnumerable<PromotionalScheme>> GetActiveStaffSchemesAsync(int staffUserId)
+        {
+            try
+            {
+                using var db = _context.CreateConnection();
+
+                // Fetch active schemes targeted at 'Staff' where today's date falls within range
+                const string sql = @"
+            SELECT 
+                SchemeId, Title, TargetScope, StartDate, EndDate, 
+                IsActive, MinimumOrderThreshold, RewardType, RewardValue, 
+                GiftItemName, RedemptionMode
+            FROM DynamicSchemes
+            WHERE TargetScope = 'Staff'
+              AND IsActive = 1
+              AND CURDATE() BETWEEN StartDate AND EndDate
+            ORDER BY SchemeId DESC;";
+
+                var result = await db.QueryAsync<PromotionalScheme>(sql);
+                return result.ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[STAFF SERVICE ERROR] GetActiveStaffSchemesAsync: {ex.Message}");
+                return Enumerable.Empty<PromotionalScheme>();
+            }
+        }
     }
 }

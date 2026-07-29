@@ -184,6 +184,7 @@ namespace CallMan
             services.AddTransient<PermissionsManagementViewModel>();
             services.AddTransient<VendorViewModel>();
             services.AddTransient<PurchaseViewModel>();
+            services.AddTransient<StaffDetailsViewModel>();
 
             // 4. Register Views
             services.AddTransient<LoginView>();

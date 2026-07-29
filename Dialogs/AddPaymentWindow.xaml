@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Icon="/Assets/opn.png"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Receive Payment" Width="400" SizeToContent="Height"
+        Title="Receive Payment" Width="400" SizeToContent="Height" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>

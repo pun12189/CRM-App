@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public CreatePoWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

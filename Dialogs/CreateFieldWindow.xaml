@@ -10,7 +10,7 @@
         Height="Auto" 
         Width="480" 
         Icon="/Assets/opn.png"
-        SizeToContent="Height"
+        SizeToContent="Height" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner" 
         ResizeMode="NoResize"
         Background="#F8FAFC">

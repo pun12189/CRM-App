@@ -6,9 +6,9 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Icon="/Assets/opn.png"
+        Icon="/Assets/opn.png" ShowInTaskbar="False"
         Title="TIJORI Database Routing Environment Platform Setup" 
-        Height="540" Width="820" WindowStartupLocation="CenterScreen"
+        Height="540" Width="820" WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize" Background="#F8FAFC">
     <Window.Resources>
         <materialDesign:BooleanToVisibilityConverter TrueValue="Collapsed" FalseValue="Visible" x:Key="InvertedBooleanConverter"/>

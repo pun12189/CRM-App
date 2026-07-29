@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public AddPaymentWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

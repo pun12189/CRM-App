@@ -10,7 +10,7 @@
         Width="480" 
         Icon="/Assets/opn.png"
         SizeToContent="Height" WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" WindowStyle="None"
+        ResizeMode="NoResize" WindowStyle="None" ShowInTaskbar="False"
         AllowsTransparency="True" Background="Transparent">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>

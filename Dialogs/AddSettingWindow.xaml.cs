@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public AddSettingWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e)

@@ -6,8 +6,8 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         mc:Ignorable="d"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Add Category" Height="590" Width="650"
-        WindowStartupLocation="CenterScreen" ResizeMode="NoResize" Background="{DynamicResource MaterialDesignPaper}">
+        Title="Add Category" Height="590" Width="650" ShowInTaskbar="False"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="{DynamicResource MaterialDesignPaper}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <md:BooleanToVisibilityConverter x:Key="InvertBoolToVisibilityConverter" TrueValue="Collapsed" FalseValue="Visible"/>

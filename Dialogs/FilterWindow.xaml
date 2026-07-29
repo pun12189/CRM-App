@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Icon="/Assets/opn.png"
         xmlns:conv="clr-namespace:CallMan.Converters"
-        Title="Filter" Width="600" Height="650" 
+        Title="Filter" Width="600" Height="650"  ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         AllowsTransparency="True" WindowStyle="None" Background="Transparent">
     <Window.Resources>

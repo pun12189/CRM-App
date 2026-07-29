@@ -24,6 +24,7 @@ namespace CallMan.Dialogs
         public CreateFieldWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }        
     }
 }

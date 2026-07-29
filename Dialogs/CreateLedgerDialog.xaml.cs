@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public CreateLedgerDialog()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

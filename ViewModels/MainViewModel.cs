@@ -294,7 +294,7 @@ namespace CallMan.ViewModels
             finally
             {
                 // Ensure admin menu is closed after navigation
-                //LoadingService.Hide();
+                LoadingService.Hide();
             }
         }
 

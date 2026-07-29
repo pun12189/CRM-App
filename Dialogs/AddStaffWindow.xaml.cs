@@ -23,6 +23,7 @@ namespace CallMan.Dialogs
         public AddStaffWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
 
         // Connect the ViewModel event to the Window Close

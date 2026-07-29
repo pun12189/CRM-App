@@ -15,11 +15,11 @@ using System.Windows.Shapes;
 namespace CallMan.Dialogs
 {
     /// <summary>
-    /// Interaction logic for AddDivisionWindow.xaml
+    /// Interaction logic for LinkVendorProductDialogWindow.xaml
     /// </summary>
-    public partial class AddDivisionWindow : Window
+    public partial class LinkVendorProductDialogWindow : Window
     {
-        public AddDivisionWindow()
+        public LinkVendorProductDialogWindow()
         {
             InitializeComponent();
             Owner = Application.Current.MainWindow;

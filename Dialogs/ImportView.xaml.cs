@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public ImportView()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

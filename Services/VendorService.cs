@@ -19,41 +19,149 @@ namespace CallMan.Services
             try
             {
                 using var db = _context.CreateConnection();
-
-                // Await the query result completely within the active connection lifetime scope
-                var result = await db.QueryAsync<Vendor>("SELECT * FROM Vendors;");
-
-                // Convert to a concrete list right here before the 'db' variable is disposed
+                var result = await db.QueryAsync<Vendor>("SELECT * FROM Vendors ORDER BY VendorId DESC;");
                 return result.ToList();
             }
             catch (Exception ex)
             {
-                // Log the exception parameters to your debug console channel
                 System.Diagnostics.Debug.WriteLine($"[VENDOR SERVICE ERROR] GetAllVendorsAsync failed: {ex.Message}");
-
-                // Return an empty list instance fallback so that your UI data-binding collections don't break
                 return Enumerable.Empty<Vendor>();
             }
         }
 
-        public async Task<int> SaveVendorAsync(Vendor vendor)
+        // READ BY ID
+        public async Task<Vendor?> GetVendorByIdAsync(int vendorId)
         {
-            using var db = _context.CreateConnection();
-            const string sql = @"
-                INSERT INTO Vendors (CompanyName, ContactPerson, Phone, Email, GstNumber, Address, Status)
-                VALUES (@CompanyName, @ContactPerson, @Phone, @Email, @GstNumber, @Address, @Status);
-                SELECT LAST_INSERT_ID();";
-            return await db.ExecuteScalarAsync<int>(sql, vendor);
+            try
+            {
+                using var db = _context.CreateConnection();
+                const string sql = "SELECT * FROM Vendors WHERE VendorId = @VendorId;";
+                return await db.QueryFirstOrDefaultAsync<Vendor>(sql, new { VendorId = vendorId });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VENDOR SERVICE ERROR] GetVendorByIdAsync failed: {ex.Message}");
+                return null;
+            }
         }
 
-        public async Task LinkProductAsync(int vendorId, int productId, string sku, decimal price)
+        // CREATE
+        public async Task<int> SaveVendorAsync(Vendor vendor)
         {
-            using var db = _context.CreateConnection();
-            const string sql = @"
-                INSERT INTO VendorProductLinks (VendorId, ProductId, SupplierSku, PurchasePrice)
-                VALUES (@VendorId, @ProductId, @sku, @price)
-                ON DUPLICATE KEY UPDATE SupplierSku = @sku, PurchasePrice = @price;";
-            await db.ExecuteAsync(sql, new { vendorId, productId, sku, price });
+            try
+            {
+                using var db = _context.CreateConnection();
+                const string sql = @"
+                    INSERT INTO Vendors (CompanyName, ContactPerson, Phone, Email, GstNumber, Address, Status, CreatedAt)
+                    VALUES (@CompanyName, @ContactPerson, @Phone, @Email, @GstNumber, @Address, @Status, @CreatedAt);
+                    SELECT LAST_INSERT_ID();";
+
+                return await db.ExecuteScalarAsync<int>(sql, vendor);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VENDOR SERVICE ERROR] SaveVendorAsync failed: {ex.Message}");
+                return 0;
+            }
+        }
+
+        // UPDATE
+        public async Task<bool> UpdateVendorAsync(Vendor vendor)
+        {
+            try
+            {
+                using var db = _context.CreateConnection();
+                const string sql = @"
+                    UPDATE Vendors 
+                    SET CompanyName = @CompanyName,
+                        ContactPerson = @ContactPerson,
+                        Phone = @Phone,
+                        Email = @Email,
+                        GstNumber = @GstNumber,
+                        Address = @Address,
+                        Status = @Status
+                    WHERE VendorId = @VendorId;";
+
+                int rowsAffected = await db.ExecuteAsync(sql, vendor);
+                return rowsAffected > 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VENDOR SERVICE ERROR] UpdateVendorAsync failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        // DELETE
+        public async Task<bool> DeleteVendorAsync(int vendorId)
+        {
+            try
+            {
+                using var db = _context.CreateConnection();
+                const string sql = "DELETE FROM Vendors WHERE VendorId = @VendorId;";
+
+                int rowsAffected = await db.ExecuteAsync(sql, new { VendorId = vendorId });
+                return rowsAffected > 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VENDOR SERVICE ERROR] DeleteVendorAsync failed: {ex.Message}");
+                return false;
+            }
+        }
+
+        // FETCH ALL PRODUCTS LINKED TO A SPECIFIC VENDOR
+        public async Task<IEnumerable<VendorProductLinkDisplay>> GetProductsByVendorIdAsync(int vendorId)
+        {
+            try
+            {
+                using var db = _context.CreateConnection();
+                const string sql = @"
+            SELECT 
+                vpl.VendorId,
+                vpl.ProductId,
+                p.Name AS ProductName,
+                COALESCE(c.CategoryName, 'General') AS CategoryName,
+                COALESCE(vpl.SupplierSku, p.ShortName) AS SupplierSku,
+                vpl.PurchasePrice,
+                p.RemainingStock AS CurrentStock
+            FROM VendorProductLinks vpl
+            INNER JOIN Products p ON vpl.ProductId = p.ProductId
+            LEFT JOIN Categories c ON p.CategoryId = c.Id
+            WHERE vpl.VendorId = @vendorId
+            ORDER BY p.Name ASC;";
+
+                var result = await db.QueryAsync<VendorProductLinkDisplay>(sql, new { vendorId });
+                return result.ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VENDOR SERVICE ERROR] GetProductsByVendorIdAsync failed: {ex.Message}");
+                return Enumerable.Empty<VendorProductLinkDisplay>();
+            }
+        }
+
+        // LINK OR UPDATE PRODUCT FOR A VENDOR
+        public async Task<bool> SaveVendorProductLinkAsync(int vendorId, int productId, string supplierSku, decimal purchasePrice)
+        {
+            try
+            {
+                using var db = _context.CreateConnection();
+                const string sql = @"
+            INSERT INTO VendorProductLinks (VendorId, ProductId, SupplierSku, PurchasePrice)
+            VALUES (@vendorId, @productId, @supplierSku, @purchasePrice)
+            ON DUPLICATE KEY UPDATE 
+                SupplierSku = @supplierSku, 
+                PurchasePrice = @purchasePrice;";
+
+                int rows = await db.ExecuteAsync(sql, new { vendorId, productId, supplierSku, purchasePrice });
+                return rows > 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[VENDOR SERVICE ERROR] SaveVendorProductLinkAsync failed: {ex.Message}");
+                return false;
+            }
         }
     }
 }

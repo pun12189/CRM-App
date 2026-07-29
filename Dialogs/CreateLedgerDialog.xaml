@@ -7,7 +7,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Create Ledger" Height="650" Width="480"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize" WindowStyle="None"
+        ResizeMode="NoResize" WindowStyle="None" ShowInTaskbar="False"
         AllowsTransparency="True" Background="Transparent">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>

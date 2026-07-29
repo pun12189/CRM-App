@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public LeadProfileWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
 
         // Optional: Close on Escape key

@@ -9,7 +9,7 @@
         mc:Ignorable="d"
         Icon="/Assets/opn.png"
         Title="Product License Activation" 
-        Height="Auto" Width="440" SizeToContent="Height"
+        Height="Auto" Width="440" SizeToContent="Height" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize" Background="#F8FAFC">
     <Window.Resources>
         <materialDesign:BooleanToVisibilityConverter TrueValue="Collapsed" FalseValue="Visible" x:Key="InvertedBooleanConverter"/>

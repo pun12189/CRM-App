@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public PermissionEditorWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

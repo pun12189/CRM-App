@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public AddSchemeDialog()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
 
         private void NumericTextBox_PreviewTextInput(object sender, System.Windows.Input.TextCompositionEventArgs e)

@@ -212,7 +212,7 @@ namespace CallMan.ViewModels
                         line.ProductId = newlyGeneratedId;
 
                         // Create link between this vendor and the new product code
-                        await _vendorService.LinkProductAsync(SelectedVendor.VendorId, newlyGeneratedId, line.SupplierSku ?? "GEN-SKU", line.UnitPrice);
+                        await _vendorService.SaveVendorProductLinkAsync(SelectedVendor.VendorId, newlyGeneratedId, line.SupplierSku ?? "GEN-SKU", line.UnitPrice);
                     }
                     finalizedLines.Add(line);
                 }

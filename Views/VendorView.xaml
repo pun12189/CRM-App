@@ -7,27 +7,95 @@
              mc:Ignorable="d" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              Background="White">
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <UserControl.Resources>
+        <DataTemplate x:Key="MainGridLeadLayoutTemplate">
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="#F8FAFC" Padding="15,10" Margin="0,0,0,15" CornerRadius="6" BorderThickness="1" BorderBrush="#E2E8F0">
-            <DockPanel>
-                <Button Content="+ Add New Vendor" Style="{StaticResource MaterialDesignFlatMidBgButton}" DockPanel.Dock="Right" Command="{Binding OpenAddVendorWindowCommand}"/>
-                <TextBlock Text="Vendor Directory" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
-            </DockPanel>
-        </Border>
+                <Border Grid.Row="0" Background="#F8FAFC" Padding="15,10" Margin="0,0,0,15" CornerRadius="6" BorderThickness="1" BorderBrush="#E2E8F0">
+                    <DockPanel>
+                        <Button Content="+ Add New Vendor" Style="{StaticResource MaterialDesignFlatMidBgButton}" DockPanel.Dock="Right" Command="{Binding OpenAddVendorWindowCommand}"/>
+                        <TextBlock Text="Vendor Directory" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </DockPanel>
+                </Border>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding VendorsList, IsAsync=True}" SelectedItem="{Binding SelectedVendor}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Company Name" Binding="{Binding CompanyName}" Width="2*" IsReadOnly="True" FontWeight="Bold"/>
-                <DataGridTextColumn Header="Contact Person" Binding="{Binding ContactPerson}" Width="1.5*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="1.2*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="GSTIN" Binding="{Binding GstNumber}" Width="1.3*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="1*" IsReadOnly="True"/>
-            </DataGrid.Columns>
-        </DataGrid>
+                <DataGrid Grid.Row="1" ItemsSource="{Binding VendorsList, IsAsync=True}" SelectedItem="{Binding SelectedVendor}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="Company Name" Width="2*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding CompanyName}" 
+                                Foreground="#2563EB" FontWeight="Bold"
+                                HorizontalAlignment="Left" Cursor="Hand">
+                                        <TextBlock.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick" 
+                                       Command="{Binding DataContext.ShowVendorDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                       CommandParameter="{Binding}" />
+                                        </TextBlock.InputBindings>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Contact Person" Binding="{Binding ContactPerson}" Width="1.5*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Phone" Binding="{Binding Phone}" Width="1.2*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="GSTIN" Binding="{Binding GstNumber}" Width="1.3*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="1*" IsReadOnly="True"/>
+                        <DataGridTemplateColumn Header="Actions" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <!-- Edit Button with Pencil Icon -->
+                                        <Button Command="{Binding DataContext.EditVendorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                     CommandParameter="{Binding}" 
+                     Style="{StaticResource MaterialDesignIconButton}"
+                     ToolTip="Edit Vendor"
+                     Width="32" Height="32" 
+                     Margin="0,0,4,0">
+                                            <materialDesign:PackIcon Kind="PencilOutline" 
+                                          Width="18" Height="18" 
+                                          Foreground="#0284C7"/>
+                                        </Button>
+
+                                        <!-- Delete Button with Trash Can Icon -->
+                                        <Button Command="{Binding DataContext.DeleteVendorCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                     CommandParameter="{Binding}" 
+                     Style="{StaticResource MaterialDesignIconButton}"
+                     ToolTip="Delete Vendor"
+                     Width="32" Height="32">
+                                            <materialDesign:PackIcon Kind="TrashCanOutline" 
+                                          Width="18" Height="18" 
+                                          Foreground="#E11D48"/>
+                                        </Button>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="VendorWorkspaceTemplate">
+            <local:VendorDetailsView DataContext="{Binding TabsDataContext}"/>
+        </DataTemplate>
+    </UserControl.Resources>
+    
+    <Grid>
+        <ContentControl Content="{Binding}">
+            <ContentControl.Style>
+                <Style TargetType="ContentControl">
+                    <Setter Property="ContentTemplate" Value="{StaticResource MainGridLeadLayoutTemplate}"/>
+
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding DataContext.WorkspaceViewIsActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                            <Setter Property="ContentTemplate" Value="{StaticResource VendorWorkspaceTemplate}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ContentControl.Style>
+        </ContentControl>
     </Grid>
 </UserControl>

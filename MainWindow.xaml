@@ -524,22 +524,32 @@
                         <MenuItem Header="All Leads" Icon="{materialDesign:PackIcon Kind=AccountMultiple}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Leads"/>
                         <MenuItem Header="Customers" Icon="{materialDesign:PackIcon Kind=CardAccountDetails}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Customers"/>
                         <MenuItem Header="My Leads" Icon="{materialDesign:PackIcon Kind=Account}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="MyLeads"/>
+                        <MenuItem Header="Dead Leads" Icon="{materialDesign:PackIcon Kind=CloseCircle}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dead"/>
+                        <MenuItem Header="Winback Pool" Icon="{materialDesign:PackIcon Kind=Pool}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="WinbackPool"/>
                     </MenuItem>
 
                     <MenuItem Header="Occupied Locations" Icon="{materialDesign:PackIcon Kind=MapMarkerRadius}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Location"/>
 
-                    <MenuItem Header="Dead Leads" Icon="{materialDesign:PackIcon Kind=AccountCancel}" Click="TopLevelMenuItem_Click">
+                    <!--<MenuItem Header="Dead Leads" Icon="{materialDesign:PackIcon Kind=AccountCancel}" Click="TopLevelMenuItem_Click">
                         <MenuItem Header="Dead" Icon="{materialDesign:PackIcon Kind=CloseCircle}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dead"/>
                         <MenuItem Header="Winback Pool" Icon="{materialDesign:PackIcon Kind=Pool}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="WinbackPool"/>
-                    </MenuItem>
-                    <MenuItem Header="Purchase" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Purchase"/>
-                    <MenuItem Header="SAP" Icon="{materialDesign:PackIcon Kind=Briefcase}" Click="TopLevelMenuItem_Click">
-                        <MenuItem Header="Orders" Icon="{materialDesign:PackIcon Kind=CartCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Orders"/>
-                        <MenuItem Header="Item/Product List" Icon="{materialDesign:PackIcon Kind=PackageVariant}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>
-                        <MenuItem Header="Ledger" Icon="{materialDesign:PackIcon Kind=BookOpenPageVariant}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Ledger"/>
-                        <MenuItem Header="Proforma" Icon="{materialDesign:PackIcon Kind=FileDocumentCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Proforma"/>
-                        <MenuItem Header="HRMS" IsEnabled="False" Icon="{materialDesign:PackIcon Kind=HumanFemale}" Style="{StaticResource SubItemStyle}" />
+                    </MenuItem>-->
+
+                    <MenuItem Header="Items" Icon="{materialDesign:PackIcon Kind=AccountCancel}" Click="TopLevelMenuItem_Click">
+                        <MenuItem Header="List" Icon="{materialDesign:PackIcon Kind=CloseCircle}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>
+                        <MenuItem Header="Purchase Orders" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Purchase"/>
                         <MenuItem Header="Vendors" Icon="{materialDesign:PackIcon Kind=PersonBox}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Vendor"/>
+                    </MenuItem>
+
+                    <!--<MenuItem Header="Purchase" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Purchase"/>-->
+                    <MenuItem Header="Orders" Icon="{materialDesign:PackIcon Kind=Briefcase}" Click="TopLevelMenuItem_Click">
+                        <MenuItem Header="Proforma" Icon="{materialDesign:PackIcon Kind=FileDocumentCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Proforma"/>
+                        <MenuItem Header="Orders" Icon="{materialDesign:PackIcon Kind=CartCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Orders"/>
+                        <!--<MenuItem Header="Item/Product List" Icon="{materialDesign:PackIcon Kind=PackageVariant}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>-->
+                        <MenuItem Header="Ledger" Icon="{materialDesign:PackIcon Kind=BookOpenPageVariant}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Ledger"/>
+                        
+                        <!--<MenuItem Header="HRMS" IsEnabled="False" Icon="{materialDesign:PackIcon Kind=HumanFemale}" Style="{StaticResource SubItemStyle}" />
+                        <MenuItem Header="Vendors" Icon="{materialDesign:PackIcon Kind=PersonBox}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Vendor"/>-->
                     </MenuItem>
                     <MenuItem Header="Drive" Icon="{materialDesign:PackIcon Kind=FolderNetwork}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Drive"/>
                     <MenuItem Header="Admin Settings" security:SecurityGuard.Requires="Admin:View" Icon="{materialDesign:PackIcon Kind=Settings}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
@@ -556,9 +566,9 @@
                                 <Setter.Value>
                                     <ControlTemplate TargetType="MenuItem">
                                         <Border x:Name="TopLevelBorder" 
-                Background="Transparent" 
-                Padding="{TemplateBinding Padding}" 
-                SnapsToDevicePixels="True">
+                                            Background="Transparent" 
+                                            Padding="{TemplateBinding Padding}" 
+                                            SnapsToDevicePixels="True">
                                             <Grid>
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                     <ContentPresenter Content="{TemplateBinding Icon}" Width="16" Height="16" Margin="0,0,8,0" VerticalAlignment="Center"/>
@@ -566,21 +576,21 @@
                                                 </StackPanel>
 
                                                 <Popup x:Name="PART_Popup"
-                                   IsOpen="{TemplateBinding IsSubmenuOpen}"
-                                   Placement="Bottom"
-                                   Focusable="False"
-                                   AllowsTransparency="True"
-                                   PopupAnimation="Fade"
-                                   VerticalOffset="-2"
+                                                   IsOpen="{TemplateBinding IsSubmenuOpen}"
+                                                   Placement="Bottom"
+                                                   Focusable="False"
+                                                   AllowsTransparency="True"
+                                                   PopupAnimation="Fade"
+                                                   VerticalOffset="-2"
        
-                                   HorizontalOffset="-14">
+                                                   HorizontalOffset="-14">
 
                                                     <Border Background="Transparent" Padding="0,2,0,0">
                                                         <Border Background="White" 
-                                    BorderBrush="#CBD5E1" 
-                                    BorderThickness="1" 
-                                    CornerRadius="4"
-                                    Padding="0">
+                                                            BorderBrush="#CBD5E1" 
+                                                            BorderThickness="1" 
+                                                            CornerRadius="4"
+                                                            Padding="0">
                                                             <Border.Effect>
                                                                 <DropShadowEffect BlurRadius="8" ShadowDepth="2" Color="#334155" Opacity="0.12"/>
                                                             </Border.Effect>
@@ -617,9 +627,9 @@
                                 <Setter.Value>
                                     <ControlTemplate TargetType="MenuItem">
                                         <Border x:Name="SubMenuBorder" 
-                Background="{TemplateBinding Background}" 
-                Padding="16,0,24,0" 
-                SnapsToDevicePixels="True">
+                                            Background="{TemplateBinding Background}" 
+                                            Padding="16,0,24,0" 
+                                            SnapsToDevicePixels="True">
                                             <Grid VerticalAlignment="Center" Width="140">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="22"/>
@@ -627,16 +637,16 @@
                                                 </Grid.ColumnDefinitions>
 
                                                 <ContentPresenter Grid.Column="0" 
-                                  Content="{TemplateBinding Icon}" 
-                                  VerticalAlignment="Center" 
-                                  HorizontalAlignment="Left"/>
+                                                  Content="{TemplateBinding Icon}" 
+                                                  VerticalAlignment="Center" 
+                                                  HorizontalAlignment="Left"/>
 
                                                 <ContentPresenter Grid.Column="1" 
-                                  Content="{TemplateBinding Header}" 
-                                  RecognizesAccessKey="True"
-                                  VerticalAlignment="Center" 
-                                  HorizontalAlignment="Left"
-                                  Margin="6,0,0,0"/>
+                                                  Content="{TemplateBinding Header}" 
+                                                  RecognizesAccessKey="True"
+                                                  VerticalAlignment="Center" 
+                                                  HorizontalAlignment="Left"
+                                                  Margin="6,0,0,0"/>
                                             </Grid>
                                         </Border>
 

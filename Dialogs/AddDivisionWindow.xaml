@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Icon="/Assets/opn.png"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Add New Division" Height="300" Width="450"
+        Title="Add New Division" Height="300" Width="450" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
         Background="{DynamicResource MaterialDesignPaper}">
     <Grid Margin="20">

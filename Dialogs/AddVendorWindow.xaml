@@ -6,14 +6,18 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         mc:Ignorable="d"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Register New Supplier Account" 
-        Width="460" Height="600"
+        Title="{Binding WindowTitle}" 
+        Width="480" Height="640"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
         ShowInTaskbar="False"
         Background="White">
     <Window.Resources>
+        <!-- Standard Outlined TextBox Style with Validation Error Handling -->
         <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+            <Setter Property="Margin" Value="0,0,0,14"/>
+            <Setter Property="materialDesign:HintAssist.FloatingScale" Value="0.8"/>
+            <Setter Property="materialDesign:ValidationAssist.UsePopup" Value="False"/>
             <Style.Triggers>
                 <Trigger Property="Validation.HasError" Value="true">
                     <Setter Property="ToolTip" 
@@ -22,22 +26,80 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>
-    <Grid Margin="25">
-        <StackPanel>
-            <TextBlock Text="Register New Vendor Account" FontSize="16" FontWeight="Bold" Margin="0,0,0,15" Foreground="#1E293B"/>
 
-            <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" materialDesign:HintAssist.Hint="Company Name *" Margin="0,0,0,12"/>
-            <TextBox Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" materialDesign:HintAssist.Hint="Contact Person Name" Margin="0,0,0,12"/>
-            <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" materialDesign:HintAssist.Hint="Phone Number *" Margin="0,0,0,12"/>
-            <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" materialDesign:HintAssist.Hint="Email Address" Margin="0,0,0,12"/>
-            <TextBox Text="{Binding GstNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" materialDesign:HintAssist.Hint="GSTIN Number" Margin="0,0,0,12"/>
-            <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" materialDesign:HintAssist.Hint="Address Location" Height="65" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,20"/>
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Cancel" Command="{Binding CloseWindowCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,10,0"/>
-                <Button Content="Save Vendor" Command="{Binding SaveVendorCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Background="#059669" BorderBrush="Transparent"/>
+        <!-- Dynamic Header -->
+        <TextBlock Text="{Binding HeaderTitle}" 
+                   FontSize="18" 
+                   FontWeight="Bold" 
+                   Margin="0,0,0,16" 
+                   Foreground="#1E293B"/>
+
+        <!-- Form Scroll Area -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
+            <StackPanel Margin="0,4,8,4">
+                <!-- Company Name -->
+                <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
+                         materialDesign:HintAssist.Hint="Company Name *"/>
+
+                <!-- Contact Person -->
+                <TextBox Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
+                         materialDesign:HintAssist.Hint="Contact Person Name"/>
+
+                <!-- Phone Number -->
+                <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
+                         materialDesign:HintAssist.Hint="Phone Number *"/>
+
+                <!-- Email Address -->
+                <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
+                         materialDesign:HintAssist.Hint="Email Address"/>
+
+                <!-- GSTIN -->
+                <TextBox Text="{Binding GstNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
+                         materialDesign:HintAssist.Hint="GSTIN Number"/>
+
+                <!-- Status (Visible when in Edit Mode) -->
+                <ComboBox SelectedValue="{Binding Status, UpdateSourceTrigger=PropertyChanged}" 
+                          SelectedValuePath="Content"
+                          materialDesign:HintAssist.Hint="Account Status"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                          Margin="0,0,0,14"
+                          Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ComboBoxItem Content="Active"/>
+                    <ComboBoxItem Content="Inactive"/>
+                </ComboBox>
+
+                <!-- Address -->
+                <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
+                         materialDesign:HintAssist.Hint="Address Location" 
+                         Height="75" 
+                         AcceptsReturn="True" 
+                         TextWrapping="Wrap"/>
             </StackPanel>
+        </ScrollViewer>
+
+        <!-- Action Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+            <Button Content="Cancel" 
+                    Command="{Binding CloseWindowCommand}" 
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" 
+                    Style="{StaticResource MaterialDesignFlatButton}" 
+                    Margin="0,0,10,0"/>
+
+            <Button Content="{Binding SaveButtonText}" 
+                    Command="{Binding SaveVendorCommand}" 
+                    CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" 
+                    Background="#059669" 
+                    BorderBrush="Transparent"/>
         </StackPanel>
     </Grid>
 </Window>

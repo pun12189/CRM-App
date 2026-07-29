@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public CustomerProfileWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

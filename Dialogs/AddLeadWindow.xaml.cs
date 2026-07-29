@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public AddLeadWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public LeadTimelineWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

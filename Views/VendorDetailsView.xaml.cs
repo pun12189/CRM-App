@@ -10,19 +10,19 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace CallMan.Dialogs
+namespace CallMan.Views
 {
     /// <summary>
-    /// Interaction logic for AddDivisionWindow.xaml
+    /// Interaction logic for VendorDetailsView.xaml
     /// </summary>
-    public partial class AddDivisionWindow : Window
+    public partial class VendorDetailsView : UserControl
     {
-        public AddDivisionWindow()
+        public VendorDetailsView()
         {
             InitializeComponent();
-            Owner = Application.Current.MainWindow;
         }
     }
 }

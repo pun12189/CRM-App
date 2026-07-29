@@ -8,7 +8,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         Title="Manage Setting" Height="250" Width="400"
         Icon="/Assets/opn.png"
-        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent">
 
     <Border Background="White" CornerRadius="10" BorderThickness="1" BorderBrush="#DDD">

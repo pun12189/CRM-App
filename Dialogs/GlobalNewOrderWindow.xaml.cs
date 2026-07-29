@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public GlobalNewOrderWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

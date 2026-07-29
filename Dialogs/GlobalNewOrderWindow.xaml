@@ -8,9 +8,9 @@
         xmlns:conv="clr-namespace:CallMan.Converters"
         xmlns:models="clr-namespace:CallMan.Models"
         mc:Ignorable="d" x:Name="win"
-        Icon="/Assets/opn.png"
+        Icon="/Assets/opn.png" ShowInTaskbar="False"
         Title="Create Global Order" Height="700" Width="1024"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <conv:IntToVisibilityConverter x:Key="IntToVisibility"/>
         <conv:StringToBoolConverter x:Key="StringToBoolConverter"/>

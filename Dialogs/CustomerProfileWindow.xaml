@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         xmlns:view="clr-namespace:CallMan.Views"
         mc:Ignorable="d" x:Name="cpView"
-        Icon="/Assets/opn.png"
+        Icon="/Assets/opn.png" ShowInTaskbar="False"
         Title="Customer Section" Height="700" Width="1024" WindowStartupLocation="CenterOwner">
     <view:CustomerProfileView DataContext="{Binding ElementName=cpView, Path=DataContext}"/>
 </Window>

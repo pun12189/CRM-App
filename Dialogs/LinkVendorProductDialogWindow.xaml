@@ -1,0 +1,51 @@
+﻿<Window x:Class="CallMan.Dialogs.LinkVendorProductDialogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CallMan.Dialogs"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Link Product to Vendor" Width="420" Height="400"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        ShowInTaskbar="False" Background="White">
+    <Window.Resources>
+        <materialDesign:InvertBooleanConverter x:Key="InverseBooleanConverter"/>
+    </Window.Resources>
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Link Catalog Item to Vendor" FontSize="18" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,16"/>
+
+        <StackPanel Grid.Row="1" VerticalAlignment="Center">
+            <!-- Product Selector -->
+            <ComboBox ItemsSource="{Binding AllProducts}" 
+                      SelectedItem="{Binding SelectedProduct}" 
+                      DisplayMemberPath="Name"
+                      IsEnabled="{Binding IsEditMode, Converter={StaticResource InverseBooleanConverter}}"
+                      materialDesign:HintAssist.Hint="Select Catalog Product *" 
+                      Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                      Margin="0,0,0,14"/>
+
+            <!-- Supplier SKU -->
+            <TextBox Text="{Binding SupplierSku, UpdateSourceTrigger=PropertyChanged}" 
+                     materialDesign:HintAssist.Hint="Supplier SKU / Model No." 
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                     Margin="0,0,0,14"/>
+
+            <!-- Purchase Price -->
+            <TextBox Text="{Binding PurchasePrice, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
+                     materialDesign:HintAssist.Hint="Agreed Purchase Price (₹) *" 
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+        </StackPanel>
+
+        <!-- Actions -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Cancel" Command="{Binding CancelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,10,0"/>
+            <Button Content="Save Mapping" Command="{Binding SaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Background="#0284C7" BorderBrush="Transparent"/>
+        </StackPanel>
+    </Grid>
+</Window>

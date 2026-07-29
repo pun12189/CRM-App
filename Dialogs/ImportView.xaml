@@ -6,8 +6,8 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Icon="/Assets/opn.png"
-        Title="ImportView" Height="600" Width="800">
+        Icon="/Assets/opn.png" ShowInTaskbar="False"
+        Title="ImportView" Height="600" Width="800" WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>

@@ -23,6 +23,7 @@ namespace CallMan.Dialogs
         public AdminVerificationDialog()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
             this.Loaded += AdminVerificationDialog_Loaded;
         }
 

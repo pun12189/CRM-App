@@ -30,6 +30,7 @@ namespace CallMan.Dialogs
         public BackupConfirmationWindow(DateTime? lastBackupDate, string lastUser, bool emailSettingsExist, bool isInternetAvailable)
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
 
             _emailSettingsExist = emailSettingsExist;
             _isInternetAvailable = isInternetAvailable;

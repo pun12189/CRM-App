@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public ActivationWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

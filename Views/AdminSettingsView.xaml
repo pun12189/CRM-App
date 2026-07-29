@@ -425,6 +425,12 @@
                                         <TextBlock Text="User Login Logs" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
+                                <Button Style="{StaticResource ModernActionCardStyle}" IsEnabled="False" CommandParameter="HRMS" Command="{Binding NavigateToSettingCommand}">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <materialDesign:PackIcon Kind="Register" Foreground="#1794A1" Width="28" Height="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                        <TextBlock Text="HRMS" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
                             </UniformGrid>
                         </StackPanel>
 
@@ -465,7 +471,7 @@
                                 <Button Style="{StaticResource ModernActionCardStyle}" CommandParameter="Lead Source" Command="{Binding NavigateToSettingCommand}" security:SecurityGuard.Requires="LeadSource:View">
                                     <StackPanel HorizontalAlignment="Center">
                                         <materialDesign:PackIcon Kind="LinkVariant" Foreground="#1794A1" Width="28" Height="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
-                                        <TextBlock Text="Lead Channels" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Lead Source" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
                                 <Button Style="{StaticResource ModernActionCardStyle}" CommandParameter="Lead Labels" Command="{Binding NavigateToSettingCommand}" security:SecurityGuard.Requires="LeadLabel:View">

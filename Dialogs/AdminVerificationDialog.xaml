@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         mc:Ignorable="d"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-        Title="Admin Authorization Required" Width="380"
+        Title="Admin Authorization Required" Width="380" ShowInTaskbar="False"
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize" SizeToContent="Height"
         Background="{DynamicResource MaterialDesignPaper}">
 

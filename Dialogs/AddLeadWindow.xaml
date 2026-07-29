@@ -6,8 +6,8 @@
         xmlns:local="clr-namespace:CallMan.Dialogs"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Icon="/Assets/opn.png"
-        Title="Generate New Lead" Height="700" Width="900" WindowStartupLocation="CenterScreen">
+        Icon="/Assets/opn.png" ShowInTaskbar="False"
+        Title="Generate New Lead" Height="700" Width="900" WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </Window.Resources>

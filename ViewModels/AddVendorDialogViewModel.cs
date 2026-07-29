@@ -19,6 +19,9 @@ namespace CallMan.ViewModels
         private readonly VendorService _vendorService;
 
         [ObservableProperty]
+        private int _vendorId;
+
+        [ObservableProperty]
         [Required(ErrorMessage = "Company Name is mandatory.")]
         [MinLength(3, ErrorMessage = "Company Name must be at least 3 characters long.")]
         [NotifyDataErrorInfo]
@@ -39,31 +42,70 @@ namespace CallMan.ViewModels
         private string _email = string.Empty;
 
         [ObservableProperty]
-        [RegularExpression(@"^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$", ErrorMessage = "Invalid GSTIN format.")]
+        [RegularExpression(@"^([0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1})?$", ErrorMessage = "Invalid GSTIN format.")]
         [NotifyDataErrorInfo]
         private string _gstNumber = string.Empty;
 
         [ObservableProperty]
         private string _address = string.Empty;
 
-        public AddVendorWindowViewModel(VendorService vendorService)
+        [ObservableProperty]
+        private string _status = "Active";
+
+        [ObservableProperty]
+        private string _windowTitle = "Register New Supplier Account";
+
+        [ObservableProperty]
+        private string _headerTitle = "Register New Vendor Account";
+
+        [ObservableProperty]
+        private string _saveButtonText = "Save Vendor";
+
+        public bool IsEditMode { get; }
+
+        public AddVendorWindowViewModel(VendorService vendorService, Vendor? existingVendor = null)
         {
             _vendorService = vendorService;
-            ValidateAllProperties();
+
+            if (existingVendor != null)
+            {
+                IsEditMode = true;
+                WindowTitle = "Update Supplier Details";
+                HeaderTitle = "Edit Vendor Account";
+                SaveButtonText = "Update Vendor";
+
+                // Populate properties from existing record
+                VendorId = existingVendor.VendorId;
+                CompanyName = existingVendor.CompanyName ?? string.Empty;
+                ContactPerson = existingVendor.ContactPerson ?? string.Empty;
+                Phone = existingVendor.Phone ?? string.Empty;
+                Email = existingVendor.Email ?? string.Empty;
+                GstNumber = existingVendor.GstNumber ?? string.Empty;
+                Address = existingVendor.Address ?? string.Empty;
+                Status = existingVendor.Status ?? "Active";
+
+                // Trigger initial validation for existing data
+                ValidateAllProperties();
+            }
+            else
+            {
+                IsEditMode = false;
+                // Clear initial validation state so required errors don't trigger before input
+                ClearErrors();
+            }
         }
 
         protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
         {
             base.OnPropertyChanged(e);
 
-            // Re-evaluate command status if properties change
+            // Notify command validation state when properties change
             if (e.PropertyName != nameof(HasErrors))
             {
                 SaveVendorCommand.NotifyCanExecuteChanged();
             }
         }
 
-        // Logic check to verify if the button is allowed to activate
         public bool CanSave(Window currentWindow) => !HasErrors;
 
         [RelayCommand(CanExecute = nameof(CanSave))]
@@ -72,31 +114,43 @@ namespace CallMan.ViewModels
             ValidateAllProperties();
             if (HasErrors) return;
 
-            if (string.IsNullOrWhiteSpace(CompanyName) || string.IsNullOrWhiteSpace(Phone))
-            {
-                MessageBox.Show("Company Name and Phone are required fields.", "Validation Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
             var vendor = new Vendor
             {
-                CompanyName = CompanyName,
-                ContactPerson = ContactPerson,
-                Phone = Phone,
-                Email = Email,
-                GstNumber = GstNumber,
-                Address = Address,
-                Status = "Active"
+                VendorId = VendorId,
+                CompanyName = CompanyName.Trim(),
+                ContactPerson = string.IsNullOrWhiteSpace(ContactPerson) ? null : ContactPerson.Trim(),
+                Phone = Phone.Trim(),
+                Email = string.IsNullOrWhiteSpace(Email) ? null : Email.Trim(),
+                GstNumber = string.IsNullOrWhiteSpace(GstNumber) ? null : GstNumber.Trim().ToUpper(),
+                Address = string.IsNullOrWhiteSpace(Address) ? null : Address.Trim(),
+                Status = Status
             };
 
-            int generatedId = await _vendorService.SaveVendorAsync(vendor);
-            if (generatedId > 0)
+            bool success;
+
+            if (IsEditMode)
+            {
+                // Execute Update in database
+                success = await _vendorService.UpdateVendorAsync(vendor);
+            }
+            else
+            {
+                // Execute Insert in database
+                int generatedId = await _vendorService.SaveVendorAsync(vendor);
+                success = generatedId > 0;
+            }
+
+            if (success)
             {
                 if (currentWindow != null)
                 {
-                    currentWindow.DialogResult = true; // Sets success flag matrix parameter context
+                    currentWindow.DialogResult = true;
                     currentWindow.Close();
                 }
+            }
+            else
+            {
+                MessageBox.Show("Failed to save vendor details. Please try again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

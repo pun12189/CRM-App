@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public AddVendorWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

@@ -22,6 +22,7 @@ namespace CallMan.Dialogs
         public FilterWindow()
         {
             InitializeComponent();
+            Owner = Application.Current.MainWindow;
         }
     }
 }

@@ -6,6 +6,9 @@
              xmlns:local="clr-namespace:CallMan.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              Background="#F8FAFC">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
@@ -112,17 +115,35 @@
                             </Border>
 
                             <!-- Card C: Incentives & Schemes -->
+                            <!-- Card C: Incentives & Schemes -->
                             <Border Grid.Column="2" Background="White" CornerRadius="8" Padding="16" Margin="8,0,0,0">
                                 <StackPanel>
-                                    <TextBlock Text="Incentives &amp; Schemes" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,8"/>
+                                    <Grid Margin="0,0,0,8">
+                                        <TextBlock Text="Incentives &amp; Schemes" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
 
-                                    <!-- Scheme Title -->
+                                        <!-- Badge for Additional Schemes -->
+                                        <Button Command="{Binding OpenSchemesPopupCommand}"
+                                            Visibility="{Binding HasMultipleSchemes, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                            HorizontalAlignment="Right"
+                                            Cursor="Hand"
+                                            Style="{StaticResource MaterialDesignFlatButton}"
+                                            Padding="8,2"
+                                            Height="24"
+                                            Background="#F3E8FF">
+                                            <TextBlock Text="{Binding OtherSchemesCount, StringFormat='+ {0} More Active'}" 
+                                               FontSize="11" 
+                                               FontWeight="Bold" 
+                                               Foreground="#6D28D9"/>
+                                        </Button>
+                                    </Grid>
+
+                                    <!-- Primary Scheme Title -->
                                     <TextBlock Text="{Binding ActiveSchemeName}" FontWeight="SemiBold" FontSize="13" Foreground="#0284C7" Margin="0,0,0,4" TextWrapping="Wrap"/>
 
-                                    <!-- Scheme Reward Text (e.g., Reward: Air Conditioner) -->
+                                    <!-- Reward Description -->
                                     <TextBlock Text="{Binding SchemeRewardText}" FontSize="12" Foreground="#64748B" Margin="0,0,0,10" TextWrapping="Wrap"/>
 
-                                    <!-- Eligibility Badge -->
+                                    <!-- Eligibility Status Badge -->
                                     <Border CornerRadius="6" Padding="8,4" HorizontalAlignment="Left">
                                         <Border.Style>
                                             <Style TargetType="Border">
@@ -134,7 +155,6 @@
                                                 </Style.Triggers>
                                             </Style>
                                         </Border.Style>
-
                                         <StackPanel Orientation="Horizontal">
                                             <materialDesign:PackIcon Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,4,0">
                                                 <materialDesign:PackIcon.Style>
@@ -150,7 +170,6 @@
                                                     </Style>
                                                 </materialDesign:PackIcon.Style>
                                             </materialDesign:PackIcon>
-
                                             <TextBlock FontSize="12" FontWeight="Bold">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
@@ -300,5 +319,132 @@
                 </Grid>
             </TabItem>
         </TabControl>
+
+        <!-- ================================================================= -->
+        <!-- ALL ACTIVE SCHEMES POPUP OVERLAY DIALOG                           -->
+        <!-- ================================================================= -->
+        <Grid Visibility="{Binding IsSchemesPopupOpen, Converter={StaticResource BooleanToVisibilityConverter}}" 
+      Grid.RowSpan="2" 
+      Margin="-16">
+
+            <!-- Semi-transparent Dark Backdrop -->
+            <Border Background="#800F172A"/>
+
+            <!-- Popup Dialog Box Container -->
+            <Border Background="White" 
+            CornerRadius="12" 
+            Width="500" 
+            MaxHeight="450" 
+            HorizontalAlignment="Center" 
+            VerticalAlignment="Center" 
+            Padding="24">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <!-- Header -->
+                        <RowDefinition Height="*"/>
+                        <!-- Scrollable Scheme List -->
+                        <RowDefinition Height="Auto"/>
+                        <!-- Footer Button -->
+                    </Grid.RowDefinitions>
+
+                    <!-- Popup Header -->
+                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                        <StackPanel>
+                            <TextBlock Text="All Active Staff Schemes" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="Incentive policies applicable for current period performance" FontSize="12" Foreground="#64748B" Margin="0,2,0,0"/>
+                        </StackPanel>
+
+                        <Button Command="{Binding CloseSchemesPopupCommand}" 
+                        Style="{StaticResource MaterialDesignIconButton}" 
+                        HorizontalAlignment="Right" 
+                        VerticalAlignment="Top" 
+                        Width="32" Height="32">
+                            <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Foreground="#64748B"/>
+                        </Button>
+                    </Grid>
+
+                    <!-- Scrollable Schemes List -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,16">
+                        <ItemsControl ItemsSource="{Binding ActiveStaffSchemes}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#F8FAFC" CornerRadius="8" Padding="16" Margin="0,0,0,12" BorderBrush="#E2E8F0" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Scheme Title & Dates -->
+                                            <Grid Grid.Row="0" Margin="0,0,0,6">
+                                                <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="14" Foreground="#0284C7"/>
+                                                <Border HorizontalAlignment="Right" Background="#DCFCE7" CornerRadius="4" Padding="6,2">
+                                                    <TextBlock Text="Active" FontSize="10" FontWeight="Bold" Foreground="#15803D"/>
+                                                </Border>
+                                            </Grid>
+
+                                            <!-- Date Validity Range -->
+                                            <TextBlock Grid.Row="1" FontSize="11" Foreground="#64748B" Margin="0,0,0,8">
+                                        <Run Text="Valid: "/>
+                                        <Run Text="{Binding StartDate, StringFormat='{}{0:dd MMM}'}"/>
+                                        <Run Text=" - "/>
+                                        <Run Text="{Binding EndDate, StringFormat='{}{0:dd MMM yyyy}'}"/>
+                                            </TextBlock>
+
+                                            <!-- Reward & Threshold Details -->
+                                            <Border Grid.Row="2" Background="White" CornerRadius="6" Padding="10" BorderBrush="#CBD5E1" BorderThickness="1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="Reward Benefit" FontSize="11" Foreground="#64748B"/>
+                                                        <TextBlock FontWeight="Bold" FontSize="13" Foreground="#0F172A" Margin="0,2,0,0">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Text" Value="{Binding RewardValue, StringFormat='₹{0:N0} Flat Cash'}"/>
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding RewardType}" Value="GiftItem">
+                                                                            <Setter Property="Text" Value="{Binding GiftItemName, StringFormat='Gift: {0}'}"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding RewardType}" Value="Percentage">
+                                                                            <Setter Property="Text" Value="{Binding RewardValue, StringFormat='{}{0}% Sales Commission'}"/>
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                                        <TextBlock Text="Min Threshold" FontSize="11" Foreground="#64748B" HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="{Binding MinimumOrderThreshold, StringFormat='₹{0:N0}'}" FontWeight="Bold" FontSize="13" Foreground="#6D28D9" Margin="0,2,0,0"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Popup Footer Close Button -->
+                    <Button Grid.Row="2" 
+                    Command="{Binding CloseActiveSchemesPopupCommand}" 
+                    Content="Close Window" 
+                    Background="#0284C7" 
+                    Foreground="White" 
+                    BorderThickness="0" 
+                    Height="36" 
+                    HorizontalAlignment="Right" 
+                    Padding="20,0"/>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

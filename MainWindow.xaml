@@ -555,7 +555,7 @@
                         <MenuItem Header="Vendors" Icon="{materialDesign:PackIcon Kind=PersonBox}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Vendor"/>-->
                     </MenuItem>
                     <MenuItem Header="Drive" Icon="{materialDesign:PackIcon Kind=FolderNetwork}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Drive"/>
-                    <MenuItem Header="Admin Settings" security:SecurityGuard.Requires="Admin:View" Icon="{materialDesign:PackIcon Kind=Settings}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
+                    <MenuItem Header="SAP Settings" security:SecurityGuard.Requires="Admin:View" Icon="{materialDesign:PackIcon Kind=Settings}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Admin"/>
                 </Menu>
                 <Menu Background="Transparent" VerticalAlignment="Stretch" HorizontalAlignment="Right">
                     <Menu.Resources>

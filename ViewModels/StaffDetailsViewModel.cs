@@ -52,6 +52,11 @@ namespace CallMan.ViewModels
         [ObservableProperty] private PromotionalScheme? _currentScheme;
         [ObservableProperty] private string _schemeRewardText = string.Empty;
 
+        [ObservableProperty] private int _otherSchemesCount = 0;
+        [ObservableProperty] private bool _hasMultipleSchemes = false;
+
+        [ObservableProperty] private bool _isSchemesPopupOpen = false;
+
         public StaffDetailsViewModel(StaffService staffService, CategoryService categoryService, IActionSecurityGuard securityGuard, IUserSession userSession)
         {
             _staffService = staffService;
@@ -136,43 +141,45 @@ namespace CallMan.ViewModels
             var activeSchemes = await _staffService.GetActiveStaffSchemesAsync(StaffUser.UserId);
             ActiveStaffSchemes = new ObservableCollection<PromotionalScheme>(activeSchemes);
 
-            CurrentScheme = activeSchemes.FirstOrDefault();
-
-            if (CurrentScheme != null)
+            if (activeSchemes.Any())
             {
-                ActiveSchemeName = CurrentScheme.Title;
+                // Option A: Pick the first active scheme
+                // Option B: Sort by highest threshold or highest reward value
+                CurrentScheme = activeSchemes.FirstOrDefault();
 
-                // Threshold check (Uses MinimumOrderThreshold or MonthlyTarget)
+                ActiveSchemeName = CurrentScheme.Title;
+                OtherSchemesCount = activeSchemes.Count() - 1;
+                HasMultipleSchemes = OtherSchemesCount > 0;
+
+                // Evaluate eligibility for primary scheme
                 decimal threshold = CurrentScheme.MinimumOrderThreshold > 0
                     ? CurrentScheme.MinimumOrderThreshold
-                    : Convert.ToDecimal(StaffUser.MonthlyTarget);
+                    : (decimal)StaffUser.MonthlyTarget;
 
                 IsEligibleForScheme = MonthlySalesAchieved >= threshold && threshold > 0;
 
-                // Dynamic Reward Formatting using your RewardType Enum
-                switch (CurrentScheme.RewardType)
-                {
-                    case RewardType.GiftItem:
-                        SchemeRewardText = !string.IsNullOrWhiteSpace(CurrentScheme.GiftItemName)
-                            ? $"Reward: {CurrentScheme.GiftItemName}"
-                            : "Reward: Material Gift Item";
-                        break;
-
-                    case RewardType.Percentage:
-                        SchemeRewardText = $"Reward: {CurrentScheme.RewardValue}% Commission Payout";
-                        break;
-
-                    default:
-                        SchemeRewardText = $"Reward: ₹{CurrentScheme.RewardValue:N0} Flat Cash Payout";
-                        break;
-                }
+                // Format Reward Text
+                SchemeRewardText = FormatRewardText(CurrentScheme);
             }
             else
             {
                 ActiveSchemeName = "No Active Staff Scheme";
                 SchemeRewardText = "N/A";
                 IsEligibleForScheme = false;
+                HasMultipleSchemes = false;
             }
+        }
+
+        private string FormatRewardText(PromotionalScheme scheme)
+        {
+            return scheme.RewardType switch
+            {
+                RewardType.GiftItem => !string.IsNullOrWhiteSpace(scheme.GiftItemName)
+                    ? $"Reward: {scheme.GiftItemName}"
+                    : "Reward: Material Gift Item",
+                RewardType.Percentage => $"Reward: {scheme.RewardValue}% Commission Payout",
+                _ => $"Reward: ₹{scheme.RewardValue:N0} Flat Cash Payout"
+            };
         }
 
         [RelayCommand]
@@ -324,5 +331,21 @@ namespace CallMan.ViewModels
         }
 
         #endregion
+
+        [RelayCommand]
+        private void OpenSchemesPopup()
+        {
+            if (ActiveStaffSchemes != null && ActiveStaffSchemes.Any())
+            {
+                IsSchemesPopupOpen = true;
+            }
+        }
+
+        // Command to close the popup
+        [RelayCommand]
+        private void CloseSchemesPopup()
+        {
+            IsSchemesPopupOpen = false;
+        }
     }
 }

@@ -28,6 +28,7 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Text="🔍" VerticalAlignment="Center" Margin="20,0,10,0" Foreground="Gray" HorizontalAlignment="Left"/>
@@ -49,9 +50,77 @@
                             <Button Grid.Column="1" Content="IMPORT ORDER's" Command="{Binding ImportOrdersCommand}" HorizontalAlignment="Right"
                                 Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0"/>
                             <Button Grid.Column="2" Content="NEW ORDER" Command="{Binding AddNewOrderCommand}" 
-                                 Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" HorizontalAlignment="Right"/>
+                                 Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0" HorizontalAlignment="Right"/>
+                            <ComboBox Grid.Column="3" x:Name="AskAIComboBox" Height="34" Padding="10,0"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                              materialDesign:HintAssist.Hint="Ask AI"
+                              materialDesign:HintAssist.Foreground="#7B1FA2"
+                              BorderBrush="#7B1FA2"
+                              Foreground="#4A148C"
+                              FontWeight="SemiBold"
+                              Width="150"
+                              VerticalAlignment="Center">
+                                <ComboBoxItem Padding="8,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FileExcel" 
+                                     Foreground="#1D6F42" 
+                                     Width="22" Height="22" 
+                                     Margin="0,0,12,0" 
+                                     VerticalAlignment="Center"/>
+                                        <TextBlock Text="Upload Excel" 
+                       Foreground="#2E7D32" 
+                       FontWeight="SemiBold" 
+                       VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </ComboBoxItem>
 
-                            <ToggleButton Grid.Column="3" 
+                                <!-- Upload Image -->
+                                <ComboBoxItem Padding="8,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="ImageOutline" 
+                                     Foreground="#0288D1" 
+                                     Width="22" Height="22" 
+                                     Margin="0,0,12,0" 
+                                     VerticalAlignment="Center"/>
+                                        <TextBlock Text="Upload Image" 
+                       Foreground="#0277BD" 
+                       FontWeight="SemiBold" 
+                       VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </ComboBoxItem>
+
+                                <!-- Upload PDF -->
+                                <ComboBoxItem Padding="8,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="FilePdfBox" 
+                                     Foreground="#D32F2F" 
+                                     Width="22" Height="22" 
+                                     Margin="0,0,12,0" 
+                                     VerticalAlignment="Center"/>
+                                        <TextBlock Text="Upload Pdf" 
+                       Foreground="#C62828" 
+                       FontWeight="SemiBold" 
+                       VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </ComboBoxItem>
+
+                                <!-- Prompt / AI -->
+                                <ComboBoxItem Padding="8,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="Sparkles" 
+                                     Foreground="#FFB300" 
+                                     Width="22" Height="22" 
+                                     Margin="0,0,12,0" 
+                                     VerticalAlignment="Center"/>
+                                        <TextBlock Text="Prompt" 
+                       Foreground="#6A1B9A" 
+                       FontWeight="Bold" 
+                       VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </ComboBoxItem>
+                            </ComboBox>
+                            
+                            <ToggleButton Grid.Column="4" 
                               IsChecked="{Binding IsCounterPanelExpanded}" 
                               Cursor="Hand"
                               Margin="5,0"

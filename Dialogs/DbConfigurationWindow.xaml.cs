@@ -23,7 +23,6 @@ namespace CallMan.Dialogs
         public DbConfigurationWindow()
         {
             InitializeComponent();
-            Owner = Application.Current.MainWindow;
 
             var viewModel = new DbConfigurationViewModel();
             this.DataContext = viewModel;

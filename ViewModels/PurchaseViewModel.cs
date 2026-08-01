@@ -1,8 +1,11 @@
-﻿using CallMan.Dialogs;
+﻿using CallMan.Core;
+using CallMan.Dialogs;
+using CallMan.Interfaces;
 using CallMan.Models;
 using CallMan.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MySqlX.XDevAPI;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,15 +21,24 @@ namespace CallMan.ViewModels
         private readonly PurchaseService _purchaseService;
         private readonly VendorService _vendorService;
         private readonly ProductService _productService;
+        private readonly CategoryService _categoryService;
+        private readonly IUserSession _userSession;
+        private readonly IActionSecurityGuard _securityGuard;
 
         [ObservableProperty] private ObservableCollection<PurchaseOrder> _purchaseOrdersList = new();
         [ObservableProperty] private PurchaseOrder? _selectedOrder;
+        [ObservableProperty] private bool _workspaceViewIsActive;
+        [ObservableProperty]
+        private object _tabsDataContext;
 
-        public PurchaseViewModel(PurchaseService purchaseService, VendorService vendorService, ProductService productService)
+        public PurchaseViewModel(PurchaseService purchaseService, VendorService vendorService, ProductService productService, CategoryService categoryService, IUserSession userSession, IActionSecurityGuard securityGuard)
         {
             _purchaseService = purchaseService;
             _vendorService = vendorService;
             _productService = productService;
+            _categoryService = categoryService;
+            _userSession = userSession;
+            _securityGuard = securityGuard;
             _ = LoadPurchaseOrdersAsync();
         }
 
@@ -68,6 +80,24 @@ namespace CallMan.ViewModels
             {
                 await LoadPurchaseOrdersAsync(); // Sync primary listing view instantly
             }
+        }
+
+        [RelayCommand]
+        public async Task ShowPODetails(PurchaseOrder selectedOrder)
+        {
+            if (selectedOrder == null) return;
+
+            var profileVm = new PurchaseDetailsViewModel(_purchaseService, _categoryService, _userSession, _securityGuard);
+            profileVm.OnNavigateBackRequested += () =>
+            {
+                // Hide the workspace view & return to the main Purchase Orders grid
+                WorkspaceViewIsActive = false;
+                TabsDataContext = null;
+            };
+
+            await profileVm.InitializeAsync(selectedOrder.PurchaseOrderId);
+            this.TabsDataContext = profileVm;
+            WorkspaceViewIsActive = true; // Swaps grid out for profile workspace view layout instantly
         }
     }
 }

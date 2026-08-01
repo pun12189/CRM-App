@@ -181,5 +181,68 @@ namespace CallMan.Services
                 throw;
             }
         }
+
+        public async Task<(PurchaseOrder? Order, Vendor? VendorDetails)> GetPurchaseOrderWithVendorAsync(int purchaseOrderId)
+        {
+            try
+            {
+                using var db = _context.CreateConnection();
+
+                const string poSql = @"
+                    SELECT 
+                        po.PurchaseOrderId, po.PoNumber, po.VendorId, po.OrderDate, 
+                        po.ExpectedDeliveryDate, po.ActualDeliveryDate, po.TotalAmount, 
+                        po.OrderStatus, po.CreatedBy,
+                        v.CompanyName AS VendorName
+                    FROM PurchaseOrders po
+                    LEFT JOIN Vendors v ON po.VendorId = v.VendorId
+                    WHERE po.PurchaseOrderId = @purchaseOrderId;";
+
+                var po = await db.QueryFirstOrDefaultAsync<PurchaseOrder>(poSql, new { purchaseOrderId });
+
+                Vendor? vendor = null;
+                if (po != null && po.VendorId > 0)
+                {
+                    const string vendorSql = @"
+                        SELECT VendorId, CompanyName, ContactPerson, Phone, Email, GstNumber, Address, Status, CreatedAt
+                        FROM Vendors
+                        WHERE VendorId = @vendorId;";
+
+                    vendor = await db.QueryFirstOrDefaultAsync<Vendor>(vendorSql, new { vendorId = po.VendorId });
+                }
+
+                return (po, vendor);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PO SERVICE ERROR] GetPurchaseOrderWithVendorAsync: {ex.Message}");
+                return (null, null);
+            }
+        }
+
+        // 2. FETCH LINE ITEMS FOR THE PURCHASE ORDER
+        public async Task<IEnumerable<PurchaseOrderDetail>> GetPurchaseOrderDetailsAsync(int purchaseOrderId)
+        {
+            try
+            {
+                using var db = _context.CreateConnection();
+                const string sql = @"
+                    SELECT 
+                        pod.PoDetailId, pod.PurchaseOrderId, pod.ProductId, 
+                        pod.Quantity, pod.UnitPrice, p.ShortName as SupplierSku,
+                        COALESCE(p.Name, CONCAT('Product #', pod.ProductId)) AS ProductName
+                    FROM PurchaseOrderDetails pod
+                    LEFT JOIN Products p ON pod.ProductId = p.ProductId
+                    WHERE pod.PurchaseOrderId = @purchaseOrderId;";
+
+                var result = await db.QueryAsync<PurchaseOrderDetail>(sql, new { purchaseOrderId });
+                return result.ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[PO SERVICE ERROR] GetPurchaseOrderDetailsAsync: {ex.Message}");
+                return Enumerable.Empty<PurchaseOrderDetail>();
+            }
+        }
     }
 }

@@ -7,48 +7,158 @@
              mc:Ignorable="d" 
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              Background="White">
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+    <UserControl.Resources>
+        <DataTemplate x:Key="MainGridLeadLayoutTemplate">
+            <Grid Margin="20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="#F8FAFC" Padding="15,10" Margin="0,0,0,15" CornerRadius="6" BorderThickness="1" BorderBrush="#E2E8F0">
-            <DockPanel>
-                <Button Content="+ Create Purchase Order" Style="{StaticResource MaterialDesignFlatMidBgButton}" DockPanel.Dock="Right" Command="{Binding OpenCreatePoWindowCommand}"/>
-                <TextBlock Text="Purchase Orders" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
-            </DockPanel>
-        </Border>
+                <Border Grid.Row="0" Background="#F8FAFC" Padding="15,10" Margin="0,0,0,15" CornerRadius="6" BorderThickness="1" BorderBrush="#E2E8F0">
+                    <DockPanel>
+                        <TextBlock Text="Purchase Orders" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <Grid HorizontalAlignment="Right">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                        
+                        <Button Content="+ Create Purchase Order" Style="{StaticResource MaterialDesignRaisedButton}" HorizontalAlignment="Right" Margin="0,0,10,0" Command="{Binding OpenCreatePoWindowCommand}"/>
+                        <ComboBox Grid.Column="1" x:Name="AskAIComboBox" Height="32" Padding="10,0"
+                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                           materialDesign:HintAssist.Hint="Ask AI"
+                           materialDesign:HintAssist.Foreground="#7B1FA2"
+                           BorderBrush="#7B1FA2"
+                           Foreground="#4A148C"
+                           FontWeight="SemiBold"
+                           Width="150"
+                           VerticalAlignment="Center">
+                            <ComboBoxItem Padding="8,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FileExcel" 
+                                      Foreground="#1D6F42" 
+                                      Width="22" Height="22" 
+                                      Margin="0,0,12,0" 
+                                      VerticalAlignment="Center"/>
+                                    <TextBlock Text="Upload Excel" 
+                                    Foreground="#2E7D32" 
+                                    FontWeight="SemiBold" 
+                                    VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ComboBoxItem>
 
-        <DataGrid Grid.Row="1" ItemsSource="{Binding PurchaseOrdersList, IsAsync=True}" SelectedItem="{Binding SelectedOrder}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="PO Number" Binding="{Binding PoNumber}" Width="1.5*" IsReadOnly="True" FontWeight="Bold"/>
-                <DataGridTextColumn Header="Vendor / Supplier" Binding="{Binding VendorName}" Width="2.5*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Order Date" Binding="{Binding OrderDate, StringFormat={}{0:dd-MM-yyyy}}" Width="1.5*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Total Cost" Binding="{Binding TotalAmount, StringFormat='₹ {0:N2}'}" Width="1.5*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding OrderStatus}" Width="1.2*" IsReadOnly="True"/>
+                            <!-- Upload Image -->
+                            <ComboBoxItem Padding="8,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ImageOutline" 
+                                      Foreground="#0288D1" 
+                                      Width="22" Height="22" 
+                                      Margin="0,0,12,0" 
+                                      VerticalAlignment="Center"/>
+                                    <TextBlock Text="Upload Image" 
+                                        Foreground="#0277BD" 
+                                        FontWeight="SemiBold" 
+                                        VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ComboBoxItem>
 
-                <DataGridTemplateColumn Header="Inventory Action" Width="1.5*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="Receive Stock" 
-                                Command="{Binding DataContext.ReceiveStockCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                CommandParameter="{Binding}" Background="#059669" Height="26" Padding="8,0">
-                                <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatMidBgButton}">
-                                        <Setter Property="IsEnabled" Value="True"/>
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding OrderStatus}" Value="Received">
-                                                <Setter Property="IsEnabled" Value="False"/>
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                            </Button>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+                            <!-- Upload PDF -->
+                            <ComboBoxItem Padding="8,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="FilePdfBox" 
+                                      Foreground="#D32F2F" 
+                                      Width="22" Height="22" 
+                                      Margin="0,0,12,0" 
+                                      VerticalAlignment="Center"/>
+                                    <TextBlock Text="Upload Pdf" 
+                                    Foreground="#C62828" 
+                                    FontWeight="SemiBold" 
+                                    VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ComboBoxItem>
+
+                            <!-- Prompt / AI -->
+                            <ComboBoxItem Padding="8,6">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Sparkles" 
+                                      Foreground="#FFB300" 
+                                      Width="22" Height="22" 
+                                      Margin="0,0,12,0" 
+                                      VerticalAlignment="Center"/>
+                                    <TextBlock Text="Prompt" 
+                                        Foreground="#6A1B9A" 
+                                        FontWeight="Bold" 
+                                        VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </ComboBoxItem>
+                        </ComboBox>
+                        </Grid>
+                    </DockPanel>
+                </Border>
+
+                <DataGrid Grid.Row="1" ItemsSource="{Binding PurchaseOrdersList, IsAsync=True}" SelectedItem="{Binding SelectedOrder}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="PO Number" Width="1.5*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding PoNumber}" Foreground="#1794A1" FontWeight="Bold" FontSize="13" TextWrapping="Wrap" HorizontalAlignment="Left" Cursor="Hand">
+                                        <TextBlock.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick" 
+                          Command="{Binding DataContext.ShowPODetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                          CommandParameter="{Binding}" />
+                                        </TextBlock.InputBindings>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Vendor / Supplier" Binding="{Binding VendorName}" Width="2.5*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Order Date" Binding="{Binding OrderDate, StringFormat={}{0:dd-MM-yyyy}}" Width="1.5*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Total Cost" Binding="{Binding TotalAmount, StringFormat='₹ {0:N2}'}" Width="1.5*" IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding OrderStatus}" Width="1.2*" IsReadOnly="True"/>
+
+                        <DataGridTemplateColumn Header="Inventory Action" Width="1.5*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="Receive Stock" 
+                            Command="{Binding DataContext.ReceiveStockCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                            CommandParameter="{Binding}" Background="#059669" Height="26" Padding="8,0">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatMidBgButton}">
+                                                <Setter Property="IsEnabled" Value="True"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding OrderStatus}" Value="Received">
+                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="PODetailViewTemplate">
+            <local:PurchaseDetailsView DataContext="{Binding TabsDataContext}"/>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <ContentControl Content="{Binding}">
+            <ContentControl.Style>
+                <Style TargetType="ContentControl">
+                    <Setter Property="ContentTemplate" Value="{StaticResource MainGridLeadLayoutTemplate}"/>
+
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding DataContext.WorkspaceViewIsActive, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                            <Setter Property="ContentTemplate" Value="{StaticResource PODetailViewTemplate}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ContentControl.Style>
+        </ContentControl>
     </Grid>
 </UserControl>

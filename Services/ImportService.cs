@@ -1,6 +1,6 @@
-﻿using CallMan.Data;
-using CallMan.Interfaces;
-using CallMan.Models.Enums;
+﻿using Tijori.Data;
+using Tijori.Interfaces;
+using Tijori.Models.Enums;
 using Dapper;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public class ImportService : IImportService
     {

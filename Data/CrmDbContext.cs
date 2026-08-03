@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Data
+namespace Tijori.Data
 {
     public class CrmDbContext
     {

@@ -1,4 +1,4 @@
-﻿using CallMan.Models.Enums;
+﻿using Tijori.Models.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace CallMan.Models
+namespace Tijori.Models
 {
     public partial class User : ObservableObject
     {

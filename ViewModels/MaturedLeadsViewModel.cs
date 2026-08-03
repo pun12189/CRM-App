@@ -1,8 +1,8 @@
-﻿using CallMan.Dialogs;
-using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Models.Enums;
-using CallMan.Services;
+﻿using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Models.Enums;
+using Tijori.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -13,7 +13,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Data;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class MaturedLeadsViewModel : ObservableObject, IDashboardFilterable
     {

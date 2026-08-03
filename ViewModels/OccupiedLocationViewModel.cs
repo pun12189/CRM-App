@@ -1,12 +1,12 @@
-﻿using CallMan.Dialogs;
-using CallMan.Models;
-using CallMan.Services;
+﻿using Tijori.Dialogs;
+using Tijori.Models;
+using Tijori.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class OccupiedLocationViewModel : ObservableObject
     {

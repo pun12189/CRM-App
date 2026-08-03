@@ -1,5 +1,5 @@
-﻿using CallMan.Models;
-using CallMan.Models.Enums;
+﻿using Tijori.Models;
+using Tijori.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace CallMan.Core
+namespace Tijori.Core
 {
     public static class SecurityGuard
     {

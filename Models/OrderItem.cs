@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace CallMan.Models
+namespace Tijori.Models
 {
     public partial class OrderItem : ObservableObject
     {

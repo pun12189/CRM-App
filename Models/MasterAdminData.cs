@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace CallMan.Models
+namespace Tijori.Models
 {
     public class MasterAdminData
     {

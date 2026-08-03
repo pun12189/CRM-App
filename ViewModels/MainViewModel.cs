@@ -1,9 +1,9 @@
-﻿using CallMan.Dialogs;
-using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Models.Enums;
-using CallMan.Services;
-using CallMan.Views;
+﻿using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Models.Enums;
+using Tijori.Services;
+using Tijori.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -19,7 +19,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class MainViewModel : ObservableObject
     {

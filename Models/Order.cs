@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static MaterialDesignThemes.Wpf.Theme.ToolBar;
 
-namespace CallMan.Models
+namespace Tijori.Models
 {
     public partial class Order : ObservableObject
     {

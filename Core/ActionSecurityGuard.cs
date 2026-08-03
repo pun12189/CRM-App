@@ -1,8 +1,8 @@
-﻿using CallMan.Dialogs;
-using CallMan.Interfaces;
-using CallMan.Models.Enums;
-using CallMan.Services;
-using CallMan.ViewModels;
+﻿using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models.Enums;
+using Tijori.Services;
+using Tijori.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace CallMan.Core
+namespace Tijori.Core
 {
     public class ActionSecurityGuard : IActionSecurityGuard
     {

@@ -12,7 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace CallMan
+namespace Tijori
 {
     /// <summary>
     /// Interaction logic for SplashWindow.xaml

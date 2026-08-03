@@ -1,14 +1,14 @@
-﻿using CallMan.Models;
-using CallMan.Models.Enums;
-using CallMan.Services;
-using CallMan.Services.Reports;
+﻿using Tijori.Models;
+using Tijori.Models.Enums;
+using Tijori.Services;
+using Tijori.Services.Reports;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Windows;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class E2EReportsDashboardViewModel : ObservableObject
     {

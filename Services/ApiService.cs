@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
-    using CallMan.Models;
+    using Tijori.Models;
     using System.Net.Http;
     using System.Net.Http.Json;
 

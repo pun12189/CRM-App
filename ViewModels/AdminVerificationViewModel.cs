@@ -1,4 +1,4 @@
-﻿using CallMan.Interfaces;
+﻿using Tijori.Interfaces;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class AdminVerificationViewModel : ObservableObject
     {

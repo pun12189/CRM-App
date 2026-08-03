@@ -1,6 +1,6 @@
-﻿using CallMan.Data;
-using CallMan.Models;
-using CallMan.ViewModels;
+﻿using Tijori.Data;
+using Tijori.Models;
+using Tijori.ViewModels;
 using Dapper;
 using DocumentFormat.OpenXml.Wordprocessing;
 using MySql.Data.MySqlClient;
@@ -13,7 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public class OrderService
     {

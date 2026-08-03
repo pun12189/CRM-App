@@ -1,12 +1,12 @@
-﻿using CallMan.Models;
-using CallMan.Models.Enums;
+﻿using Tijori.Models;
+using Tijori.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Interfaces
+namespace Tijori.Interfaces
 {
     public interface IDashboardFilterable
     {

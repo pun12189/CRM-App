@@ -1,6 +1,6 @@
-﻿using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Services;
+﻿using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class GenericSettingsViewModel : ObservableObject
     {

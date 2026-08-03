@@ -1,4 +1,4 @@
-﻿using CallMan.Models.Enums;
+﻿using Tijori.Models.Enums;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Models
+namespace Tijori.Models
 {
     public partial class ImportMapping : ObservableObject
     {

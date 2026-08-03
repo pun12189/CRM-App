@@ -1,7 +1,7 @@
-﻿using CallMan.Core;
-using CallMan.Data;
-using CallMan.Interfaces;
-using CallMan.Models;
+﻿using Tijori.Core;
+using Tijori.Data;
+using Tijori.Interfaces;
+using Tijori.Models;
 using Dapper;
 using MySql.Data.MySqlClient;
 using Org.BouncyCastle.Crypto.Generators;
@@ -14,7 +14,7 @@ using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public class AuthService : IAuthService
     {

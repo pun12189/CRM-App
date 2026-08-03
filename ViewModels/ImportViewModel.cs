@@ -1,6 +1,6 @@
-﻿using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Models.Enums;
+﻿using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Models.Enums;
 using ClosedXML.Excel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -10,7 +10,7 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class ImportViewModel : ObservableObject
     {

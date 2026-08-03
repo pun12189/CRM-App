@@ -1,6 +1,6 @@
-﻿using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Services;
+﻿using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
 using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
-namespace CallMan.Dialogs
+namespace Tijori.Dialogs
 {
     /// <summary>
     /// Interaction logic for ToastWindow.xaml

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
-namespace CallMan.Helper
+namespace Tijori.Helper
 {
     public static class Helper
     {

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Models.Enums
+namespace Tijori.Models.Enums
 {
     public enum E2EComparisonTarget
     {

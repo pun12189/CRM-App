@@ -1,9 +1,9 @@
-﻿using CallMan.Models;
+﻿using Tijori.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class FilterViewModel : ObservableObject
     {

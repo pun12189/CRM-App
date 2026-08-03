@@ -1,5 +1,5 @@
-﻿using CallMan.Data;
-using CallMan.Models;
+﻿using Tijori.Data;
+using Tijori.Models;
 using Dapper;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public class NotificationRoutingService
     {

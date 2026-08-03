@@ -1,8 +1,8 @@
-﻿using CallMan.Core;
-using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Models.Enums;
-using CallMan.Services;
+﻿using Tijori.Core;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Models.Enums;
+using Tijori.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DocumentFormat.OpenXml.Bibliography;
@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class LeadProfileViewModel : ObservableObject
     {

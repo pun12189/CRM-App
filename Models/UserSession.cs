@@ -1,11 +1,11 @@
-﻿using CallMan.Interfaces;
+﻿using Tijori.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Models
+namespace Tijori.Models
 {
     public class UserSession : IUserSession
     {

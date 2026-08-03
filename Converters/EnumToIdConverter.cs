@@ -1,4 +1,4 @@
-﻿using CallMan.Models.Enums;
+﻿using Tijori.Models.Enums;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
-namespace CallMan.Converters
+namespace Tijori.Converters
 {
     public class EnumToIdConverter : IValueConverter
     {

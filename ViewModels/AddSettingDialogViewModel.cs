@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class AddSettingDialogViewModel : ObservableObject
     {

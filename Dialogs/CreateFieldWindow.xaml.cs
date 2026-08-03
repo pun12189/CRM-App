@@ -1,4 +1,4 @@
-﻿using CallMan.ViewModels;
+﻿using Tijori.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
-namespace CallMan.Dialogs
+namespace Tijori.Dialogs
 {
     /// <summary>
     /// Interaction logic for CreateFieldWindow.xaml

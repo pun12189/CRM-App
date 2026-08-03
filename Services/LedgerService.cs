@@ -1,5 +1,5 @@
-﻿using CallMan.Data;
-using CallMan.Models;
+﻿using Tijori.Data;
+using Tijori.Models;
 using Dapper;
 using MySql.Data.MySqlClient;
 using System;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public class LedgerService
     {

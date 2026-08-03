@@ -1,5 +1,5 @@
-﻿using CallMan.Models;
-using CallMan.Services;
+﻿using Tijori.Models;
+using Tijori.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class LeadTimelineViewModel : ObservableObject
     {

@@ -1,11 +1,11 @@
-﻿<UserControl x:Class="CallMan.Views.LeadCustomerProfileView"
+﻿<UserControl x:Class="Tijori.Views.LeadCustomerProfileView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:CallMan.Views"
+             xmlns:local="clr-namespace:Tijori.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             xmlns:vms="clr-namespace:CallMan.ViewModels"
+             xmlns:vms="clr-namespace:Tijori.ViewModels"
              mc:Ignorable="d" x:Name="lcProfile"
              d:DesignHeight="700" d:DesignWidth="1024">
     <UserControl.Resources>

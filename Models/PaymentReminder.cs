@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Models
+namespace Tijori.Models
 {
     public class PaymentReminder
     {

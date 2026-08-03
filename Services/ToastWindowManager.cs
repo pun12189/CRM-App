@@ -1,6 +1,6 @@
-﻿using CallMan.Dialogs;
-using CallMan.Interfaces;
-using CallMan.Models;
+﻿using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public static class ToastWindowManager
     {

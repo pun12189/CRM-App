@@ -1,5 +1,5 @@
-﻿using CallMan.Services;
-using CallMan.ViewModels;
+﻿using Tijori.Services;
+using Tijori.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace CallMan.Views
+namespace Tijori.Views
 {
     /// <summary>
     /// Interaction logic for MaturedLeadsView.xaml

@@ -1,6 +1,6 @@
-﻿using CallMan.Data;
-using CallMan.Models;
-using CallMan.Models.Enums;
+﻿using Tijori.Data;
+using Tijori.Models;
+using Tijori.Models.Enums;
 using Dapper;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Mysqlx.Crud;
@@ -14,7 +14,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public class LeadService
     {

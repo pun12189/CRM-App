@@ -1,4 +1,4 @@
-﻿using CallMan.Data;
+﻿using Tijori.Data;
 using Dapper;
 using MySql.Data.MySqlClient;
 using System;
@@ -11,7 +11,7 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public class BackupService
     {

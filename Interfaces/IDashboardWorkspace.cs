@@ -1,11 +1,11 @@
-﻿using CallMan.Models;
+﻿using Tijori.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Interfaces
+namespace Tijori.Interfaces
 {
     public interface IDashboardWorkspace
     {

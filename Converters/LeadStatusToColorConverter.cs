@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Media;
 
-namespace CallMan.Converters
+namespace Tijori.Converters
 {
     public class LeadStatusToColorConverter : IValueConverter
     {

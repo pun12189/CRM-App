@@ -1,7 +1,7 @@
-﻿using CallMan.Core;
-using CallMan.Data;
-using CallMan.Models;
-using CallMan.Models.Enums;
+﻿using Tijori.Core;
+using Tijori.Data;
+using Tijori.Models;
+using Tijori.Models.Enums;
 using Dapper;
 using MySql.Data.MySqlClient;
 using System;
@@ -13,7 +13,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public class LicenseService
     {

@@ -1,9 +1,9 @@
-﻿using CallMan.Data;
-using CallMan.Dialogs;
-using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Services;
-using CallMan.ViewModels;
+﻿using Tijori.Data;
+using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
+using Tijori.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System.ComponentModel;
 using System.Windows;
@@ -11,7 +11,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 
-namespace CallMan
+namespace Tijori
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -165,7 +165,7 @@ namespace CallMan
 
             // Evaluate operational connectivity modes via Network interfaces & License states rules
             bool isInternetAvailable = System.Net.NetworkInformation.NetworkInterface.GetIsNetworkAvailable()
-                                       && CallMan.Core.LicenseManager.Current?.AreOnlineServicesAllowed == true;
+                                       && Tijori.Core.LicenseManager.Current?.AreOnlineServicesAllowed == true;
 
             if (backupService != null)
             {

@@ -1,5 +1,5 @@
-﻿using CallMan.Interfaces.Reports;
-using CallMan.Models.Enums;
+﻿using Tijori.Interfaces.Reports;
+using Tijori.Models.Enums;
 using Dapper;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Services.Reports.Strategies
+namespace Tijori.Services.Reports.Strategies
 {
     public class SalesCustomerStrategy : IE2EReportStrategy
     {

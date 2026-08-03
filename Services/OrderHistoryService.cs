@@ -1,6 +1,6 @@
-﻿using CallMan.Data;
-using CallMan.Interfaces;
-using CallMan.Models;
+﻿using Tijori.Data;
+using Tijori.Interfaces;
+using Tijori.Models;
 using Dapper;
 using MySql.Data.MySqlClient;
 using System;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public class OrderHistoryService : IOrderHistoryService
     {

@@ -1,5 +1,5 @@
-﻿using CallMan.Models;
-using CallMan.Services;
+﻿using Tijori.Models;
+using Tijori.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace CallMan.Core
+namespace Tijori.Core
 {
     public static class LicenseManager
     {

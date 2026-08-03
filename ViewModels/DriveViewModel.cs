@@ -1,6 +1,6 @@
-﻿using CallMan.Data;
-using CallMan.Interfaces;
-using CallMan.Models;
+﻿using Tijori.Data;
+using Tijori.Interfaces;
+using Tijori.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dapper;
@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class DriveViewModel : ObservableObject
     {

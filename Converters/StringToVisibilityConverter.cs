@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 
-namespace CallMan.Converters
+namespace Tijori.Converters
 {
     public class StringToVisibilityConverter : IValueConverter
     {

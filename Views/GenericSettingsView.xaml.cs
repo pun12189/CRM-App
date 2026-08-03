@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace CallMan.Views
+namespace Tijori.Views
 {
     /// <summary>
     /// Interaction logic for GenericSettingsView.xaml

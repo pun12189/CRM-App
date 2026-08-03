@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
 
-namespace CallMan.Models
+namespace Tijori.Models
 {
     public partial class CompanyProfile : ObservableObject
     {

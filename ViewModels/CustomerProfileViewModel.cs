@@ -1,7 +1,7 @@
-﻿using CallMan.Core;
-using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Services;
+﻿using Tijori.Core;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class CustomerProfileViewModel : ObservableObject
     {

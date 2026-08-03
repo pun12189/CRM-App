@@ -31,11 +31,11 @@ AppCopyright=Copyright © 2026
 ;app publisher name
 AppPublisher=sofric.com
 ;app publisher website URL
-AppPublisherURL=https://sofric.com
+AppPublisherURL=https://leadmanch.com
 ;app publisher support URL
-AppSupportURL=https://sofric.com/support
+AppSupportURL=https://leadmanch.com/contact
 ;app publisher updates URL
-AppUpdatesURL=https://sofric.com/download
+AppUpdatesURL=https://leadmanch.com/download
 ;default directory {pf} is a constant for
 ;program files. See INNO help for all constants
 DefaultDirName={autopf}\TIJORI
@@ -64,7 +64,7 @@ LicenseFile={#SourceFileDir}SetupFiles\eula.rtf
 WizardImageFile={#SourceFileDir}SetupFiles\CRM.bmp
 WizardSmallImageFile={#SourceFileDir}SetupFiles\tijori.png
 ;I use whatever my apps icon is                               
-;UninstallDisplayIcon={app}\CallMan.exe
+;UninstallDisplayIcon={app}\Tijori.exe
 ;Version number of your installer (not your app)
 VersionInfoVersion={#Version}
 AppVersion={#Version}
@@ -129,7 +129,7 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
    ;Source: {#SourceFileDir}\Assets\*;  DestDir: "{app}\Assets"; Flags:ignoreversion recursesubdirs
    Source: {#SourceFileDir}\runtimes\*;  DestDir: "{app}\runtimes"; Flags:ignoreversion recursesubdirs
    ;Source: {#SourceFileDir}\TxtFile\*;  DestDir: "{app}\TxtFile"; Flags:ignoreversion recursesubdirs
-   Source: {#SourceFileDir}\CallMan.exe;  DestDir: "{app}"; Flags:ignoreversion recursesubdirs sign
+   Source: {#SourceFileDir}\Tijori.exe;  DestDir: "{app}"; Flags:ignoreversion recursesubdirs sign
    Source: "{#SourceFileDir}\SetupFiles\tijori.ico"; DestDir: "{app}"; Flags: ignoreversion
    Source: {#SourceFileDir}\*.dll;  DestDir: "{app}"; Flags:ignoreversion
    Source: {#SourceFileDir}\*.pdb;  DestDir: "{app}"; Flags:ignoreversion
@@ -407,20 +407,20 @@ settingpermission = Setting Program Access Permissions
 ;uk.StandardVersion=стандарт версія
 ;uk.StarterVersion=стартер версія
 [icons]
-Name: "{group}\TIJORI"; Filename: "{app}\CallMan.exe"; WorkingDir: "{app}"; IconFilename: "{app}\tijori.ico"
-;Name: {group}\TIJORI; Filename: {app}\CallMan.exe; WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico"
-Name: "{group}\Help"; Filename: "http://sofric.com/"; 
+Name: "{group}\TIJORI"; Filename: "{app}\Tijori.exe"; WorkingDir: "{app}"; IconFilename: "{app}\tijori.ico"
+;Name: {group}\TIJORI; Filename: {app}\Tijori.exe; WorkingDir: {app}; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico"
+Name: "{group}\Help"; Filename: "http://leadmanch.com/"; 
 Name: {group}\Uninstall; Filename: {uninstallexe};  WorkingDir: "{app}"; IconFilename: "{app}\tijori.ico"
-Name: "{autodesktop}\TIJORI"; Filename: "{app}\CallMan.exe"; WorkingDir: "{app}"; IconFilename: "{app}\tijori.ico"; Tasks: desktopicon
-;Name: {commondesktop}\TIJORI;  Filename: {app}\CallMan.exe; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico"; Tasks: desktopicon
+Name: "{autodesktop}\TIJORI"; Filename: "{app}\Tijori.exe"; WorkingDir: "{app}"; IconFilename: "{app}\tijori.ico"; Tasks: desktopicon
+;Name: {commondesktop}\TIJORI;  Filename: {app}\Tijori.exe; IconFilename: "{#SourceFileDir}SetupFiles\tijori.ico"; Tasks: desktopicon
 
 ;[Tasks]
 ;Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"
 
 [Run]
 ;Filename: "{tmp}\net8runtime.exe"; Parameters: "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"; Flags: runhidden waituntilterminated
-Filename: "{app}\CallMan.exe"; Description: "{cm:launchtemplatetoaster}"; Flags: nowait skipifsilent postinstall ; 
-Filename: explorer.exe; Parameters: "http://sofric.com/"; Description: "{cm:viewhelpfile}"; Flags: Shellexec skipifsilent  postinstall unchecked; 
+Filename: "{app}\Tijori.exe"; Description: "{cm:launchtemplatetoaster}"; Flags: nowait skipifsilent postinstall ; 
+Filename: explorer.exe; Parameters: "http://leadmanch.com/"; Description: "{cm:viewhelpfile}"; Flags: Shellexec skipifsilent  postinstall unchecked; 
 Filename: "certutil.exe"; Parameters: "-addstore ""Root"" ""{tmp}\Tijori.cer"""; Flags: runhidden; StatusMsg: "Installing secure system certificates (Root)..."
 
 Filename: "certutil.exe"; Parameters: "-addstore ""TrustedPublisher"" ""{tmp}\Tijori.cer"""; Flags: runhidden; StatusMsg: "Installing secure system certificates (Publisher)..."
@@ -432,20 +432,20 @@ Filename: "certutil.exe"; Parameters: "-addstore ""TrustedPublisher"" ""{tmp}\Ti
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v Edition /t REG_SZ /d ""Professional"" /f"; Flags: runasoriginaluser runhidden;  Tasks: professionalversion
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v installpath /t REG_SZ /d ""{app}"" /f"; Flags: runasoriginaluser;
 
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""8000"" /f"; Check : IsCompatibleIExplorerVersion('7');
-Filename: Reg.exe; Parameters: "add ""HKLM\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""8000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('7');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v Tijori.exe /t REG_DWORD /d ""8000"" /f"; Check : IsCompatibleIExplorerVersion('7');
+Filename: Reg.exe; Parameters: "add ""HKLM\SOFTWARE\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v Tijori.exe /t REG_DWORD /d ""8000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('7');
 
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""8000"" /f"; Check : IsCompatibleIExplorerVersion('8');
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""8000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('8');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v Tijori.exe /t REG_DWORD /d ""8000"" /f"; Check : IsCompatibleIExplorerVersion('8');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v Tijori.exe /t REG_DWORD /d ""8000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('8');
 
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""9000"" /f"; Check : IsCompatibleIExplorerVersion('9');
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""9000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('9');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v Tijori.exe /t REG_DWORD /d ""9000"" /f"; Check : IsCompatibleIExplorerVersion('9');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v Tijori.exe /t REG_DWORD /d ""9000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('9');
 
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""10000"" /f"; Check : IsCompatibleIExplorerVersion('10');
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""10000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('10');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v Tijori.exe /t REG_DWORD /d ""10000"" /f"; Check : IsCompatibleIExplorerVersion('10');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v Tijori.exe /t REG_DWORD /d ""10000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('10');
 
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""11000"" /f"; Check : IsCompatibleIExplorerVersion('11');
-Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v CallMan.exe /t REG_DWORD /d ""11000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('11');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v Tijori.exe /t REG_DWORD /d ""11000"" /f"; Check : IsCompatibleIExplorerVersion('11');
+Filename: Reg.exe; Parameters: "add ""HKLM\Software\Microsoft\Internet Explorer\Main\FeatureControl\FEATURE_BROWSER_EMULATION"" /v Tijori.exe /t REG_DWORD /d ""11000"" /f";Flags:64bit; Check : IsCompatibleIExplorerVersionWin64('11');
 
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v Language /t REG_SZ /d ""en"" /f"; Flags: runasoriginaluser runhidden;  Languages: en
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v Language /t REG_SZ /d ""da"" /f"; Flags: runasoriginaluser runhidden;  Languages: da
@@ -504,8 +504,8 @@ Type:files;  Name:{commondesktop}\TIJORI
 [Registry]
 ;Root: HKCR; Subkey: ".ttr"; ValueType: string; ValueName: ""; ValueData: "TIJORI"; Flags: uninsdeletevalue 
 Root: HKCR; Subkey: "TIJORI"; ValueType: string; ValueName: ""; ValueData: "TIJORI"; Flags: uninsdeletekey 
-Root: HKCR; Subkey: "TIJORI\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\CallMan.exe,1" 
-Root: HKCR; Subkey: "TIJORI\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\CallMan.exe"" ""%1""" 
+Root: HKCR; Subkey: "TIJORI\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\Tijori.exe,1" 
+Root: HKCR; Subkey: "TIJORI\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\Tijori.exe"" ""%1""" 
 ;Root: HKLM; Subkey: "SOFTWARE\Platform\Brand"; ValueType: string; ValueName: "Colours7"; ValueData:  "{code:RegisteredUser}"; 
  [Code]
    
@@ -597,7 +597,7 @@ function RegisteredUser(Param: String): string;
   FilePath: string;
   begin
    
-    FilePath := ExpandConstant('{app}')+'\CallMan.exe'  ;
+    FilePath := ExpandConstant('{app}')+'\Tijori.exe'  ;
     Result := GetSHA1OfFile(FilePath);
 end;
 
@@ -961,7 +961,7 @@ end;
     //end;
     // Not necessary, already created in DIRS section with full permissions.
 	// if not DirExists(ExpandConstant('{commonappdata}\TemplateToaster')) then begin CreateDir(ExpandConstant('{commonappdata}\TemplateToaster')); end;    
-    //FilePath := ExpandConstant('{app}\CallMan.exe');
+    //FilePath := ExpandConstant('{app}\Tijori.exe');
     //Res := GetSHA1OfFile(FilePath);
     //SaveStringToFile(ExpandConstant('{commonappdata}\TemplateToaster\Colours7.txt'), '{#SetupSetting("AppVersion")}' + ':  ' + Res + #13#10, True);
   //finally

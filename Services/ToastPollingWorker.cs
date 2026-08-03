@@ -1,11 +1,11 @@
-﻿using CallMan.Data;
-using CallMan.Dialogs;
-using CallMan.Interfaces;
-using CallMan.Models;
+﻿using Tijori.Data;
+using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
 using Dapper;
 using Microsoft.Toolkit.Uwp.Notifications;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public class ToastPollingWorker
     {

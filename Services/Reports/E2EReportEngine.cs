@@ -1,10 +1,10 @@
-﻿using CallMan.Data;
-using CallMan.Interfaces.Reports;
-using CallMan.Models.Enums;
-using CallMan.Services.Reports.Strategies;
+﻿using Tijori.Data;
+using Tijori.Interfaces.Reports;
+using Tijori.Models.Enums;
+using Tijori.Services.Reports.Strategies;
 using System.Data;
 
-namespace CallMan.Services.Reports
+namespace Tijori.Services.Reports
 {
     public class E2EReportEngine
     {

@@ -1,7 +1,7 @@
-﻿using CallMan.Dialogs;
-using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Services;
+﻿using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +17,7 @@ using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Xml.Linq;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class AdminSettingsViewModel : ObservableObject
     {
@@ -98,7 +98,7 @@ namespace CallMan.ViewModels
                     CurrentSettingView = _serviceProvider.GetRequiredService<SchemeManagementViewModel>();
                     break;
                 case "Whatsapp":
-                case "CallMan":
+                case "Tijori":
                 case "ECom":
                 case "MargTally":
                     if (!Core.LicenseManager.Current.AreOnlineServicesAllowed)
@@ -124,7 +124,7 @@ namespace CallMan.ViewModels
                     CurrentSettingView = _serviceProvider.GetRequiredService<EmailSettingsViewModel>();
                     break;
                 case "Workflows":
-                    if (!CallMan.Core.LicenseManager.Current.AreOnlineServicesAllowed)
+                    if (!Tijori.Core.LicenseManager.Current.AreOnlineServicesAllowed)
                     {
                         MessageBox.Show(
                             "This operation requires online communication access permissions.\n\n" +

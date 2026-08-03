@@ -1,5 +1,5 @@
-﻿using CallMan.Core;
-using CallMan.Models;
+﻿using Tijori.Core;
+using Tijori.Models;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dapper;
@@ -14,7 +14,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class DbConfigurationViewModel : ObservableObject
     {

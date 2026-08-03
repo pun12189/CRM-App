@@ -1,12 +1,12 @@
-﻿using CallMan.Interfaces;
-using CallMan.Services;
+﻿using Tijori.Interfaces;
+using Tijori.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public class WorkflowEngine
     {

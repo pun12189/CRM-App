@@ -1,8 +1,8 @@
-﻿using CallMan.Core;
-using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Services;
-using CallMan.Views;
+﻿using Tijori.Core;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
+using Tijori.Views;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class LoginViewModel : ObservableObject
     {

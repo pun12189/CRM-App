@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace CallMan.Models
+namespace Tijori.Models
 {
     public partial class ProductBatch : ObservableObject
     {

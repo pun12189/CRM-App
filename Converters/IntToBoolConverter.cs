@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 
-namespace CallMan.Converters
+namespace Tijori.Converters
 {
     /// <summary>
     /// Converts an integer count value into a boolean flag. 

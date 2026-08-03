@@ -1,7 +1,7 @@
-﻿using CallMan.Dialogs;
-using CallMan.Models;
-using CallMan.Models.Enums;
-using CallMan.Services;
+﻿using Tijori.Dialogs;
+using Tijori.Models;
+using Tijori.Models.Enums;
+using Tijori.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class SchemeManagementViewModel : ObservableObject
     {

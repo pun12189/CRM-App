@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36811.4
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tijori", "Tijori.csproj", "{64ECF10F-9958-16F0-48B9-53D94874C5D6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Ravi|Any CPU = Ravi|Any CPU
+		Release|Any CPU = Release|Any CPU
+		Subodh|Any CPU = Subodh|Any CPU
+		Testing|Any CPU = Testing|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{64ECF10F-9958-16F0-48B9-53D94874C5D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64ECF10F-9958-16F0-48B9-53D94874C5D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64ECF10F-9958-16F0-48B9-53D94874C5D6}.Ravi|Any CPU.ActiveCfg = Ravi|Any CPU
+		{64ECF10F-9958-16F0-48B9-53D94874C5D6}.Ravi|Any CPU.Build.0 = Ravi|Any CPU
+		{64ECF10F-9958-16F0-48B9-53D94874C5D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64ECF10F-9958-16F0-48B9-53D94874C5D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64ECF10F-9958-16F0-48B9-53D94874C5D6}.Subodh|Any CPU.ActiveCfg = Subodh|Any CPU
+		{64ECF10F-9958-16F0-48B9-53D94874C5D6}.Subodh|Any CPU.Build.0 = Subodh|Any CPU
+		{64ECF10F-9958-16F0-48B9-53D94874C5D6}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
+		{64ECF10F-9958-16F0-48B9-53D94874C5D6}.Testing|Any CPU.Build.0 = Testing|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A096BE7F-F4BC-49E2-868D-64257B7BC6D0}
+	EndGlobalSection
+EndGlobal

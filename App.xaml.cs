@@ -1,18 +1,18 @@
-﻿using CallMan.Core;
-using CallMan.Data;
-using CallMan.Dialogs;
-using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Services;
-using CallMan.Services.Reports;
-using CallMan.ViewModels;
-using CallMan.Views;
+﻿using Tijori.Core;
+using Tijori.Data;
+using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
+using Tijori.Services.Reports;
+using Tijori.ViewModels;
+using Tijori.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Toolkit.Uwp.Notifications;
 using MySql.Data.MySqlClient;
 using System.Windows;
 
-namespace CallMan
+namespace Tijori
 {
     /// <summary>
     /// Interaction logic for App.xaml

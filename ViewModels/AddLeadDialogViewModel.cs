@@ -1,6 +1,6 @@
-﻿using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.Services;
+﻿using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PhoneNumbers;
@@ -10,7 +10,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
 
-namespace CallMan.ViewModels
+namespace Tijori.ViewModels
 {
     public partial class AddLeadDialogViewModel : ObservableObject
     {

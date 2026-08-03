@@ -1,7 +1,7 @@
-﻿using CallMan.Dialogs;
-using CallMan.Interfaces;
-using CallMan.Models;
-using CallMan.ViewModels;
+﻿using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Org.BouncyCastle.Asn1.X509;
 using System;
@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace CallMan.Services
+namespace Tijori.Services
 {
     public class DialogService : IDialogService
     {

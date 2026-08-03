@@ -170,8 +170,6 @@ namespace CallMan.ViewModels
         /// </summary>
         public async Task LoadUnifiedDocumentsWorkspaceAsync(int entityId, string activeModule)
         {
-
-
             var categoriesList = await _categoryService.GetCategoriesByModulesAsync(activeModule);
 
             // 2. Fetch all files currently uploaded for this specific profile ID            

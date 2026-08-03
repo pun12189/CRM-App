@@ -3,6 +3,7 @@ using CallMan.Dialogs;
 using CallMan.Interfaces;
 using CallMan.Models;
 using Dapper;
+using Microsoft.Toolkit.Uwp.Notifications;
 
 namespace CallMan.Services
 {
@@ -66,7 +67,7 @@ namespace CallMan.Services
             _historyService.RefreshFromDatabaseList(rollingHistory);
 
             // 2. ISOLATE NEW POPUPS: Find alerts that have not been popped on this station yet
-            var pendingPopups = rollingHistory.Where(x => x.NotificationStatus == "Pending").ToList();
+            var pendingPopups = rollingHistory.Where(x => x.NotificationStatus == "Pending" && x.ScheduleTime <= DateTime.Now).ToList();
 
             foreach (var toastItem in pendingPopups)
             {
@@ -76,9 +77,13 @@ namespace CallMan.Services
                 if (rowsUpdated == 1)
                 {
                     toastItem.NotificationStatus = "Popped";
-                    // Send directly to our structural stacking controller window engine
-                    await Task.Delay(TimeSpan.FromSeconds(30));
-                    ToastWindowManager.ShowNotification(toastItem, _routingService, _historyService, _dialogService);
+                    new ToastContentBuilder()
+                     .AddArgument("toastId", toastItem.ToastId)
+                     .AddArgument("leadId", toastItem.LeadId)
+                     .AddText(toastItem.ReminderType)
+                     .AddText(toastItem.MessageText)
+                     .AddAttributionText("TIJORI")
+                     .Show();
                 }
             }
         }

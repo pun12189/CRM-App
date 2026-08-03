@@ -8,6 +8,7 @@ using CallMan.Services.Reports;
 using CallMan.ViewModels;
 using CallMan.Views;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Toolkit.Uwp.Notifications;
 using MySql.Data.MySqlClient;
 using System.Windows;
 

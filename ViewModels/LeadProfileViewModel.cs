@@ -304,7 +304,7 @@ namespace Tijori.ViewModels
                             EventId = 1983,
                             LeadId = SelectedLead?.LeadId ?? 0,
                             ReminderType = ReminderType.FollowUp.ToString() + " Reminder: " + SelectedLead?.CustomerName,
-                            MessageContent = Message,
+                            MessageContent = SelectedAction + ": " + Message,
                             ScheduleTime = combinedDateTime, // Pops up instantly on target's workstation
                             TargetUser = _session.CurrentUser,      // <-- Direct routing targeting self profile layout
                             TargetMachine = Environment.MachineName,        // Set this if you want to explicitly target a specific physical terminal name
@@ -418,13 +418,14 @@ namespace Tijori.ViewModels
                                 {
                                     EventId = 1984,
                                     LeadId = SelectedLead.LeadId,
-                                    ReminderType = ReminderType.Payment.ToString() + " Reminder: " + SelectedLead.CustomerName,
-                                    MessageContent = _session.CurrentUser + " has scheduled a followup reminder for Admin.\r\n" + Message,
+                                    ReminderType = ReminderType.FollowUp.ToString() + " Reminder: " + SelectedLead?.CustomerName,
+                                    MessageContent = SelectedAction + ":" + Message,
                                     ScheduleTime = combinedDateTime, // Schedule the payment reminder for the specified date
                                     TargetUser = "Admin",      // <-- Direct routing targeting admin profile layout
                                     TargetMachine = Environment.MachineName,        // Set this if you want to explicitly target a specific physical terminal name
                                     SenderUser = _session.CurrentUser        // Authored by User
                                 };
+
                                 await _notificationRoutingService.DispatchTargetedToastAsync(adminReminderNotification);
                             }
 

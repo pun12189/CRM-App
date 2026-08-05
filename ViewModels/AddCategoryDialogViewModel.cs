@@ -14,6 +14,7 @@ namespace Tijori.ViewModels
 {
     public partial class AddCategoryDialogViewModel : ObservableObject
     {
+        [ObservableProperty] private int _categoryId;
         [ObservableProperty] private string _categoryName = string.Empty;
         [ObservableProperty] private bool _applyToAllContexts;
         [ObservableProperty] private decimal _mspDiscountPercentage;
@@ -41,6 +42,7 @@ namespace Tijori.ViewModels
 
         public AddCategoryDialogViewModel(BusinessCategory existingCategory, List<string>? linkedModules = null)
         {
+            CategoryId = existingCategory.CategoryId;
             ActiveContextType = existingCategory.TargetContext;
             CategoryName = existingCategory.CategoryName;
             MspDiscountPercentage = existingCategory.MspDiscountPercentage;
@@ -80,6 +82,7 @@ namespace Tijori.ViewModels
         {
             var category = new BusinessCategory
             {
+                CategoryId = this.CategoryId,
                 CategoryName = this.CategoryName,
                 TargetContext = context,
                 MspDiscountPercentage = this.MspDiscountPercentage,

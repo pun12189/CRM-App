@@ -6,10 +6,13 @@
              xmlns:local="clr-namespace:Tijori.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:conv="clr-namespace:Tijori.Converters"
+             xmlns:model="clr-namespace:Tijori.Models"
              mc:Ignorable="d" 
              d:DesignHeight="850" d:DesignWidth="1100"
              Background="#F8FAFC">
     <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <model:BindingProxy x:Key="DataContextProxy" Data="{Binding}" />
         <conv:LessThanZeroToBoolConverter x:Key="LessThanZeroToBoolConverter"/>
         <!-- Tab Header Style -->
         <Style x:Key="ModernTabItemStyle" TargetType="TabItem" BasedOn="{StaticResource MaterialDesignTabItem}">
@@ -542,94 +545,186 @@
                 <!-- TAB 4: ORDER DOCUMENTS                                    -->
                 <!-- ========================================================= -->
                 <TabItem Header="Documents" Style="{StaticResource ModernTabItemStyle}">
-                    <Grid Margin="15">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <!-- Top Inline Mini-Upload Dialog Block -->
-                            <RowDefinition Height="*"/>
-                            <!-- Single Central DataGrid Workspace -->
-                        </Grid.RowDefinitions>
+                    <materialDesign:DialogHost Identifier="DocumentTabDialogHost" DialogTheme="Inherit">
+                        <Grid Margin="15">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <!-- Top Inline Mini-Upload Dialog Block -->
+                                <RowDefinition Height="*"/>
+                                <!-- Single Central DataGrid Workspace -->
+                            </Grid.RowDefinitions>
 
-                        <!-- TOP BAR: STREAMLINED MINI-UPLOAD BAR PANEL -->
-                        <materialDesign:Card Grid.Row="0" UniformCornerRadius="6" Padding="14,10" Margin="0,0,0,15" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1">
-                            <DockPanel LastChildFill="True">
+                            <!-- TOP BAR: STREAMLINED MINI-UPLOAD BAR PANEL -->
+                            <materialDesign:Card Grid.Row="0" UniformCornerRadius="6" Padding="14,10" Margin="0,0,0,15" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1">
+                                <DockPanel LastChildFill="True">
 
-                                <!-- Right Side Interactive Core Actions -->
-                                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
-                                    <TextBlock Text="Target Category Slot:" Foreground="#475569" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                    <!-- RIGHT ACTION BUTTONS: Filter, Import, Export -->
+                                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
 
-                                    <!-- Dynamic Category Selection Dropdown Dropdown -->
-                                    <ComboBox ItemsSource="{Binding AvailableDocumentCategories, IsAsync=True}"
-                                      DisplayMemberPath="CategoryName"
-                                      SelectedValue="{Binding SelectedUploadCategory}"
-                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" 
-                                      Width="220" Height="36" Padding="10,4" Margin="0,0,10,0"/>
+                                        <Button Command="{Binding ClearFiltersCommand}"
+                        Visibility="{Binding IsFilterActive, Converter={StaticResource BooleanToVisibilityConverter}}"
+                        Style="{StaticResource MaterialDesignFlatButton}" 
+                        Foreground="#DC2626"
+                        Height="36" Padding="10,0" Margin="0,0,8,0"
+                        ToolTip="Reset all active filters">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="FilterOff" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Clear Filter" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </Button>
 
-                                    <!-- Bulk/Single File Upload Trigger Command Switch Button -->
-                                    <Button Command="{Binding UploadDocumentCommand}"
-                                        Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#059669" BorderBrush="Transparent"
-                                        Padding="12,0" Height="36" Content="Upload Document File"/>
-                                </StackPanel>
+                                        <!-- 1. FILTER BUTTON -->
+                                        <Button Command="{Binding OpenFilterDialogCommand}"
+        Style="{StaticResource MaterialDesignOutlinedButton}" 
+        BorderBrush="#64748B" Foreground="#334155"
+        Height="36" Padding="12,0" Margin="0,0,8,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="FilterVariant" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Filter" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </Button>
 
-                                <!-- Left Title Component Parameter Info Labels -->
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <materialDesign:PackIcon Kind="FolderFile" Foreground="#2563EB" Width="22" Height="22" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding DocumentCountSummaryText}" FontSize="13" FontWeight="Bold" Foreground="#1E293B" Margin="10,0,0,0" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </DockPanel>
-                        </materialDesign:Card>
+                                        <!-- 2. IMPORT BUTTON -->
+                                        <Button Command="{Binding OpenImportDialogCommand}"
+        Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#059669" BorderBrush="Transparent"
+        Height="36" Padding="12,0" Margin="0,0,8,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Upload" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                <TextBlock Text="Import" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                            </StackPanel>
+                                        </Button>
 
-                        <!-- BOTTOM PORTION: CENTRAL COMPLIANCE DATA TABLE GRID -->
-                        <DataGrid Grid.Row="1" ItemsSource="{Binding UnifiedDocumentsCollection, IsAsync=True}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
-                            <DataGrid.Columns>
-                                <!-- Color-Coded Category Label Column -->
-                                <DataGridTemplateColumn Header="Category Classification" Width="2*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding CategoryName}" FontWeight="Bold" Foreground="#334155"/>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
+                                        <!-- 3. EXPORT BUTTON WITH DROPDOWN MENU -->
+                                        <!-- EXPORT BUTTON WITH DROPDOWN MENU -->
+                                        <materialDesign:PopupBox
+         PlacementMode="BottomAndAlignRightEdges"
+         ToolTip="Export Documents"
+         Height="36" Padding="0">
+                                            <materialDesign:PopupBox.ToggleContent>
+                                                <Border Background="#2563EB" CornerRadius="4" Padding="12,0" Height="36">
+                                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <materialDesign:PackIcon Kind="Download" Foreground="White" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                                        <TextBlock Text="Export" Foreground="White" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                                        <materialDesign:PackIcon Kind="ChevronDown" Foreground="White" Width="16" Height="16" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </materialDesign:PopupBox.ToggleContent>
 
-                                <!-- Dynamic filename metadata column rows values mapping -->
-                                <DataGridTextColumn Header="File Name" Binding="{Binding FileName}" Width="3.5*" IsReadOnly="True" FontWeight="Medium"/>
-                                <DataGridTextColumn Header="Uploaded By User" Binding="{Binding UploadedBy}" Width="1.5*" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="Date Logged" Binding="{Binding UploadedAt, StringFormat={}{0:dd-MM-yyyy hh:mm tt}}" Width="2*" IsReadOnly="True"/>
+                                            <!-- FIXED WIDER CONTAINER (Width="190") TO PREVENT TEXT TRUNCATION -->
+                                            <StackPanel Background="White" Margin="4">
 
-                                <!-- CONTEXT COMPONENT ACTIONS PANEL ROUTE -->
-                                <DataGridTemplateColumn Header="Actions" Width="1.5*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                                                <!-- 1. ALL -->
+                                                <MenuItem Command="{Binding ExportZipCommand}" 
+  CommandParameter="All"
+  Padding="8,6" Margin="0">
+                                                    <MenuItem.Header>
+                                                        <TextBlock Text="ALL" FontWeight="SemiBold" Foreground="#1E293B" Margin="-10,0,0,0"/>
+                                                    </MenuItem.Header>
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="FolderZip" Foreground="#2563EB" Width="18" Height="18"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
 
-                                                <Button Command="{Binding DataContext.ReplaceDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                    CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#F59E0B" BorderBrush="Transparent" 
-                                                    Padding="0" Width="28" Height="28" Margin="0,0,6,0" ToolTip="Replace / Overwrite File">
-                                                    <materialDesign:PackIcon Kind="FileReplace" Foreground="White" Width="14" Height="14"/>
-                                                </Button>
+                                                <!-- 2. FILTERED -->
+                                                <MenuItem Command="{Binding ExportZipCommand}" 
+  CommandParameter="Filtered"
+  IsEnabled="{Binding IsFilteredEnabled}"
+  Padding="8,6" Margin="0">
+                                                    <MenuItem.Header>
+                                                        <TextBlock Text="Filtered" FontWeight="SemiBold" Margin="-10,0,0,0"/>
+                                                    </MenuItem.Header>
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="Filter" Foreground="#D97706" Width="18" Height="18"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
 
-                                                <Button Command="{Binding DataContext.DownloadDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                    CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#0284C7" BorderBrush="Transparent" 
-                                                    Padding="0" Width="28" Height="28" Margin="0,0,6,0" ToolTip="Download File to System">
-                                                    <materialDesign:PackIcon Kind="Download" Foreground="White" Width="14" Height="14"/>
-                                                </Button>
-
-                                                <Button Command="{Binding DataContext.DeleteDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                                    CommandParameter="{Binding}"
-                                                    Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#DC2626" BorderBrush="Transparent" 
-                                                    Padding="0" Width="28" Height="28" ToolTip="Delete Document Permanently">
-                                                    <materialDesign:PackIcon Kind="Delete" Foreground="White" Width="14" Height="14"/>
-                                                </Button>
+                                                <!-- 3. SELECTED -->
+                                                <MenuItem Command="{Binding ExportZipCommand}" 
+  CommandParameter="Selected"
+  IsEnabled="{Binding IsSelectedEnabled}"
+  Padding="8,6" Margin="0">
+                                                    <MenuItem.Header>
+                                                        <TextBlock Text="Selected" FontWeight="SemiBold" Margin="-10,0,0,0"/>
+                                                    </MenuItem.Header>
+                                                    <MenuItem.Icon>
+                                                        <materialDesign:PackIcon Kind="CheckboxMarked" Foreground="#059669" Width="18" Height="18"/>
+                                                    </MenuItem.Icon>
+                                                </MenuItem>
 
                                             </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
-                    </Grid>
+                                        </materialDesign:PopupBox>
+                                    </StackPanel>
+
+                                    <!-- LEFT SUMMARY TEXT -->
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <materialDesign:PackIcon Kind="FolderFile" Foreground="#2563EB" Width="22" Height="22" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding DocumentCountSummaryText}" FontSize="13" FontWeight="Bold" Foreground="#1E293B" Margin="10,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DockPanel>
+                            </materialDesign:Card>
+
+                            <!-- BOTTOM PORTION: CENTRAL COMPLIANCE DATA TABLE GRID -->
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding DisplayedDocuments, IsAsync=True}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
+                                <DataGrid.Columns>
+                                    <DataGridTemplateColumn Width="Auto">
+                                        <DataGridTemplateColumn.Header>
+                                            <CheckBox Command="{Binding Data.ToggleSelectAllCommand, Source={StaticResource DataContextProxy}}" CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"/>
+                                        </DataGridTemplateColumn.Header>
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                    <!-- Color-Coded Category Label Column -->
+                                    <DataGridTemplateColumn Header="Category Classification" Width="2*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding CategoryName}" FontWeight="Bold" Foreground="#334155"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <!-- Dynamic filename metadata column rows values mapping -->
+                                    <DataGridTextColumn Header="File Name" Binding="{Binding FileName}" Width="3.5*" IsReadOnly="True" FontWeight="Medium"/>
+                                    <DataGridTextColumn Header="Uploaded By User" Binding="{Binding UploadedBy}" Width="1.5*" IsReadOnly="True"/>
+                                    <DataGridTextColumn Header="Date Logged" Binding="{Binding UploadedAt, StringFormat={}{0:dd-MM-yyyy hh:mm tt}}" Width="2*" IsReadOnly="True"/>
+
+                                    <!-- CONTEXT COMPONENT ACTIONS PANEL ROUTE -->
+                                    <DataGridTemplateColumn Header="Actions" Width="1.5*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+
+                                                    <Button Command="{Binding DataContext.ReplaceDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                CommandParameter="{Binding}"
+                                Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#F59E0B" BorderBrush="Transparent" 
+                                Padding="0" Width="28" Height="28" Margin="0,0,6,0" ToolTip="Replace / Overwrite File">
+                                                        <materialDesign:PackIcon Kind="FileReplace" Foreground="White" Width="14" Height="14"/>
+                                                    </Button>
+
+                                                    <Button Command="{Binding DataContext.DownloadDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                CommandParameter="{Binding}"
+                                Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#0284C7" BorderBrush="Transparent" 
+                                Padding="0" Width="28" Height="28" Margin="0,0,6,0" ToolTip="Download File to System">
+                                                        <materialDesign:PackIcon Kind="Download" Foreground="White" Width="14" Height="14"/>
+                                                    </Button>
+
+                                                    <Button Command="{Binding DataContext.DeleteDocumentFileCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                CommandParameter="{Binding}"
+                                Style="{StaticResource MaterialDesignFlatMidBgButton}" Background="#DC2626" BorderBrush="Transparent" 
+                                Padding="0" Width="28" Height="28" ToolTip="Delete Document Permanently">
+                                                        <materialDesign:PackIcon Kind="Delete" Foreground="White" Width="14" Height="14"/>
+                                                    </Button>
+
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </materialDesign:DialogHost>
                 </TabItem>
 
             </TabControl>

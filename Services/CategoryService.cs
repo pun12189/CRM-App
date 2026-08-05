@@ -223,18 +223,38 @@ namespace Tijori.Services
 
             try
             {
-                // 1. Update core label info
-                const string updateCatSql = "UPDATE BusinessCategories SET CategoryName = @CategoryName WHERE CategoryId = @CategoryId;";
-                await db.ExecuteAsync(updateCatSql, category, tx);
-
-                // 2. Clear old mapping configurations down
-                await db.ExecuteAsync("DELETE FROM DocumentModuleLinks WHERE CategoryId = @CategoryId;", new { CategoryId = category.CategoryId }, tx);
-
-                // 3. Insert fresh checkbox intersections
-                foreach (var mod in modules)
+                // 1. New Category vs Existing Category Logic
+                if (category.CategoryId == 0)
                 {
-                    await db.ExecuteAsync("INSERT INTO DocumentModuleLinks (CategoryId, ModuleName) VALUES (@CategoryId, @Module);",
-                        new { CategoryId = category.CategoryId, Module = mod }, tx);
+                    // For new entries, include TargetContext ('Documents') so NOT NULL check passes
+                    const string insertCatSql = @"
+                INSERT INTO BusinessCategories 
+                    (CategoryName, TargetContext, MspDiscountPercentage, CreditLimitAmount, CreditGraceDays, SettlementModel, IsSystemDefined) 
+                VALUES 
+                    (@CategoryName, 'Documents', 0.00, 0.00, 0, 0, 0);
+                SELECT LAST_INSERT_ID();";
+
+                    category.CategoryId = await db.ExecuteScalarAsync<int>(insertCatSql, new { CategoryName = category.CategoryName }, tx);
+                }
+                else
+                {
+                    // Update existing category name
+                    const string updateCatSql = "UPDATE BusinessCategories SET CategoryName = @CategoryName WHERE CategoryId = @CategoryId;";
+                    await db.ExecuteAsync(updateCatSql, category, tx);
+
+                    // Clear old module link mappings for this CategoryId
+                    await db.ExecuteAsync("DELETE FROM DocumentModuleLinks WHERE CategoryId = @CategoryId;", new { CategoryId = category.CategoryId }, tx);
+                }
+
+                // 2. Insert fresh module links into DocumentModuleLinks
+                if (modules != null && modules.Any())
+                {
+                    const string insertLinkSql = "INSERT INTO DocumentModuleLinks (CategoryId, ModuleName) VALUES (@CategoryId, @Module);";
+
+                    foreach (var mod in modules)
+                    {
+                        await db.ExecuteAsync(insertLinkSql, new { CategoryId = category.CategoryId, Module = mod }, tx);
+                    }
                 }
 
                 tx.Commit();

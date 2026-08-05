@@ -19,5 +19,8 @@ namespace Tijori.Models
         public string UploadedBy { get; set; } = string.Empty;
         public DateTime UploadedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+
+        [ObservableProperty]
+        private bool _isSelected;
     }
 }

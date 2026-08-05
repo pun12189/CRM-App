@@ -1,21 +1,25 @@
-﻿using Tijori.Core;
-using Tijori.Interfaces;
-using Tijori.Models;
-using Tijori.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using Tijori.Core;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
+using Tijori.Views;
 
 namespace Tijori.ViewModels
 {
@@ -94,13 +98,51 @@ namespace Tijori.ViewModels
         [ObservableProperty] private ProformaHeader _activeProforma = new();
         [ObservableProperty] private bool _isInEditMode;
 
-        [ObservableProperty] private ObservableCollection<UploadedDocumentRow> _unifiedDocumentsCollection = new();
+        [ObservableProperty]
+        private ObservableCollection<UploadedDocumentRow> _unifiedDocumentsCollection = new();
 
-        // Dropdown lookup source for the upload dialog header section
-        [ObservableProperty] private ObservableCollection<BusinessCategory> _availableDocumentCategories = new();
+        [ObservableProperty]
+        private ObservableCollection<BusinessCategory> _availableDocumentCategories = new();
+
+        [ObservableProperty]
+        private string _documentCountSummaryText = "0 Files Total";
+
+        // --- Filter Properties ---
+        [ObservableProperty] private BusinessCategory? _filterCategory;
+        [ObservableProperty] private DateTime? _filterDateLogged;
+        [ObservableProperty] private string? _filterLoggedUser;
+        [ObservableProperty] private bool _isFilterActive;
+
+        // --- Import Properties ---
         [ObservableProperty] private BusinessCategory? _selectedUploadCategory;
+        [ObservableProperty] private List<string> _selectedFilePaths = new();
+        [ObservableProperty] private string _selectedFilesSummaryText = "No files selected";
 
-        [ObservableProperty] private string _documentCountSummaryText = "0 Files Total";
+        // --- Export Enablement Status ---
+        public bool IsFilteredEnabled => IsFilterActive;
+        public bool IsSelectedEnabled => UnifiedDocumentsCollection.Any(x => x.IsSelected);
+
+        public IEnumerable<UploadedDocumentRow> DisplayedDocuments
+        {
+            get
+            {
+                var list = UnifiedDocumentsCollection.AsEnumerable();
+
+                if (IsFilterActive)
+                {
+                    if (FilterCategory != null)
+                        list = list.Where(x => x.CategoryId == FilterCategory.CategoryId);
+
+                    if (FilterDateLogged.HasValue)
+                        list = list.Where(x => x.UploadedAt.Date == FilterDateLogged.Value.Date);
+
+                    if (!string.IsNullOrWhiteSpace(FilterLoggedUser))
+                        list = list.Where(x => x.UploadedBy.Contains(FilterLoggedUser, StringComparison.OrdinalIgnoreCase));
+                }
+
+                return list;
+            }
+        }
 
         public CustomerProfileViewModel(LeadService service, IUserSession session, SettingService settingService, ProductService productService, OrderService orderService, Lead lead, OccupiedLocationService locationService, CategoryService categoryService, IActionSecurityGuard securityGuard, bool isInEditMode = false)
         {
@@ -115,7 +157,25 @@ namespace Tijori.ViewModels
             _selectedLead = lead;
             _locationService = locationService;
             _securityGuard = securityGuard;
+
+            UnifiedDocumentsCollection.CollectionChanged += (s, e) =>
+            {
+                if (e.NewItems != null)
+                {
+                    foreach (UploadedDocumentRow item in e.NewItems)
+                        item.PropertyChanged += Item_PropertyChanged;
+                }
+            };
+
             _ = LoadCustomerData(lead.LeadId);
+        }
+
+        private void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(UploadedDocumentRow.IsSelected))
+            {
+                OnPropertyChanged(nameof(IsSelectedEnabled));
+            }
         }
 
         // --- Logic for Dynamic Balance ---
@@ -187,6 +247,8 @@ namespace Tijori.ViewModels
                 }
 
                 DocumentCountSummaryText = $"{filesList.Count()} Total Document Attachments Registered";
+
+                OnPropertyChanged(nameof(DisplayedDocuments));
             });
         }
 
@@ -599,24 +661,94 @@ namespace Tijori.ViewModels
         }
 
         [RelayCommand]
-        private async Task ExecuteNewFileUpload()
+        private void ToggleSelectAll(bool? isChecked)
         {
-            if (SelectedLead == null || SelectedUploadCategory == null)
+            if (isChecked == null || DisplayedDocuments == null) return;
+
+            // Cast the elements of the view to your specific Lead model
+            foreach (var item in DisplayedDocuments.Cast<UploadedDocumentRow>())
             {
-                MessageBox.Show("Please choose a target Document Category from the dropdown selector first.", "Context Missing", MessageBoxButton.OK, MessageBoxImage.Warning);
+                item.IsSelected = isChecked.Value;
+            }
+
+            OnPropertyChanged(nameof(IsSelectedEnabled));
+        }
+
+        // --- 1. FILTER DIALOG COMMANDS ---
+        [RelayCommand]
+        private async Task OpenFilterDialog()
+        {
+            await DialogHost.Show(new FilterDialogView { DataContext = this }, "DocumentTabDialogHost");
+        }
+
+        [RelayCommand]
+        private void ApplyFilter()
+        {
+            IsFilterActive = FilterCategory != null || FilterDateLogged.HasValue || !string.IsNullOrWhiteSpace(FilterLoggedUser);
+            OnPropertyChanged(nameof(DisplayedDocuments));
+            OnPropertyChanged(nameof(IsFilteredEnabled));
+            DialogHost.Close("DocumentTabDialogHost");
+        }
+
+        [RelayCommand]
+        private void ClearFilters()
+        {
+            FilterCategory = null;
+            FilterDateLogged = null;
+            FilterLoggedUser = string.Empty;
+            IsFilterActive = false;
+
+            // 2. Refresh UI Grid and Export status
+            OnPropertyChanged(nameof(DisplayedDocuments));
+            OnPropertyChanged(nameof(IsFilterActive));
+            OnPropertyChanged(nameof(IsFilteredEnabled));
+
+            // 3. Safely close dialog if it was called from inside the FilterDialog
+            if (DialogHost.IsDialogOpen("DocumentTabDialogHost"))
+            {
+                DialogHost.Close("DocumentTabDialogHost");
+            }
+        }
+
+        // --- 2. IMPORT DIALOG COMMANDS ---
+        [RelayCommand]
+        private async Task OpenImportDialog()
+        {
+            SelectedFilePaths.Clear();
+            SelectedFilesSummaryText = "No files selected";
+            await DialogHost.Show(new ImportDialogView { DataContext = this }, "DocumentTabDialogHost");
+        }
+
+        [RelayCommand]
+        private void BrowseFiles()
+        {
+            var dlg = new OpenFileDialog
+            {
+                Multiselect = true, // Supports single & multiple selection
+                Title = "Select Documents to Upload"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                SelectedFilePaths = dlg.FileNames.ToList();
+                SelectedFilesSummaryText = $"{SelectedFilePaths.Count} file(s) selected";
+            }
+        }
+
+        [RelayCommand]
+        private async Task UploadSelectedFiles()
+        {
+            if (SelectedUploadCategory == null || !SelectedFilePaths.Any())
+            {
+                MessageBox.Show("Please select a category and at least one file.", "Import Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            var fileDialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Multiselect = true, // Bulk multi-uploads to a single category made simple!
-                Filter = "Compliance Formats|*.pdf;*.jpg;*.jpeg;*.png;*.xlsx;*.docx"
-            };
-
-            if (fileDialog.ShowDialog() == true)
+            // Upload files loop...
+            if (SelectedFilePaths.Count > 0)
             {
                 string moduleContext = SelectedLead.Status?.ToLower() == "matured" ? "Customer" : "Lead";
-                var success = await _categoryService.UploadDocumentAsync(fileDialog.FileNames, moduleContext, SelectedUploadCategory, SelectedLead.LeadId, _session.CurrentUser);
+                var success = await _categoryService.UploadDocumentAsync(SelectedFilePaths.ToArray(), moduleContext, SelectedUploadCategory, SelectedLead.LeadId, _session.CurrentUser);
 
                 if (success)
                 {
@@ -628,6 +760,50 @@ namespace Tijori.ViewModels
                 }
                 // Refresh grid matrix instantly
                 await LoadUnifiedDocumentsWorkspaceAsync(SelectedLead.LeadId, moduleContext);
+            }
+
+            DialogHost.Close("DocumentTabDialogHost");
+        }
+
+        // --- 3. EXPORT ZIP COMMAND ---
+        [RelayCommand]
+        private async Task ExportZip(string mode)
+        {
+            List<UploadedDocumentRow> targetRows = mode switch
+            {
+                "Selected" => UnifiedDocumentsCollection.Where(x => x.IsSelected).ToList(),
+                "Filtered" => DisplayedDocuments.ToList(),
+                _ => UnifiedDocumentsCollection.ToList() // "All"
+            };
+
+            if (!targetRows.Any())
+            {
+                MessageBox.Show("No documents available for export in this mode.", "Export Zip", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var dlg = new SaveFileDialog
+            {
+                Filter = "Zip Archive (*.zip)|*.zip",
+                FileName = $"Tijori_Docs_{mode}_{DateTime.Now:yyyyMMdd_HHmmss}.zip"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                await Task.Run(() =>
+                {
+                    if (File.Exists(dlg.FileName)) File.Delete(dlg.FileName);
+                    using var archive = ZipFile.Open(dlg.FileName, ZipArchiveMode.Create);
+                    foreach (var doc in targetRows)
+                    {
+                        if (File.Exists(doc.StoragePath))
+                        {
+                            archive.CreateEntryFromFile(doc.StoragePath, $"{doc.CategoryName}_{doc.FileName}");
+                        }
+                    }
+                });
+
+                MessageBox.Show($"Successfully exported {targetRows.Count} file(s) as Zip!", "Export Complete", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 

@@ -25,10 +25,10 @@ namespace Tijori.ViewModels
         {
             new("Leads", "Lead"),
             new("Customers", "Customer"),
-            new("Vendors", "Vendor"),
+            new("Vendors", "Vendors"),
             new("Staffs", "Staff"),
             new("Purchase", "Purchase"),
-            new("Orders", "Order"),
+            new("Orders", "Orders"),
             new("Products", "Product")
         };
 

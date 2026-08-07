@@ -284,6 +284,16 @@ namespace Tijori.ViewModels
                         }, DispatcherPriority.Background);
 
                         break;
+                    // Add other cases as you build them
+                    case "Register":
+                        var vm10 = _serviceProvider.GetRequiredService<StockRegisterViewModel>();
+                        await vm10.InitializeAsync();
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm10;
+                        }, DispatcherPriority.Background);
+
+                        break;
                         // Add other cases as you build them
                 }
             }

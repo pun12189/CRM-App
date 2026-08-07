@@ -94,6 +94,32 @@ namespace Tijori.Services
         }
 
         /// <summary>
+        /// Fetches all product batches ordered by BatchNumber
+        /// </summary>
+        public async Task<IEnumerable<ProductBatch>> GetAllBatchesAsync()
+        {
+            const string sql = @"
+                SELECT 
+                    BatchId,
+                    ProductId,
+                    DivisionId,
+                    BatchNumber,
+                    MfgDate,
+                    ExpiryDate,
+                    QuantityReceived,
+                    CurrentStock,
+                    MinimumSellingPrice,
+                    CreatedAt
+                FROM ProductBatches
+                ORDER BY BatchNumber ASC;";
+
+            using var db = _context.CreateConnection();
+            if (db.State == ConnectionState.Closed) db.Open();
+
+            return await db.QueryAsync<ProductBatch>(sql);
+        }
+
+        /// <summary>
         /// Retrieves all inventory batches associated with a specific product and division context.
         /// </summary>
         /// <param name="productId">The target product ID to fetch batches for.</param>

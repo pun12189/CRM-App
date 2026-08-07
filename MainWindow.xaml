@@ -98,6 +98,9 @@
         <DataTemplate DataType="{x:Type vm:StaffDetailsViewModel}">
             <views:StaffDetailsView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StockRegisterViewModel}">
+            <views:StockRegisterView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -663,8 +666,12 @@
                                 </Setter.Value>
                             </Setter>
                         </Style>
-                    </Menu.Resources>                    
-                    <MenuItem Header="e2e Reports" Click="TopLevelMenuItem_Click" HorizontalAlignment="Right" Visibility="Visible" Icon="{materialDesign:PackIcon Kind=FileDocument}" Command="{Binding NavigateCommand}" CommandParameter="Reports"/>
+                    </Menu.Resources>
+                    <MenuItem Header="e2e Reports" Click="TopLevelMenuItem_Click" HorizontalAlignment="Right" Visibility="Visible" Icon="{materialDesign:PackIcon Kind=ReportLine}">
+                        <MenuItem Header="Business DNA" Icon="{materialDesign:PackIcon Kind=Dna}" Command="{Binding NavigateCommand}" CommandParameter="Reports" Style="{StaticResource SubItemStyle}"/>
+                        <MenuItem Header="Item Ledger" Icon="{materialDesign:PackIcon Kind=ReportBar}" Command="{Binding NavigateCommand}" CommandParameter="Register" Style="{StaticResource SubItemStyle}"/>
+                    </MenuItem>
+                    
                 </Menu>
             </Grid>
         </materialDesign:ColorZone>

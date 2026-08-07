@@ -244,5 +244,41 @@ namespace Tijori.Services
                 return Enumerable.Empty<PurchaseOrderDetail>();
             }
         }
+
+        public async Task<IEnumerable<StockInwardDto>> GetStockInwardFilteredAsync(int productId, int? vendorId, string? location)
+        {
+            const string sql = @"
+        SELECT 
+            po.PoNumber AS BillNo,
+            po.OrderDate AS TransactionDate,
+            po.VendorId,
+            COALESCE(v.CompanyName, 'Cash Vendor') AS VendorName,
+            COALESCE(v.Address, '') AS VendorCity,
+            pod.ProductId,
+            COALESCE(pb.BatchNumber, 'N/A') AS BatchNumber,
+            pod.Quantity,
+            pod.UnitPrice
+        FROM PurchaseOrderDetails pod
+        INNER JOIN PurchaseOrders po ON pod.PurchaseOrderId = po.PurchaseOrderId
+        LEFT JOIN Vendors v ON po.VendorId = v.VendorId
+        LEFT JOIN ProductBatches pb 
+               ON pb.ProductId = pod.ProductId 
+              AND pb.BatchNumber LIKE CONCAT('BAT-PO', po.PurchaseOrderId, '-%')
+        WHERE pod.ProductId = @ProductId
+          -- OPTIONAL FILTERS: If parameter is NULL, condition is bypassed
+          AND (@VendorId IS NULL OR po.VendorId = @VendorId)
+          AND (@Location IS NULL OR @Location = '' OR LOWER(v.Address) LIKE LOWER(CONCAT('%', @Location, '%')))
+        ORDER BY po.OrderDate ASC;";
+
+            using var db = _context.CreateConnection();
+            if (db.State == ConnectionState.Closed) db.Open();
+
+            return await db.QueryAsync<StockInwardDto>(sql, new
+            {
+                ProductId = productId,
+                VendorId = vendorId,
+                Location = location
+            });
+        }
     }
 }

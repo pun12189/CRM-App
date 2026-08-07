@@ -186,6 +186,7 @@ namespace Tijori
             services.AddTransient<VendorViewModel>();
             services.AddTransient<PurchaseViewModel>();
             services.AddTransient<StaffDetailsViewModel>();
+            services.AddTransient<StockRegisterViewModel>();
 
             // 4. Register Views
             services.AddTransient<LoginView>();

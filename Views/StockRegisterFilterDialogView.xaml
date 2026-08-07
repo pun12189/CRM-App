@@ -1,0 +1,116 @@
+﻿<UserControl x:Class="Tijori.Views.StockRegisterFilterDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Tijori.Views"
+             mc:Ignorable="d" 
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Width="780" Padding="24" Background="White">
+    <StackPanel>
+
+        <!-- DIALOG TITLE -->
+        <TextBlock Text="Stock Register Filters" FontSize="18" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,18"/>
+
+        <Grid Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="24"/>
+                <!-- GAP -->
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT COLUMN -->
+            <StackPanel Grid.Column="0">
+
+                <!-- 1. Product Selection -->
+                <TextBlock Text="Select Item / Product *" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                <ComboBox materialDesign:TextFieldAssist.HasClearButton="True"
+                          ItemsSource="{Binding AvailableItems}"
+                          DisplayMemberPath="Name"
+                          SelectedItem="{Binding SelectedProduct}"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                          Margin="0,0,0,16"/>
+
+                <!-- 2. Batch Selection -->
+                <TextBlock Text="Select Batch Number (Optional)" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                <ComboBox materialDesign:TextFieldAssist.HasClearButton="True"
+                          ItemsSource="{Binding FilteredBatches}"
+                          DisplayMemberPath="BatchNumber"
+                          SelectedItem="{Binding SelectedBatch}"
+                          IsEnabled="{Binding IsBatchSelectionEnabled}"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                          Margin="0,0,0,16"/>
+
+                <!-- 3. Customer Selection -->
+                <TextBlock Text="Select Customer (Optional)" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                <ComboBox materialDesign:TextFieldAssist.HasClearButton="True"
+                           ItemsSource="{Binding FilteredCustomers}"
+                           DisplayMemberPath="CustomerName"
+                           SelectedItem="{Binding SelectedCustomer}"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                          Margin="0,0,0,16"/>
+
+            </StackPanel>
+
+            <!-- RIGHT COLUMN -->
+            <StackPanel Grid.Column="2">
+
+                <!-- 4. Vendor Selection -->
+                <TextBlock Text="Select Vendor (Optional)" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                <ComboBox materialDesign:TextFieldAssist.HasClearButton="True"
+                          ItemsSource="{Binding FilteredVendors}"
+                          DisplayMemberPath="CompanyName"
+                          SelectedItem="{Binding SelectedVendor}"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                          Margin="0,0,0,16"/>
+
+                <!-- 5. Date Range Selection (From & To) -->
+                <TextBlock Text="Date Range *" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <DatePicker Grid.Column="0" 
+                                materialDesign:HintAssist.Hint="From Date"
+                                SelectedDate="{Binding FromDate}"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+
+                    <DatePicker Grid.Column="2" 
+                                materialDesign:HintAssist.Hint="To Date"
+                                SelectedDate="{Binding ToDate}"
+                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                </Grid>
+
+                <!-- 6. Location / City Filter -->
+                <TextBlock Text="Location / City (Optional)" FontSize="12" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,6"/>
+                <TextBox materialDesign:TextFieldAssist.HasClearButton="True"
+                         Text="{Binding LocationFilter, UpdateSourceTrigger=PropertyChanged}"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                         Margin="0,0,0,16"/>
+
+            </StackPanel>
+        </Grid>        
+
+        <!-- ACTION BUTTONS: DISCARD & GENERATE REPORT -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+
+            <Button Content="Discard" 
+                    Command="{Binding DiscardFilterDialogCommand}" 
+                    Style="{StaticResource MaterialDesignFlatButton}" 
+                    Foreground="#64748B"
+                    Height="38" Padding="16,0" Margin="0,0,8,0"/>
+
+            <Button Content="Generate Report" 
+                    Command="{Binding ApplyFilterCommand}" 
+                    Style="{StaticResource MaterialDesignRaisedButton}" 
+                    Background="#2563EB" Foreground="White"
+                    Height="38" Padding="20,0"/>
+
+        </StackPanel>
+
+    </StackPanel>
+</UserControl>

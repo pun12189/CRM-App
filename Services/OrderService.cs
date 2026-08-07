@@ -544,5 +544,43 @@ namespace Tijori.Services
                 }
             }
         }
+
+        public async Task<IEnumerable<StockOutwardDto>> GetStockOutwardFilteredAsync(int productId, int? batchId, int? leadId, string? location)
+        {
+            const string sql = @"
+        SELECT 
+            COALESCE(o.InvoiceNumber, CONCAT('ORD-', o.OrderId)) AS BillNo,
+            o.OrderDate AS TransactionDate,
+            o.LeadId,
+            COALESCE(l.CustomerName, 'Walk-in Customer') AS CustomerName,
+            COALESCE(l.City, '') AS CustomerCity,
+            oi.ProductId,
+            oi.BatchId,
+            COALESCE(pb.BatchNumber, 'N/A') AS BatchNumber,
+            oi.Quantity,
+            COALESCE(oi.UnitPrice, 0.00) AS UnitPrice,
+            COALESCE(oi.Total, 0.00) AS TotalAmount
+        FROM OrderItems oi
+        INNER JOIN Orders o ON oi.OrderId = o.OrderId
+        LEFT JOIN Leads l ON o.LeadId = l.LeadId
+        LEFT JOIN ProductBatches pb ON oi.BatchId = pb.BatchId
+        WHERE oi.ProductId = @ProductId
+          -- OPTIONAL FILTERS
+          AND (@BatchId IS NULL OR oi.BatchId = @BatchId)
+          AND (@LeadId IS NULL OR o.LeadId = @LeadId)
+          AND (@Location IS NULL OR @Location = '' OR LOWER(l.City) LIKE LOWER(CONCAT('%', @Location, '%')))
+        ORDER BY o.OrderDate ASC;";
+
+            using var db = _context.CreateConnection();
+            if (db.State == ConnectionState.Closed) db.Open();
+
+            return await db.QueryAsync<StockOutwardDto>(sql, new
+            {
+                ProductId = productId,
+                BatchId = batchId,
+                LeadId = leadId,
+                Location = location
+            });
+        }
     }
 }

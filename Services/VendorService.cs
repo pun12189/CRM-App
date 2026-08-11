@@ -12,8 +12,10 @@ namespace Tijori.Services
     public class VendorService
     {
         private readonly CrmDbContext _context;
+
         public VendorService(CrmDbContext context) => _context = context;
 
+        // READ ALL VENDORS
         public async Task<IEnumerable<Vendor>> GetAllVendorsAsync()
         {
             try
@@ -45,7 +47,7 @@ namespace Tijori.Services
             }
         }
 
-        // CREATE
+        // CREATE VENDOR
         public async Task<int> SaveVendorAsync(Vendor vendor)
         {
             try
@@ -53,7 +55,7 @@ namespace Tijori.Services
                 using var db = _context.CreateConnection();
                 const string sql = @"
                     INSERT INTO Vendors (CompanyName, ContactPerson, Phone, Email, GstNumber, Address, Status, CreatedAt)
-                    VALUES (@CompanyName, @ContactPerson, @Phone, @Email, @GstNumber, @Address, @Status, @CreatedAt);
+                    VALUES (@CompanyName, @ContactPerson, @Phone, @Email, @GstNumber, @Address, @Status, NOW());
                     SELECT LAST_INSERT_ID();";
 
                 return await db.ExecuteScalarAsync<int>(sql, vendor);
@@ -65,7 +67,7 @@ namespace Tijori.Services
             }
         }
 
-        // UPDATE
+        // UPDATE VENDOR
         public async Task<bool> UpdateVendorAsync(Vendor vendor)
         {
             try
@@ -92,7 +94,7 @@ namespace Tijori.Services
             }
         }
 
-        // DELETE
+        // DELETE VENDOR
         public async Task<bool> DeleteVendorAsync(int vendorId)
         {
             try
@@ -117,19 +119,19 @@ namespace Tijori.Services
             {
                 using var db = _context.CreateConnection();
                 const string sql = @"
-            SELECT 
-                vpl.VendorId,
-                vpl.ProductId,
-                p.Name AS ProductName,
-                COALESCE(c.CategoryName, 'General') AS CategoryName,
-                COALESCE(vpl.SupplierSku, p.ShortName) AS SupplierSku,
-                vpl.PurchasePrice,
-                p.RemainingStock AS CurrentStock
-            FROM VendorProductLinks vpl
-            INNER JOIN Products p ON vpl.ProductId = p.ProductId
-            LEFT JOIN Categories c ON p.CategoryId = c.Id
-            WHERE vpl.VendorId = @vendorId
-            ORDER BY p.Name ASC;";
+                    SELECT 
+                        vpl.VendorId,
+                        vpl.ProductId,
+                        p.Name AS ProductName,
+                        COALESCE(c.CategoryName, 'General') AS CategoryName,
+                        COALESCE(vpl.SupplierSku, p.ShortName) AS SupplierSku,
+                        vpl.PurchasePrice,
+                        p.RemainingStock AS CurrentStock
+                    FROM VendorProductLinks vpl
+                    INNER JOIN Products p ON vpl.ProductId = p.ProductId
+                    LEFT JOIN Categories c ON p.CategoryId = c.Id
+                    WHERE vpl.VendorId = @vendorId
+                    ORDER BY p.Name ASC;";
 
                 var result = await db.QueryAsync<VendorProductLinkDisplay>(sql, new { vendorId });
                 return result.ToList();
@@ -148,11 +150,11 @@ namespace Tijori.Services
             {
                 using var db = _context.CreateConnection();
                 const string sql = @"
-            INSERT INTO VendorProductLinks (VendorId, ProductId, SupplierSku, PurchasePrice)
-            VALUES (@vendorId, @productId, @supplierSku, @purchasePrice)
-            ON DUPLICATE KEY UPDATE 
-                SupplierSku = @supplierSku, 
-                PurchasePrice = @purchasePrice;";
+                    INSERT INTO VendorProductLinks (VendorId, ProductId, SupplierSku, PurchasePrice)
+                    VALUES (@vendorId, @productId, @supplierSku, @purchasePrice)
+                    ON DUPLICATE KEY UPDATE 
+                        SupplierSku = @supplierSku, 
+                        PurchasePrice = @purchasePrice;";
 
                 int rows = await db.ExecuteAsync(sql, new { vendorId, productId, supplierSku, purchasePrice });
                 return rows > 0;

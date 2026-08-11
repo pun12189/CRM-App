@@ -6,65 +6,169 @@
         xmlns:local="clr-namespace:Tijori.Dialogs"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="Create Custom Field" 
-        Height="Auto" 
-        Width="480" 
-        Icon="/Assets/opn.png"
-        SizeToContent="Height" ShowInTaskbar="False"
-        WindowStartupLocation="CenterOwner" 
-        ResizeMode="NoResize"
-        Background="#F8FAFC">
-    <Grid>
-        <Border Padding="12" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1">
-            <StackPanel Margin="10">
+        Title="Field Configuration" Height="Auto" Width="480" 
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize" SizeToContent="Height"
+        Background="Transparent" AllowsTransparency="True" WindowStyle="None" 
+        Icon="/Assets/opn.png" ShowInTaskbar="False">
+    <Grid Margin="16">
+        <Border Padding="20" Background="White" CornerRadius="8" BorderBrush="#CBD5E1" BorderThickness="1">
+            <StackPanel>
 
-                <Grid Margin="0,0,0,10">
-                    <TextBlock Text="Create Field" FontSize="18" FontWeight="Bold" Foreground="#334155" VerticalAlignment="Center"/>
-                </Grid>
+                <!-- HEADER -->
+                <DockPanel Margin="0,0,0,16" LastChildFill="True">
+                    <Button DockPanel.Dock="Right" Command="{Binding CloseDialogCommand}" 
+                            Style="{StaticResource MaterialDesignFlatButton}" Width="30" Height="30" Padding="0">
+                        <materialDesign:PackIcon Kind="Close" Width="18" Height="18" Foreground="#64748B"/>
+                    </Button>
 
-                <StackPanel Margin="6">
-                    <TextBlock Text="Field Name" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
-                    <TextBox Text="{Binding NewField.FieldName, UpdateSourceTrigger=PropertyChanged}" 
-                             materialDesign:HintAssist.Hint="Enter field Name" 
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="{Binding DialogTitle}" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
+                        <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                            <TextBlock Text="Target Scope: " FontSize="12" Foreground="#64748B" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding NewField.ModuleType}" FontSize="12" Foreground="#1794A1" FontWeight="Bold"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DockPanel>
+
+                <!-- 1. CATEGORY SELECTOR (VISIBLE ONLY WHEN CREATING NEW FIELD) -->
+                <StackPanel Margin="0,0,0,16">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <!-- Hide category picker when editing existing fields -->
+                                <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
+                    <TextBlock Text="Field Category *" FontSize="12" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,6"/>
+                    <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="4" Background="#F8FAFC">
+                        <UniformGrid Columns="2">
+                            <RadioButton Content="Standard Model Field" 
+                                         IsChecked="{Binding IsTier2Selected, Mode=TwoWay}"
+                                         GroupName="FieldTierGroup"
+                                         FontWeight="SemiBold" FontSize="11" Foreground="#2563EB" HorizontalAlignment="Center"/>
+
+                            <RadioButton Content="Custom Field" 
+                                         IsChecked="{Binding IsTier3Selected, Mode=TwoWay}"
+                                         GroupName="FieldTierGroup"
+                                         FontWeight="SemiBold" FontSize="11" Foreground="#0D9488" HorizontalAlignment="Center"/>
+                        </UniformGrid>
+                    </Border>
+                </StackPanel>
+
+                <!-- 2. ORIGINAL FIELD NAME -->
+                <StackPanel Margin="0,0,0,14">
+                    <TextBlock Text="Original Field Name *" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+
+                    <Grid>
+                        <!-- MODEL FIELD DROPDOWN PICKER (TIER 1 & TIER 2) -->
+                        <ComboBox ItemsSource="{Binding FilteredModelProperties}"
+                                  SelectedValue="{Binding SelectedModelPropertyName, UpdateSourceTrigger=PropertyChanged}"
+                                  IsEnabled="{Binding IsFieldNameEditable}"
+                                  materialDesign:HintAssist.Hint="Select original field...">
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox" BasedOn="{StaticResource MaterialDesignOutlinedComboBox}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding NewField.FieldTier}" Value="1">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding NewField.FieldTier}" Value="2">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Style>
+                        </ComboBox>
+
+                        <!-- CUSTOM FIELD TEXTBOX (TIER 3) -->
+                        <TextBox Text="{Binding NewField.FieldName, UpdateSourceTrigger=PropertyChanged}" 
+                                 IsEnabled="{Binding IsFieldNameEditable}"
+                                 materialDesign:HintAssist.Hint="Type property name...">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding NewField.FieldTier}" Value="3">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+                    </Grid>
+                </StackPanel>
+
+                <!-- 3. RENAME / CHANGE FIELD NAME -->
+                <StackPanel Margin="0,0,0,14">
+                    <TextBlock Text="Rename / Change Field Name *" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                    <TextBox Text="{Binding NewField.DisplayLabel, UpdateSourceTrigger=PropertyChanged}" 
+                             materialDesign:HintAssist.Hint="e.g. Client Name, Mobile, Account Manager..." 
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                 </StackPanel>
 
-                <StackPanel Margin="6">
-                    <TextBlock Text="Field Type" FontSize="13" FontWeight="SemiBold" Foreground="#475569" Margin="0,0,0,8"/>
-                    <ComboBox SelectedValue="{Binding NewField.FieldType}" SelectedValuePath="Tag"
-                              materialDesign:HintAssist.Hint="Select type" 
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}">
-                        <ComboBoxItem Content="Textbox" Tag="Textbox"/>
-                        <ComboBoxItem Content="TextArea" Tag="TextArea"/>
-                        <ComboBoxItem Content="Dropdown (single selection)" Tag="DropdownSingle"/>
-                        <ComboBoxItem Content="Dropdown (multiple selection)" Tag="DropdownMultiple"/>
-                        <ComboBoxItem Content="Calendar" Tag="CalendarClock"/>
-                    </ComboBox>
-                </StackPanel>
-
-                <StackPanel Margin="8">
+                <!-- 4. CONTROL TYPE (ACTIVE ONLY IN TIER 3) -->
+                <StackPanel Margin="0,0,0,14">
                     <StackPanel.Style>
                         <Style TargetType="StackPanel">
                             <Setter Property="Visibility" Value="Collapsed"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding NewField.FieldType}" Value="DropdownSingle">
-                                    <Setter Property="Visibility" Value="Visible"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding NewField.FieldType}" Value="DropdownMultiple">
+                                <DataTrigger Binding="{Binding NewField.FieldTier}" Value="3">
                                     <Setter Property="Visibility" Value="Visible"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
 
-                    <Grid>
+                    <TextBlock Text="Control Type" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                    <ComboBox SelectedValue="{Binding NewField.FieldType}" SelectedValuePath="Tag"
+                              materialDesign:HintAssist.Hint="Select Control Type" 
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}">
+                        <ComboBoxItem Content="Textbox" Tag="Textbox"/>
+                        <ComboBoxItem Content="TextArea" Tag="TextArea"/>
+                        <ComboBoxItem Content="Dropdown (single selection)" Tag="DropdownSingle"/>
+                        <ComboBoxItem Content="Dropdown (multiple selection)" Tag="DropdownMultiple"/>
+                        <ComboBoxItem Content="Calendar + Clock" Tag="CalendarClock"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <!-- 5. DROPDOWN OPTIONS MATRIX (ACTIVE ONLY FOR TIER 3 DROPDOWNS) -->
+                <StackPanel Margin="0,0,0,14">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding NewField.FieldTier}" Value="3"/>
+                                        <Condition Binding="{Binding NewField.FieldType}" Value="DropdownSingle"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding NewField.FieldTier}" Value="3"/>
+                                        <Condition Binding="{Binding NewField.FieldType}" Value="DropdownMultiple"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+
+                    <TextBlock Text="Dropdown Options" FontSize="12" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,6"/>
+                    <Grid Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
                         <TextBox Text="{Binding NewValueOptionText, UpdateSourceTrigger=PropertyChanged}"
-                                 materialDesign:HintAssist.Hint="Type option choice value text here..."
+                                 materialDesign:HintAssist.Hint="Type choice value..."
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" Grid.Column="0" Margin="0,0,8,0">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Enter" Command="{Binding AddValueOptionCommand}"/>
@@ -77,7 +181,7 @@
 
                     <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="10,6" Background="#F8FAFC" MinHeight="45">
                         <Grid>
-                            <TextBlock Text="No option choices added yet." Foreground="#94A3B8" FontSize="12" FontStyle="Italic" VerticalAlignment="Center">
+                            <TextBlock Text="No choices added yet." Foreground="#94A3B8" FontSize="12" FontStyle="Italic" VerticalAlignment="Center">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -99,8 +203,8 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <materialDesign:Chip Content="{Binding}" Margin="3" IsDeletable="True"
-                     DeleteCommand="{Binding DataContext.RemoveValueOptionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                     DeleteCommandParameter="{Binding}" Background="#EFF6FF" Foreground="#1E40AF" />
+                                                             DeleteCommand="{Binding DataContext.RemoveValueOptionCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                             DeleteCommandParameter="{Binding}" Background="#EFF6FF" Foreground="#1E40AF" />
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -108,50 +212,40 @@
                     </Border>
                 </StackPanel>
 
-                <StackPanel Margin="6">
-                    <TextBlock Text="Visible-In (Where this field should be added)" FontSize="13" FontWeight="SemiBold" Foreground="#475569"/>
-                    <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Padding="12,10" Background="#F8FAFC">
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox Content="Lead" IsChecked="{Binding NewField.IsVisibleInLead}" Margin="0,0,24,0" FontWeight="Medium" Foreground="#334155"/>
-                            <CheckBox Content="Customer" IsChecked="{Binding NewField.IsVisibleInCustomer}" Margin="0,0,24,0" FontWeight="Medium" Foreground="#334155"/>
-                            <CheckBox Content="Product" IsChecked="{Binding NewField.IsVisibleInProduct}" FontWeight="Medium" Foreground="#334155"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <DockPanel LastChildFill="False" Margin="0,5,0,0">
-                    <TextBlock Text="Required Field Validation*" FontSize="13" FontWeight="SemiBold" Foreground="#475569" VerticalAlignment="Center"/>
-                    <ToggleButton x:Name="RequiredToggle" IsChecked="{Binding NewField.IsRequired}" 
-                                  Style="{StaticResource MaterialDesignSwitchToggleButton}" 
-                                  DockPanel.Dock="Right" Background="#FF8A3D" BorderBrush="#FF8A3D"/>
-                </DockPanel>
-
-                <StackPanel Margin="6">
-                    <StackPanel.Style>
-                        <Style TargetType="StackPanel">
-                            <Setter Property="Visibility" Value="Collapsed"/>
+                <!-- 6. TOGGLE OPTIONS (HIDDEN IN TIER 1 MANDATORY FIELDS) -->
+                <Border BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12" Background="#F8FAFC" Margin="0,0,0,16">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsChecked, ElementName=RequiredToggle}" Value="True">
-                                    <Setter Property="Visibility" Value="Visible"/>
+                                <DataTrigger Binding="{Binding NewField.FieldTier}" Value="1">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
-                    </StackPanel.Style>
+                    </Border.Style>
 
-                    <TextBlock Text="Enforce Requirement For Submission In:" FontSize="12" FontWeight="SemiBold" Foreground="#B91C1C" Margin="2,0,0,0"/>
-                    <Border BorderBrush="#FEE2E2" BorderThickness="1" CornerRadius="4" Padding="12,10" Background="#FEF2F2">
-                        <StackPanel Orientation="Horizontal">
-                            <CheckBox Content="Lead" IsChecked="{Binding NewField.IsRequiredInLead}" IsEnabled="{Binding NewField.IsVisibleInLead}" Margin="0,0,16,0" FontWeight="Medium" Foreground="#991B1B"/>
-                            <CheckBox Content="Customer" IsChecked="{Binding NewField.IsRequiredInCustomer}" IsEnabled="{Binding NewField.IsVisibleInCustomer}" Margin="0,0,16,0" FontWeight="Medium" Foreground="#991B1B"/>
-                            <CheckBox Content="Product" IsChecked="{Binding NewField.IsRequiredInProduct}" IsEnabled="{Binding NewField.IsVisibleInProduct}" FontWeight="Medium" Foreground="#991B1B"/>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
+                    <StackPanel>
+                        <DockPanel LastChildFill="False" Margin="0,0,0,8">
+                            <TextBlock Text="Show on Form?" FontSize="13" FontWeight="SemiBold" Foreground="#334155" VerticalAlignment="Center"/>
+                            <ToggleButton IsChecked="{Binding NewField.IsVisible}" 
+                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                                          DockPanel.Dock="Right" Background="#0D9488" BorderBrush="#0D9488"/>
+                        </DockPanel>
 
-                <Separator Background="#E2E8F0" Margin="0,5"/>
+                        <DockPanel LastChildFill="False">
+                            <TextBlock Text="Is Required?" FontSize="13" FontWeight="SemiBold" Foreground="#334155" VerticalAlignment="Center"/>
+                            <ToggleButton IsChecked="{Binding NewField.IsRequired, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                                          DockPanel.Dock="Right" Background="#FF8A3D" BorderBrush="#FF8A3D"/>
+                        </DockPanel>
+                    </StackPanel>
+                </Border>
 
-                <Button Content="Submit" Command="{Binding SubmitCustomFieldCommand}" 
-                        Height="40" FontSize="14" FontWeight="Bold" Style="{StaticResource MaterialDesignFlatDarkBgButton}"/>
+                <!-- 7. SAVE BUTTON -->
+                <Button Content="Save Configuration" Command="{Binding SubmitCustomFieldCommand}" 
+                        Height="40" FontSize="14" FontWeight="Bold" Background="#1794A1" BorderBrush="#1794A1" Foreground="White"
+                        Style="{StaticResource MaterialDesignFlatDarkBgButton}"/>
             </StackPanel>
         </Border>
     </Grid>

@@ -6,8 +6,9 @@
         xmlns:local="clr-namespace:Tijori.Dialogs"
         mc:Ignorable="d"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:conv="clr-namespace:Tijori.Converters"
         Title="{Binding WindowTitle}" 
-        Width="480" Height="640"
+        Width="480" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
         ShowInTaskbar="False"
@@ -28,6 +29,10 @@
         </Style>
 
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <conv:StringToUpperConverter x:Key="StringToUpperConverter"/>
+        <conv:FieldLabelConverter x:Key="FieldLabelConverter"/>
+        <conv:FieldVisibilityConverter x:Key="FieldVisibilityConverter"/>
+        <conv:MultiBooleanToVisibilityConverter x:Key="MultiBooleanToVisibilityConverter"/>
     </Window.Resources>
 
     <Grid Margin="24">
@@ -35,71 +40,138 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
         <!-- Dynamic Header -->
-        <TextBlock Text="{Binding HeaderTitle}" 
-                   FontSize="18" 
-                   FontWeight="Bold" 
-                   Margin="0,0,0,16" 
-                   Foreground="#1E293B"/>
+        <TextBlock Grid.Row="0" Text="{Binding HeaderTitle}" 
+                   FontSize="18" FontWeight="Bold" Margin="0,0,0,16" Foreground="#1E293B"/>
 
         <!-- Form Scroll Area -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,10">
             <StackPanel Margin="0,4,8,4">
-                <!-- Company Name -->
-                <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
-                         materialDesign:HintAssist.Hint="Company Name *"/>
 
-                <!-- Contact Person -->
-                <TextBox Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
-                         materialDesign:HintAssist.Hint="Contact Person Name"/>
+                <!-- Company Name (TIER 1 - MANDATORY) -->
+                <TextBox Text="{Binding CompanyName, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='CompanyName|Company Name *'}"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12"/>
 
-                <!-- Phone Number -->
-                <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
-                         materialDesign:HintAssist.Hint="Phone Number *"/>
+                <!-- Contact Person (TIER 2 - OPTIONAL) -->
+                <TextBox Text="{Binding ContactPerson, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='ContactPerson|Contact Person Name'}"
+                         Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='ContactPerson'}"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12"/>
 
-                <!-- Email Address -->
-                <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
-                         materialDesign:HintAssist.Hint="Email Address"/>
+                <!-- Phone Number (TIER 1 - MANDATORY) -->
+                <TextBox Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Phone|Phone Number *'}"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12"/>
 
-                <!-- GSTIN -->
-                <TextBox Text="{Binding GstNumber, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
-                         materialDesign:HintAssist.Hint="GSTIN Number"/>
+                <!-- Email Address (TIER 2 - OPTIONAL) -->
+                <TextBox Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Email|Email Address'}"
+                         Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='Email'}"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12"/>
 
-                <!-- Status (Visible when in Edit Mode) -->
+                <!-- GSTIN Number (TIER 2 - OPTIONAL) -->
+                <TextBox Text="{Binding GstNumber, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='GstNumber|GSTIN Number'}"
+                         Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='GstNumber'}"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,0,12"/>
+
+                <!-- Status (Visible in Edit Mode and if enabled in settings) -->
                 <ComboBox SelectedValue="{Binding Status, UpdateSourceTrigger=PropertyChanged}" 
                           SelectedValuePath="Content"
-                          materialDesign:HintAssist.Hint="Account Status"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                          Margin="0,0,0,14"
-                          Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                          materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Status|Account Status'}"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,0,12">
+                    <ComboBox.Visibility>
+                        <MultiBinding Converter="{StaticResource MultiBooleanToVisibilityConverter}">
+                            <Binding Path="IsEditMode"/>
+                            <Binding Path="FieldConfigMap" Converter="{StaticResource FieldVisibilityConverter}" ConverterParameter="Status"/>
+                        </MultiBinding>
+                    </ComboBox.Visibility>
                     <ComboBoxItem Content="Active"/>
                     <ComboBoxItem Content="Inactive"/>
                 </ComboBox>
 
-                <!-- Address -->
-                <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
-                         materialDesign:HintAssist.Hint="Address Location" 
-                         Height="75" 
-                         AcceptsReturn="True" 
-                         TextWrapping="Wrap"/>
+                <!-- Address Location (TIER 2 - OPTIONAL) -->
+                <TextBox Text="{Binding Address, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Address|Address Location'}"
+                         Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='Address'}"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="75" AcceptsReturn="True" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                <!-- TIER 3 DYNAMIC CUSTOM FIELDS -->
+                <ItemsControl ItemsSource="{Binding DynamicVendorFields}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0,0,12">
+                                <ContentControl x:Name="InputControlHost" Focusable="False">
+                                    <TextBox Text="{Binding FieldValue, UpdateSourceTrigger=PropertyChanged}"
+                                             materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
+                                             materialDesign:HintAssist.IsFloating="True"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                </ContentControl>
+                            </Grid>
+
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding FieldType}" Value="DropdownSingle">
+                                    <Setter TargetName="InputControlHost" Property="Content">
+                                        <Setter.Value>
+                                            <ComboBox ItemsSource="{Binding OptionsList}"
+                                                      SelectedItem="{Binding FieldValue, UpdateSourceTrigger=PropertyChanged}"
+                                                      materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
+                                                      materialDesign:HintAssist.IsFloating="True"
+                                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+
+                                <DataTrigger Binding="{Binding FieldType}" Value="TextArea">
+                                    <Setter TargetName="InputControlHost" Property="Content">
+                                        <Setter.Value>
+                                            <TextBox Text="{Binding FieldValue, UpdateSourceTrigger=PropertyChanged}"
+                                                     materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
+                                                     materialDesign:HintAssist.IsFloating="True"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                     Height="75" AcceptsReturn="True" TextWrapping="Wrap"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+
+                                <DataTrigger Binding="{Binding FieldType}" Value="CalendarClock">
+                                    <Setter TargetName="InputControlHost" Property="Content">
+                                        <Setter.Value>
+                                            <DatePicker SelectedDate="{Binding SelectedDate, UpdateSourceTrigger=PropertyChanged}"
+                                                        materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
+                                                        materialDesign:HintAssist.IsFloating="True"
+                                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </StackPanel>
         </ScrollViewer>
 
+        <!-- Validation Error Message Bar -->
+        <TextBlock Grid.Row="2" Text="{Binding ValidationErrorMessage}" 
+                   Foreground="#DC2626" FontWeight="SemiBold" FontSize="12"
+                   Margin="0,4,0,8" TextWrapping="Wrap"
+                   Visibility="{Binding IsValidationErrorVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
         <!-- Action Buttons -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
             <Button Content="Cancel" 
                     Command="{Binding CloseWindowCommand}" 
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" 
-                    Style="{StaticResource MaterialDesignFlatButton}" 
-                    Margin="0,0,10,0"/>
+                    Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,10,0"/>
 
             <Button Content="{Binding SaveButtonText}" 
                     Command="{Binding SaveVendorCommand}" 
                     CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" 
-                    Background="#059669" 
-                    BorderBrush="Transparent"/>
+                    Background="#059669" BorderBrush="Transparent"/>
         </StackPanel>
     </Grid>
 </Window>

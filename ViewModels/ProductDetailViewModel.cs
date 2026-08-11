@@ -1,20 +1,21 @@
-﻿using Tijori.Models;
-using Tijori.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using Tijori.Core;
+using Tijori.Models;
+using Tijori.Services;
 
 namespace Tijori.ViewModels
 {
     public partial class ProductDetailViewModel : ObservableObject
     {
         private readonly ProductService _productService;
+        private readonly CustomFieldService _customFieldService;
         private readonly int _currentDivisionId = 1;
 
         [ObservableProperty] private Product _newProduct;
@@ -25,39 +26,85 @@ namespace Tijori.ViewModels
         [ObservableProperty] private string _validationErrorMessage = string.Empty;
         [ObservableProperty] private bool _isValidationErrorVisible;
 
-        public ProductDetailViewModel(ProductService service, ObservableCollection<Category> categories, Product product)
+        [ObservableProperty] private ModuleFieldConfigMap _fieldConfigMap = new(new List<CustomFieldDefinition>());
+        [ObservableProperty] private ObservableCollection<CustomFieldInputValue> _dynamicProductFields = new();
+
+        public ProductDetailViewModel(
+            ProductService service,
+            CustomFieldService customFieldService,
+            ObservableCollection<Category> categories,
+            Product? product = null)
         {
             _productService = service;
+            _customFieldService = customFieldService;
             _categories = categories;
-            _newProduct = product;
 
-            // FIX: Ensure the first category is selectable if no category is set
-            if (_newProduct.CategoryId == 0 && _categories.Any())
-            {
-                _newProduct.CategoryId = _categories.First().Id;
-            }
-
-            InitializeForm();
-        }
-
-        private void InitializeForm()
-        {
-            NewProduct = new Product
+            _newProduct = product ?? new Product
             {
                 DivisionId = _currentDivisionId,
                 Unit = "Pcs",
-                TrackCost = true
+                TrackCost = true,
+                HasBatchTracking = true // Default to batch-tracked mode
             };
 
-            TargetBatch = new ProductBatch
+            _targetBatch = new ProductBatch
             {
                 DivisionId = _currentDivisionId
             };
 
-            IsValidationErrorVisible = false;
+            // Select default category if unassigned
+            if (_newProduct.CategoryId == 0 && _categories != null && _categories.Any())
+            {
+                _newProduct.CategoryId = _categories.First().Id;
+            }
+
+            _ = LoadInitialDataAsync();
         }
 
-        // Intercepts input on the full Product Name field to auto-generate a sanitized code format
+        private async Task LoadInitialDataAsync()
+        {
+            await GetCustomFields();
+        }
+
+        private async Task GetCustomFields()
+        {
+            // 1. Fetch field definitions for Product module
+            var fieldDefinitions = (await _customFieldService.GetFieldsByModuleAsync("Product")).ToList();
+
+            // 2. Populate FieldConfigMap for Section 1 & 2 hints and visibility toggles
+            FieldConfigMap = new ModuleFieldConfigMap(fieldDefinitions);
+
+            // 3. Fetch saved Tier 3 custom field values from DB if editing an existing product
+            Dictionary<int, string> savedValues = (NewProduct != null && NewProduct.ProductId > 0)
+                ? await _customFieldService.GetEntityCustomFieldValuesAsync(NewProduct.ProductId, "Product")
+                : new Dictionary<int, string>();
+
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                DynamicProductFields.Clear();
+
+                // 4. Hydrate Tier 3 dynamic custom fields into Section 3 with saved values
+                foreach (var f in fieldDefinitions.Where(x => x.IsVisible && x.FieldTier == 3))
+                {
+                    // Try to pull previously saved value for this FieldId
+                    savedValues.TryGetValue(f.FieldId, out string? initialValue);
+
+                    DynamicProductFields.Add(new CustomFieldInputValue
+                    {
+                        FieldId = f.FieldId,
+                        FieldName = f.FieldName,
+                        DisplayLabel = f.DisplayLabel,
+                        FieldType = f.FieldType,
+                        FieldTier = f.FieldTier,
+                        IsRequired = f.IsRequired,
+                        FieldValue = initialValue ?? string.Empty, // 👈 HYDRATES SAVED VALUE IN EDIT MODE
+                        OptionsList = f.SeedValueOptionsList ?? new ObservableCollection<string>()
+                    });
+                }
+            });
+        }
+
+        // Auto-generate sanitized ShortName when Product.Name changes
         partial void OnNewProductChanged(Product value)
         {
             if (value != null)
@@ -80,7 +127,6 @@ namespace Tijori.ViewModels
                 return;
             }
 
-            // Sanitizes inputs: "Alloy Rim 26 Inch" -> "ALLOY-RIM-26-INCH"
             string sanitized = fullName.Trim()
                                        .Replace(" ", "-")
                                        .Replace("--", "-");
@@ -90,7 +136,24 @@ namespace Tijori.ViewModels
         [RelayCommand]
         private void ClearForm()
         {
-            InitializeForm();
+            NewProduct = new Product
+            {
+                DivisionId = _currentDivisionId,
+                Unit = "Pcs",
+                TrackCost = true,
+                HasBatchTracking = true,
+                CategoryId = _categories.FirstOrDefault()?.Id ?? 0
+            };
+
+            TargetBatch = new ProductBatch
+            {
+                DivisionId = _currentDivisionId
+            };
+
+            IsValidationErrorVisible = false;
+            ValidationErrorMessage = string.Empty;
+
+            _ = GetCustomFields();
         }
 
         private void ShowError(string message)
@@ -100,59 +163,108 @@ namespace Tijori.ViewModels
         }
 
         [RelayCommand]
-        private async Task Save(Window window)
-        {
-            if (await _productService.UpsertProductWithBatchAsync(NewProduct, TargetBatch))
-            {
-                window.DialogResult = true;
-                window.Close();
-            }
-        }
-
-        [RelayCommand]
-        private async Task SaveProductAssembly()
+        private async Task SaveProductAssembly(Window? window)
         {
             IsValidationErrorVisible = false;
 
-            // 1. Core Field Validations
-            if (string.IsNullOrWhiteSpace(NewProduct.Name) ||
-                string.IsNullOrWhiteSpace(NewProduct.SKU) ||
-                string.IsNullOrWhiteSpace(NewProduct.BrandName) ||
-                string.IsNullOrWhiteSpace(TargetBatch.BatchNumber))
+            // 1. MANDATORY TIER 1 VALIDATION
+            if (string.IsNullOrWhiteSpace(NewProduct.Name))
             {
-                ShowError("Please complete all mandatory fields marked with an asterisk (*).");
+                ShowError($"{FieldConfigMap.GetLabel("Name", "Product Name")} is required.");
                 return;
             }
 
-            if (TargetBatch.QuantityReceived <= 0 || TargetBatch.MinimumSellingPrice <= 0)
+            // 2. TIER 2 DYNAMIC VALIDATION
+            if (FieldConfigMap.GetIsRequired("SKU") && string.IsNullOrWhiteSpace(NewProduct.SKU))
             {
-                ShowError("Quantity received and Minimum Selling Price must be greater than zero.");
+                ShowError($"{FieldConfigMap.GetLabel("SKU", "SKU")} is required.");
                 return;
+            }
+
+            if (FieldConfigMap.GetIsRequired("ShortName") && string.IsNullOrWhiteSpace(NewProduct.ShortName))
+            {
+                ShowError($"{FieldConfigMap.GetLabel("ShortName", "Short Name")} is required.");
+                return;
+            }
+
+            // 3. TIER 3 DYNAMIC CUSTOM FIELDS VALIDATION
+            foreach (var customField in DynamicProductFields)
+            {
+                if (customField.IsRequired && string.IsNullOrWhiteSpace(customField.FieldValue))
+                {
+                    ShowError($"{customField.EffectiveLabel} is required.");
+                    return;
+                }
+            }
+
+            // 4. BATCH VS DIRECT TRADER DATE LOGIC
+            if (NewProduct.HasBatchTracking)
+            {
+                // Batch Mode: Dates come from TargetBatch and get pushed to NewProduct
+                if (string.IsNullOrWhiteSpace(TargetBatch.BatchNumber))
+                {
+                    ShowError("Batch Number / Lot Code is required when Batch Tracking is enabled.");
+                    return;
+                }
+
+                // Check for duplicate batch code if creating a new entry
+                if (NewProduct.ProductId == 0)
+                {
+                    bool isDuplicate = await _productService.IsBatchNumberDuplicateAsync(TargetBatch.BatchNumber, _currentDivisionId);
+                    if (isDuplicate)
+                    {
+                        ShowError($"Batch code '{TargetBatch.BatchNumber}' already exists in this division.");
+                        return;
+                    }
+                }
+
+                NewProduct.MfgDate = TargetBatch.MfgDate;
+                NewProduct.ExpiryDate = TargetBatch.ExpiryDate;
+            }
+            else
+            {
+                // Direct Trader Mode: Sync dates directly to a default lot row
+                if (string.IsNullOrWhiteSpace(TargetBatch.BatchNumber))
+                {
+                    TargetBatch.BatchNumber = $"DIRECT-{DateTime.Now:yyyyMMddHHmmss}";
+                }
+                TargetBatch.MfgDate = NewProduct.MfgDate;
+                TargetBatch.ExpiryDate = NewProduct.ExpiryDate;
             }
 
             try
             {
-                // 2. Check for Unique Batch Number across the Active Division
-                bool isDuplicateBatch = await _productService.IsBatchNumberDuplicateAsync(TargetBatch.BatchNumber, _currentDivisionId);
-                if (isDuplicateBatch)
-                {
-                    ShowError($"Batch code '{TargetBatch.BatchNumber}' is already registered in this division inventory branch.");
-                    return;
-                }
+                TargetBatch.CurrentStock = TargetBatch.QuantityReceived;
+                TargetBatch.DivisionId = _currentDivisionId;
 
-                // 3. Map values from initial entry configuration into parent row aggregates
                 NewProduct.InitialStock = TargetBatch.QuantityReceived;
                 NewProduct.RemainingStock = TargetBatch.QuantityReceived;
-                NewProduct.CostPrice = TargetBatch.MinimumSellingPrice; // Set base WAC cost baseline
+                NewProduct.CostPrice = TargetBatch.MinimumSellingPrice;
 
-                TargetBatch.CurrentStock = TargetBatch.QuantityReceived;
-
-                // 4. Save to Database
+                // 5. UPSERT MAIN PRODUCT AND BATCH RECORD
                 bool isSaved = await _productService.UpsertProductWithBatchAsync(NewProduct, TargetBatch);
-                if (isSaved)
+
+                if (isSaved && NewProduct.ProductId > 0)
                 {
-                    // Success! Reset form for next inventory entry
-                    InitializeForm();
+                    // 6. PERSIST TIER 3 DYNAMIC CUSTOM FIELD VALUES TO DATABASE
+                    var customValues = DynamicProductFields
+                        .Select(cf => new KeyValuePair<int, string>(cf.FieldId, cf.FieldValue ?? string.Empty));
+
+                    await _customFieldService.SaveEntityCustomFieldValuesAsync(NewProduct.ProductId, "Product", customValues);
+
+                    if (window != null)
+                    {
+                        window.DialogResult = true;
+                        window.Close();
+                    }
+                    else
+                    {
+                        ClearForm();
+                    }
+                }
+                else
+                {
+                    ShowError("Failed to save product entry.");
                 }
             }
             catch (Exception ex)

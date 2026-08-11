@@ -31,6 +31,9 @@ namespace Tijori.Models
         [ObservableProperty] private int _remainingStock;
         [ObservableProperty] private int _initialStock;
 
+        [ObservableProperty] private DateTime? _mfgDate;
+        [ObservableProperty] private DateTime? _expiryDate;
+
         // Costing
         [ObservableProperty] private decimal _mRP;
         [ObservableProperty] private decimal _costPrice;
@@ -38,6 +41,8 @@ namespace Tijori.Models
         [ObservableProperty] private decimal _gstPercent;
 
         [ObservableProperty] private bool _trackCost = true;
+
+        [ObservableProperty] private bool _hasBatchTracking = true;
 
         [ObservableProperty] private bool _isExpanded;
 

@@ -33,7 +33,6 @@ namespace Tijori.Services
                     VALUES (@Email, @Password, @FullName, @Phone, @Role, @SeniorId, @DepartmentId, @MonthlyTarget, @IsActive, NOW());
                     SELECT LAST_INSERT_ID();";
 
-                // Execute query bound tightly to the current transaction channel context
                 int newUserId = await db.QuerySingleAsync<int>(sql, user, transaction: transaction);
 
                 transaction.Commit();
@@ -42,9 +41,8 @@ namespace Tijori.Services
             catch (Exception ex)
             {
                 transaction.Rollback();
-                // Replace with your centralized logger if available (e.g., _logger.LogError(ex))
                 System.Diagnostics.Debug.WriteLine($"Error in CreateUserAsync: {ex.Message}");
-                throw new ApplicationException("Failed to commit the creation transaction loop for the new staff member.", ex);
+                throw new ApplicationException("Failed to commit the creation transaction for the new staff member.", ex);
             }
         }
 
@@ -84,15 +82,13 @@ namespace Tijori.Services
         }
 
         /// <summary>
-        /// Reads all active user records within a clean, isolated read-committed transaction space.
+        /// Reads all active user records.
         /// </summary>
         public async Task<IEnumerable<User>> GetAllStaffAsync()
         {
-            using var db = _context.CreateConnection();
-            using var transaction = db.BeginTransaction(IsolationLevel.ReadCommitted);
-
             try
             {
+                using var db = _context.CreateConnection();
                 const string sql = @"
                     SELECT u.*, d.DeptName, s.FullName as SeniorName
                     FROM Users u
@@ -101,29 +97,23 @@ namespace Tijori.Services
                     WHERE u.IsActive = 1
                     ORDER BY u.UserId ASC;";
 
-                var staffList = await db.QueryAsync<User>(sql, transaction: transaction);
-
-                transaction.Commit();
-                return staffList;
+                return await db.QueryAsync<User>(sql);
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
                 System.Diagnostics.Debug.WriteLine($"Error in GetAllStaffAsync: {ex.Message}");
-                throw new ApplicationException("Failed to retrieve system staff registry lists data streams.", ex);
+                return Enumerable.Empty<User>();
             }
         }
 
         /// <summary>
-        /// Reads a user record by email within a clean, isolated read-committed transaction space.
+        /// Reads a user record by email.
         /// </summary>
-        public async Task<User> GetUserByEmailAsync(string email)
+        public async Task<User?> GetUserByEmailAsync(string email)
         {
-            using var db = _context.CreateConnection();
-            using var transaction = db.BeginTransaction(IsolationLevel.ReadCommitted);
-
             try
             {
+                using var db = _context.CreateConnection();
                 const string sql = @"
                     SELECT u.*, d.DeptName, s.FullName as SeniorName
                     FROM Users u
@@ -132,69 +122,60 @@ namespace Tijori.Services
                     WHERE u.IsActive = 1 AND u.Email = @Email
                     ORDER BY u.UserId ASC;";
 
-                var user = await db.QuerySingleOrDefaultAsync<User>(sql, new { Email = email }, transaction: transaction);
-
-                transaction.Commit();
-                return user;
+                return await db.QuerySingleOrDefaultAsync<User>(sql, new { Email = email });
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
                 System.Diagnostics.Debug.WriteLine($"Error in GetUserByEmailAsync: {ex.Message}");
-                throw new ApplicationException("Failed to retrieve system staff registry lists data streams.", ex);
+                return null;
             }
         }
 
         public async Task<string> GetAdminSecretKeyAsync()
         {
-            using (IDbConnection db = _context.CreateConnection())
-            {
-                // Query filters for active system profile where Role code equals 1 (Admin)
-                string sql = @"SELECT TwoFactorSecret 
-                           FROM Users 
-                           WHERE Role = 0 AND IsActive = 1 
-                           LIMIT 1;";
-
-                // Execute scalar query to pull only the matching text row value block
-                string? adminSecret = await db.ExecuteScalarAsync<string?>(sql);
-
-                return adminSecret ?? string.Empty;
-            }
-        }
-
-        /// <summary>
-        /// Fetches higher-ranking personnel choices within a secure database transaction context.
-        /// </summary>
-        public async Task<IEnumerable<User>> GetEligibleSeniorsAsync(UserRole targetRole)
-        {
-            using var db = _context.CreateConnection();
-            using var transaction = db.BeginTransaction(IsolationLevel.ReadCommitted);
-
             try
             {
-                // Pulls managers whose role ID value sits above the targeted layout assignment level
-                const string sql = "SELECT * FROM Users WHERE Role < @TargetRole AND IsActive = 1;";
-                var seniors = await db.QueryAsync<User>(sql, new { TargetRole = (byte)targetRole }, transaction: transaction);
+                using var db = _context.CreateConnection();
+                const string sql = @"SELECT TwoFactorSecret 
+                               FROM Users 
+                               WHERE Role = 0 AND IsActive = 1 
+                               LIMIT 1;";
 
-                transaction.Commit();
-                return seniors;
+                string? adminSecret = await db.ExecuteScalarAsync<string?>(sql);
+                return adminSecret ?? string.Empty;
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
-                System.Diagnostics.Debug.WriteLine($"Error in GetEligibleSeniorsAsync: {ex.Message}");
-                throw new ApplicationException("Failed to evaluate hierarchy metrics data parameters.", ex);
+                System.Diagnostics.Debug.WriteLine($"Error in GetAdminSecretKeyAsync: {ex.Message}");
+                return string.Empty;
             }
         }
 
         /// <summary>
-        /// Flag-based soft deletion to securely isolate account historical data metrics.
+        /// Fetches higher-ranking personnel choices for reporting hierarchy.
+        /// </summary>
+        public async Task<IEnumerable<User>> GetEligibleSeniorsAsync(UserRole targetRole)
+        {
+            try
+            {
+                using var db = _context.CreateConnection();
+                const string sql = "SELECT * FROM Users WHERE Role < @TargetRole AND IsActive = 1;";
+                return await db.QueryAsync<User>(sql, new { TargetRole = (byte)targetRole });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in GetEligibleSeniorsAsync: {ex.Message}");
+                return Enumerable.Empty<User>();
+            }
+        }
+
+        /// <summary>
+        /// Soft deletes user profile.
         /// </summary>
         public async Task<bool> SoftDeleteUserAsync(User user)
         {
-            // App-level security barrier safeguard check
             if (user.Role == UserRole.Admin)
-                throw new InvalidOperationException("System Security Rule Violation: Master Administrative routing profiles can never be removed from active memory spaces.");
+                throw new InvalidOperationException("System Security Rule Violation: Master Administrative routing profiles can never be removed.");
 
             using var db = _context.CreateConnection();
             using var transaction = db.BeginTransaction();
@@ -211,12 +192,12 @@ namespace Tijori.Services
             {
                 transaction.Rollback();
                 System.Diagnostics.Debug.WriteLine($"Error in SoftDeleteUserAsync: {ex.Message}");
-                throw new ApplicationException($"Failed to execute soft-delete lifecycle operations for User ID {user.UserId}.", ex);
+                throw new ApplicationException($"Failed to soft-delete User ID {user.UserId}.", ex);
             }
         }
 
         /// <summary>
-        /// Hard-deletes a user profile with an integrated database check to prevent deleting Admins.
+        /// Hard deletes a user profile with safety checks preventing Admin removal.
         /// </summary>
         public async Task<bool> DeleteUserAsync(int userId)
         {
@@ -225,7 +206,6 @@ namespace Tijori.Services
 
             try
             {
-                // CRITICAL SAFETY GATE: Query the role level inside the transaction space right before taking physical action
                 const string checkRoleSql = "SELECT Role FROM Users WHERE UserId = @UserId;";
                 var roleValue = await db.ExecuteScalarAsync<byte?>(checkRoleSql, new { UserId = userId }, transaction: transaction);
 
@@ -244,24 +224,28 @@ namespace Tijori.Services
             {
                 transaction.Rollback();
                 System.Diagnostics.Debug.WriteLine($"Error in DeleteUserAsync: {ex.Message}");
-                throw new ApplicationException($"Failed to run physical purge parameters for target User ID {userId}.", ex);
+                throw new ApplicationException($"Failed to purge User ID {userId}.", ex);
             }
         }
 
         public async Task UpdateUser2FAStatusAsync(int userId, bool isEnabled, string secretKey)
         {
-            using (IDbConnection db = _context.CreateConnection())
+            try
             {
-                string sql = @"UPDATE Users 
-                           SET IsTwoFactorEnabled = @IsEnabled, 
-                               TwoFactorSecret = @SecretKey 
-                           WHERE UserId = @UserId;";
+                using var db = _context.CreateConnection();
+                const string sql = @"UPDATE Users 
+                               SET IsTwoFactorEnabled = @IsEnabled, 
+                                   TwoFactorSecret = @SecretKey 
+                               WHERE UserId = @UserId;";
 
                 await db.ExecuteAsync(sql, new { UserId = userId, IsEnabled = isEnabled, SecretKey = secretKey });
             }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error in UpdateUser2FAStatusAsync: {ex.Message}");
+            }
         }
 
-        // 1. CALCULATE MONTHLY SALES ACHIEVED BY STAFF MEMBER (ProcessedBy = Email/FullName)
         public async Task<decimal> GetMonthlySalesAchievedAsync(string identifier, int year, int month)
         {
             try
@@ -270,7 +254,7 @@ namespace Tijori.Services
                 const string sql = @"
                     SELECT COALESCE(SUM(TotalAmount), 0)
                     FROM Orders
-                    WHERE (ProcessedBy = @identifier OR ProcessedBy = @identifier)
+                    WHERE ProcessedBy = @identifier
                       AND YEAR(OrderDate) = @year
                       AND MONTH(OrderDate) = @month
                       AND Status != 'Cancelled';";
@@ -284,7 +268,6 @@ namespace Tijori.Services
             }
         }
 
-        // 2. FETCH LEAD STATS HELD BY THIS STAFF (LeadHolder = FullName)
         public async Task<(int TotalLeads, int ConvertedLeads)> GetLeadStatsByStaffAsync(string staffFullName)
         {
             try
@@ -297,10 +280,10 @@ namespace Tijori.Services
                     FROM Leads
                     WHERE LeadHolder = @staffFullName;";
 
-                var result = await db.QueryFirstOrDefaultAsync<dynamic>(sql, new { staffFullName });
+                var result = await db.QueryFirstOrDefaultAsync(sql, new { staffFullName });
                 if (result != null)
                 {
-                    return ((int)result.TotalLeads, (int)result.ConvertedLeads);
+                    return (Convert.ToInt32(result.TotalLeads), Convert.ToInt32(result.ConvertedLeads));
                 }
                 return (0, 0);
             }
@@ -311,7 +294,6 @@ namespace Tijori.Services
             }
         }
 
-        // 3. FETCH TOTAL ACTIVE ACCOUNTS / CUSTOMERS MANAGED BY STAFF
         public async Task<int> GetManagedCustomersCountAsync(string staffFullName)
         {
             try
@@ -332,18 +314,16 @@ namespace Tijori.Services
             try
             {
                 using var db = _context.CreateConnection();
-
-                // Fetch active schemes targeted at 'Staff' where today's date falls within range
                 const string sql = @"
-            SELECT 
-                SchemeId, Title, TargetScope, StartDate, EndDate, 
-                IsActive, MinimumOrderThreshold, RewardType, RewardValue, 
-                GiftItemName, RedemptionMode
-            FROM DynamicSchemes
-            WHERE TargetScope = 'Staff'
-              AND IsActive = 1
-              AND CURDATE() BETWEEN StartDate AND EndDate
-            ORDER BY SchemeId DESC;";
+                    SELECT 
+                        SchemeId, Title, TargetScope, StartDate, EndDate, 
+                        IsActive, MinimumOrderThreshold, RewardType, RewardValue, 
+                        GiftItemName, RedemptionMode
+                    FROM DynamicSchemes
+                    WHERE TargetScope = 'Staff'
+                      AND IsActive = 1
+                      AND CURDATE() BETWEEN StartDate AND EndDate
+                    ORDER BY SchemeId DESC;";
 
                 var result = await db.QueryAsync<PromotionalScheme>(sql);
                 return result.ToList();

@@ -1,7 +1,4 @@
-﻿using Tijori.Interfaces;
-using Tijori.Models;
-using Tijori.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PhoneNumbers;
 using System.Collections.ObjectModel;
@@ -9,6 +6,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.RegularExpressions;
+using Tijori.Core;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
 
 namespace Tijori.ViewModels
 {
@@ -22,6 +23,8 @@ namespace Tijori.ViewModels
         private readonly CustomFieldService _customFieldService;
         [ObservableProperty]
         private Lead _newLead = new();
+
+        [ObservableProperty] private string _moduleContext = "Lead";
 
         [ObservableProperty]
         private string _tempFieldName = "";
@@ -38,6 +41,8 @@ namespace Tijori.ViewModels
 
         // Small helper class
         public record CustomFieldEntry(string Key, string Value);
+
+        [ObservableProperty] private ModuleFieldConfigMap _fieldConfigMap = new(new List<CustomFieldDefinition>());
 
         [ObservableProperty] private ObservableCollection<CustomFieldInputValue> _dynamicLeadFields = new();
 
@@ -120,6 +125,12 @@ namespace Tijori.ViewModels
 
         public async Task Initialize(Lead? existingLead, bool IsCustomer = false)
         {
+            _isCustomerMode = IsCustomer;
+            ModuleContext = IsCustomer ? "Customer" : "Lead";
+
+            // Reload field schema and configurations for the active module context
+            await GetCustomFields();
+
             if (existingLead != null)
             {
                 NewLead = existingLead;               
@@ -176,21 +187,78 @@ namespace Tijori.ViewModels
 
         private async Task GetCustomFields()
         {
-            // Fetch dynamic database configurations schemas matching this view target space
-            var fieldDefinitions = await _customFieldService.GetAllFieldsAsync();
+            // 1. Fetch field definitions for Lead / Customer module
+            var fieldDefinitions = (await _customFieldService.GetFieldsByModuleAsync(ModuleContext)).ToList();
+
+            // 2. Populate Tier 1 & Tier 2 config map for dynamic labels and visibility toggles in Sections 1 & 2
+            FieldConfigMap = new ModuleFieldConfigMap(fieldDefinitions);
+
+            // 3. Fetch live options for dynamic system dropdowns
+            var sources = (await _settingService.GetSettingsAsync("LeadSources")).Select(x => x.Name).ToList();
+            var tags = (await _settingService.GetSettingsAsync("LeadTags")).Select(x => x.Name).ToList();
+            var labels = (await _settingService.GetSettingsAsync("LeadLabels")).Select(x => x.Name).ToList();
+            var divisions = (await _profileService.GetActiveDivisionsAsync()).Select(x => x.Name).ToList();
+
+            // 4. Fetch saved Tier 3 custom field values from DB if editing an existing record
+            Dictionary<int, string> savedValues = (_isEditMode && NewLead.LeadId > 0)
+                ? await _customFieldService.GetEntityCustomFieldValuesAsync(NewLead.LeadId, ModuleContext)
+                : new Dictionary<int, string>();
+
             App.Current.Dispatcher.Invoke(() =>
             {
                 DynamicLeadFields.Clear();
-                foreach (var f in fieldDefinitions.Where(x => _isCustomerMode ? x.IsVisibleInCustomer : x.IsVisibleInLead))
+
+                // 5. Loop through Tier 2 system dropdowns and Tier 3 dynamic custom fields
+                foreach (var f in fieldDefinitions.Where(x => x.IsVisible && x.FieldTier != 1))
                 {
-                    DynamicLeadFields.Add(new CustomFieldInputValue
+                    // Hydrate previously saved value if available
+                    savedValues.TryGetValue(f.FieldId, out string? initialValue);
+
+                    var inputValue = new CustomFieldInputValue
                     {
                         FieldId = f.FieldId,
                         FieldName = f.FieldName,
+                        DisplayLabel = f.DisplayLabel,
                         FieldType = f.FieldType,
-                        IsRequiredInLead = f.IsRequiredInLead,
-                        SeedValueOptionsList = f.SeedValueOptionsList ?? new ObservableCollection<string>()
-                    });
+                        FieldTier = f.FieldTier,
+                        IsRequired = f.IsRequired,
+                        FieldValue = initialValue ?? string.Empty // 👈 HYDRATES SAVED VALUE IN EDIT MODE
+                    };
+
+                    // TIER 2 SYSTEM DROPDOWNS (Divisions, Sources, Tags, Labels)
+                    if (f.FieldTier == 2)
+                    {
+                        switch (f.FieldName)
+                        {
+                            case "LeadSource":
+                                inputValue.FieldType = "DropdownSingle";
+                                inputValue.OptionsList = new ObservableCollection<string>(sources);
+                                break;
+                            case "LeadTag":
+                                inputValue.FieldType = "DropdownSingle";
+                                inputValue.OptionsList = new ObservableCollection<string>(tags);
+                                break;
+                            case "LeadLabels":
+                                inputValue.FieldType = "DropdownMultiple";
+                                inputValue.OptionsList = new ObservableCollection<string>(labels);
+                                break;
+                            case "AssignedDivisions":
+                                inputValue.FieldType = "DropdownMultiple";
+                                inputValue.OptionsList = new ObservableCollection<string>(divisions);
+                                break;
+                            default:
+                                // Skip standard model textboxes (AltPhone, Email, CompanyName)
+                                // because they are statically placed in Section 1 & Section 2 XAML!
+                                continue;
+                        }
+                    }
+                    // TIER 3 DYNAMIC CUSTOM FIELDS
+                    else if (f.FieldTier == 3)
+                    {
+                        inputValue.OptionsList = f.SeedValueOptionsList ?? new ObservableCollection<string>();
+                    }
+
+                    DynamicLeadFields.Add(inputValue);
                 }
             });
         }
@@ -225,19 +293,21 @@ namespace Tijori.ViewModels
                 return;
             }
 
+            // Tier 1 Mandatory Customer/Lead Name validation
             if (string.IsNullOrWhiteSpace(NewLead.CustomerName))
             {
-                // You could add a StatusMessage property here for validation errors
+                ValidationMessage = $"{FieldConfigMap.GetLabel("CustomerName", _isCustomerMode ? "Customer Name" : "Lead Name")} is mandatory.";
                 return;
             }
 
+            // Tier 3 Dynamic Custom Field Validations
             bool validationFailed = false;
             foreach (var inputField in DynamicLeadFields)
             {
-                if (inputField.IsRequiredInLead && string.IsNullOrWhiteSpace(inputField.FieldValue))
+                if (inputField.IsRequired && string.IsNullOrWhiteSpace(inputField.FieldValue))
                 {
                     inputField.HasValidationError = true;
-                    inputField.ValidationErrorMessage = $"{inputField.FieldName} is mandatory.";
+                    inputField.ValidationErrorMessage = $"{inputField.EffectiveLabel} is mandatory.";
                     validationFailed = true;
                 }
                 else
@@ -274,17 +344,30 @@ namespace Tijori.ViewModels
                     };
 
                     targetLeadId = await _leadService.SaveLeadAsync(NewLead, historyEntry, _session.CurrentUser);
-                    await _workflowEngine.EnqueueEventAsync("OnLeadCreated", targetLeadId, "Lead");                    
+                    await _workflowEngine.EnqueueEventAsync("OnLeadCreated", targetLeadId, _isCustomerMode ? "Customer" : "Lead");
                 }
 
-                var valuesPayload = DynamicLeadFields.Select(f => new KeyValuePair<int, string>(f.FieldId, f.FieldValue ?? string.Empty));
-                await _leadService.SaveLeadCustomFieldValuesAsync(targetLeadId, valuesPayload, _isCustomerMode ? "Customer" : "Lead");
-                // Close window with 'True' result
-                RequestClose?.Invoke(true);
+                if (targetLeadId > 0)
+                {
+                    // 1. Map dynamic custom fields to KeyValuePairs
+                    var valuesPayload = DynamicLeadFields.Select(f => new KeyValuePair<int, string>(f.FieldId, f.FieldValue ?? string.Empty));
+
+                    // 2. Persist using our universal CustomFieldService
+                    string targetEntityType = _isCustomerMode ? "Customer" : "Lead";
+                    await _customFieldService.SaveEntityCustomFieldValuesAsync(targetLeadId, targetEntityType, valuesPayload);
+
+                    // 3. Close window with 'True' result
+                    RequestClose?.Invoke(true);
+                }
+                else
+                {
+                    ValidationMessage = "Failed to record entry in the database. Please try again.";
+                }
             }
             catch (Exception ex)
             {
-                // Handle DB errors here
+                ValidationMessage = $"System execution fault: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"[SAVE LEAD ERROR]: {ex.Message}");
             }
         }
 
@@ -647,6 +730,19 @@ namespace Tijori.ViewModels
             catch (NumberParseException)
             {
                 return inputNumber + " [PARSING ERROR]";
+            }
+        }
+
+        [RelayCommand]
+        public void RemoveMultiSelectOption(string itemToRemove)
+        {
+            foreach (var field in DynamicLeadFields)
+            {
+                if (field.SelectedMultiValues.Contains(itemToRemove))
+                {
+                    field.SelectedMultiValues.Remove(itemToRemove);
+                    break;
+                }
             }
         }
     }

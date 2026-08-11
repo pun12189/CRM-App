@@ -51,6 +51,7 @@ namespace Tijori.ViewModels
         [RelayCommand]
         private async Task Login(object passwordBox)
         {
+#if RELEASE
             await LicenseManager.RefreshCacheAsync();
 
             // Check your model's native properties directly
@@ -67,7 +68,7 @@ namespace Tijori.ViewModels
                 // STOPS EXECUTION IN ITS TRACKS: Prevents login routing and credentials checks
                 return;
             }
-
+#endif
             if (IsBusy) return;
             IsBusy = true;
             IsLoggingIn = true;

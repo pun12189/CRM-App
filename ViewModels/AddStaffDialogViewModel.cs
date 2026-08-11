@@ -1,7 +1,4 @@
-﻿using Tijori.Models;
-using Tijori.Models.Enums;
-using Tijori.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -12,19 +9,27 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using Tijori.Core;
+using Tijori.Models;
+using Tijori.Models.Enums;
+using Tijori.Services;
 
 namespace Tijori.ViewModels
 {
     public partial class AddStaffDialogViewModel : ObservableObject
     {
         private readonly StaffService _staffService;
-        private readonly DepartmentService _departmentService; // Dynamic dynamic lookup service
+        private readonly DepartmentService _departmentService;
+        private readonly CustomFieldService _customFieldService;
 
-        public event Action<bool?> RequestClose;
+        public event Action<bool?>? RequestClose;
 
         [ObservableProperty] private User _currentUser = new();
         [ObservableProperty] private string _windowTitle = "Add New Staff Profile";
         [ObservableProperty] private bool _isEditMode;
+
+        [ObservableProperty] private string _validationErrorMessage = string.Empty;
+        [ObservableProperty] private bool _isValidationErrorVisible;
 
         private List<User> _cachedMasterStaffList = new();
 
@@ -32,30 +37,37 @@ namespace Tijori.ViewModels
         [ObservableProperty] private ObservableCollection<User> _potentialSeniors = new();
         [ObservableProperty] private ObservableCollection<Department> _departmentsList = new();
 
-        // Enforce safe types directly instead of using plain magic text strings lists
+        // Custom Fields Engine Properties
+        [ObservableProperty] private ModuleFieldConfigMap _fieldConfigMap = new(new List<CustomFieldDefinition>());
+        [ObservableProperty] private ObservableCollection<CustomFieldInputValue> _dynamicStaffFields = new();
+
         public IEnumerable<UserRole> RolesList => Enum.GetValues(typeof(UserRole)).Cast<UserRole>();
 
-        public AddStaffDialogViewModel(StaffService staffService, DepartmentService departmentService)
+        public AddStaffDialogViewModel(
+            StaffService staffService,
+            DepartmentService departmentService,
+            CustomFieldService customFieldService)
         {
             _staffService = staffService;
             _departmentService = departmentService;
+            _customFieldService = customFieldService;
         }
 
-        /// <summary>
-        /// Pre-loads master data lookups and prepares the data form bindings.
-        /// </summary>
         public async Task InitializeAsync(User? userToEdit)
         {
             try
             {
-                // 1. Fetch dynamic data streams asynchronously from database services
+                // 1. Fetch dynamic data lookups
                 var departments = await _departmentService.GetAllDepartmentsAsync();
                 DepartmentsList = new ObservableCollection<Department>(departments);
 
                 var absoluteStaff = await _staffService.GetAllStaffAsync();
                 _cachedMasterStaffList = absoluteStaff.ToList();
 
-                // 2. Establish setup configurations depending on entry execution paths
+                // 2. Hydrate Custom Field Configurations
+                await GetCustomFields();
+
+                // 3. Configure Entry Execution Paths
                 if (userToEdit != null)
                 {
                     IsEditMode = true;
@@ -73,115 +85,177 @@ namespace Tijori.ViewModels
                     };
                 }
 
-                // 3. CRITICAL ENGINE HOOK: Listen to internal property shifts on the CurrentUser instance
                 CurrentUser.PropertyChanged += OnCurrentUserPropertyChanged;
-
-                // 4. Fire the initial hierarchy pass for the dropdown list items
                 RefreshEligibleSeniors();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to initialize lookup parameters data streams:\n{ex.Message}",
-                                "System Error Connection", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError($"Failed to initialize lookup parameters: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Event listener that intercepts shifts inside the model to recalculate options on the fly.
-        /// </summary>
+        private async Task GetCustomFields()
+        {
+            // 1. Fetch field definitions for Staff module
+            var fieldDefinitions = (await _customFieldService.GetFieldsByModuleAsync("Staff")).ToList();
+
+            // 2. Config Map for Tier 1 & Tier 2 dynamic hints and visibility
+            FieldConfigMap = new ModuleFieldConfigMap(fieldDefinitions);
+
+            // 3. Fetch saved Tier 3 custom field values from DB if editing an existing staff member
+            Dictionary<int, string> savedValues = (IsEditMode && CurrentUser.UserId > 0)
+                ? await _customFieldService.GetEntityCustomFieldValuesAsync(CurrentUser.UserId, "Staff")
+                : new Dictionary<int, string>();
+
+            App.Current.Dispatcher.Invoke(() =>
+            {
+                DynamicStaffFields.Clear();
+
+                // 4. Hydrate Tier 3 dynamic custom fields with saved values
+                foreach (var f in fieldDefinitions.Where(x => x.IsVisible && x.FieldTier == 3))
+                {
+                    // Try to pull previously saved value for this FieldId
+                    savedValues.TryGetValue(f.FieldId, out string? initialValue);
+
+                    DynamicStaffFields.Add(new CustomFieldInputValue
+                    {
+                        FieldId = f.FieldId,
+                        FieldName = f.FieldName,
+                        DisplayLabel = f.DisplayLabel,
+                        FieldType = f.FieldType,
+                        FieldTier = f.FieldTier,
+                        IsRequired = f.IsRequired,
+                        FieldValue = initialValue ?? string.Empty, // 👈 HYDRATES SAVED VALUE IN EDIT MODE
+                        OptionsList = f.SeedValueOptionsList ?? new ObservableCollection<string>()
+                    });
+                }
+            });
+        }
+
         private void OnCurrentUserPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            // Whenever the Role field changes, instantly recalculate who can be their senior
             if (e.PropertyName == nameof(User.Role))
             {
                 RefreshEligibleSeniors();
             }
         }
 
-        /// <summary>
-        /// Dynamic Hierarchy Filter Rule Engine: Evaluates rows based on integer-enum values.
-        /// </summary>
         private void RefreshEligibleSeniors()
         {
             if (CurrentUser == null) return;
 
-            // Rule: Filter where senior's integer value is strictly lower than target user's enum value
             var filteredSeniors = _cachedMasterStaffList
                 .Where(u => (byte)u.Role < (byte)CurrentUser.Role && u.UserId != CurrentUser.UserId)
                 .ToList();
 
-            // Push updates onto the bound UI collection seamlessly
             PotentialSeniors = new ObservableCollection<User>(filteredSeniors);
 
-            // Safety Rule: If the currently assigned senior is no longer eligible, clear out the selection handle
             if (CurrentUser.SeniorId.HasValue && !filteredSeniors.Any(s => s.UserId == CurrentUser.SeniorId))
             {
                 CurrentUser.SeniorId = null;
             }
         }
 
-        /// <summary>
-        /// Validates requirements and commits changes safely using transaction wrappers.
-        /// </summary>
+        private void ShowError(string message)
+        {
+            ValidationErrorMessage = message;
+            IsValidationErrorVisible = true;
+        }
+
         [RelayCommand]
         private async Task SaveAsync(object parameter)
         {
-            // 1. Mandatory Identity Check Verification Guards
-            if (string.IsNullOrWhiteSpace(CurrentUser.FullName) || string.IsNullOrWhiteSpace(CurrentUser.Email))
+            IsValidationErrorVisible = false;
+
+            // 1. TIER 1 MANDATORY VALIDATIONS
+            if (string.IsNullOrWhiteSpace(CurrentUser.FullName))
             {
-                MessageBox.Show("Operational Stop: Full Name and Login E-mail address coordinates cannot be left blank.",
-                                "Validation Boundary Violation", MessageBoxButton.OK, MessageBoxImage.Warning);
+                ShowError($"{FieldConfigMap.GetLabel("FullName", "Full Name")} is required.");
                 return;
             }
 
-            // 2. Safely extract password information from the parameter block if creating a new user
+            if (string.IsNullOrWhiteSpace(CurrentUser.Email))
+            {
+                ShowError($"{FieldConfigMap.GetLabel("Email", "Email ID")} is required.");
+                return;
+            }
+
+            // 2. TIER 2 DYNAMIC MODEL FIELD VALIDATIONS
+            if (FieldConfigMap.GetIsRequired("Phone") && string.IsNullOrWhiteSpace(CurrentUser.Phone))
+            {
+                ShowError($"{FieldConfigMap.GetLabel("Phone", "Phone Number")} is required.");
+                return;
+            }
+
+            if (FieldConfigMap.GetIsRequired("DepartmentId") && (CurrentUser.DepartmentId == 0))
+            {
+                ShowError($"{FieldConfigMap.GetLabel("DepartmentId", "Department Location")} is required.");
+                return;
+            }
+
+            if (FieldConfigMap.GetIsRequired("SeniorId") && !CurrentUser.SeniorId.HasValue)
+            {
+                ShowError($"{FieldConfigMap.GetLabel("SeniorId", "Senior / Team Leader")} is required.");
+                return;
+            }
+
+            // 3. TIER 3 DYNAMIC CUSTOM FIELDS VALIDATION
+            foreach (var customField in DynamicStaffFields)
+            {
+                if (customField.IsRequired && string.IsNullOrWhiteSpace(customField.FieldValue))
+                {
+                    ShowError($"{customField.EffectiveLabel} is required.");
+                    return;
+                }
+            }
+
+            // 4. PASSWORD SECURITY CHECK
             if (!IsEditMode && parameter is PasswordBox passBoxControl)
             {
                 string rawTextPassword = passBoxControl.Password;
                 if (string.IsNullOrWhiteSpace(rawTextPassword) || rawTextPassword.Length < 4)
                 {
-                    MessageBox.Show("Security Protection Gate Rule:\nPlease specify a valid system authorization password (Minimum length: 4 characters).",
-                                    "Password Requirement Notice", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ShowError("Specify a valid system login password (Minimum length: 4 characters).");
                     return;
                 }
 
-                // Assign password safely (Include encryption tools here, e.g., BCrypt/SHA256 hash routines if preferred)
                 CurrentUser.Password = BCrypt.Net.BCrypt.HashPassword(rawTextPassword);
             }
 
             try
             {
-                // 3. Fire the atomic transaction database execution loop
-                bool executionIsSuccessful;
+                int targetUserId = CurrentUser.UserId;
+                bool executionIsSuccessful = false;
+
                 if (IsEditMode)
                 {
                     executionIsSuccessful = await _staffService.UpdateUserAsync(CurrentUser);
                 }
                 else
                 {
-                    int newlyAssignedId = await _staffService.CreateUserAsync(CurrentUser);
-                    executionIsSuccessful = newlyAssignedId > 0;
-                    if (executionIsSuccessful) CurrentUser.UserId = newlyAssignedId;
+                    targetUserId = await _staffService.CreateUserAsync(CurrentUser);
+                    executionIsSuccessful = targetUserId > 0;
+                    if (executionIsSuccessful) CurrentUser.UserId = targetUserId;
                 }
 
-                // 4. Send operation feedback notifications back to the UI
                 if (executionIsSuccessful)
                 {
-                    MessageBox.Show("Staff registration data parameters successfully written to the master table registry.",
-                                    "Transaction Confirmed", MessageBoxButton.OK, MessageBoxImage.Information);
+                    // 5. PERSIST TIER 3 DYNAMIC CUSTOM FIELD VALUES TO DATABASE
+                    var customValues = DynamicStaffFields
+                        .Select(cf => new KeyValuePair<int, string>(cf.FieldId, cf.FieldValue ?? string.Empty));
+
+                    await _customFieldService.SaveEntityCustomFieldValuesAsync(targetUserId, "Staff", customValues);
+
                     RequestClose?.Invoke(true);
                 }
                 else
                 {
-                    MessageBox.Show("The server accepted the channel request but reported that 0 database rows were modified.",
-                                    "Write Verification Failure", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    ShowError("Failed to write staff profile to database.");
                 }
             }
             catch (Exception ex)
             {
-                // Fallback capture shield prevents terminal app runtime crashes completely
-                MessageBox.Show($"The database operation failed. The engine rolled back adjustments cleanly to prevent corruption errors:\n\n{ex.Message}",
-                                "Transaction Error Core Failure", MessageBoxButton.OK, MessageBoxImage.Error);
+                ShowError($"Transaction fault: {ex.Message}");
             }
         }
 

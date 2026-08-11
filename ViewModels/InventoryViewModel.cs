@@ -23,6 +23,7 @@ namespace Tijori.ViewModels
     {
         private readonly ProductService _productService;
         private readonly CategoryService _categoryService;
+        private readonly CustomFieldService _customFieldService;
         private readonly int _currentDivisionId = 1;
 
         [ObservableProperty] private ObservableCollection<Product> _allProducts = new();
@@ -54,10 +55,11 @@ namespace Tijori.ViewModels
         /// </summary>
         public decimal CombinedTotalAssetValue => GlobalInventoryCostValue + GlobalInventoryGstValue;
 
-        public InventoryViewModel(ProductService productService, CategoryService categoryService)
+        public InventoryViewModel(ProductService productService, CategoryService categoryService, CustomFieldService customFieldService)
         {
             _productService = productService;
             _categoryService = categoryService;
+            _customFieldService = customFieldService;
             _ = LoadInitialData();            
         }
 
@@ -231,7 +233,7 @@ namespace Tijori.ViewModels
         private async Task ShowProductDetail(Product product)
         {
             // We pass the Categories and the Product to the detail window
-            var detailVm = new ProductDetailViewModel(_productService, Categories, product);
+            var detailVm = new ProductDetailViewModel(_productService, _customFieldService, Categories, product);
             var window = new ProductDetailWindow { DataContext = detailVm };
 
             if (window.ShowDialog() == true)

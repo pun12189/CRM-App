@@ -4,12 +4,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Tijori.Dialogs"
+        xmlns:conv="clr-namespace:Tijori.Converters"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Icon="/Assets/opn.png" ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
         Title="Product Details" Width="600" Height="Auto" SizeToContent="Height">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <conv:StringToUpperConverter x:Key="StringToUpperConverter"/>
+        <conv:FieldLabelConverter x:Key="FieldLabelConverter"/>
+        <conv:FieldVisibilityConverter x:Key="FieldVisibilityConverter"/>
     </Window.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <Border Padding="16" Background="#F5F5F5">
@@ -19,33 +23,43 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
+                <!-- HEADER -->
                 <TextBlock Grid.Row="0" Text="Add New Product Entry" 
                            FontSize="20" FontWeight="Bold" Foreground="#333333" Margin="5,0,5,15"/>
 
+                <!-- SECTION 1: CORE SPECIFICATIONS -->
                 <materialDesign:Card Grid.Row="1" Margin="5" Padding="12" UniformCornerRadius="4">
                     <StackPanel>
                         <TextBlock Text="Core Specifications" FontSize="14" FontWeight="SemiBold" Foreground="#1794A1" Margin="0,0,0,10"/>
 
                         <UniformGrid Columns="3">
-                            <TextBox materialDesign:HintAssist.Hint="Product Name *" 
+                            <!-- Product Name (TIER 1 - MANDATORY) -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Name|Product Name *'}" 
                                      Text="{Binding NewProduct.Name, UpdateSourceTrigger=PropertyChanged}" 
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
 
-                            <TextBox materialDesign:HintAssist.Hint="Short Name (Auto-Generated) *" 
+                            <!-- Short Name (TIER 2 - OPTIONAL MODEL FIELD) -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='ShortName|Short Name (Auto-Generated)'}" 
                                      Text="{Binding NewProduct.ShortName, UpdateSourceTrigger=PropertyChanged}" 
+                                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='ShortName'}"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"
                                      ToolTip="Must be completely unique across your catalogue."/>
 
-                            <TextBox materialDesign:HintAssist.Hint="SKU (Stock Keeping Unit) *" 
+                            <!-- SKU (TIER 2 - OPTIONAL MODEL FIELD) -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='SKU|SKU (Stock Keeping Unit)'}" 
                                      Text="{Binding NewProduct.SKU, UpdateSourceTrigger=PropertyChanged}" 
+                                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='SKU'}"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"
                                      ToolTip="Used to send low-stock notification alerts."/>
 
-                            <ComboBox materialDesign:HintAssist.Hint="Measurement Unit *" 
+                            <!-- Measurement Unit (TIER 2 - OPTIONAL MODEL FIELD) -->
+                            <ComboBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Unit|Measurement Unit'}" 
                                       SelectedValue="{Binding NewProduct.Unit, UpdateSourceTrigger=PropertyChanged}"
-                                        SelectedValuePath="Content"
+                                      SelectedValuePath="Content"
+                                      Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='Unit'}"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="5">
                                 <ComboBoxItem Content="Pcs"/>
                                 <ComboBoxItem Content="Litres"/>
@@ -54,70 +68,222 @@
                                 <ComboBoxItem Content="Kgs"/>
                             </ComboBox>
 
-                            <ComboBox materialDesign:HintAssist.Hint="Category Selection *" 
+                            <!-- Category Selection (TIER 2 - OPTIONAL MODEL FIELD) -->
+                            <ComboBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='CategoryId|Category Selection'}" 
                                       ItemsSource="{Binding Categories}"
                                       SelectedValue="{Binding NewProduct.CategoryId}"
                                       SelectedValuePath="Id" DisplayMemberPath="CategoryName"
+                                      Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='CategoryId'}"
                                       Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="5"/>
 
-                            <TextBox materialDesign:HintAssist.Hint="Brand Name (Optional)" 
+                            <!-- Brand Name (TIER 2 - OPTIONAL MODEL FIELD) -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='BrandName|Brand Name'}" 
                                      Text="{Binding NewProduct.BrandName}" 
+                                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='BrandName'}"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
 
-                            <TextBox materialDesign:HintAssist.Hint="Manufacturer (Optional)" 
+                            <!-- Manufacturer (TIER 2 - OPTIONAL MODEL FIELD) -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Manufacturer|Manufacturer'}" 
                                      Text="{Binding NewProduct.Manufacturer}" 
+                                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='Manufacturer'}"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
 
-                            <TextBox materialDesign:HintAssist.Hint="Packaging Configuration (Optional)" 
+                            <!-- Packaging Configuration (TIER 2 - OPTIONAL MODEL FIELD) -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Packaging|Packaging Configuration'}" 
                                      Text="{Binding NewProduct.Packaging}" 
+                                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='Packaging'}"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"
                                      ToolTip="e.g., Pack of 10, Bottle of 500ml"/>
                         </UniformGrid>
                     </StackPanel>
                 </materialDesign:Card>
 
+                <!-- SECTION 2: INITIAL BATCH SETUP & PRICING METRICS -->
                 <materialDesign:Card Grid.Row="2" Margin="5,15,5,5" Padding="12" UniformCornerRadius="4">
                     <StackPanel>
-                        <TextBlock Text="Initial Batch Setup &amp; Pricing Metrics" FontSize="14" FontWeight="SemiBold" Foreground="#1794A1" Margin="0,0,0,10"/>
+                        <!-- HEADER WITH TOGGLE -->
+                        <DockPanel Margin="0,0,0,10">
+                            <TextBlock Text="Pricing Metrics &amp; Initial Inventory" FontSize="14" FontWeight="SemiBold" Foreground="#1794A1" VerticalAlignment="Center"/>
+
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                                <TextBlock Text="Enable Batch Tracking" FontSize="12" FontWeight="SemiBold" Foreground="#374151" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                <ToggleButton IsChecked="{Binding NewProduct.HasBatchTracking, UpdateSourceTrigger=PropertyChanged}" 
+                              Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                              Background="#1794A1" BorderBrush="#1794A1"/>
+                            </StackPanel>
+                        </DockPanel>
 
                         <UniformGrid Columns="3">
-                            <TextBox materialDesign:HintAssist.Hint="Batch Number/Lot Code *" 
-                                     Text="{Binding TargetBatch.BatchNumber, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"
-                                     ToolTip="Validation: System flags an error immediately if this batch exists."/>
+                            <!-- 1. BATCH NUMBER (Tier 2 Optional - Visible only if Batch Tracking IS ENABLED AND IsVisible in DB) -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='BatchNumber|Batch Number/Lot Code'}" 
+                     Text="{Binding TargetBatch.BatchNumber, UpdateSourceTrigger=PropertyChanged}" 
+                     Margin="5">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox" BasedOn="{StaticResource MaterialDesignOutlinedTextBox}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <!-- Hide if HasBatchTracking is OFF -->
+                                            <DataTrigger Binding="{Binding NewProduct.HasBatchTracking}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                            <!-- Hide if Admin set IsVisible = 0 in Settings -->
+                                            <DataTrigger Binding="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='BatchNumber'}" Value="Collapsed">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
 
-                            <TextBox materialDesign:HintAssist.Hint="Initial Batch Quantity Received *" 
-                                     Text="{Binding TargetBatch.QuantityReceived, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+                            <!-- 2. QUANTITY RECEIVED / INITIAL STOCK -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='InitialStock|Initial Quantity Received *'}" 
+                     Text="{Binding TargetBatch.QuantityReceived, UpdateSourceTrigger=PropertyChanged}" 
+                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='InitialStock'}"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
 
-                            <TextBox materialDesign:HintAssist.Hint="Purchase Price (Min Selling Price) *" 
-                                     Text="{Binding TargetBatch.MinimumSellingPrice, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+                            <!-- 3. PURCHASE PRICE / COST PRICE -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='CostPrice|Purchase Price (Min Selling Price) *'}" 
+                     Text="{Binding TargetBatch.MinimumSellingPrice, UpdateSourceTrigger=PropertyChanged}" 
+                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='CostPrice'}"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
 
-                            <TextBox materialDesign:HintAssist.Hint="Maximum Retail Price (MRP) *" 
-                                     Text="{Binding NewProduct.MRP, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+                            <!-- 4. MRP -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='MRP|Maximum Retail Price (MRP) *'}" 
+                     Text="{Binding NewProduct.MRP, UpdateSourceTrigger=PropertyChanged}" 
+                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='MRP'}"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
 
-                            <TextBox materialDesign:HintAssist.Hint="Standard Outbound Selling Price *" 
-                                     Text="{Binding NewProduct.SellingPrice, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+                            <!-- 5. SELLING PRICE -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='SellingPrice|Standard Outbound Selling Price *'}" 
+                     Text="{Binding NewProduct.SellingPrice, UpdateSourceTrigger=PropertyChanged}" 
+                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='SellingPrice'}"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
 
-                            <TextBox materialDesign:HintAssist.Hint="GST Percent (%)" 
-                                     Text="{Binding NewProduct.GstPercent, UpdateSourceTrigger=PropertyChanged}" 
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
+                            <!-- 6. GST PERCENT -->
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='GSTPercent|GST Percent (%)'}" 
+                     Text="{Binding NewProduct.GstPercent, UpdateSourceTrigger=PropertyChanged}" 
+                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='GSTPercent'}"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"/>
 
-                            <DatePicker materialDesign:HintAssist.Hint="Manufacturing Date (Mfg)" 
-                                        SelectedDate="{Binding TargetBatch.MfgDate}"
-                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="5"/>
+                            <!-- 7. MFG DATE (Tier 2 Optional - Hidden if Batch Tracking is OFF OR Admin set IsVisible = 0) -->
+                            <DatePicker materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='MfgDate|Manufacturing Date (Mfg)'}" 
+                        SelectedDate="{Binding NewProduct.MfgDate}" Margin="5">
+                                <DatePicker.Style>
+                                    <Style TargetType="DatePicker" BasedOn="{StaticResource MaterialDesignOutlinedDatePicker}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding NewProduct.HasBatchTracking}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='MfgDate'}" Value="Collapsed">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DatePicker.Style>
+                            </DatePicker>
 
-                            <DatePicker materialDesign:HintAssist.Hint="Expiration Date (Expiry)" 
-                                        SelectedDate="{Binding TargetBatch.ExpiryDate}"
-                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}" Margin="5"/>
+                            <!-- 8. EXPIRY DATE (Tier 2 Optional - Hidden if Batch Tracking is OFF OR Admin set IsVisible = 0) -->
+                            <DatePicker materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='ExpiryDate|Expiration Date (Expiry)'}" 
+                        SelectedDate="{Binding NewProduct.ExpiryDate}" Margin="5">
+                                <DatePicker.Style>
+                                    <Style TargetType="DatePicker" BasedOn="{StaticResource MaterialDesignOutlinedDatePicker}">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding NewProduct.HasBatchTracking}" Value="False">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='ExpiryDate'}" Value="Collapsed">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DatePicker.Style>
+                            </DatePicker>
                         </UniformGrid>
                     </StackPanel>
                 </materialDesign:Card>
 
-                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5,20,5,5">
+                <!-- SECTION 3: DYNAMIC CUSTOM FIELDS ENGINE (TIER 3) -->
+                <materialDesign:Card Grid.Row="3" Margin="5,15,5,5" Padding="12" UniformCornerRadius="4">
+                    <materialDesign:Card.Style>
+                        <Style TargetType="materialDesign:Card">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DynamicProductFields.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </materialDesign:Card.Style>
+
+                    <StackPanel>
+                        <TextBlock Text="Custom Attributes" FontSize="14" FontWeight="SemiBold" Foreground="#1794A1" Margin="0,0,0,10"/>
+
+                        <ItemsControl ItemsSource="{Binding DynamicProductFields}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="3" IsItemsHost="True"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="5">
+                                        <ContentControl x:Name="InputControlHost" Focusable="False">
+                                            <TextBox Text="{Binding FieldValue, UpdateSourceTrigger=PropertyChanged}"
+                                                     materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
+                                                     materialDesign:HintAssist.IsFloating="True"
+                                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                        </ContentControl>
+                                    </Grid>
+
+                                    <DataTemplate.Triggers>
+                                        <!-- TRIGGER 1: SINGLE DROPDOWN -->
+                                        <DataTrigger Binding="{Binding FieldType}" Value="DropdownSingle">
+                                            <Setter TargetName="InputControlHost" Property="Content">
+                                                <Setter.Value>
+                                                    <ComboBox ItemsSource="{Binding OptionsList}"
+                                                              SelectedItem="{Binding FieldValue, UpdateSourceTrigger=PropertyChanged}"
+                                                              materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
+                                                              materialDesign:HintAssist.IsFloating="True"
+                                                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+
+                                        <!-- TRIGGER 2: TEXTAREA -->
+                                        <DataTrigger Binding="{Binding FieldType}" Value="TextArea">
+                                            <Setter TargetName="InputControlHost" Property="Content">
+                                                <Setter.Value>
+                                                    <TextBox Text="{Binding FieldValue, UpdateSourceTrigger=PropertyChanged}"
+                                                             materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
+                                                             materialDesign:HintAssist.IsFloating="True"
+                                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                                                             Height="80" AcceptsReturn="True" TextWrapping="Wrap"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+
+                                        <!-- TRIGGER 3: CALENDAR + CLOCK -->
+                                        <DataTrigger Binding="{Binding FieldType}" Value="CalendarClock">
+                                            <Setter TargetName="InputControlHost" Property="Content">
+                                                <Setter.Value>
+                                                    <DatePicker SelectedDate="{Binding SelectedDate, UpdateSourceTrigger=PropertyChanged}"
+                                                                materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
+                                                                materialDesign:HintAssist.IsFloating="True"
+                                                                Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </materialDesign:Card>
+
+                <!-- SECTION 4: ACTIONS PANEL FOOTER -->
+                <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5,20,5,5">
                     <TextBlock Text="{Binding ValidationErrorMessage}" 
                                Foreground="#C62828" FontWeight="SemiBold" 
                                VerticalAlignment="Center" Margin="0,0,15,0"

@@ -22,6 +22,7 @@ namespace Tijori.ViewModels
         private readonly IUserSession _userSession;
         private readonly IActionSecurityGuard _securityGuard;
         private readonly ProductService _productService;
+        private readonly CustomFieldService _customFieldService;
 
         [ObservableProperty]
         private ObservableCollection<Vendor> _vendorsList = new();
@@ -34,7 +35,7 @@ namespace Tijori.ViewModels
 
         [ObservableProperty] private bool _workspaceViewIsActive;
 
-        public VendorViewModel(VendorService vendorService, PurchaseService purchaseService, CategoryService categoryService, IUserSession userSession, IActionSecurityGuard securityGuard, ProductService productService)
+        public VendorViewModel(VendorService vendorService, PurchaseService purchaseService, CategoryService categoryService, IUserSession userSession, IActionSecurityGuard securityGuard, ProductService productService, CustomFieldService customFieldService)
         {
             _vendorService = vendorService;
             _purchaseService = purchaseService;
@@ -42,6 +43,7 @@ namespace Tijori.ViewModels
             _userSession = userSession;
             _securityGuard = securityGuard;
             _productService = productService;
+            _customFieldService = customFieldService;
             _ = LoadVendorsAsync();
         }
 
@@ -63,7 +65,7 @@ namespace Tijori.ViewModels
         [RelayCommand]
         private async Task OpenAddVendorWindowAsync()
         {
-            var dialogVm = new AddVendorWindowViewModel(_vendorService);
+            var dialogVm = new AddVendorWindowViewModel(_vendorService, _customFieldService);
 
             var addWindow = new AddVendorWindow
             {
@@ -85,7 +87,7 @@ namespace Tijori.ViewModels
             if (vendor == null) return;
 
             // Pass existing vendor toViewModel constructor to trigger Edit Mode
-            var dialogVm = new AddVendorWindowViewModel(_vendorService, vendor);
+            var dialogVm = new AddVendorWindowViewModel(_vendorService, _customFieldService, vendor);
 
             var editWindow = new AddVendorWindow
             {

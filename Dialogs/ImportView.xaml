@@ -5,77 +5,285 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Tijori.Dialogs"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:conv="clr-namespace:Tijori.Converters"
         mc:Ignorable="d"
         Icon="/Assets/opn.png" ShowInTaskbar="False"
-        Title="ImportView" Height="600" Width="800" WindowStartupLocation="CenterOwner">
+        Title="Excel Data Import Engine" Height="650" Width="850"
+        WindowStartupLocation="CenterScreen" Background="#F8FAFC">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <conv:NullToBoolConverter x:Key="NullToBoolConverter"/>
     </Window.Resources>
-    <Grid Margin="20">
+    <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- Row 0: Browse Card -->
+            <RowDefinition Height="Auto"/>
+            <!-- Row 1: Progress Indicator -->
+            <RowDefinition Height="Auto"/>
+            <!-- Row 2: Saved Mapping Templates Bar -->
+            <RowDefinition Height="Auto"/>
+            <!-- Row 3: Dual Action Bar -->
             <RowDefinition Height="*"/>
+            <!-- Row 4: Column Mapping GroupBox -->
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="20"/>
-            <RowDefinition Height="Auto"/>
+            <!-- Row 5: Status Footer -->
         </Grid.RowDefinitions>
 
-        <materialDesign:Card Padding="10" Margin="0,0,0,15">
+        <!-- ================= ROW 0: BROWSE FILE CARD ================= -->
+        <!-- ================= ROW 0: BROWSE FILE CARD ================= -->
+        <materialDesign:Card Grid.Row="0" UniformCornerRadius="6" Padding="6,8" Margin="0,0,0,6" Background="White">
             <DockPanel>
-                <Button Content="BROWSE" Command="{Binding BrowseAndLoadCommand}" DockPanel.Dock="Right"/>
-                <TextBox Text="{Binding FilePath}" IsReadOnly="True" materialDesign:HintAssist.Hint="Select Marg/Busy/Tally Export..."/>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Margin="8,0,0,0">
+                    <!-- BROWSE EXCEL BUTTON -->
+                    <Button Content="BROWSE EXCEL" 
+                     Command="{Binding BrowseAndLoadCommand}" 
+                     Height="30" 
+                     Padding="12,0"
+                     Margin="0,0,6,0"
+                     Background="#0D9488" 
+                     BorderBrush="#0D9488" 
+                     FontSize="11" 
+                     FontWeight="Bold"/>
+                    
+                    <!-- DOWNLOAD FORMAT BUTTON -->
+                    <Button Content="DOWNLOAD FORMAT" 
+                    Command="{Binding DownloadFormatCommand}" 
+                    Style="{StaticResource MaterialDesignOutlinedButton}" 
+                    Height="30" 
+                    Padding="10,0" 
+                    BorderBrush="#0284C7" 
+                    Foreground="#0284C7" 
+                    FontSize="11" 
+                    FontWeight="Bold"                      
+                    ToolTip="Download standard Excel import template with required column headers marked with *">
+                        <Button.ContentTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="Download" Width="14" Height="14" VerticalAlignment="Center"/>
+                                    <TextBlock Text="DOWNLOAD FORMAT" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Button.ContentTemplate>
+                    </Button>                   
+                </StackPanel>
+
+                <TextBox Text="{Binding FilePath}" 
+                 IsReadOnly="True" 
+                 materialDesign:HintAssist.Hint="Select Marg / Busy / Tally Export (.xlsx)..." 
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                 Height="30" 
+                 Padding="8,4" 
+                 FontSize="11" 
+                 VerticalAlignment="Center"/>
             </DockPanel>
         </materialDesign:Card>
 
-        <GroupBox Header="Step 1: Column Mapping" 
-          Grid.Row="1" MinHeight="100"
-          Margin="0,0,0,10"
-          Visibility="{Binding IsMappingVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <!-- ================= ROW 1: LOADING PROGRESS BAR ================= -->
+        <Border Grid.Row="1" Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}" Background="#EFF6FF" BorderBrush="#93C5FD" BorderThickness="1" CornerRadius="6" Padding="8,6" Margin="0,0,0,6">
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <materialDesign:PackIcon Kind="FileExcel" Width="16" Height="16" Foreground="#2563EB" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding LoadingMessage}" FontWeight="SemiBold" FontSize="11" Foreground="#1E40AF" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+                <ProgressBar IsIndeterminate="True" Height="4" Foreground="#2563EB" Background="#DBEAFE"/>
+            </StackPanel>
+        </Border>
 
-            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="300">
+        <!-- ================= ROW 2: SAVED MAPPING PROFILE TEMPLATE BAR ================= -->
+        <materialDesign:Card Grid.Row="2" Visibility="{Binding IsMappingVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Padding="8,6" Margin="0,0,0,6" Background="White" UniformCornerRadius="6">
+            <DockPanel>
+                <Button Command="{Binding OpenSaveProfileDialogCommand}" DockPanel.Dock="Right" Style="{StaticResource MaterialDesignOutlinedButton}" Height="30" Padding="8,0" BorderBrush="#0D9488" Foreground="#0D9488" ToolTip="Save current column mappings as a template">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="ContentSaveAll" Width="14" Height="14" VerticalAlignment="Center"/>
+                        <TextBlock Text="SAVE TEMPLATE" FontWeight="Bold" FontSize="11" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="BookmarkOutline" Width="16" Height="16" Foreground="#0284C7" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="Mapping Template:" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <ComboBox ItemsSource="{Binding SavedProfiles}" SelectedItem="{Binding SelectedProfile, Mode=TwoWay}" DisplayMemberPath="ProfileName" Padding="8,0" materialDesign:HintAssist.Hint="-- Load Saved Profile (e.g. Marg/Busy) --" Width="220" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="30" FontSize="11"/>
+                    <Button Command="{Binding DeleteSelectedProfileCommand}" Style="{StaticResource MaterialDesignIconButton}" Width="28" Height="28" Margin="6,0,0,0" ToolTip="Delete Selected Profile" IsEnabled="{Binding SelectedProfile, Converter={StaticResource NullToBoolConverter}}">
+                        <materialDesign:PackIcon Kind="DeleteOutline" Foreground="#E11D48" Width="16" Height="16"/>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </materialDesign:Card>
+
+        <!-- ================= ROW 3: DUAL-ACTION UNMAPPED EXCEL BAR ================= -->
+        <materialDesign:Card Grid.Row="3" Visibility="{Binding IsMappingVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Padding="8,6" Margin="0,0,0,6" Background="#F8FAFC" UniformCornerRadius="6" BorderBrush="#CBD5E1" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.4*"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1.4*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 1. PICK UNMAPPED EXCEL COLUMN -->
+                <StackPanel Grid.Column="0" Margin="0,0,8,0" VerticalAlignment="Center">
+                    <TextBlock Text="Unmapped Excel Columns:" FontSize="10" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,2"/>
+                    <ComboBox ItemsSource="{Binding UnmappedExcelHeaders}" Padding="8,0" SelectedItem="{Binding SelectedUnmappedExcelHeader, Mode=TwoWay}" materialDesign:HintAssist.Hint="-- Pick Header --" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="30" FontSize="11"/>
+                </StackPanel>
+
+                <!-- 2. OPTION A: MAP TO UNMAPPED TIER 2 FIELD -->
+                <Grid Grid.Column="1" Margin="0,0,8,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                        <TextBlock Text="Option A: Map to Available Logical Fields" FontSize="10" FontWeight="Bold" Foreground="#1E40AF" Margin="0,0,0,2"/>
+                        <ComboBox ItemsSource="{Binding AvailableUnmappedTier2Fields}" Padding="8,0" SelectedItem="{Binding SelectedTier2TargetField, Mode=TwoWay}" DisplayMemberPath="DisplayLabel" materialDesign:HintAssist.Hint="-- Target Available Field --" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="30" FontSize="11"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Command="{Binding MapExcelToTier2FieldCommand}" VerticalAlignment="Bottom" Height="30" Padding="8,0" Background="#2563EB" BorderBrush="#2563EB" ToolTip="Map Excel header to selected Available System Field">
+                        <materialDesign:PackIcon Kind="LinkVariant" Width="16" Height="16" Foreground="White"/>
+                    </Button>
+                </Grid>
+
+                <!-- VERTICAL SEPARATOR -->
+                <Border Grid.Column="2" Width="1" Background="#CBD5E1" Margin="0,2,8,2"/>
+
+                <!-- 3. OPTION B: CREATE NEW TIER 3 CUSTOM FIELD -->
+                <StackPanel Grid.Column="3" VerticalAlignment="Bottom">
+                    <TextBlock Text="Option B: Dynamic Custom Field" FontSize="10" FontWeight="Bold" Foreground="#15803D" Margin="0,0,0,2"/>
+                    <Button Command="{Binding OpenCreateTier3DialogCommand}" Height="30" Background="#16A34A" BorderBrush="#16A34A" Foreground="White" FontSize="11" FontWeight="Bold">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="PlusCircle" Width="14" Height="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="CREATE CUSTOM FIELD" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </materialDesign:Card>
+
+        <!-- ================= ROW 4: COLUMN MAPPING GROUPBOX ================= -->
+        <GroupBox Grid.Row="4" Header="Step 1: Column Mapping (Match System Fields with Excel Columns)" Visibility="{Binding IsMappingVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Style="{StaticResource MaterialDesignGroupBox}" materialDesign:ColorZoneAssist.Mode="PrimaryDark" Padding="4">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <ItemsControl ItemsSource="{Binding Mappings}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="5">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="150"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
+                            <Border BorderThickness="0,0,0,1" BorderBrush="#E2E8F0" Padding="8,4" Margin="0,1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2.2*"/>
+                                        <ColumnDefinition Width="3*"/>
+                                    </Grid.ColumnDefinitions>
 
-                                <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                    <!-- LEFT COLUMN: SYSTEM TIER FIELD INFORMATION -->
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" FontSize="12" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                        <!-- TIER BADGE -->
+                                        <Border CornerRadius="8" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Background" Value="#F1F5F9"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding FieldTier}" Value="1">
+                                                            <Setter Property="Background" Value="#FEE2E2"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding FieldTier}" Value="2">
+                                                            <Setter Property="Background" Value="#DBEAFE"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding FieldTier}" Value="3">
+                                                            <Setter Property="Background" Value="#FEF3C7"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding TierBadgeText}" FontSize="9" FontWeight="Bold">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="#475569"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding FieldTier}" Value="1">
+                                                                <Setter Property="Foreground" Value="#991B1B"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding FieldTier}" Value="2">
+                                                                <Setter Property="Foreground" Value="#1E40AF"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding FieldTier}" Value="3">
+                                                                <Setter Property="Foreground" Value="#92400E"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                        <materialDesign:PackIcon Kind="InformationOutline" Width="13" Height="13" Margin="4,0,0,0" Foreground="#94A3B8" VerticalAlignment="Center" ToolTip="{Binding InfoTooltip}"/>
+                                    </StackPanel>
 
-                                <ComboBox Grid.Column="1" 
-                                  ItemsSource="{Binding DataContext.ExcelHeaders, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                  SelectedItem="{Binding SelectedExcelHeader}"
-                                  materialDesign:HintAssist.Hint="Select Excel Column"
-                                  Margin="10,0,0,0"/>
-                            </Grid>
+                                    <!-- RIGHT COLUMN: EXCEL HEADER DROPDOWN & CLEAR BUTTON -->
+                                    <Grid Grid.Column="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox Grid.Column="0" Padding="8,0" ItemsSource="{Binding AvailableHeaders}" SelectedItem="{Binding SelectedExcelHeader, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="-- Select Excel Column --" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="32" FontSize="11"/>
+                                        <Button Grid.Column="1" Command="{Binding DataContext.ClearMappingCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" CommandParameter="{Binding}" Style="{StaticResource MaterialDesignIconButton}" Width="28" Height="28" Margin="6,0,0,0" ToolTip="Remove Column Mapping" Visibility="{Binding IsMapped, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <materialDesign:PackIcon Kind="CloseCircle" Foreground="#EF4444" Width="16" Height="16"/>
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
         </GroupBox>
 
-        <GroupBox Header="Step 2: Data Preview (Mapped Columns Only)" Grid.Row="2">
-            <DataGrid ItemsSource="{Binding PreviewData}" 
-              IsReadOnly="True" 
-              AutoGenerateColumns="True"
-              CanUserAddRows="False"
-              VerticalScrollBarVisibility="Auto"
-              MaxHeight="150"
-              Background="WhiteSmoke">
-                <DataGrid.ColumnHeaderStyle>
-                    <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
-                        <Setter Property="Background" Value="#F5F5F5"/>
-                        <Setter Property="FontWeight" Value="Bold"/>
-                    </Style>
-                </DataGrid.ColumnHeaderStyle>
-            </DataGrid>
-        </GroupBox>
+        <!-- ================= ROW 5: STATUS FOOTER ================= -->
+        <Border Grid.Row="5" Margin="0,8,0,0" Padding="0,6,0,0" BorderThickness="0,1,0,0" BorderBrush="#E2E8F0">
+            <DockPanel LastChildFill="False">
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="Information" Width="16" Height="16" Foreground="#0284C7" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="#0284C7" FontWeight="SemiBold" FontSize="11" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="450"/>
+                </StackPanel>
 
-        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
-            <TextBlock Text="{Binding StatusMessage}" VerticalAlignment="Center" Margin="0,0,20,0"/>
-            <Button Content="START IMPORT" Command="{Binding StartImportCommand}" Background="#1794A1"/>
-        </StackPanel>
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="CANCEL" Command="{Binding RequestCloseWindowCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="32" Margin="0,0,8,0" Padding="12,0" FontSize="11"/>
+                    <Button Content="START IMPORT" Command="{Binding StartImportCommand}" Height="32" Padding="16,0" Background="#0D9488" BorderBrush="#0D9488" FontSize="11" FontWeight="Bold" IsEnabled="{Binding IsMappingVisible}"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ================= SAVE PROFILE NAME DIALOG OVERLAY ================= -->
+        <materialDesign:DialogHost Grid.RowSpan="6" IsOpen="{Binding IsSaveProfileDialogOpen}" CloseOnClickAway="False">
+            <materialDesign:DialogHost.DialogContent>
+                <Border Padding="16" Width="320" Background="White" CornerRadius="6">
+                    <StackPanel>
+                        <TextBlock Text="Save Mapping Template" FontWeight="Bold" FontSize="14" Foreground="#0F172A" Margin="0,0,0,8"/>
+                        <TextBlock Text="Enter a name for this mapping template:" FontSize="11" Foreground="#64748B" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                        <TextBox Text="{Binding NewProfileName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Template Name *" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="32" Padding="8,4" FontSize="11" Margin="0,0,0,16"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="CANCEL" Command="{Binding CancelSaveProfileDialogCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="30" Padding="10,0" FontSize="11" Margin="0,0,6,0"/>
+                            <Button Content="SAVE" Command="{Binding ConfirmSaveProfileCommand}" Height="30" Padding="12,0" Background="#0D9488" BorderBrush="#0D9488" FontSize="11" FontWeight="Bold"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
+
+        <!-- ================= CREATE TIER 3 CUSTOM FIELD DIALOG OVERLAY ================= -->
+        <materialDesign:DialogHost Grid.RowSpan="6" IsOpen="{Binding IsCreateTier3DialogOpen}" CloseOnClickAway="False">
+            <materialDesign:DialogHost.DialogContent>
+                <Border Padding="16" Width="340" Background="White" CornerRadius="6">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <materialDesign:PackIcon Kind="PlusCircle" Width="18" Height="18" Foreground="#16A34A" VerticalAlignment="Center"/>
+                            <TextBlock Text="Create Custom Field" FontWeight="Bold" FontSize="14" Foreground="#0F172A" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBox Text="{Binding NewTier3DisplayLabel, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Display Label *" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="32" Padding="8,4" FontSize="11" Margin="0,0,0,8"/>
+                        <TextBox Text="{Binding NewTier3FieldName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Database Property Name *" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="32" Padding="8,4" FontSize="11" Margin="0,0,0,8"/>
+                        <ComboBox ItemsSource="{Binding SupportedControlTypes}" SelectedItem="{Binding SelectedTier3FieldType}" Padding="8,0" materialDesign:HintAssist.Hint="Field Control Type *" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="32" FontSize="11" Margin="0,0,0,8"/>
+                        <TextBox Text="{Binding NewTier3Tooltip, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Description / Tooltip (Optional)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="32" Padding="8,4" FontSize="11" Margin="0,0,0,16"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="CANCEL" Command="{Binding CancelCreateTier3DialogCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="30" Padding="10,0" FontSize="11" Margin="0,0,6,0"/>
+                            <Button Content="CREATE &amp; MAP" Command="{Binding ConfirmCreateTier3FieldCommand}" Height="30" Padding="12,0" Background="#16A34A" BorderBrush="#16A34A" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </materialDesign:DialogHost.DialogContent>
+        </materialDesign:DialogHost>
     </Grid>
 </Window>

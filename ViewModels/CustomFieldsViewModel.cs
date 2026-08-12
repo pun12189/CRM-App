@@ -67,33 +67,29 @@ namespace Tijori.ViewModels
             string normalizedModule = SelectedModule.TrimEnd('s'); // Convert "Leads" -> "Lead"
 
             var data = await _fieldService.GetFieldsByModuleAsync(normalizedModule);
-            CustomFieldsSource.Clear();
 
-            int index = 1;
-            foreach (var item in data)
+            App.Current.Dispatcher.Invoke(() =>
             {
-                item.RowIndex = index++;
-                CustomFieldsSource.Add(item);
-            }
+                CustomFieldsSource.Clear();
+
+                int index = 1;
+                foreach (var item in data)
+                {
+                    item.RowIndex = index++;
+                    CustomFieldsSource.Add(item);
+                }
+            });
         }
 
         [RelayCommand]
-        private void OpenCreateFieldDialog()
+        private async Task OpenCreateFieldDialog()
         {
             var vm = _serviceProvider.GetRequiredService<CreateFieldViewModel>();
 
             string activeModule = SelectedModule.TrimEnd('s'); // e.g., "Leads" -> "Lead"
 
-            // Default to Tier 2 (Model Property restoration) or Tier 3 (Custom Field)
-            vm.NewField = new CustomFieldDefinition
-            {
-                ModuleType = activeModule,
-                FieldTier = 3, // Tier 3 by default, or set to 2 if picking from model
-                IsVisible = true,
-                IsRequired = false
-            };
-
-            vm.InitializeAvailableModelProperties(activeModule);
+            // Initialize 2-Column Catalog and DataGrid List asynchronously
+            await vm.InitializeAsync(activeModule);
 
             var dialogWindow = new CreateFieldWindow { DataContext = vm };
             dialogWindow.Owner = Application.Current.MainWindow;
@@ -106,7 +102,35 @@ namespace Tijori.ViewModels
 
             if (dialogWindow.ShowDialog() == true)
             {
-                _ = LoadCustomFieldsListAsync();
+                await LoadCustomFieldsListAsync();
+            }
+        }
+
+        [RelayCommand]
+        private async Task EditField(CustomFieldDefinition fieldToEdit)
+        {
+            if (fieldToEdit == null) return;
+
+            var vm = _serviceProvider.GetRequiredService<CreateFieldViewModel>();
+
+            // 1. Initialize ViewModel for the target module
+            await vm.InitializeAsync(fieldToEdit.ModuleType);
+
+            // 2. Load target field into editor
+            vm.SelectFieldForEditCommand.Execute(fieldToEdit);
+
+            var dialogWindow = new CreateFieldWindow { DataContext = vm };
+            dialogWindow.Owner = Application.Current.MainWindow;
+
+            vm.RequestClose += (bool isSaved) =>
+            {
+                dialogWindow.DialogResult = isSaved;
+                dialogWindow.Close();
+            };
+
+            if (dialogWindow.ShowDialog() == true)
+            {
+                await LoadCustomFieldsListAsync();
             }
         }
 
@@ -122,61 +146,13 @@ namespace Tijori.ViewModels
                 return;
             }
 
-            var result = MessageBox.Show($"Are you sure you want to drop field '{field.FieldName}'?",
+            var result = MessageBox.Show($"Are you sure you want to drop field '{field.EffectiveLabel}'?",
                 "Confirm Drop", MessageBoxButton.YesNo, MessageBoxImage.Warning);
 
             if (result == MessageBoxResult.Yes)
             {
                 await _fieldService.DeleteCustomFieldAsync(field.FieldId);
                 await LoadCustomFieldsListAsync();
-            }
-        }
-
-        [RelayCommand]
-        private void EditField(CustomFieldDefinition fieldToEdit)
-        {
-            if (fieldToEdit == null) return;
-
-            var vm = _serviceProvider.GetRequiredService<CreateFieldViewModel>();
-
-            // 1. CRITICAL FIX: Explicitly set IsEditMode FIRST before changing tier selection
-            vm.IsEditMode = true;
-
-            // 2. Clone field properties safely
-            vm.NewField = new CustomFieldDefinition
-            {
-                FieldId = fieldToEdit.FieldId,
-                FieldName = fieldToEdit.FieldName,
-                DisplayLabel = fieldToEdit.DisplayLabel,
-                FieldType = fieldToEdit.FieldType,
-                ModuleType = fieldToEdit.ModuleType,
-                FieldTier = fieldToEdit.FieldTier,
-                IsVisible = fieldToEdit.IsVisible,
-                IsRequired = fieldToEdit.IsRequired,
-                SeedValues = fieldToEdit.SeedValues,
-                SeedValueOptionsList = new ObservableCollection<string>(fieldToEdit.SeedValueOptionsList ?? new())
-            };
-
-            // 3. Set Tier Selection States
-            vm.IsTier2Selected = fieldToEdit.FieldTier == 2;
-            vm.IsTier3Selected = fieldToEdit.FieldTier == 3;
-
-            // 4. Initialize model property drop lists & set selected property without triggering auto-overwrite
-            vm.InitializeAvailableModelProperties(fieldToEdit.ModuleType);
-            vm.SelectedModelPropertyName = fieldToEdit.FieldName;
-
-            var dialogWindow = new CreateFieldWindow { DataContext = vm };
-            dialogWindow.Owner = Application.Current.MainWindow;
-
-            vm.RequestClose += (bool isSaved) =>
-            {
-                dialogWindow.DialogResult = isSaved;
-                dialogWindow.Close();
-            };
-
-            if (dialogWindow.ShowDialog() == true)
-            {
-                _ = LoadCustomFieldsListAsync();
             }
         }
     }

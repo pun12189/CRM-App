@@ -10,6 +10,10 @@ namespace Tijori.Models.Enums
     {
         Product,
         Lead,
-        Order
+        Order,
+        Customer,
+        Purchase,
+        Vendor,
+        Staff
     }
 }

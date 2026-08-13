@@ -32,7 +32,7 @@
 
             <!-- Header -->
             <TextBlock Grid.Row="0" Text="{Binding WindowTitle}" FontSize="20" 
-                       FontWeight="Bold" Foreground="#1794A1" Margin="0,0,0,20"/>
+                   FontWeight="Bold" Foreground="#1794A1" Margin="0,0,0,20"/>
 
             <!-- Scrollable Form Container -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" MaxHeight="520">
@@ -50,26 +50,33 @@
 
                             <!-- Full Name (TIER 1 - MANDATORY) -->
                             <TextBox Text="{Binding CurrentUser.FullName, UpdateSourceTrigger=PropertyChanged}" 
-                                     materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='FullName|Full Name *'}" 
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
-                                     Margin="0,0,0,16" VerticalContentAlignment="Center"/>
+                                 materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='FullName|Full Name *'}" 
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                 Margin="0,0,0,16" VerticalContentAlignment="Center"/>
+
+                            <!-- Username / Login Handle (NEW FIELD) -->
+                            <TextBox Text="{Binding CurrentUser.Username, UpdateSourceTrigger=PropertyChanged}" 
+                                 materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Username|Username / Short Handle *'}" 
+                                 Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='Username'}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                 Margin="0,0,0,16" VerticalContentAlignment="Center"/>
 
                             <!-- Email ID (TIER 1 - MANDATORY) -->
                             <TextBox Text="{Binding CurrentUser.Email, UpdateSourceTrigger=PropertyChanged}" 
-                                     materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Email|Email ID (System Login Workspace) *'}" 
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
-                                     Margin="0,0,0,16" VerticalContentAlignment="Center"/>
+                                 materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Email|Email ID (System Login Workspace) *'}" 
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                 Margin="0,0,0,16" VerticalContentAlignment="Center"/>
 
                             <!-- Phone / WhatsApp Number (TIER 2 - OPTIONAL) -->
                             <TextBox Text="{Binding CurrentUser.Phone, UpdateSourceTrigger=PropertyChanged}" 
-                                     materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Phone|Phone / WhatsApp Number'}" 
-                                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='Phone'}"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
-                                     Margin="0,0,0,16" VerticalContentAlignment="Center"/>
+                                 materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Phone|Phone / WhatsApp Number'}" 
+                                 Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='Phone'}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                 Margin="0,0,0,16" VerticalContentAlignment="Center"/>
 
                             <!-- Login Password (Visible only in Create Mode) -->
                             <PasswordBox x:Name="PassBox" materialDesign:HintAssist.Hint="Set Account Login Password" 
-                                         VerticalContentAlignment="Center" Margin="0,0,0,16">
+                                     VerticalContentAlignment="Center" Margin="0,0,0,16">
                                 <PasswordBox.Style>
                                     <Style TargetType="PasswordBox" BasedOn="{StaticResource MaterialDesignOutlinedPasswordBox}">
                                         <Setter Property="Visibility" Value="Visible"/>
@@ -89,36 +96,36 @@
 
                             <!-- Department Location (TIER 2 - OPTIONAL) -->
                             <ComboBox ItemsSource="{Binding DepartmentsList}" 
-                                      SelectedValue="{Binding CurrentUser.DepartmentId, UpdateSourceTrigger=PropertyChanged}"
-                                      SelectedValuePath="Id" DisplayMemberPath="DeptName"
-                                      materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='DepartmentId|Assign Department Location'}"
-                                      Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='DepartmentId'}"
-                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" 
-                                      Margin="0,0,0,16" VerticalContentAlignment="Center"/>
+                                  SelectedValue="{Binding CurrentUser.DepartmentId, UpdateSourceTrigger=PropertyChanged}"
+                                  SelectedValuePath="Id" DisplayMemberPath="DeptName"
+                                  materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='DepartmentId|Assign Department Location'}"
+                                  Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='DepartmentId'}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                                  Margin="0,0,0,16" VerticalContentAlignment="Center"/>
 
                             <!-- Access Role (TIER 1 - MANDATORY) -->
                             <ComboBox ItemsSource="{Binding RolesList}" 
-                                      SelectedValue="{Binding CurrentUser.Role, UpdateSourceTrigger=PropertyChanged}"
-                                      materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Role|Assign System Access Level Role *'}"
-                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" 
-                                      Margin="0,0,0,16" VerticalContentAlignment="Center"/>
+                                  SelectedValue="{Binding CurrentUser.Role, UpdateSourceTrigger=PropertyChanged}"
+                                  materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Role|Assign System Access Level Role *'}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                                  Margin="0,0,0,16" VerticalContentAlignment="Center"/>
 
                             <!-- Senior / Reporting Team Leader (TIER 2 - OPTIONAL) -->
                             <ComboBox ItemsSource="{Binding PotentialSeniors}" 
-                                      SelectedValue="{Binding CurrentUser.SeniorId, UpdateSourceTrigger=PropertyChanged}"
-                                      SelectedValuePath="UserId" DisplayMemberPath="DisplayName"
-                                      IsEnabled="{Binding PotentialSeniors.Count, Converter={StaticResource IntToBoolConverter}}"
-                                      materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='SeniorId|Assign Senior / Reporting Team Leader'}"
-                                      Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='SeniorId'}"
-                                      Style="{StaticResource MaterialDesignOutlinedComboBox}" 
-                                      Margin="0,0,0,16" VerticalContentAlignment="Center"/>
+                                  SelectedValue="{Binding CurrentUser.SeniorId, UpdateSourceTrigger=PropertyChanged}"
+                                  SelectedValuePath="UserId" DisplayMemberPath="DisplayName"
+                                  IsEnabled="{Binding PotentialSeniors.Count, Converter={StaticResource IntToBoolConverter}}"
+                                  materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='SeniorId|Assign Senior / Reporting Team Leader'}"
+                                  Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='SeniorId'}"
+                                  Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                                  Margin="0,0,0,16" VerticalContentAlignment="Center"/>
 
                             <!-- Monthly Performance Target (TIER 2 - OPTIONAL) -->
                             <TextBox Text="{Binding CurrentUser.MonthlyTarget, UpdateSourceTrigger=PropertyChanged}" 
-                                     materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='MonthlyTarget|Monthly Performance Target Amount (₹)'}" 
-                                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='MonthlyTarget'}"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
-                                     Margin="0,0,0,16" VerticalContentAlignment="Center"/>
+                                 materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='MonthlyTarget|Monthly Performance Target Amount (₹)'}" 
+                                 Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='MonthlyTarget'}"
+                                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                                 Margin="0,0,0,16" VerticalContentAlignment="Center"/>
                         </StackPanel>
                     </Grid>
 
@@ -129,9 +136,9 @@
                                 <Grid Margin="0,0,0,16">
                                     <ContentControl x:Name="InputControlHost" Focusable="False">
                                         <TextBox Text="{Binding FieldValue, UpdateSourceTrigger=PropertyChanged}"
-                                                 materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
-                                                 materialDesign:HintAssist.IsFloating="True"
-                                                 Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                             materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
+                                             materialDesign:HintAssist.IsFloating="True"
+                                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                                     </ContentControl>
                                 </Grid>
 
@@ -140,10 +147,10 @@
                                         <Setter TargetName="InputControlHost" Property="Content">
                                             <Setter.Value>
                                                 <ComboBox ItemsSource="{Binding OptionsList}"
-                                                          SelectedItem="{Binding FieldValue, UpdateSourceTrigger=PropertyChanged}"
-                                                          materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
-                                                          materialDesign:HintAssist.IsFloating="True"
-                                                          Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+                                                      SelectedItem="{Binding FieldValue, UpdateSourceTrigger=PropertyChanged}"
+                                                      materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
+                                                      materialDesign:HintAssist.IsFloating="True"
+                                                      Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                                             </Setter.Value>
                                         </Setter>
                                     </DataTrigger>
@@ -152,9 +159,9 @@
                                         <Setter TargetName="InputControlHost" Property="Content">
                                             <Setter.Value>
                                                 <DatePicker SelectedDate="{Binding SelectedDate, UpdateSourceTrigger=PropertyChanged}"
-                                                            materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
-                                                            materialDesign:HintAssist.IsFloating="True"
-                                                            Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
+                                                        materialDesign:HintAssist.Hint="{Binding EffectiveLabel}"
+                                                        materialDesign:HintAssist.IsFloating="True"
+                                                        Style="{StaticResource MaterialDesignOutlinedDatePicker}"/>
                                             </Setter.Value>
                                         </Setter>
                                     </DataTrigger>
@@ -167,7 +174,7 @@
 
             <!-- Active Status Switch (TIER 2 - OPTIONAL) -->
             <Border Grid.Row="2" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12,0" Background="#F8FAFC" Height="42" Margin="0,12,0,0"
-                    Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='IsActive'}">
+                Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='IsActive'}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -181,8 +188,8 @@
                     </StackPanel>
 
                     <ToggleButton Grid.Column="1" Style="{StaticResource MaterialDesignSwitchToggleButton}" 
-                                  IsChecked="{Binding CurrentUser.IsActive, UpdateSourceTrigger=PropertyChanged}" 
-                                  VerticalAlignment="Center" Margin="0,0,4,0"/>
+                              IsChecked="{Binding CurrentUser.IsActive, UpdateSourceTrigger=PropertyChanged}" 
+                              VerticalAlignment="Center" Margin="0,0,4,0"/>
 
                     <TextBlock Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" FontSize="12" FontWeight="Bold">
                         <TextBlock.Style>
@@ -203,18 +210,18 @@
 
             <!-- Validation Error Bar -->
             <TextBlock Grid.Row="3" Text="{Binding ValidationErrorMessage}" 
-                       Foreground="#DC2626" FontWeight="SemiBold" FontSize="12"
-                       Margin="0,10,0,0" TextWrapping="Wrap"
-                       Visibility="{Binding IsValidationErrorVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                   Foreground="#DC2626" FontWeight="SemiBold" FontSize="12"
+                   Margin="0,10,0,0" TextWrapping="Wrap"
+                   Visibility="{Binding IsValidationErrorVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
             <!-- Action Buttons -->
             <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
                 <Button Content="CANCEL" IsCancel="True" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#94A3B8" FontWeight="SemiBold" Height="38" Margin="0,0,8,0"/>
 
                 <Button Content="SAVE STAFF PROFILE" 
-                        Command="{Binding SaveCommand}" 
-                        CommandParameter="{Binding ElementName=PassBox}"
-                        Background="#1794A1" BorderBrush="#1794A1" Foreground="White" FontWeight="Bold" Height="38" Padding="20,0">
+                    Command="{Binding SaveCommand}" 
+                    CommandParameter="{Binding ElementName=PassBox}"
+                    Background="#1794A1" BorderBrush="#1794A1" Foreground="White" FontWeight="Bold" Height="38" Padding="20,0">
                     <Button.Resources>
                         <Style TargetType="Border">
                             <Setter Property="CornerRadius" Value="6"/>

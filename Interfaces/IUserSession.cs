@@ -11,6 +11,7 @@ namespace Tijori.Interfaces
         string CurrentUser { get; set; }
         int UserId { get; set; }
         string CurrentUserEmail { get; set; }
+        string UserName { get; set; }
         string DisplayName { get; set; }
         string UserRole { get; set; } // "Admin", "Executive", "Team Leader", "Sub-Admin"
         int? SeniorId { get; set; }

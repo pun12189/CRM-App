@@ -23,6 +23,7 @@ namespace Tijori.Models
         public string? MemberSince { get; set; }
         public string? Phone { get; set; }
         public int LogId { get; set; }
+        public string UserName { get; set; } = string.Empty;
 
         public void Clear()
         {

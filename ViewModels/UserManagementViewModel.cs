@@ -1,9 +1,6 @@
-﻿using Tijori.Core;
-using Tijori.Interfaces;
-using Tijori.Models;
-using Tijori.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,6 +8,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using Tijori.Core;
+using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Models.Enums;
+using Tijori.Services;
 
 namespace Tijori.ViewModels
 {
@@ -101,6 +104,26 @@ namespace Tijori.ViewModels
 
             // Tell AdminSettingsViewModel to swap CurrentSettingView to StaffDetailsViewModel
             await _adminSettingsViewModel.OpenStaffDetailsAsync(selectedUser);
+        }
+
+        [RelayCommand]
+        private async Task ImportStaff()
+        {
+            var vm = App.ServiceProvider.GetRequiredService<ImportViewModel>();
+            await vm.InitializeAsync(ImportType.Staff);
+            var dialogWindow = new ImportView { DataContext = vm };
+            // No need for a close event here since the ImportViewModel can directly call LoadStaff() after a successful import
+            vm.RequestClose += (result) =>
+            {
+                dialogWindow.DialogResult = result;
+                dialogWindow.Close();
+            };
+
+            if (dialogWindow.ShowDialog() == true)
+            {
+                // Re-run the query to show the new lead in the DataGrid
+                await LoadData();
+            }
         }
     }
 }

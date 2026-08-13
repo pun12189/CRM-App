@@ -17,6 +17,7 @@ namespace Tijori.Models
 
         [ObservableProperty] private string _email = string.Empty;
         [ObservableProperty] private string? _phone;
+        [ObservableProperty] private string _userName;
         [ObservableProperty] private string _fullName = string.Empty;
         [ObservableProperty] private string _password = string.Empty;
         [ObservableProperty] private UserRole _role = UserRole.Executive;

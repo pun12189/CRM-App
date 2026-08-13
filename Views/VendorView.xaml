@@ -17,8 +17,17 @@
 
                 <Border Grid.Row="0" Background="#F8FAFC" Padding="15,10" Margin="0,0,0,15" CornerRadius="6" BorderThickness="1" BorderBrush="#E2E8F0">
                     <DockPanel>
-                        <Button Content="+ Add New Vendor" Style="{StaticResource MaterialDesignFlatMidBgButton}" DockPanel.Dock="Right" Command="{Binding OpenAddVendorWindowCommand}"/>
+                        
                         <TextBlock Text="Vendor Directory" FontSize="15" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <Grid DockPanel.Dock="Right" HorizontalAlignment="Right">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Content="IMPORT VENDOR's" Command="{Binding ImportVendorsCommand}" HorizontalAlignment="Right"
+Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0"/>
+                            <Button Grid.Column="1" Content="+ Add New Vendor" Style="{StaticResource MaterialDesignFlatMidBgButton}" DockPanel.Dock="Right" Command="{Binding OpenAddVendorWindowCommand}"/>
+                        </Grid>
                     </DockPanel>
                 </Border>
 

@@ -81,7 +81,7 @@ namespace Tijori.ViewModels
 
                 if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(password))
                 {
-                    ErrorMessage = "Email and Password are required.";
+                    ErrorMessage = "Username/Email and Password are required.";
                     return;
                 }
 

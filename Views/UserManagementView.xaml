@@ -24,6 +24,8 @@
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right" VerticalAlignment="Center">
+                <Button Content="IMPORT STAFF" Command="{Binding ImportStaffCommand}" HorizontalAlignment="Right"
+Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0"/>
                 <Button Content="Export" Background="#FF8A3D" BorderBrush="#FF8A3D" Margin="0,0,10,0" Height="32" Visibility="Collapsed"/>
                 <Button Content="Add New Staff" Command="{Binding OpenAddStaffDialogCommand}" security:SecurityGuard.Requires="User:Create"
                     Background="#1794A1" BorderBrush="#1794A1" Height="32"/>

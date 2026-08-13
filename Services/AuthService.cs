@@ -56,8 +56,17 @@ namespace Tijori.Services
             // 2. FALLBACK TO DATABASE (Local Staff)
             using IDbConnection db = _context.CreateConnection();
 
-            string sql = "SELECT * FROM Users WHERE Email = @email AND IsActive = 1 LIMIT 1";
-            var user = await db.QueryFirstOrDefaultAsync<User>(sql, new { email });
+            string sql = @"
+                SELECT * FROM Users 
+                WHERE (
+                    Username = @Input 
+                    OR Email = @Input 
+                    OR Phone = @Input
+                ) 
+                AND IsActive = 1 
+                LIMIT 1;";
+
+            var user = await db.QueryFirstOrDefaultAsync<User>(sql, new { Input = email });
 
             if (user != null && BCrypt.Net.BCrypt.Verify(password, user.Password))
             {
@@ -67,6 +76,7 @@ namespace Tijori.Services
                 SecurityGuard.SessionRightsCache = await _permissionService.HydrateUserSessionSecurityProfileAsync(user.Role);
 
                 _session.UserId = user.UserId;
+                _session.UserName = user.UserName;
                 _session.CurrentUserEmail = user.Email;
                 _session.DisplayName = user.FullName;
                 _session.CurrentUser = user.FullName;

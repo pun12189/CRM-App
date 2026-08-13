@@ -236,7 +236,7 @@ namespace Tijori.ViewModels
                     "Lead" or "Customer" => new List<string> { "CustomerName", "Phone", "LeadHolder" },
                     "Product" => new List<string> { "Name" },
                     "Vendor" => new List<string> { "CompanyName", "Phone" },
-                    "Staff" => new List<string> { "FullName", "Email", "Role" },
+                    "Staff" => new List<string> { "FullName", "Email", "Role", "UserName" },
                     "Order" => new List<string> { "LeadId", "OrderDate", "TotalAmount", "ProductId", "Quantity", "UnitPrice" },
                     "Purchase" => new List<string> { "PoNumber", "VendorId", "OrderDate", "TotalAmount", "ProductId", "Quantity", "UnitPrice" },
                     _ => new List<string>()

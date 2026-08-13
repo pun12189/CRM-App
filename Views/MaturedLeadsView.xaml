@@ -108,7 +108,7 @@
                             </MenuItem>
                         </Menu>
 
-                        <Button Grid.Column="2" Content="Import Leads" 
+                        <Button Grid.Column="2" Content="Import Customer's" 
         Command="{Binding OpenImportLeadsDialogCommand}"
         Padding="20,5" Background="#1794A1" Foreground="White" FontWeight="Bold" Margin="5,0" security:SecurityGuard.Requires="Customer:View"/>
                         <Button Grid.Column="4" Content="+ New Customer" 

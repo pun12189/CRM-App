@@ -157,7 +157,7 @@ namespace Tijori.ViewModels
 
                 "Vendor" => new List<string> { "ContactPerson", "Email", "GstNumber", "Address", "Status" },
 
-                "Staff" => new List<string> { "Phone", "DepartmentId", "SeniorId", "MonthlyTarget", "IsActive" },
+                "Staff" => new List<string> { "Phone", "DepartmentId", "SeniorId", "MonthlyTarget", "IsActive", "Username" },
 
                 "Order" => new List<string>
         {
@@ -236,7 +236,7 @@ namespace Tijori.ViewModels
                     "Lead" or "Customer" => new List<string> { "CustomerName", "Phone", "LeadHolder" },
                     "Product" => new List<string> { "Name" },
                     "Vendor" => new List<string> { "CompanyName", "Phone" },
-                    "Staff" => new List<string> { "FullName", "Email", "Role", "UserName" },
+                    "Staff" => new List<string> { "FullName", "Email", "Role" },
                     "Order" => new List<string> { "LeadId", "OrderDate", "TotalAmount", "ProductId", "Quantity", "UnitPrice" },
                     "Purchase" => new List<string> { "PoNumber", "VendorId", "OrderDate", "TotalAmount", "ProductId", "Quantity", "UnitPrice" },
                     _ => new List<string>()
@@ -274,6 +274,7 @@ namespace Tijori.ViewModels
                 NewField.IsRequired = false;
                 OnPropertyChanged(nameof(DialogTitle));
                 OnPropertyChanged(nameof(IsFieldNameEditable));
+                OnPropertyChanged(nameof(IsControlTypeEditable)); // 👈 NOTIFY PERMISSION
             }
         }       
 

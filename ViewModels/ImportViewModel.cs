@@ -204,12 +204,13 @@ namespace Tijori.ViewModels
 
                 "Staff" => new List<SystemFieldDescriptor>
         {
+                    new() { FieldName = "Username", DisplayLabel = "Username", InfoTooltip = "Short handle or username for quick system login" },
             new() { FieldName = "Phone", DisplayLabel = "Phone Number", InfoTooltip = "Mobile phone number" },
             new() { FieldName = "DepartmentId", DisplayLabel = "Department ID", InfoTooltip = "Assigned department ID" },
             new() { FieldName = "SeniorId", DisplayLabel = "Reporting Manager / Senior ID", InfoTooltip = "Manager/Senior staff lookup ID" },
             new() { FieldName = "MonthlyTarget", DisplayLabel = "Monthly Target", InfoTooltip = "Monthly sales allocation" },
             new() { FieldName = "IsActive", DisplayLabel = "Is Active", InfoTooltip = "Account active status (1/0)" }
-        },
+                },
 
                 "Order" => new List<SystemFieldDescriptor>
         {

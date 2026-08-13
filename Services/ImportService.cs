@@ -604,8 +604,17 @@ namespace Tijori.Services
                         decimal monthlyTarget = decimal.TryParse(row.GetValueOrDefault("MonthlyTarget")?.ToString(), out var tgt) ? tgt : 0.00m;
                         int isActive = int.TryParse(row.GetValueOrDefault("IsActive")?.ToString(), out var act) ? act : 1;
 
+                        string? rawUsername = row.GetValueOrDefault("Username")?.ToString()?.Trim();
+                        string? email = row.GetValueOrDefault("Email")?.ToString()?.Trim();
+
+                        if (string.IsNullOrWhiteSpace(rawUsername) && !string.IsNullOrWhiteSpace(email) && email.Contains("@"))
+                        {
+                            rawUsername = email.Split('@')[0]; // Auto-generate username from email prefix if left blank in Excel
+                        }
+
                         parameters.Add("FullName", row.GetValueOrDefault("FullName"));
-                        parameters.Add("Email", row.GetValueOrDefault("Email"));
+                        parameters.Add("Username", rawUsername);
+                        parameters.Add("Email", email);
                         parameters.Add("Role", row.GetValueOrDefault("Role") ?? "Staff");
                         parameters.Add("Phone", row.GetValueOrDefault("Phone"));
                         parameters.Add("DepartmentId", deptId);

@@ -55,7 +55,7 @@
                                  Margin="0,0,0,16" VerticalContentAlignment="Center"/>
 
                             <!-- Username / Login Handle (NEW FIELD) -->
-                            <TextBox Text="{Binding CurrentUser.Username, UpdateSourceTrigger=PropertyChanged}" 
+                            <TextBox Text="{Binding CurrentUser.UserName, UpdateSourceTrigger=PropertyChanged}" 
                                  materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Username|Username / Short Handle *'}" 
                                  Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='Username'}"
                                  Style="{StaticResource MaterialDesignOutlinedTextBox}" 

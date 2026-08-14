@@ -9,6 +9,7 @@
         xmlns:views="clr-namespace:Tijori.Views"
         xmlns:security="clr-namespace:Tijori.Core"
         Icon="/Assets/opn.png"
+        xmlns:helpers="clr-namespace:Tijori.Helper"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="Tijori" WindowState="Maximized" WindowStartupLocation="CenterScreen">
@@ -526,7 +527,7 @@
                         <MenuItem Header="Future Task" Icon="{materialDesign:PackIcon Kind=CalendarClock}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Future"/>
                     </MenuItem>
 
-                    <MenuItem Header="Leads" Icon="{materialDesign:PackIcon Kind=AccountGroup}" Click="TopLevelMenuItem_Click">
+                    <MenuItem Header="Leads" helpers:ModuleVisibilityProps.RequiredFeature="LMS" Icon="{materialDesign:PackIcon Kind=AccountGroup}" Click="TopLevelMenuItem_Click">
                         <MenuItem Header="All Leads" Icon="{materialDesign:PackIcon Kind=AccountMultiple}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Leads"/>
                         <MenuItem Header="Customers" Icon="{materialDesign:PackIcon Kind=CardAccountDetails}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Customers"/>
                         <MenuItem Header="My Leads" Icon="{materialDesign:PackIcon Kind=Account}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="MyLeads"/>
@@ -676,92 +677,142 @@
             </Grid>
         </materialDesign:ColorZone>
         <ContentControl Grid.Row="3" Content="{Binding CurrentView}"/>
-        <materialDesign:DrawerHost Grid.RowSpan="4" IsRightDrawerOpen="{Binding IsAdminMenuOpen, Mode=TwoWay}" Visibility="Visible">
+        <materialDesign:DrawerHost Grid.RowSpan="4" IsRightDrawerOpen="{Binding IsAdminMenuOpen, Mode=TwoWay}">
 
+            <!-- RIGHT DRAWER CONTENT -->
             <materialDesign:DrawerHost.RightDrawerContent>
-                <Grid Width="300" Background="{DynamicResource MaterialDesignPaper}" Margin="20,40">
-                    <StackPanel VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,20,0,0">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Border Width="330" Background="{DynamicResource MaterialDesignPaper}" Padding="20,24">
+                        <StackPanel VerticalAlignment="Top">
 
-                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch" Height="50" Margin="0,0,0,12" Padding="8,0">
-                            <Grid HorizontalAlignment="Stretch" Width="280">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                            <TextBlock Text="System Package Toggles" FontWeight="Bold" FontSize="16" Foreground="{DynamicResource MaterialDesignBody}" Margin="0,0,0,20"/>
 
-                                <TextBlock Grid.Column="0" TextWrapping="Wrap" Text="Lead Management System (LMS)" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13" Foreground="{DynamicResource MaterialDesignBody}"/>
+                            <!-- ================= 1. LMS PACKAGE CARD ================= -->
+                            <Border BorderThickness="1" BorderBrush="#E2E8F0" CornerRadius="8" Background="#F8FAFC" Padding="12,10" Margin="0,0,0,12">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
 
-                                <ToggleButton Grid.Column="1" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Button>
-                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch" Height="50" Margin="0,0,0,12" Padding="8,0">
-                            <Grid HorizontalAlignment="Stretch" Width="280">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                            <TextBlock Text="LMS Package Only" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource MaterialDesignBody}"/>
+                                            <TextBlock Text="Standalone Lead Management System" FontSize="10" Foreground="#64748B" Margin="0,2,0,0"/>
+                                        </StackPanel>
 
-                                <TextBlock Grid.Column="0" TextWrapping="Wrap" Text="Customer Relationship Management (CRM)" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13" Foreground="{DynamicResource MaterialDesignBody}"/>
+                                        <!-- EXCLUSIVE LMS TOGGLE -->
+                                        <ToggleButton Grid.Column="1" 
+                                          IsChecked="{Binding IsLmsPackageActive, Mode=TwoWay}" 
+                                          Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                                          VerticalAlignment="Center"/>
+                                    </Grid>
 
-                                <ToggleButton Grid.Column="1" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Button>
+                                    <!-- EXPANDABLE SUB-OPTIONS (Visible if LMS features are included in active package) -->
+                                    <StackPanel Margin="8,10,0,0" 
+                                    Visibility="{Binding IsLmsFeaturesAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
 
-                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch" Height="50" Margin="0,0,0,12" Padding="8,0">
-                            <Grid HorizontalAlignment="Stretch" Width="280">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                                        <Border Height="1" Background="#CBD5E1" Margin="0,0,0,8"/>
+                                        <TextBlock Text="LMS Sub-Feature Actions:" FontSize="10" FontWeight="Bold" Foreground="#475569" Margin="0,0,0,6"/>
 
-                                <TextBlock Grid.Column="0" TextWrapping="Wrap" Text="Customer Relationship Management (CRM-Pro)" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13" Foreground="{DynamicResource MaterialDesignBody}"/>
+                                        <Grid Margin="0,3">
+                                            <TextBlock Text="• Add Lead Button" FontSize="11" Foreground="#334155" VerticalAlignment="Center"/>
+                                            <ToggleButton IsChecked="{Binding IsLmsAddLeadEnabled, Mode=TwoWay}" 
+                                              HorizontalAlignment="Right" 
+                                              Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
+                                        </Grid>
 
-                                <ToggleButton Grid.Column="1" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Button>
+                                        <Grid Margin="0,3">
+                                            <TextBlock Text="• Import Excel Wizard" FontSize="11" Foreground="#334155" VerticalAlignment="Center"/>
+                                            <ToggleButton IsChecked="{Binding IsLmsImportLeadsEnabled, Mode=TwoWay}" 
+                                              HorizontalAlignment="Right" 
+                                              Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
+                                        </Grid>
 
-                        <Button Style="{StaticResource MaterialDesignFlatButton}" HorizontalAlignment="Stretch" Height="50" Margin="0,0,0,12" Padding="8,0">
-                            <Grid HorizontalAlignment="Stretch" Width="280">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
+                                        <Grid Margin="0,3">
+                                            <TextBlock Text="• Export Excel Feature" FontSize="11" Foreground="#334155" VerticalAlignment="Center"/>
+                                            <ToggleButton IsChecked="{Binding IsLmsExportLeadsEnabled, Mode=TwoWay}" 
+                                              HorizontalAlignment="Right" 
+                                              Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
+                                        </Grid>
 
-                                <TextBlock Grid.Column="0" TextWrapping="Wrap" Text="Enterprise Resource Planning (ERP)" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="13" Foreground="{DynamicResource MaterialDesignBody}"/>
+                                        <Grid Margin="0,3">
+                                            <TextBlock Text="• Delete Lead Capability" FontSize="11" Foreground="#334155" VerticalAlignment="Center"/>
+                                            <ToggleButton IsChecked="{Binding IsLmsDeleteLeadEnabled, Mode=TwoWay}" 
+                                              HorizontalAlignment="Right" 
+                                              Style="{StaticResource MaterialDesignSwitchToggleButton}"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
 
-                                <ToggleButton Grid.Column="1" Style="{StaticResource MaterialDesignSwitchToggleButton}" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Button>
-                    </StackPanel>
-                </Grid>
+                            <!-- ================= 2. CRM PACKAGE CARD ================= -->
+                            <Border BorderThickness="1" BorderBrush="#E2E8F0" CornerRadius="8" Background="#F8FAFC" Padding="12,10" Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                        <TextBlock Text="CRM Package" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource MaterialDesignBody}"/>
+                                        <TextBlock Text="Includes LMS + CRM Features" FontSize="10" Foreground="#64748B" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- EXCLUSIVE CRM TOGGLE -->
+                                    <ToggleButton Grid.Column="1" 
+                                      IsChecked="{Binding IsCrmPackageActive, Mode=TwoWay}" 
+                                      Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                                      VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- ================= 3. CRM-PRO PACKAGE CARD ================= -->
+                            <Border BorderThickness="1" BorderBrush="#E2E8F0" CornerRadius="8" Background="#F8FAFC" Padding="12,10" Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                        <TextBlock Text="CRM-Pro Package" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource MaterialDesignBody}"/>
+                                        <TextBlock Text="Includes LMS + CRM + CRM-Pro" FontSize="10" Foreground="#64748B" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- EXCLUSIVE CRM-PRO TOGGLE -->
+                                    <ToggleButton Grid.Column="1" 
+                                      IsChecked="{Binding IsCrmProPackageActive, Mode=TwoWay}" 
+                                      Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                                      VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- ================= 4. ERP PACKAGE CARD ================= -->
+                            <Border BorderThickness="1" BorderBrush="#E2E8F0" CornerRadius="8" Background="#F8FAFC" Padding="12,10" Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                        <TextBlock Text="ERP Suite" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource MaterialDesignBody}"/>
+                                        <TextBlock Text="Full Enterprise Package (All Features)" FontSize="10" Foreground="#64748B" Margin="0,2,0,0"/>
+                                    </StackPanel>
+
+                                    <!-- EXCLUSIVE ERP TOGGLE -->
+                                    <ToggleButton Grid.Column="1" 
+                                      IsChecked="{Binding IsErpPackageActive, Mode=TwoWay}" 
+                                      Style="{StaticResource MaterialDesignSwitchToggleButton}" 
+                                      VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                        </StackPanel>
+                    </Border>
+                </ScrollViewer>
             </materialDesign:DrawerHost.RightDrawerContent>
-
-            <!--<Grid>
-                <Button HorizontalAlignment="Right" 
-                VerticalAlignment="Bottom"
-                Width="100" 
-                Height="100"                
-                Click="SecretButton_Click">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="BorderBrush" Value="Transparent"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}"/>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="Transparent"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-            </Grid>-->
         </materialDesign:DrawerHost>
         <Grid Grid.RowSpan="4" Visibility="{Binding IsGlobalLoadingActive, Converter={StaticResource BooleanToVisibilityConverter}}">
 

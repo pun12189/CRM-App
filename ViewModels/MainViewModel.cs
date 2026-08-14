@@ -1,10 +1,4 @@
-﻿using Tijori.Dialogs;
-using Tijori.Interfaces;
-using Tijori.Models;
-using Tijori.Models.Enums;
-using Tijori.Services;
-using Tijori.Views;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +12,13 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Tijori.Dialogs;
+using Tijori.Helper;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Models.Enums;
+using Tijori.Services;
+using Tijori.Views;
 
 namespace Tijori.ViewModels
 {
@@ -57,6 +58,65 @@ namespace Tijori.ViewModels
         [ObservableProperty] private bool _isGlobalLoadingActive;
         [ObservableProperty] private string _globalLoadingMessage = "Loading...";
 
+        // ====================================================================
+        // EXCLUSIVE DRAWER PACKAGE TOGGLES (Only ONE can be true at a time)
+        // ====================================================================
+
+        public bool IsLmsPackageActive
+        {
+            get => ModuleManager.CurrentPackage == ActivePackageTier.LMS;
+            set { if (value) ModuleManager.SwitchPackage(ActivePackageTier.LMS); }
+        }
+
+        public bool IsCrmPackageActive
+        {
+            get => ModuleManager.CurrentPackage == ActivePackageTier.CRM;
+            set { if (value) ModuleManager.SwitchPackage(ActivePackageTier.CRM); }
+        }
+
+        public bool IsCrmProPackageActive
+        {
+            get => ModuleManager.CurrentPackage == ActivePackageTier.CRMPro;
+            set { if (value) ModuleManager.SwitchPackage(ActivePackageTier.CRMPro); }
+        }
+
+        public bool IsErpPackageActive
+        {
+            get => ModuleManager.CurrentPackage == ActivePackageTier.ERP;
+            set { if (value) ModuleManager.SwitchPackage(ActivePackageTier.ERP); }
+        }
+
+        // Returns true if LMS features are supported under current package (LMS, CRM, CRMPro, or ERP)
+        public bool IsLmsFeaturesAvailable => ModuleManager.IsFeatureEnabled("LMS");
+
+        // ====================================================================
+        // LMS SUB-OPTION TOGGLES
+        // ====================================================================
+
+        public bool IsLmsAddLeadEnabled
+        {
+            get => ModuleManager.IsFeatureEnabled("LMS:AddLead");
+            set => ModuleManager.SetSubFeatureState("LMS:AddLead", value);
+        }
+
+        public bool IsLmsImportLeadsEnabled
+        {
+            get => ModuleManager.IsFeatureEnabled("LMS:ImportLeads");
+            set => ModuleManager.SetSubFeatureState("LMS:ImportLeads", value);
+        }
+
+        public bool IsLmsExportLeadsEnabled
+        {
+            get => ModuleManager.IsFeatureEnabled("LMS:ExportLeads");
+            set => ModuleManager.SetSubFeatureState("LMS:ExportLeads", value);
+        }
+
+        public bool IsLmsDeleteLeadEnabled
+        {
+            get => ModuleManager.IsFeatureEnabled("LMS:DeleteLead");
+            set => ModuleManager.SetSubFeatureState("LMS:DeleteLead", value);
+        }
+
         private bool _isAdminMenuOpen;
         public bool IsAdminMenuOpen
         {
@@ -85,6 +145,29 @@ namespace Tijori.ViewModels
             SetupIdleTimer();
 
             LoadingService.OnLoadingStateChanged += HandleGlobalLoadingEvent;
+
+            ModuleManager.OnModuleStateChanged += (s, e) =>
+            {
+                NotifyAllPackageProperties();
+            };
+        }
+
+        private void NotifyAllPackageProperties()
+        {
+            // Update Drawer Toggle States
+            OnPropertyChanged(nameof(IsLmsPackageActive));
+            OnPropertyChanged(nameof(IsCrmPackageActive));
+            OnPropertyChanged(nameof(IsCrmProPackageActive));
+            OnPropertyChanged(nameof(IsErpPackageActive));
+
+            // Update LMS Visibility state for Sub-Options
+            OnPropertyChanged(nameof(IsLmsFeaturesAvailable));
+
+            // Update Sub-Feature Switch States
+            OnPropertyChanged(nameof(IsLmsAddLeadEnabled));
+            OnPropertyChanged(nameof(IsLmsImportLeadsEnabled));
+            OnPropertyChanged(nameof(IsLmsExportLeadsEnabled));
+            OnPropertyChanged(nameof(IsLmsDeleteLeadEnabled));
         }
 
         private void HandleGlobalLoadingEvent(bool isActive, string message)

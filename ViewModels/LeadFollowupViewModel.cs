@@ -1,11 +1,7 @@
-﻿using Tijori.Dialogs;
-using Tijori.Interfaces;
-using Tijori.Models;
-using Tijori.Models.Enums;
-using Tijori.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using PdfSharp.Pdf.Filters;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -16,6 +12,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
+using Tijori.Dialogs;
+using Tijori.Helper;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Models.Enums;
+using Tijori.Services;
 
 namespace Tijori.ViewModels
 {
@@ -78,6 +80,17 @@ namespace Tijori.ViewModels
         [ObservableProperty] private SettingItem? _targetSelectedLabel;
         [ObservableProperty] private ObservableCollection<SettingItem> _selectedLabelsList = new();
 
+        [ObservableProperty] private bool _workspaceViewIsActive;
+        [ObservableProperty] private Lead? _activeProfileLead;
+
+        [ObservableProperty]
+        private object _tabsDataContext;
+
+        private ICollectionView _cardsCollection;
+        public ICollectionView CardsCollection => _cardsCollection;
+        [ObservableProperty]
+        private WorkspaceViewMode _currentViewMode = WorkspaceViewMode.Table;
+
         public LeadFollowupViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService, StaffService staffService, CategoryService categoryService, IActionSecurityGuard securityGuard)
         {
             _leadService = leadService;
@@ -118,6 +131,14 @@ namespace Tijori.ViewModels
             foreach (var item in LeadsCollection.Cast<Lead>())
             {
                 item.IsSelectedForAction = isChecked.Value;
+            }
+
+            if (CardsCollection != null)
+            {
+                foreach (var card in CardsCollection.Cast<ITileCardItem>())
+                {
+                    card.IsSelectedForAction = isChecked.Value;
+                }
             }
         }
 
@@ -306,13 +327,34 @@ namespace Tijori.ViewModels
             // 5. Notify the UI to refresh the table
             OnPropertyChanged(nameof(LeadsCollection));
 
+            var cardList = new ObservableCollection<ITileCardItem>(list.Select(l => l.ToTileCard()));
+            _cardsCollection = CollectionViewSource.GetDefaultView(cardList);
+            _cardsCollection.Filter = FilterCards;
+            OnPropertyChanged(nameof(CardsCollection));
+
             LeadTags = new ObservableCollection<SettingItem>(await _settingService.GetSettingsAsync("LeadTags"));
+        }
+
+        private bool FilterCards(object obj)
+        {
+            if (obj is not ITileCardItem card) return false;
+            if (string.IsNullOrWhiteSpace(SearchText)) return true;
+
+            if (card.RawModel is Lead lead)
+            {
+                return FilterLeads(lead);
+            }
+
+            return card.PrimaryTitle.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                   card.HeaderTag.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                   card.OwnerOrMetaLabel.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
         }
 
         // This logic runs every time SearchText changes
         partial void OnSearchTextChanged(string value)
         {
             _leadsCollection?.Refresh();
+            _cardsCollection?.Refresh();
         }
 
         private bool FilterLeads(object obj)
@@ -360,14 +402,26 @@ namespace Tijori.ViewModels
             }
         }
 
+        // ==========================================
+        // 6. GENERIC TILE / CARD ACTION DISPATCHERS
+        // ==========================================
         [RelayCommand]
-        private void EditLead(Lead leadToEdit)
+        private async Task EditItem(object? rawModel)
+        {
+            if (rawModel is Lead lead)
+            {
+                await EditLead(lead);
+            }
+        }
+
+        [RelayCommand]
+        private async Task EditLead(Lead leadToEdit)
         {
             if (leadToEdit == null) return;
 
             // Open the Dialog and pass the lead data
             var vm = App.ServiceProvider.GetRequiredService<AddLeadDialogViewModel>();
-            vm.Initialize(leadToEdit);
+            await vm.Initialize(leadToEdit);
             var dialogWindow = new AddLeadWindow { DataContext = vm, Title = "Update Lead Info" };
 
             vm.RequestClose += (result) => {
@@ -377,7 +431,16 @@ namespace Tijori.ViewModels
 
             if (dialogWindow.ShowDialog() == true)
             {
-                LoadLeads(); // Refresh list after update
+               await LoadLeads(); // Refresh list after update
+            }
+        }
+
+        [RelayCommand]
+        private async Task DeleteItem(object? rawModel)
+        {
+            if (rawModel is Lead lead)
+            {
+                await DeleteLead(lead);
             }
         }
 
@@ -411,6 +474,15 @@ namespace Tijori.ViewModels
             historyWindow.DataContext = historyVm;
             historyWindow.Owner = App.Current.MainWindow; // Set parent window
             historyWindow.ShowDialog();
+        }
+
+        [RelayCommand]
+        private void MoreOptions(object? rawModel)
+        {
+            if (rawModel is Lead lead)
+            {
+                OpenLeadProfile(lead);
+            }
         }
 
         [RelayCommand]
@@ -559,6 +631,51 @@ namespace Tijori.ViewModels
 
             // 5. Notify the UI to refresh the table
             OnPropertyChanged(nameof(LeadsCollection));
+
+            var cardList = new ObservableCollection<ITileCardItem>(list.Select(l => l.ToTileCard()));
+            _cardsCollection = CollectionViewSource.GetDefaultView(cardList);
+            _cardsCollection.Filter = FilterCards;
+            OnPropertyChanged(nameof(CardsCollection));
+        }
+
+        [RelayCommand]
+        private void UpdateStatus(object? rawModel)
+        {
+            if (rawModel is Lead lead)
+            {
+                ShowLeadWorkspace(lead);
+            }
+        }
+
+        [RelayCommand]
+        public void ShowLeadWorkspace(Lead selectedLead)
+        {
+            if (selectedLead == null) return;
+            ActiveProfileLead = selectedLead;
+
+            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, _categoryService, _securityGuard, true);
+
+            if (selectedLead.Status?.ToLower() == "matured")
+            {
+                profileVm = new CustomerProfileViewModel(_leadService, _session, _settingService, _productService, _orderService, selectedLead, _locationService, _categoryService, _securityGuard, true);
+            }
+
+            this.TabsDataContext = profileVm;
+            WorkspaceViewIsActive = true; // Swaps grid out for profile workspace view layout instantly
+        }
+
+        [RelayCommand]
+        public void HideLeadWorkspace()
+        {
+            WorkspaceViewIsActive = false;
+            this.TabsDataContext = null;
+            this.ActiveProfileLead = null;
+        }
+
+        [RelayCommand]
+        private void ItemSelectionChanged(object? item)
+        {
+            RecalculateSelectionStates();
         }
     }
 }

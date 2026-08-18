@@ -33,6 +33,7 @@ namespace Tijori.ViewModels
         private readonly CategoryService _categoryService;
         private readonly IActionSecurityGuard _securityGuard;
         private ICollectionView _leadsCollection;
+        private List<Lead> _rawLeadsList = new();
 
         [ObservableProperty]
         private string _searchText = string.Empty;
@@ -66,6 +67,12 @@ namespace Tijori.ViewModels
         // Tracks properties to bind dynamically to our modal popup overlays
         [ObservableProperty] private bool _isChangeLeadHolderOpen;
         [ObservableProperty] private bool _isAssignLabelsOpen;
+
+        [ObservableProperty] private int _selectedTabIndex = 0;
+        [ObservableProperty] private int _allCount;
+        [ObservableProperty] private int _leadsCount;
+        [ObservableProperty] private int _customersCount;
+        [ObservableProperty] private int _remindersCount;
 
         // Dropdown lookup source lists
         [ObservableProperty] private ObservableCollection<User> _systemUsersList = new();
@@ -119,6 +126,11 @@ namespace Tijori.ViewModels
             {
                 item.IsSelectedForAction = isChecked.Value;
             }
+        }
+
+        partial void OnSelectedTabIndexChanged(int value)
+        {
+            _leadsCollection?.Refresh();
         }
 
         /// <summary>
@@ -276,6 +288,22 @@ namespace Tijori.ViewModels
             SelectedLabelsList = new();
         }
 
+        private void UpdateTabCounts()
+        {
+            if (_rawLeadsList == null) return;
+
+            AllCount = _rawLeadsList.Count;
+
+            // Leads: Non-matured / Not tagged as Customer
+            LeadsCount = _rawLeadsList.Count(l => !IsCustomer(l));
+
+            // Customers: Matured status or tagged as Customer
+            CustomersCount = _rawLeadsList.Count(l => IsCustomer(l));
+
+            // Reminders: Follow-up date is today or overdue
+            RemindersCount = _rawLeadsList.Count(l => IsReminderDue(l));
+        }
+
         private async Task LoadLeads()
         {
             var users = await _staffService.GetAllStaffAsync();
@@ -295,13 +323,16 @@ namespace Tijori.ViewModels
             if (userId.ToLower() != "admin")
             {
                 list = new ObservableCollection<Lead>(list.Where(l => l.LeadHolder == userId));
-            }            
+            }
+
+            _rawLeadsList = list.ToList();
+            UpdateTabCounts();
 
             // 3. Update the CollectionView (the actual source for your DataGrid)
             _leadsCollection = CollectionViewSource.GetDefaultView(list);
 
             // 4. Re-apply your search filter logic
-            _leadsCollection.Filter = FilterLeads;
+            _leadsCollection.Filter = CombinedFilter;
 
             // 5. Notify the UI to refresh the table
             OnPropertyChanged(nameof(LeadsCollection));
@@ -309,18 +340,44 @@ namespace Tijori.ViewModels
             LeadTags = new ObservableCollection<SettingItem>(await _settingService.GetSettingsAsync("LeadTags"));
         }
 
-        // This logic runs every time SearchText changes
-        partial void OnSearchTextChanged(string value)
+        private bool IsCustomer(Lead l)
         {
-            _leadsCollection?.Refresh();
+            return string.Equals(l.Status.ToLower(), "matured", StringComparison.OrdinalIgnoreCase);
         }
 
-        private bool FilterLeads(object obj)
+        private bool IsReminderDue(Lead l)
+        {
+            if (l.LatestUpdate?.NextFollowUpDate == null) return false;
+            return l.LatestUpdate.NextFollowUpDate.Value.Date <= DateTime.Today;
+        }
+
+        private bool CombinedFilter(object obj)
         {
             if (obj is not Lead lead) return false;
+
+            // 1. Apply Tab Filtering
+            switch (SelectedTabIndex)
+            {
+                case 1: // Leads Tab
+                    if (IsCustomer(lead)) return false;
+                    break;
+
+                case 2: // Customer Tab
+                    if (!IsCustomer(lead)) return false;
+                    break;
+
+                case 3: // Reminders Tab
+                    if (!IsReminderDue(lead)) return false;
+                    break;
+
+                case 0: // All Tab
+                default:
+                    break;
+            }
+
+            // 2. Apply Text Search Filtering
             if (string.IsNullOrWhiteSpace(SearchText)) return true;
 
-            // Search across multiple fields: Name, Phone, City, and Company
             return lead.CustomerName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
                    (lead.Phone?.Contains(SearchText) ?? false) ||
                    (lead.AltPhone?.Contains(SearchText) ?? false) ||
@@ -339,6 +396,12 @@ namespace Tijori.ViewModels
                    (lead.LeadSource?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.LeadTag?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false);
         }
+
+        // This logic runs every time SearchText changes
+        partial void OnSearchTextChanged(string value)
+        {
+            _leadsCollection?.Refresh();
+        }        
 
         [RelayCommand]
         private void OpenAddLeadDialog()
@@ -513,11 +576,14 @@ namespace Tijori.ViewModels
                 list = new ObservableCollection<Lead>(list.Where(l => l.LeadHolder == userId));
             }
 
+            _rawLeadsList = list.ToList();
+            UpdateTabCounts();
+
             // 3. Update the CollectionView (the actual source for your DataGrid)
             _leadsCollection = CollectionViewSource.GetDefaultView(list);
 
             // 4. Re-apply your search filter logic
-            _leadsCollection.Filter = FilterLeads;
+            _leadsCollection.Filter = CombinedFilter;
 
             // 5. Notify the UI to refresh the table
             OnPropertyChanged(nameof(LeadsCollection));
@@ -551,11 +617,14 @@ namespace Tijori.ViewModels
                 list = new ObservableCollection<Lead>(list.Where(l => l.LeadHolder == userId));
             }
 
+            _rawLeadsList = list.ToList();
+            UpdateTabCounts();
+
             // 3. Update the CollectionView (the actual source for your DataGrid)
             _leadsCollection = CollectionViewSource.GetDefaultView(list);
 
             // 4. Re-apply your search filter logic
-            _leadsCollection.Filter = FilterLeads;
+            _leadsCollection.Filter = CombinedFilter;
 
             // 5. Notify the UI to refresh the table
             OnPropertyChanged(nameof(LeadsCollection));

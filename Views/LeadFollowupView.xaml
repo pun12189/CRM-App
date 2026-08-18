@@ -32,12 +32,11 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Orientation="Horizontal" Grid.Column="0">
                     <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="Gray"/>
-                    <Grid Width="250">
+                    <Grid Width="200">
                         <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
                          VerticalContentAlignment="Center" Height="30"
                          Padding="5,0"/>
@@ -122,26 +121,6 @@
                 Padding="20,5" FontWeight="Bold" Margin="5,0" Visibility="{Binding IsFuture, Converter={StaticResource InverseBoolToVis}}"/>
                 <ComboBox Grid.Column="5" materialDesign:HintAssist.Hint="Select Category" Style="{StaticResource MaterialDesignOutlinedComboBox}"                 
                 Padding="20,7" FontWeight="Bold" Margin="5,0" ItemsSource="{Binding LeadTags}" SelectedItem="{Binding SelectedLeadTag}" DisplayMemberPath="Name" SelectedValuePath="Id"/>
-                <Button Grid.Column="6" 
-                    Style="{StaticResource MaterialDesignOutlinedButton}"
-                    BorderBrush="#0284C7"
-                    Foreground="#0284C7"
-                    Background="#F0F9FF"
-                    Padding="20,5" 
-                    Margin="0,0,6,0"
-                    FontWeight="SemiBold">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <!-- AI Icon -->
-                        <materialDesign:PackIcon Kind="AutoAwesome" Width="16" Height="16" Foreground="#0284C7" VerticalAlignment="Center" Margin="0,0,6,0"/>
-
-                        <TextBlock Text="AI Task" VerticalAlignment="Center"/>
-
-                        <!-- Counter Badge (6) -->
-                        <Border Background="#0284C7" CornerRadius="10" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="6" FontSize="10" FontWeight="Bold" Foreground="White"/>
-                        </Border>
-                    </StackPanel>
-                </Button>
                 <!--<Button Grid.Column="5" Content="Bulk Delete" Style="{StaticResource MaterialDesignOutlinedLightButton}"
                 Command="{Binding BulkDeleteCommand}"
                 Padding="20,5" Background="IndianRed" Foreground="White" FontWeight="Bold" Margin="5,0"/>-->
@@ -155,64 +134,92 @@
                 <RowDefinition Height="*"/>
                 <!-- DataGrid -->
             </Grid.RowDefinitions>
-            <TabControl Grid.Row="0" SelectedIndex="{Binding SelectedTabIndex}" HorizontalAlignment="Left" BorderThickness="0">
-                <TabControl.Resources>
-                    <Style TargetType="TabItem" BasedOn="{StaticResource MaterialDesignTabItem}">
-                        <Setter Property="FontSize" Value="13"/>
-                        <Setter Property="FontWeight" Value="SemiBold"/>
-                        <Setter Property="Height" Value="40"/>
-                        <Setter Property="Padding" Value="18,6"/>
-                    </Style>
-                </TabControl.Resources>
+            <Grid Grid.Row="0" VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <!-- Left-aligned Tab Control -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Right-aligned AI Task Button -->
+                </Grid.ColumnDefinitions>
+                <TabControl Grid.Column="0" SelectedIndex="{Binding SelectedTabIndex}" Style="{StaticResource MaterialDesignTabControl}" HorizontalAlignment="Left" BorderThickness="0">
+                    <TabControl.Resources>
+                        <Style TargetType="TabItem" BasedOn="{StaticResource MaterialDesignTabItem}">
+                            <Setter Property="FontSize" Value="13"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Height" Value="40"/>
+                            <Setter Property="Padding" Value="18,6"/>
+                        </Style>
+                    </TabControl.Resources>
 
-                <!-- TAB 1: ALL -->
-                <TabItem>
-                    <TabItem.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="All" VerticalAlignment="Center"/>
-                            <Border Background="#E2E8F0" CornerRadius="10" Padding="6,1" Margin="8,0,0,0">
-                                <TextBlock Text="{Binding AllCount, FallbackValue=0}" FontSize="11" FontWeight="Bold" Foreground="#475569"/>
-                            </Border>
-                        </StackPanel>
-                    </TabItem.Header>
-                </TabItem>
+                    <!-- TAB 1: ALL -->
+                    <TabItem>
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="All" VerticalAlignment="Center"/>
+                                <Border Background="#E2E8F0" CornerRadius="10" Padding="6,1" Margin="8,0,0,0">
+                                    <TextBlock Text="{Binding AllCount, FallbackValue=0}" FontSize="11" FontWeight="Bold" Foreground="#475569"/>
+                                </Border>
+                            </StackPanel>
+                        </TabItem.Header>
+                    </TabItem>
 
-                <!-- TAB 2: LEADS -->
-                <TabItem>
-                    <TabItem.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Leads" VerticalAlignment="Center"/>
-                            <Border Background="#E0F2FE" CornerRadius="10" Padding="6,1" Margin="8,0,0,0">
-                                <TextBlock Text="{Binding LeadsCount, FallbackValue=0}" FontSize="11" FontWeight="Bold" Foreground="#0369A1"/>
-                            </Border>
-                        </StackPanel>
-                    </TabItem.Header>
-                </TabItem>
+                    <!-- TAB 2: LEADS -->
+                    <TabItem>
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Leads" VerticalAlignment="Center"/>
+                                <Border Background="#E0F2FE" CornerRadius="10" Padding="6,1" Margin="8,0,0,0">
+                                    <TextBlock Text="{Binding LeadsCount, FallbackValue=0}" FontSize="11" FontWeight="Bold" Foreground="#0369A1"/>
+                                </Border>
+                            </StackPanel>
+                        </TabItem.Header>
+                    </TabItem>
 
-                <!-- TAB 3: CUSTOMER -->
-                <TabItem>
-                    <TabItem.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Customer" VerticalAlignment="Center"/>
-                            <Border Background="#DCFCE7" CornerRadius="10" Padding="6,1" Margin="8,0,0,0">
-                                <TextBlock Text="{Binding CustomersCount, FallbackValue=0}" FontSize="11" FontWeight="Bold" Foreground="#15803D"/>
-                            </Border>
-                        </StackPanel>
-                    </TabItem.Header>
-                </TabItem>
+                    <!-- TAB 3: CUSTOMER -->
+                    <TabItem>
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Customer" VerticalAlignment="Center"/>
+                                <Border Background="#DCFCE7" CornerRadius="10" Padding="6,1" Margin="8,0,0,0">
+                                    <TextBlock Text="{Binding CustomersCount, FallbackValue=0}" FontSize="11" FontWeight="Bold" Foreground="#15803D"/>
+                                </Border>
+                            </StackPanel>
+                        </TabItem.Header>
+                    </TabItem>
 
-                <!-- TAB 4: REMINDERS -->
-                <TabItem>
-                    <TabItem.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Reminders" VerticalAlignment="Center"/>
-                            <Border Background="#FEE2E2" CornerRadius="10" Padding="6,1" Margin="8,0,0,0">
-                                <TextBlock Text="{Binding RemindersCount, FallbackValue=0}" FontSize="11" FontWeight="Bold" Foreground="#B91C1C"/>
-                            </Border>
-                        </StackPanel>
-                    </TabItem.Header>
-                </TabItem>
-            </TabControl>
+                    <!-- TAB 4: REMINDERS -->
+                    <TabItem>
+                        <TabItem.Header>
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="Reminders" VerticalAlignment="Center"/>
+                                <Border Background="#FEE2E2" CornerRadius="10" Padding="6,1" Margin="8,0,0,0">
+                                    <TextBlock Text="{Binding RemindersCount, FallbackValue=0}" FontSize="11" FontWeight="Bold" Foreground="#B91C1C"/>
+                                </Border>
+                            </StackPanel>
+                        </TabItem.Header>
+                    </TabItem>
+                </TabControl>
+                <Button Grid.Column="1" 
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    BorderBrush="#0284C7"
+                    Foreground="#0284C7"
+                    Background="#F0F9FF"
+                    Padding="20,5" 
+                    Margin="0,0,6,8"
+                    FontWeight="SemiBold">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <!-- AI Icon -->
+                        <materialDesign:PackIcon Kind="AutoAwesome" Width="16" Height="16" Foreground="#0284C7" VerticalAlignment="Center" Margin="0,0,6,0"/>
+
+                        <TextBlock Text="Pending AI Task's" VerticalAlignment="Center"/>
+
+                        <!-- Counter Badge (6) -->
+                        <Border Background="#0284C7" CornerRadius="10" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="5" FontSize="10" FontWeight="Bold" Foreground="White"/>
+                        </Border>
+                    </StackPanel>
+                </Button>
+            </Grid>
             <DataGrid Grid.Row="2" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" ItemsSource="{Binding LeadsCollection, IsAsync=True}" AlternationCount="9999" SelectedItem="{Binding SelectedLead}"
       AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" SelectionMode="Single" VirtualizingPanel.IsVirtualizing="True"
           VirtualizingPanel.VirtualizationMode="Recycling"

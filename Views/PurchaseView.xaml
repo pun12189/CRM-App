@@ -28,7 +28,7 @@
     Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0"/>
                             <Button Grid.Column="1" Content="+ Create Purchase Order" Style="{StaticResource MaterialDesignRaisedButton}" HorizontalAlignment="Right" Margin="0,0,10,0" Command="{Binding OpenCreatePoWindowCommand}"/>
                         <ComboBox Grid.Column="2" x:Name="AskAIComboBox" Height="32" Padding="10,0"
-                           Style="{StaticResource MaterialDesignOutlinedComboBox}"
+                           Style="{StaticResource MaterialDesignComboBox}"
                            materialDesign:HintAssist.Hint="Ask AI"
                            materialDesign:HintAssist.Foreground="#7B1FA2"
                            BorderBrush="#7B1FA2"

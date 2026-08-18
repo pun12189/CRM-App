@@ -184,6 +184,13 @@
                             <TextBlock Text="Automations" VerticalAlignment="Center" Margin="20,0,0,0" FontSize="14"/>
                         </StackPanel>
                     </RadioButton>
+
+                    <RadioButton Style="{StaticResource SidebarIconButtonStyle}" x:Name="RbManufacturing" Click="SidebarButton_Click" Tag="Manufacturing">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Manufacturing" Width="20" Height="20" Margin="9,0,0,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Manufacturing" VerticalAlignment="Center" Margin="20,0,0,0" FontSize="14"/>
+                        </StackPanel>
+                    </RadioButton>
                 </StackPanel>
             </Grid>
         </Border>
@@ -534,6 +541,18 @@
                                     <StackPanel HorizontalAlignment="Center">
                                         <materialDesign:PackIcon Kind="Brain" Foreground="#1794A1" Width="28" Height="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                         <TextBlock Text="Enable AI Features" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </UniformGrid>
+                        </StackPanel>
+
+                        <StackPanel x:Name="SecManufacturing" Margin="0,0,0,32">
+                            <TextBlock Text="MANUFACTURING WORKFLOW" FontSize="12" FontWeight="Black" Foreground="#64748B" Margin="8,0,0,8"/>
+                            <UniformGrid Columns="4">
+                                <Button Style="{StaticResource ModernActionCardStyle}" CommandParameter="MasterFormulations" Command="{Binding NavigateToSettingCommand}">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <materialDesign:PackIcon Kind="AbTesting" Foreground="#1794A1" Width="28" Height="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                                        <TextBlock Text="Master Formulations" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
                             </UniformGrid>

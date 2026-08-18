@@ -101,6 +101,9 @@
         <DataTemplate DataType="{x:Type vm:StockRegisterViewModel}">
             <views:StockRegisterView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MasterFormulationViewModel}">
+            <views:MasterFormulationView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>

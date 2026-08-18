@@ -5,83 +5,188 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Tijori.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:converter="clr-namespace:Tijori.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <materialDesign:BooleanToVisibilityConverter x:Key="InvertedBoolToVisConverter" TrueValue="Collapsed" FalseValue="Visible"/>
+        <converter:BoolToEditIconConverter x:Key="BoolToEditIconConverter"/>
+        <converter:SubCategoryColorConverter x:Key="SubCategoryColorConverter"/>
+        <converter:SubCategoryWeightConverter x:Key="SubCategoryWeightConverter"/>
     </UserControl.Resources>
-    <Grid>
+    <Grid Background="#F8FAFC">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Entry Form -->
+            <!-- 1. Add / Edit Card -->
             <RowDefinition Height="*"/>
-            <!-- Data Table -->
+            <!-- 2. Hierarchical Data Table -->
         </Grid.RowDefinitions>
 
-        <!-- 1. ENTRY FORM -->
-        <materialDesign:Card Grid.Row="0" Padding="15" Margin="0,0,0,20">
+        <!-- 1. ENTRY / EDIT CARD -->
+        <materialDesign:Card Grid.Row="0" Padding="16" Margin="0,0,0,16" UniformCornerRadius="8" Background="White">
             <StackPanel>
-                <TextBlock Text="Add / Edit Category" Style="{StaticResource MaterialDesignBody2TextBlock}" Margin="0,0,0,15"/>
+                <DockPanel Margin="0,0,0,12">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="{Binding IsEditMode, Converter={StaticResource BoolToEditIconConverter}, FallbackValue=FolderPlus}" 
+                                            Foreground="#1794A1" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="{Binding FormTitle, FallbackValue='Add New Item Category'}" 
+                               FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Status indicator when editing -->
+                    <Border DockPanel.Dock="Right" Background="#FEF3C7" CornerRadius="4" Padding="8,2" 
+                        Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="Editing Mode" FontSize="11" FontWeight="Bold" Foreground="#B45309"/>
+                    </Border>
+                </DockPanel>
+
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="2*"/>
+                        <!-- Category Name -->
+                        <ColumnDefinition Width="1.5*"/>
+                        <!-- Classification Nature -->
                         <ColumnDefinition Width="2*"/>
+                        <!-- Parent Category -->
                         <ColumnDefinition Width="Auto"/>
+                        <!-- Action Buttons -->
                     </Grid.ColumnDefinitions>
 
                     <!-- Category Name -->
-                    <TextBox Grid.Column="0" Text="{Binding NewCategoryName}" 
-                         materialDesign:HintAssist.Hint="Category Name (e.g., Actives, Raw)" 
-                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="0,0,10,0" Height="45" Padding="10,0,0,0"/>
+                    <TextBox Grid.Column="0" 
+                         Text="{Binding NewCategoryName, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="Category Name (e.g. Tablets, Raw APIs)" 
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}" Padding="10,0"
+                         Margin="0,0,10,0" Height="42"/>
 
-                    <!-- Parent Selection -->
-                    <ComboBox Grid.Column="1" ItemsSource="{Binding AllCategories}" 
+                    <!-- 🌟 Item Classification (Category Nature) 🌟 -->
+                    <ComboBox Grid.Column="1" 
+                          ItemsSource="{Binding AvailableClassifications}" 
+                          SelectedItem="{Binding SelectedCategoryType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Padding="10,0"
+                          materialDesign:HintAssist.Hint="Classification / Nature"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                          Margin="0,0,10,0" Height="42"/>
+
+                    <!-- Parent Category Selection -->
+                    <ComboBox Grid.Column="2" 
+                          ItemsSource="{Binding PotentialParentCategories}" 
                           SelectedItem="{Binding SelectedParent}"
-                          DisplayMemberPath="CategoryName"
-                          materialDesign:HintAssist.Hint="Parent Category (Leave blank for Main)" 
+                          DisplayMemberPath="CategoryName" Padding="10,0"
+                          materialDesign:HintAssist.Hint="Parent Category (Optional: For Sub-Categories)" 
                           materialDesign:TextFieldAssist.HasClearButton="True"
-                          Style="{StaticResource MaterialDesignOutlinedComboBox}" Margin="0,0,10,0" Height="45" Padding="10,0,10,0"/>
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                          Margin="0,0,12,0" Height="42"/>
 
-                    <!-- Add Button -->
-                    <StackPanel Orientation="Horizontal" Grid.Column="2">
-                        <Button Command="{Binding SaveCategoryCommand}" Content="{Binding SubmitButtonContent}" Height="40" Margin="0,0,10,0"/>
+                    <!-- Action Buttons -->
+                    <StackPanel Orientation="Horizontal" Grid.Column="3" VerticalAlignment="Center">
+                        <Button Command="{Binding SaveCategoryCommand}" 
+                            Content="{Binding SubmitButtonContent, FallbackValue='SAVE CATEGORY'}" 
+                            Background="#1794A1" BorderBrush="#1794A1" Foreground="White"
+                            FontWeight="SemiBold" Height="42" Padding="16,0" Margin="0,0,8,0"/>
 
-                        <!-- Only shows up when editing to let the user "Escape" the edit state -->
-                        <Button Command="{Binding ClearFormCommand}" Content="CANCEL" Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="40"/>
+                        <Button Command="{Binding ClearFormCommand}" 
+                            Content="CANCEL" 
+                            Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}" 
+                            Style="{StaticResource MaterialDesignOutlinedButton}" 
+                            Height="42" Padding="12,0"/>
                     </StackPanel>
                 </Grid>
             </StackPanel>
         </materialDesign:Card>
 
-        <!-- 2. DATA TABLE -->
-        <DataGrid Grid.Row="1" ItemsSource="{Binding AllCategories, IsAsync=True}" 
-              AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="40"
-              Style="{StaticResource MaterialDesignDataGrid}">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Category Name" Binding="{Binding CategoryName}" Width="2*" IsReadOnly="True"/>
+        <!-- 2. DATA TABLE WITH HIERARCHY & BADGES -->
+        <Border Grid.Row="1" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1">
+            <DataGrid ItemsSource="{Binding AllCategories, IsAsync=True}" 
+                  AutoGenerateColumns="False" 
+                  CanUserAddRows="False" 
+                  RowHeight="44"
+                  GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="#F1F5F9"
+                  Style="{StaticResource MaterialDesignDataGrid}">
+                <DataGrid.Columns>
 
-                <!-- Shows the Parent Name instead of ParentId -->
-                <DataGridTextColumn Header="Parent Category" Binding="{Binding ParentName}" Width="2*" IsReadOnly="True"/>
+                    <!-- 🌟 Category Hierarchy View (Distinguishes Parent vs Child clearly) -->
+                    <DataGridTemplateColumn Header="Category Structure" Width="2.5*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" 
+                        Margin="{Binding IndentationMargin}" 
+                        VerticalAlignment="Center">
 
-                <DataGridTemplateColumn Header="Actions" Width="0.5*">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
-                                <Button Style="{StaticResource MaterialDesignIconButton}" 
-                                    Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                    CommandParameter="{Binding}" Foreground="Orange" Height="32" Width="32">
-                                    <materialDesign:PackIcon Kind="Edit" Height="15" Width="15" />
-                                </Button>
-                                <Button Style="{StaticResource MaterialDesignIconButton}" 
-                                    Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                    CommandParameter="{Binding}" Foreground="Red" Height="32" Width="32">
-                                    <materialDesign:PackIcon Kind="Delete" Height="15" Width="15"/>
-                                </Button>
-                            </StackPanel>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+                                    <!-- ROOT / MAIN CATEGORY -->
+                                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsSubCategory, Converter={StaticResource InvertedBoolToVisConverter}}">
+                                        <materialDesign:PackIcon Kind="Folder" Foreground="#0284C7" Width="16" Height="16" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="{Binding CategoryName}" FontWeight="Bold" FontSize="12.5" Foreground="#0F172A" VerticalAlignment="Center"/>
+                                        <Border Background="#F1F5F9" CornerRadius="3" Padding="4,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="ROOT / MAIN" FontSize="9" FontWeight="Bold" Foreground="#64748B"/>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <!-- SUB-CATEGORY (Level 1, 2, 3...) -->
+                                    <StackPanel Orientation="Horizontal" Visibility="{Binding IsSubCategory, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <materialDesign:PackIcon Kind="SubdirectoryArrowRight" Foreground="#94A3B8" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                        <materialDesign:PackIcon Kind="FolderOutline" Foreground="#64748B" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                        <TextBlock Text="{Binding CategoryName}" FontWeight="Medium" FontSize="12" Foreground="#334155" VerticalAlignment="Center"/>
+                                    </StackPanel>
+
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- 🌟 Classification / Nature Badge -->
+                    <DataGridTemplateColumn Header="Classification / Nature" Width="1.5*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border Background="{Binding ClassificationBadgeBackground}" CornerRadius="4" Padding="8,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ClassificationDisplay}" FontSize="10" FontWeight="Bold" Foreground="{Binding ClassificationBadgeForeground}"/>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- 🌟 Parent Category Column -->
+                    <DataGridTemplateColumn Header="Parent Group" Width="1.5*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding ParentName, FallbackValue='—'}" 
+                                           Foreground="{Binding IsSubCategory, Converter={StaticResource SubCategoryColorConverter}}"
+                                           FontWeight="{Binding IsSubCategory, Converter={StaticResource SubCategoryWeightConverter}}"
+                                           FontSize="11.5"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Operations Column -->
+                    <DataGridTemplateColumn Header="Actions" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                        Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}" 
+                                        ToolTip="Edit Category"
+                                        Width="28" Height="28" Padding="0" Margin="0,0,4,0">
+                                        <materialDesign:PackIcon Kind="Pencil" Width="14" Height="14" Foreground="#D97706"/>
+                                    </Button>
+
+                                    <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                        Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}" 
+                                        ToolTip="Delete Category"
+                                        Width="28" Height="28" Padding="0">
+                                        <materialDesign:PackIcon Kind="TrashCan" Width="14" Height="14" Foreground="#EF4444"/>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
     </Grid>
 </UserControl>

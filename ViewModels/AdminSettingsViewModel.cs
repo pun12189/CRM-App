@@ -97,6 +97,9 @@ namespace Tijori.ViewModels
                 case "Schemes":
                     CurrentSettingView = _serviceProvider.GetRequiredService<SchemeManagementViewModel>();
                     break;
+                case "MasterFormulations":
+                    CurrentSettingView = _serviceProvider.GetRequiredService<MasterFormulationViewModel>();
+                    break;
                 case "Whatsapp":
                 case "Tijori":
                 case "ECom":

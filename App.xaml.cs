@@ -145,6 +145,7 @@ namespace Tijori
             services.AddSingleton<ReportEntityService>();
             services.AddSingleton<LedgerService>();
             services.AddSingleton<MasterFormulationService>();
+            services.AddSingleton<ServiceOrderService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();
@@ -189,6 +190,7 @@ namespace Tijori
             services.AddTransient<StaffDetailsViewModel>();
             services.AddTransient<StockRegisterViewModel>();
             services.AddTransient<MasterFormulationViewModel>();
+            services.AddTransient<ServiceOrderViewModel>();
 
             // 4. Register Views
             services.AddTransient<LoginView>();

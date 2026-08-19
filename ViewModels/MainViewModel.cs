@@ -294,6 +294,14 @@ namespace Tijori.ViewModels
                         }, DispatcherPriority.Background);
 
                         break;
+                    case "ServiceOrder":
+                        var vm11 = _serviceProvider.GetRequiredService<ServiceOrderViewModel>();
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm11;
+                        }, DispatcherPriority.Background);
+
+                        break;
                         // Add other cases as you build them
                 }
             }

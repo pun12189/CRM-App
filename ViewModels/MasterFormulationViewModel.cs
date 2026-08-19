@@ -3,10 +3,12 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Data;
 using Tijori.Models;
 using Tijori.Models.Enums;
 using Tijori.Services;
@@ -18,6 +20,11 @@ namespace Tijori.ViewModels
         private readonly ProductService _productService;
         private readonly MasterFormulationService _formulationService;
 
+        public ICollectionView FilteredFormulations { get; private set; } = null!;
+
+        [ObservableProperty] private string _searchText = string.Empty;
+        [ObservableProperty] private int _totalFormulationsCount;
+
         [ObservableProperty] private MasterFormulation _currentFormulation = new();
         [ObservableProperty] private ObservableCollection<MasterFormulation> _formulationsList = new();
         [ObservableProperty] private ObservableCollection<Product> _finishedProductsList = new();
@@ -26,7 +33,10 @@ namespace Tijori.ViewModels
         [ObservableProperty] private Product? _selectedRawMaterialToAdd;
         [ObservableProperty] private decimal _newIngredientPercentage = 0m;
         [ObservableProperty] private string _newIngredientPhase = "Phase A";
+        [ObservableProperty] private bool _isFormOpen; // Toggles between Directory & Editor
         [ObservableProperty] private bool _isEditMode;
+        [ObservableProperty] private string _formTitle = "Create Master Formulation";
+        [ObservableProperty] private string _saveButtonText = "Save Formulation";
 
         // Fast Item Inline Addition State
         [ObservableProperty] private bool _isQuickAddProductOpen;
@@ -35,8 +45,6 @@ namespace Tijori.ViewModels
         [ObservableProperty] private string _quickProductUnit = "Kg";
         [ObservableProperty] private decimal _quickProductCost;
         [ObservableProperty] private decimal _quickProductPercentage;
-
-        [ObservableProperty] private string _saveButtonText = "Save Formulation Master";
 
         public MasterFormulationViewModel(ProductService productService, MasterFormulationService formulationService)
         {
@@ -71,11 +79,34 @@ namespace Tijori.ViewModels
 
         private async Task LoadFormulationsListAsync()
         {
-            var list = await _formulationService.GetAllFormulationsAsync();
+            var list = (await _formulationService.GetAllFormulationsAsync()).ToList();
+
             App.Current.Dispatcher.Invoke(() =>
             {
                 FormulationsList = new ObservableCollection<MasterFormulation>(list);
+                TotalFormulationsCount = FormulationsList.Count;
+
+                // Setup live search filtering
+                FilteredFormulations = CollectionViewSource.GetDefaultView(FormulationsList);
+                FilteredFormulations.Filter = FilterFormulationItem;
+                OnPropertyChanged(nameof(FilteredFormulations));
             });
+        }
+
+        partial void OnSearchTextChanged(string value)
+        {
+            FilteredFormulations?.Refresh();
+        }
+
+        private bool FilterFormulationItem(object obj)
+        {
+            if (obj is not MasterFormulation item) return false;
+            if (string.IsNullOrWhiteSpace(SearchText)) return true;
+
+            var term = SearchText.Trim();
+            return (item.FormulationName != null && item.FormulationName.Contains(term, StringComparison.OrdinalIgnoreCase))
+                || (item.FinishedProductName != null && item.FinishedProductName.Contains(term, StringComparison.OrdinalIgnoreCase))
+                || (item.Instructions != null && item.Instructions.Contains(term, StringComparison.OrdinalIgnoreCase));
         }
 
         [RelayCommand]
@@ -144,6 +175,25 @@ namespace Tijori.ViewModels
             QuickProductCost = 0m;
             QuickProductPercentage = 0m;
             IsQuickAddProductOpen = true;
+        }
+
+        [RelayCommand]
+        private void OpenNewFormulation()
+        {
+            CurrentFormulation = new MasterFormulation();
+            CurrentFormulation.NotifyTotalsChanged();
+            IsEditMode = false;
+            FormTitle = "Create Master Formulation";
+            SaveButtonText = "Save Formulation Master";
+            IsFormOpen = true;
+        }
+
+        [RelayCommand]
+        private void CloseForm()
+        {
+            IsFormOpen = false;
+            CurrentFormulation = new MasterFormulation();
+            IsEditMode = false;
         }
 
         [RelayCommand]
@@ -232,6 +282,7 @@ namespace Tijori.ViewModels
 
                 await LoadFormulationsListAsync();
                 ResetForm();
+                IsFormOpen = false;
             }
             catch (Exception ex)
             {
@@ -243,14 +294,14 @@ namespace Tijori.ViewModels
         // 🌟 EDIT / LOAD EXISTING FORMULATION
         // ==========================================
         [RelayCommand]
-        private async Task EditFormulationAsync(MasterFormulation? item)
+        private async Task EditFormulation(MasterFormulation? item)
         {
             if (item == null) return;
 
             var fullRecipe = await _formulationService.GetFormulationByIdAsync(item.FormulationId);
             if (fullRecipe == null) return;
 
-            // Wire up PropertyChanged for all loaded items
+            // Wire up PropertyChanged for recipe items
             foreach (var line in fullRecipe.Items)
             {
                 line.PropertyChanged += (s, e) =>
@@ -264,21 +315,24 @@ namespace Tijori.ViewModels
 
             CurrentFormulation = fullRecipe;
             CurrentFormulation.NotifyTotalsChanged();
+
             IsEditMode = true;
+            FormTitle = $"Edit Formulation: {fullRecipe.FormulationName}";
             SaveButtonText = "Update Formulation Master";
+            IsFormOpen = true;
         }
 
         // ==========================================
         // 🌟 DELETE FORMULATION COMMAND
         // ==========================================
         [RelayCommand]
-        private async Task DeleteFormulationAsync(MasterFormulation? item)
+        private async Task DeleteFormulation(MasterFormulation? item)
         {
             if (item == null) return;
 
             var confirm = MessageBox.Show(
-                $"Are you sure you want to delete formulation '{item.FormulationName}'?",
-                "Confirm Delete",
+                $"Are you sure you want to delete formulation '{item.FormulationName}'?\nAll ingredient phase lines will be removed.",
+                "Confirm Deletion",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
 
@@ -287,9 +341,9 @@ namespace Tijori.ViewModels
                 await _formulationService.DeleteFormulationAsync(item.FormulationId);
                 await LoadFormulationsListAsync();
 
-                if (CurrentFormulation.FormulationId == item.FormulationId)
+                if (IsFormOpen && CurrentFormulation.FormulationId == item.FormulationId)
                 {
-                    ResetForm();
+                    CloseForm();
                 }
             }
         }

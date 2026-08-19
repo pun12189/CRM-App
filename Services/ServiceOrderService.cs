@@ -185,7 +185,7 @@ namespace Tijori.Services
                     so.TaxAmount,
                     so.GrandTotalAmount,
                     so.SpecialInstructions,
-                    c.Name AS CustomerName,
+                    c.CustomerName AS CustomerName,
                     (SELECT COUNT(1) FROM production_work_orders pwo WHERE pwo.OrderId = so.OrderId) AS BatchOrdersCount
                 FROM service_orders so
                 LEFT JOIN leads c ON so.CustomerId = c.LeadId
@@ -256,6 +256,133 @@ namespace Tijori.Services
 
             const string sql = "DELETE FROM service_orders WHERE OrderId = @OrderId;";
             return await conn.ExecuteAsync(sql, new { OrderId = orderId }) > 0;
+        }
+
+        /// <summary>
+        /// Approves the order, transitions status to 'InProduction', and spawns 1 batch work order per line item with complete BOM & stages.
+        /// </summary>
+        public async Task<List<ProductionWorkOrder>> ApproveAndSpawnBatchesAsync(int orderId)
+        {
+            using var conn = _context.CreateConnection();
+            if (conn.State == ConnectionState.Closed)
+                await ((System.Data.Common.DbConnection)conn).OpenAsync();
+
+            using var transaction = conn.BeginTransaction();
+            try
+            {
+                // 1. Verify order exists and is in 'Draft' state
+                const string checkOrderSql = @"
+            SELECT OrderId, OrderNumber, CustomerId, OrderStatus 
+            FROM service_orders 
+            WHERE OrderId = @OrderId;";
+
+                var order = await conn.QueryFirstOrDefaultAsync<ServiceOrder>(checkOrderSql, new { OrderId = orderId }, transaction);
+                if (order == null)
+                    throw new InvalidOperationException($"Service order #{orderId} was not found.");
+
+                if (order.OrderStatus == "InProduction" || order.OrderStatus == "Completed")
+                    throw new InvalidOperationException($"Order #{order.OrderNumber} is already in production or completed.");
+
+                // 2. Fetch all Line Items
+                const string itemsSql = @"
+            SELECT * FROM service_order_items 
+            WHERE OrderId = @OrderId;";
+                var items = (await conn.QueryAsync<ServiceOrderItem>(itemsSql, new { OrderId = orderId }, transaction)).ToList();
+
+                if (!items.Any())
+                    throw new InvalidOperationException("Cannot process order without product line items.");
+
+                // 3. Update Order status to 'InProduction'
+                const string updateOrderSql = @"
+            UPDATE service_orders 
+            SET OrderStatus = 'InProduction', UpdatedAt = NOW() 
+            WHERE OrderId = @OrderId;";
+                await conn.ExecuteAsync(updateOrderSql, new { OrderId = orderId }, transaction);
+
+                var generatedBatches = new List<ProductionWorkOrder>();
+                int batchSequence = 1;
+
+                // 4. Iterate and spawn 1 batch per item
+                foreach (var item in items)
+                {
+                    string batchNumber = $"BT-{DateTime.Now:yyyyMMdd}-{orderId:D3}-{batchSequence:D2}";
+                    batchSequence++;
+
+                    const string insertWorkOrderSql = @"
+                INSERT INTO production_work_orders (
+                    BatchNumber, OrderId, OrderItemId, CustomerId, BrandName, 
+                    ProductId, BatchSize, CurrentStage, MfgDate, ExpiryDate, 
+                    ProductionNotes, CreatedAt
+                ) VALUES (
+                    @BatchNumber, @OrderId, @OrderItemId, @CustomerId, @BrandName, 
+                    @ProductId, @BatchSize, 'Dispensing', @MfgDate, @ExpiryDate, 
+                    @ProductionNotes, NOW()
+                );
+                SELECT LAST_INSERT_ID();";
+
+                    var workOrder = new ProductionWorkOrder
+                    {
+                        BatchNumber = batchNumber,
+                        OrderId = orderId,
+                        OrderItemId = item.OrderItemId,
+                        CustomerId = order.CustomerId,
+                        BrandName = item.BrandName,
+                        ProductId = item.ProductId,
+                        BatchSize = item.TargetQuantity,
+                        CurrentStage = "Dispensing",
+                        MfgDate = DateTime.Today,
+                        ExpiryDate = DateTime.Today.AddYears(2),
+                        ProductionNotes = $"Specs: {item.PackagingType} | {item.PackSize} | Shade: {item.ColorShade ?? "Std"} | Fragrance: {item.FragranceFlavor ?? "Std"}"
+                    };
+
+                    int workOrderId = await conn.ExecuteScalarAsync<int>(insertWorkOrderSql, workOrder, transaction);
+                    workOrder.WorkOrderId = workOrderId;
+
+                    // 5. Copy Line-Item BOM to Batch BOM Snapshot
+                    const string copyBomSql = @"
+                INSERT INTO work_order_bom_items (
+                    WorkOrderId, RawMaterialProductId, Phase, PercentageValue, 
+                    CalculatedQuantity, Unit, Remarks, SequenceOrder
+                )
+                SELECT 
+                    @WorkOrderId, RawMaterialProductId, Phase, PercentageValue, 
+                    CalculatedQuantity, Unit, Remarks, SequenceOrder
+                FROM service_order_item_bom
+                WHERE OrderItemId = @OrderItemId;";
+
+                    await conn.ExecuteAsync(copyBomSql, new { WorkOrderId = workOrderId, OrderItemId = item.OrderItemId }, transaction);
+
+                    // 6. Spawn Default Production Stages Checklist
+                    const string insertStageSql = @"
+                INSERT INTO work_order_stages (
+                    WorkOrderId, StageName, SequenceOrder, Status, StartedAt
+                ) VALUES 
+                (@WorkOrderId, 'Material Dispensing & Weighing', 1, 'InProgress', NOW()),
+                (@WorkOrderId, 'Phase Mixing & Formulation', 2, 'Pending', NULL),
+                (@WorkOrderId, 'Primary Filling & Packing', 3, 'Pending', NULL),
+                (@WorkOrderId, 'Secondary Packing & Labeling', 4, 'Pending', NULL),
+                (@WorkOrderId, 'QC Lab Testing & Release', 5, 'Pending', NULL);";
+
+                    await conn.ExecuteAsync(insertStageSql, new { WorkOrderId = workOrderId }, transaction);
+
+                    // 7. Mark Line Item as InProduction
+                    const string updateItemSql = @"
+                UPDATE service_order_items 
+                SET ProductionStatus = 'InProduction' 
+                WHERE OrderItemId = @OrderItemId;";
+                    await conn.ExecuteAsync(updateItemSql, new { OrderItemId = item.OrderItemId }, transaction);
+
+                    generatedBatches.Add(workOrder);
+                }
+
+                transaction.Commit();
+                return generatedBatches;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
     }
 }

@@ -2,7 +2,8 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:conv="clr-namespace:Tijori.Converters"
              xmlns:local="clr-namespace:Tijori.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              Background="#F8FAFC">
@@ -10,6 +11,8 @@
         <materialDesign:BooleanToVisibilityConverter x:Key="InvertedBoolToVisConverter" TrueValue="Collapsed" FalseValue="Visible" />
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <materialDesign:InvertBooleanConverter x:Key="InvertBooleanConverter"/>
+        <conv:StringMatchToVisConverter x:Key="StringMatchToVisConverter" />
+        <conv:InvertedStringMatchToVisConverter x:Key="InvertedStringMatchToVisConverter" />
     </UserControl.Resources>
     <Grid Margin="16">
 
@@ -109,25 +112,39 @@
                         </DataGridTemplateColumn>
 
                         <!-- Actions -->
-                        <DataGridTemplateColumn Header="Actions" Width="110">
+                        <DataGridTemplateColumn Header="Actions" Width="140">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+
+                                        <!-- 🚀 Approve & Release to Production -->
                                         <Button Style="{StaticResource MaterialDesignIconButton}" 
-                                                Command="{Binding DataContext.EditOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}" 
-                                                ToolTip="Open / Edit Order"
-                                                Width="28" Height="28" Padding="0" Margin="0,0,4,0">
+                                            Command="{Binding DataContext.ApproveAndReleaseToProductionCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}" 
+                                            ToolTip="Approve &amp; Release to Production"
+                                            Width="28" Height="28" Padding="0" Margin="0,0,4,0"
+                                            Visibility="{Binding OrderStatus, Converter={StaticResource StringMatchToVisConverter}, ConverterParameter='Draft'}">
+                                            <materialDesign:PackIcon Kind="PlayCircleOutline" Width="16" Height="16" Foreground="#16A34A"/>
+                                        </Button>
+
+                                        <!-- ✏️ Edit Order -->
+                                        <Button Style="{StaticResource MaterialDesignIconButton}" 
+                                            Command="{Binding DataContext.EditOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}" 
+                                            ToolTip="Open / Edit Order"
+                                            Width="28" Height="28" Padding="0" Margin="0,0,4,0">
                                             <materialDesign:PackIcon Kind="PencilOutline" Width="15" Height="15" Foreground="#D97706"/>
                                         </Button>
 
+                                        <!-- 🗑️ Delete Order -->
                                         <Button Style="{StaticResource MaterialDesignIconButton}" 
-                                                Command="{Binding DataContext.DeleteOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                CommandParameter="{Binding}" 
-                                                ToolTip="Delete Order"
-                                                Width="28" Height="28" Padding="0">
+                                            Command="{Binding DataContext.DeleteOrderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}" 
+                                            ToolTip="Delete Order"
+                                            Width="28" Height="28" Padding="0">
                                             <materialDesign:PackIcon Kind="TrashCanOutline" Width="15" Height="15" Foreground="#EF4444"/>
                                         </Button>
+
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -144,7 +161,7 @@
         <Grid Visibility="{Binding IsFormOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
 
             <!-- ============================================================= -->
-            <!-- STEP 1: PRODUCT SPECS & FORMULA BUILDER (CurrentStep == 1)    -->
+            <!-- STEP 1: COMPACT PRODUCT & FORMULATION BUILDER                 -->
             <!-- ============================================================= -->
             <Grid>
                 <Grid.Style>
@@ -159,170 +176,177 @@
                 </Grid.Style>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <!-- Top Bar & Wizard Tracker -->
+                    <!-- 1. Order Header Ribbon -->
                     <RowDefinition Height="Auto"/>
-                    <!-- Order Header Info -->
-                    <RowDefinition Height="Auto"/>
-                    <!-- Product Specs Drawer -->
+                    <!-- 2. Compact Product Specs -->
                     <RowDefinition Height="*"/>
-                    <!-- Live BOM / Recipe Grid -->
+                    <!-- 3. Maximized BOM DataGrid Table -->
                     <RowDefinition Height="Auto"/>
-                    <!-- Footer with Counter & Next -->
+                    <!-- 4. Action Footer -->
                 </Grid.RowDefinitions>
 
-                <!-- Step 1 Top Bar -->
-                <Border Grid.Row="0" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,10">
-                    <DockPanel LastChildFill="False">
-                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Style="{StaticResource MaterialDesignIconButton}" Command="{Binding CloseWizardCommand}" Width="28" Height="28" Padding="0" Margin="0,0,8,0">
-                                <materialDesign:PackIcon Kind="ArrowLeft" Width="18" Height="18" Foreground="#475569"/>
+                <!-- 1. ORDER HEADER RIBBON -->
+                <Border Grid.Row="0" Background="White" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1" Padding="10,6" Margin="0,0,0,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Back & Title -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,12,0">
+                            <Button Style="{StaticResource MaterialDesignIconButton}" Command="{Binding CloseWizardCommand}" Width="26" Height="26" Padding="0" Margin="0,0,6,0">
+                                <materialDesign:PackIcon Kind="ArrowLeft" Width="16" Height="16" Foreground="#475569"/>
                             </Button>
-                            <TextBlock Text="Step 1: Product Specs &amp; Formulation Builder" FontSize="15" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                            <TextBlock Text="New Service Order" FontSize="13.5" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
                         </StackPanel>
 
-                        <!-- Counter Pill -->
-                        <Border DockPanel.Dock="Right" Background="#F0FDFA" BorderBrush="#1794A1" BorderThickness="1" CornerRadius="6" Padding="10,4">
+                        <!-- Order Reference # -->
+                        <TextBox Grid.Column="1" Text="{Binding CurrentOrder.OrderNumber, UpdateSourceTrigger=PropertyChanged}" 
+                         materialDesign:HintAssist.Hint="Order #" Padding="10,10,0,0"
+                         materialDesign:HintAssist.IsFloating="True"
+                         FontSize="11.5" Height="34" Margin="0,0,8,0"
+                         Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                        <!-- Customer Selector -->
+                        <ComboBox Grid.Column="2" ItemsSource="{Binding CustomersList}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="CustomerName"
+                          IsEnabled="{Binding CanChangeCustomer}" Padding="10,0"
+                          materialDesign:HintAssist.Hint="Select Customer / Client *" 
+                          materialDesign:HintAssist.IsFloating="True"
+                          FontSize="11.5" Height="34" Margin="0,0,8,0"
+                          Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
+
+                        <!-- Order Date -->
+                        <DatePicker Grid.Column="3" SelectedDate="{Binding CurrentOrder.OrderDate}" 
+                            materialDesign:HintAssist.Hint="Order Date" Padding="10,10"
+                            materialDesign:HintAssist.IsFloating="True"
+                            FontSize="11" Height="34" Margin="0,0,8,0"/>
+
+                        <!-- Due Date -->
+                        <DatePicker Grid.Column="4" SelectedDate="{Binding CurrentOrder.DeliveryDueDate}" 
+                            materialDesign:HintAssist.Hint="Due Date" Padding="10,10"
+                            materialDesign:HintAssist.IsFloating="True"
+                            FontSize="11" Height="34" Margin="0,0,10,0"/>
+
+                        <!-- Cart Counter Pill -->
+                        <Border Grid.Column="5" Background="#F0FDFA" BorderBrush="#1794A1" BorderThickness="1" CornerRadius="4" Padding="8,2" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="CartOutline" Width="16" Height="16" Foreground="#1794A1" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock FontSize="12" FontWeight="Bold" Foreground="#1794A1">
-                                    <Run Text="{Binding ConfiguredProductsCount, Mode=OneWay}"/>
-                                    <Run Text=" Products Configured"/>
+                                <materialDesign:PackIcon Kind="CartOutline" Width="14" Height="14" Foreground="#1794A1" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                <TextBlock FontSize="11" FontWeight="Bold" Foreground="#1794A1">
+                            <Run Text="{Binding ConfiguredProductsCount, Mode=OneWay}"/>
+                            <Run Text=" Added"/>
                                 </TextBlock>
                             </StackPanel>
                         </Border>
-                    </DockPanel>
-                </Border>
-
-                <!-- Order Header (Customer locked when item count > 0) -->
-                <Border Grid.Row="1" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="12" Margin="0,0,0,10">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.5*"/>
-                            <ColumnDefinition Width="2.5*"/>
-                            <ColumnDefinition Width="1.2*"/>
-                            <ColumnDefinition Width="1.2*"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
-                            <TextBlock Text="Order Reference #:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                            <TextBox Text="{Binding CurrentOrder.OrderNumber, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="38"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1" Margin="0,0,10,0">
-                            <TextBlock Text="Customer / Client Name:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                            <ComboBox ItemsSource="{Binding CustomersList}" SelectedItem="{Binding SelectedCustomer}" DisplayMemberPath="Name"
-                                      IsEnabled="{Binding CanChangeCustomer}" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="38"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="2" Margin="0,0,10,0">
-                            <TextBlock Text="Order Date:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                            <DatePicker SelectedDate="{Binding CurrentOrder.OrderDate}" Height="38"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="3">
-                            <TextBlock Text="Delivery Due Date:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                            <DatePicker SelectedDate="{Binding CurrentOrder.DeliveryDueDate}" Height="38"/>
-                        </StackPanel>
                     </Grid>
                 </Border>
 
-                <!-- Product & Packaging Specs Drawer -->
-                <Border Grid.Row="2" Background="White" CornerRadius="8" BorderBrush="#CBD5E1" BorderThickness="1" Padding="12" Margin="0,0,0,10">
+                <!-- 2. PRODUCT & PACKAGING SPECIFICATIONS -->
+                <Border Grid.Row="1" Background="White" CornerRadius="6" BorderBrush="#CBD5E1" BorderThickness="1" Padding="10,6" Margin="0,0,0,8">
                     <StackPanel>
-                        <!-- Row 1: Brand, FG, Formulation, Qty -->
-                        <Grid Margin="0,0,0,8">
+                        <Grid Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="2*"/>
                                 <ColumnDefinition Width="2*"/>
-                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="100"/>
                             </Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                <TextBlock Text="Customer Brand Name:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                                <ComboBox ItemsSource="{Binding CustomerBrandsList}" SelectedItem="{Binding SelectedBrand}" 
-                                          Text="{Binding CustomBrandText, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="BrandName" 
-                                          IsEditable="True" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="38"/>
-                            </StackPanel>
+                            <ComboBox Grid.Column="0" ItemsSource="{Binding CustomerBrandsList}" SelectedItem="{Binding SelectedBrand}" 
+                              Text="{Binding CustomBrandText, UpdateSourceTrigger=PropertyChanged}" DisplayMemberPath="BrandName" 
+                              IsEditable="True" Padding="10,0"
+                              materialDesign:HintAssist.Hint="Brand Name *" 
+                              materialDesign:HintAssist.IsFloating="True"
+                              FontSize="11.5" Height="34" Margin="0,0,6,0"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
-                            <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                                <TextBlock Text="Finished Good / Base Product (Optional):" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                                <ComboBox ItemsSource="{Binding FinishedProductsList}" SelectedItem="{Binding SelectedProduct}" DisplayMemberPath="Name" 
-                                          IsEditable="True" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="38"/>
-                            </StackPanel>
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding FinishedProductsList}" SelectedItem="{Binding SelectedProduct}" DisplayMemberPath="Name" 
+                              IsEditable="True" Padding="10,0"
+                              materialDesign:HintAssist.Hint="Base Product / SKU (Optional)" 
+                              materialDesign:HintAssist.IsFloating="True"
+                              FontSize="11.5" Height="34" Margin="0,0,6,0"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
-                            <StackPanel Grid.Column="2" Margin="0,0,8,0">
-                                <TextBlock Text="Master Formulation (Optional):" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                                <ComboBox ItemsSource="{Binding MasterFormulationsList}" SelectedItem="{Binding SelectedFormulation}" DisplayMemberPath="FormulationName" 
-                                          materialDesign:TextFieldAssist.HasClearButton="True" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="38"/>
-                            </StackPanel>
+                            <ComboBox Grid.Column="2" ItemsSource="{Binding MasterFormulationsList}" SelectedItem="{Binding SelectedFormulation}" DisplayMemberPath="FormulationName" 
+                              materialDesign:TextFieldAssist.HasClearButton="True" Padding="10,0"
+                              materialDesign:HintAssist.Hint="Master Formulation (Optional)" 
+                              materialDesign:HintAssist.IsFloating="True"
+                              FontSize="11.5" Height="34" Margin="0,0,6,0"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
-                            <StackPanel Grid.Column="3">
-                                <TextBlock Text="Order Qty:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                                <TextBox Text="{Binding ActiveItem.TargetQuantity, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="38"/>
-                            </StackPanel>
+                            <TextBox Grid.Column="3" Text="{Binding ActiveItem.TargetQuantity, UpdateSourceTrigger=PropertyChanged}" 
+                             materialDesign:HintAssist.Hint="Order Qty *" Padding="10,10,0,0"
+                             materialDesign:HintAssist.IsFloating="True"
+                             FontSize="11.5" Height="34" Margin="0,0,6,0"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+
+                            <TextBox Grid.Column="4" Text="{Binding ActiveItem.UnitPrice, UpdateSourceTrigger=PropertyChanged}" 
+                             materialDesign:HintAssist.Hint="Unit Rate (₹)" Padding="10,10,0,0"
+                             materialDesign:HintAssist.IsFloating="True"
+                             FontSize="11.5" Height="34"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
                         </Grid>
 
-                        <!-- Row 2: Packaging Customizations & Pricing -->
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1.3*"/>
                                 <ColumnDefinition Width="1.3*"/>
                                 <ColumnDefinition Width="1.3*"/>
                                 <ColumnDefinition Width="1.3*"/>
-                                <ColumnDefinition Width="1*"/>
                             </Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                <TextBlock Text="Packaging Type:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                                <ComboBox ItemsSource="{Binding PackagingTypes}" Text="{Binding ActiveItem.PackagingType}" IsEditable="True" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="38"/>
-                            </StackPanel>
+                            <ComboBox Grid.Column="0" ItemsSource="{Binding PackagingTypes}" Text="{Binding ActiveItem.PackagingType}" IsEditable="True" 
+                              materialDesign:HintAssist.Hint="Packaging Type" Padding="10,0"
+                              materialDesign:HintAssist.IsFloating="True"
+                              FontSize="11.5" Height="34" Margin="0,0,6,0"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
-                            <StackPanel Grid.Column="1" Margin="0,0,8,0">
-                                <TextBlock Text="Pack Size / Vol:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                                <ComboBox ItemsSource="{Binding CommonPackSizes}" Text="{Binding ActiveItem.PackSize}" IsEditable="True" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="38"/>
-                            </StackPanel>
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding CommonPackSizes}" Text="{Binding ActiveItem.PackSize}" IsEditable="True" 
+                              materialDesign:HintAssist.Hint="Pack Size / Vol *" Padding="10,0"
+                              materialDesign:HintAssist.IsFloating="True"
+                              FontSize="11.5" Height="34" Margin="0,0,6,0"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
-                            <StackPanel Grid.Column="2" Margin="0,0,8,0">
-                                <TextBlock Text="Color / Shade:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                                <TextBox Text="{Binding ActiveItem.ColorShade}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="38"/>
-                            </StackPanel>
+                            <TextBox Grid.Column="2" Text="{Binding ActiveItem.ColorShade}" 
+                             materialDesign:HintAssist.Hint="Color / Shade" Padding="10,10,0,0"
+                             materialDesign:HintAssist.IsFloating="True"
+                             FontSize="11.5" Height="34" Margin="0,0,6,0"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
-                            <StackPanel Grid.Column="3" Margin="0,0,8,0">
-                                <TextBlock Text="Fragrance / Flavor:" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                                <ComboBox ItemsSource="{Binding CommonFragrances}" Text="{Binding ActiveItem.FragranceFlavor}" IsEditable="True" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="38"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="4">
-                                <TextBlock Text="Unit Rate (₹):" FontSize="11" FontWeight="SemiBold" Foreground="#64748B" Margin="0,0,0,3"/>
-                                <TextBox Text="{Binding ActiveItem.UnitPrice, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="38"/>
-                            </StackPanel>
+                            <ComboBox Grid.Column="3" ItemsSource="{Binding CommonFragrances}" Text="{Binding ActiveItem.FragranceFlavor}" IsEditable="True" 
+                              materialDesign:HintAssist.Hint="Fragrance / Flavor" Padding="10,0"
+                              materialDesign:HintAssist.IsFloating="True"
+                              FontSize="11.5" Height="34"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
                         </Grid>
                     </StackPanel>
                 </Border>
 
-                <!-- Live BOM & Recipe Table for Current Product -->
-                <Border Grid.Row="3" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="10">
+                <!-- 3. LIVE BOM DATA TABLE -->
+                <Border Grid.Row="2" Background="White" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1" Padding="8">
                     <Grid>
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
 
-                        <!-- BOM Table Header -->
-                        <TextBlock Grid.Row="0" Text="Recipe Bill of Materials (BOM) — Calculated for Active Item Batch Size" FontSize="12" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8"/>
-
-                        <!-- Ingredient Fast-Adder Bar -->
-                        <Grid Grid.Row="1" Margin="0,0,0,8">
+                        <Grid Grid.Row="0" Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="120"/>
-                                <ColumnDefinition Width="3*"/>
-                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="2.5*"/>
+                                <ColumnDefinition Width="90"/>
                                 <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
-                            <ComboBox Grid.Column="0" Text="{Binding NewIngredientPhase}" IsEditable="True" Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="36" Margin="0,0,8,0">
+                            <ComboBox Grid.Column="0" Text="{Binding NewIngredientPhase}" IsEditable="True" Padding="10,0"
+                              materialDesign:HintAssist.Hint="Phase" Height="32" FontSize="11" Margin="0,0,6,0"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}">
                                 <ComboBoxItem Content="Phase A"/>
                                 <ComboBoxItem Content="Phase B"/>
                                 <ComboBoxItem Content="Phase C"/>
@@ -330,28 +354,47 @@
                             </ComboBox>
 
                             <ComboBox Grid.Column="1" ItemsSource="{Binding RawMaterialsList}" SelectedItem="{Binding SelectedRawMaterialToAdd}" DisplayMemberPath="Name" 
-                                      IsEditable="True" materialDesign:HintAssist.Hint="Search &amp; Add Raw Material / Chemical..." Style="{StaticResource MaterialDesignOutlinedComboBox}" Height="36" Margin="0,0,8,0"/>
+                              IsEditable="True" materialDesign:HintAssist.Hint="Search &amp; Add Raw Material / Chemical..." 
+                              Height="32" FontSize="11" Margin="0,0,6,0" Padding="10,0"
+                              Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
                             <TextBox Grid.Column="2" Text="{Binding NewIngredientPercentage, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" 
-                                     materialDesign:HintAssist.Hint="Qty (%)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="36" Margin="0,0,8,0"/>
+                             materialDesign:HintAssist.Hint="Qty (%)" Height="32" FontSize="11" Margin="0,0,6,0" Padding="10,10,0,0"
+                             Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
 
-                            <Button Grid.Column="3" Command="{Binding AddIngredientToActiveFormulaCommand}" Content="+ ADD RM" Background="#1794A1" Foreground="White" Height="36" Padding="12,0"/>
+                            <Button Grid.Column="3" Command="{Binding AddIngredientToActiveFormulaCommand}" Content="+ ADD RM" 
+                            Background="#1794A1" BorderBrush="#1794A1" Foreground="White" FontWeight="Bold" FontSize="11" Height="32" Padding="10,0"/>
+
+                            <StackPanel Grid.Column="4" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <TextBlock Text="Active: " Foreground="#64748B" FontSize="11"/>
+                                <TextBlock Text="{Binding ActiveBOMTotalPercentage, StringFormat='{}{0:N2}%'}" FontWeight="Bold" Foreground="#0F172A" FontSize="11.5" Margin="0,0,10,0"/>
+                                <Border Background="#E0F2FE" CornerRadius="4" Padding="6,2">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="WaterPercent" Foreground="#0284C7" Width="12" Height="12" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                        <TextBlock Text="Water (QS): " Foreground="#0369A1" FontSize="10.5" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding ActiveBOMWaterPercentage, StringFormat='{}{0:N2}%'}" FontWeight="Black" Foreground="#0369A1" FontSize="11"/>
+                                    </StackPanel>
+                                </Border>
+                            </StackPanel>
                         </Grid>
 
-                        <!-- Ingredients Grid -->
-                        <DataGrid Grid.Row="2" ItemsSource="{Binding ActiveBOMList}" AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="36" Style="{StaticResource MaterialDesignDataGrid}">
+                        <DataGrid Grid.Row="1" ItemsSource="{Binding ActiveBOMList}" 
+                          AutoGenerateColumns="False" CanUserAddRows="False" 
+                          RowHeight="30" FontSize="11.5"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#F1F5F9"
+                          Style="{StaticResource MaterialDesignDataGrid}">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="Phase" Binding="{Binding Phase}" Width="100"/>
+                                <DataGridTextColumn Header="Phase" Binding="{Binding Phase}" Width="80"/>
                                 <DataGridTextColumn Header="Raw Material Name" Binding="{Binding RawMaterialName}" Width="2.5*" IsReadOnly="True"/>
-                                <DataGridTextColumn Header="Percentage (%)" Binding="{Binding PercentageValue, StringFormat='{}{0:N2}%'}" FontWeight="Bold" Width="120"/>
-                                <DataGridTextColumn Header="Actual Batch Qty" Binding="{Binding CalculatedQuantity, StringFormat='{}{0:N3} Kg'}" FontWeight="Bold" Foreground="#0284C7" Width="140" IsReadOnly="True"/>
+                                <DataGridTextColumn Header="Percentage (%)" Binding="{Binding PercentageValue, StringFormat='{}{0:N2}%'}" FontWeight="Bold" Width="110"/>
+                                <DataGridTextColumn Header="Batch Qty" Binding="{Binding CalculatedQuantity, StringFormat='{}{0:N3} Kg'}" FontWeight="Bold" Foreground="#0284C7" Width="120" IsReadOnly="True"/>
                                 <DataGridTextColumn Header="Mixing Remarks" Binding="{Binding Remarks, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                                <DataGridTemplateColumn Width="40">
+                                <DataGridTemplateColumn Width="36">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
-                                            <Button Style="{StaticResource MaterialDesignIconButton}" Width="22" Height="22" Padding="0" 
-                                                    Command="{Binding DataContext.RemoveIngredientFromActiveFormulaCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                                    CommandParameter="{Binding}">
+                                            <Button Style="{StaticResource MaterialDesignIconButton}" Width="20" Height="20" Padding="0" 
+                                            Command="{Binding DataContext.RemoveIngredientFromActiveFormulaCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                            CommandParameter="{Binding}">
                                                 <materialDesign:PackIcon Kind="TrashCanOutline" Width="13" Height="13" Foreground="#EF4444"/>
                                             </Button>
                                         </DataTemplate>
@@ -362,26 +405,21 @@
                     </Grid>
                 </Border>
 
-                <!-- Step 1 Footer -->
-                <Border Grid.Row="4" Background="#F1F5F9" CornerRadius="8" Padding="12,8" Margin="0,8,0,0">
-                    <DockPanel LastChildFill="True">
+                <!-- 4. SLIM ACTION FOOTER -->
+                <Border Grid.Row="3" Background="#F1F5F9" CornerRadius="6" Padding="10,6" Margin="0,6,0,0">
+                    <DockPanel LastChildFill="False">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                            <Button Content="+ ADD PRODUCT TO ORDER" Command="{Binding AddItemToCartCommand}" Background="#0284C7" BorderBrush="#0284C7" Foreground="White" FontWeight="Bold" Height="36" Padding="14,0" Margin="0,0,10,0"/>
-                            <Button Content="PROCEED TO REVIEW ➔" Command="{Binding GoToStep2Command}" Background="#1794A1" BorderBrush="#1794A1" Foreground="White" FontWeight="Bold" Height="36" Padding="16,0"/>
-                        </StackPanel>
-
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Active Ingredients: " Foreground="#64748B" FontSize="11.5"/>
-                            <TextBlock Text="{Binding ActiveBOMTotalPercentage, StringFormat='{}{0:N2}%'}" FontWeight="Bold" Foreground="#0F172A" FontSize="12" Margin="0,0,14,0"/>
-                            <TextBlock Text="Water (Aqua / QS): " Foreground="#0369A1" FontSize="11.5" FontWeight="SemiBold"/>
-                            <TextBlock Text="{Binding ActiveBOMWaterPercentage, StringFormat='{}{0:N2}%'}" FontWeight="Bold" Foreground="#0369A1" FontSize="12"/>
+                            <Button Content="+ ADD PRODUCT TO ORDER" Command="{Binding AddItemToCartCommand}" 
+                            Background="#0284C7" BorderBrush="#0284C7" Foreground="White" FontWeight="Bold" FontSize="11.5" Height="32" Padding="14,0" Margin="0,0,8,0"/>
+                            <Button Content="PROCEED TO REVIEW ➔" Command="{Binding GoToStep2Command}" 
+                            Background="#1794A1" BorderBrush="#1794A1" Foreground="White" FontWeight="Bold" FontSize="11.5" Height="32" Padding="16,0"/>
                         </StackPanel>
                     </DockPanel>
                 </Border>
             </Grid>
 
             <!-- ============================================================= -->
-            <!-- STEP 2: REVIEW & FINAL SUBMISSION (CurrentStep == 2)         -->
+            <!-- STEP 2: REVIEW & FINAL SUBMISSION (CurrentStep == 2)          -->
             <!-- ============================================================= -->
             <Grid>
                 <Grid.Style>
@@ -396,35 +434,35 @@
                 </Grid.Style>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
-                    <!-- Banner -->
+                    <!-- 1. Banner -->
                     <RowDefinition Height="*"/>
-                    <!-- Configured Products Review DataGrid -->
+                    <!-- 2. Configured Products Review DataGrid -->
                     <RowDefinition Height="Auto"/>
-                    <!-- Commercial Totals & Submit -->
+                    <!-- 3. Commercial Totals & Submit -->
                 </Grid.RowDefinitions>
 
-                <!-- Banner with Order & Customer info -->
-                <Border Grid.Row="0" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1" Padding="14,10" Margin="0,0,0,10">
+                <!-- 1. Banner with Order & Customer info -->
+                <Border Grid.Row="0" Background="White" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1" Padding="12,8" Margin="0,0,0,8">
                     <DockPanel LastChildFill="False">
                         <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
                             <Button Style="{StaticResource MaterialDesignIconButton}" Command="{Binding GoToStep1Command}" Width="28" Height="28" Padding="0" Margin="0,0,8,0">
                                 <materialDesign:PackIcon Kind="ArrowLeft" Width="18" Height="18" Foreground="#475569"/>
                             </Button>
-                            <TextBlock Text="Step 2: Review Order &amp; Configured Product Recipes" FontSize="15" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                            <TextBlock Text="Step 2: Review Order &amp; Configured Product Recipes" FontSize="14" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="Customer: " Foreground="#64748B" FontSize="12"/>
-                            <TextBlock Text="{Binding CurrentOrder.CustomerName}" FontWeight="Bold" Foreground="#0F172A" FontSize="12" Margin="0,0,16,0"/>
-                            <TextBlock Text="Order #: " Foreground="#64748B" FontSize="12"/>
-                            <TextBlock Text="{Binding CurrentOrder.OrderNumber}" FontWeight="Bold" Foreground="#1794A1" FontSize="12"/>
+                            <TextBlock Text="Customer: " Foreground="#64748B" FontSize="11.5"/>
+                            <TextBlock Text="{Binding SelectedCustomer.CustomerName, FallbackValue='—'}" FontWeight="Bold" Foreground="#0F172A" FontSize="11.5" Margin="0,0,16,0"/>
+                            <TextBlock Text="Order #: " Foreground="#64748B" FontSize="11.5"/>
+                            <TextBlock Text="{Binding CurrentOrder.OrderNumber}" FontWeight="Bold" Foreground="#1794A1" FontSize="11.5"/>
                         </StackPanel>
                     </DockPanel>
                 </Border>
 
-                <!-- Configured Products Grid (Review Mode) -->
-                <Border Grid.Row="1" Background="White" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1">
-                    <DataGrid ItemsSource="{Binding CurrentOrder.Items}" AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="42" Style="{StaticResource MaterialDesignDataGrid}">
+                <!-- 2. Configured Products Review Grid -->
+                <Border Grid.Row="1" Background="White" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1">
+                    <DataGrid ItemsSource="{Binding CurrentOrder.Items}" AutoGenerateColumns="False" CanUserAddRows="False" RowHeight="40" Style="{StaticResource MaterialDesignDataGrid}">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Brand Name" Binding="{Binding BrandName}" FontWeight="Bold" Width="1.5*"/>
                             <DataGridTextColumn Header="Product / Recipe Name" Binding="{Binding ProductName}" Width="2*"/>
@@ -437,9 +475,8 @@
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Style="{StaticResource MaterialDesignIconButton}" Width="24" Height="24" Padding="0" 
-                                                Command="{Binding DataContext.RemoveLineItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                                CommandParameter="{Binding}"
-                                                IsEnabled="{Binding DataContext.IsOrderLocked, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource InvertBooleanConverter}}">
+                                        Command="{Binding DataContext.RemoveLineItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                        CommandParameter="{Binding}">
                                             <materialDesign:PackIcon Kind="TrashCanOutline" Width="14" Height="14" Foreground="#EF4444"/>
                                         </Button>
                                     </DataTemplate>
@@ -449,31 +486,30 @@
                     </DataGrid>
                 </Border>
 
-                <!-- Step 2 Footer -->
-                <Border Grid.Row="2" Background="#F1F5F9" CornerRadius="8" Padding="14,10" Margin="0,10,0,0">
+                <!-- 3. Commercial Totals & Action Footer -->
+                <Border Grid.Row="2" Background="#F1F5F9" CornerRadius="6" Padding="12,8" Margin="0,8,0,0">
                     <DockPanel LastChildFill="True">
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Content="← BACK TO EDIT" Command="{Binding GoToStep1Command}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="38" Margin="0,0,8,0"/>
-                            <Button Content="CANCEL" Command="{Binding CloseWizardCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="38" Margin="0,0,8,0"/>
-                            <Button Content="SUBMIT SERVICE ORDER" Command="{Binding SubmitOrderCommand}" Background="#1794A1" BorderBrush="#1794A1" Foreground="White" FontWeight="Bold" Height="38" Padding="20,0"
-                                    IsEnabled="{Binding IsOrderLocked, Converter={StaticResource InvertBooleanConverter}}"/>
+                            <Button Content="← BACK TO EDIT" Command="{Binding GoToStep1Command}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="34" Margin="0,0,8,0"/>
+                            <Button Content="CANCEL" Command="{Binding CloseWizardCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="34" Margin="0,0,8,0"/>
+                            <Button Content="SUBMIT SERVICE ORDER" Command="{Binding SubmitOrderCommand}" Background="#1794A1" BorderBrush="#1794A1" Foreground="White" FontWeight="Bold" Height="34" Padding="18,0"/>
                         </StackPanel>
 
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <StackPanel Margin="0,0,20,0">
-                                <TextBlock Text="Sub Total:" FontSize="10.5" Foreground="#64748B"/>
-                                <TextBlock Text="{Binding CurrentOrder.SubTotalAmount, StringFormat='{}{0:C}'}" FontSize="13" FontWeight="Bold" Foreground="#334155"/>
+                                <TextBlock Text="Sub Total:" FontSize="10" Foreground="#64748B"/>
+                                <TextBlock Text="{Binding CurrentOrder.SubTotalAmount, StringFormat='{}{0:C}'}" FontSize="12.5" FontWeight="Bold" Foreground="#334155"/>
                             </StackPanel>
 
                             <StackPanel Margin="0,0,20,0">
-                                <TextBlock Text="Taxes (GST):" FontSize="10.5" Foreground="#64748B"/>
-                                <TextBlock Text="{Binding CurrentOrder.TaxAmount, StringFormat='{}{0:C}'}" FontSize="13" FontWeight="Bold" Foreground="#334155"/>
+                                <TextBlock Text="Taxes (GST):" FontSize="10" Foreground="#64748B"/>
+                                <TextBlock Text="{Binding CurrentOrder.TaxAmount, StringFormat='{}{0:C}'}" FontSize="12.5" FontWeight="Bold" Foreground="#334155"/>
                             </StackPanel>
 
-                            <Border Background="#DCFCE7" CornerRadius="6" Padding="12,6" VerticalAlignment="Center">
+                            <Border Background="#DCFCE7" CornerRadius="4" Padding="10,4" VerticalAlignment="Center">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Grand Total: " FontWeight="SemiBold" Foreground="#15803D" FontSize="12" VerticalAlignment="Center"/>
-                                    <TextBlock Text="{Binding CurrentOrder.GrandTotalAmount, StringFormat='{}{0:C}'}" FontWeight="Black" Foreground="#15803D" FontSize="14" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Grand Total: " FontWeight="SemiBold" Foreground="#15803D" FontSize="11.5" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding CurrentOrder.GrandTotalAmount, StringFormat='{}{0:C}'}" FontWeight="Black" Foreground="#15803D" FontSize="13" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

@@ -302,6 +302,14 @@ namespace Tijori.ViewModels
                         }, DispatcherPriority.Background);
 
                         break;
+                    case "Batch":
+                        var vm12 = _serviceProvider.GetRequiredService<BatchTrackerViewModel>();
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm12;
+                        }, DispatcherPriority.Background);
+
+                        break;
                         // Add other cases as you build them
                 }
             }

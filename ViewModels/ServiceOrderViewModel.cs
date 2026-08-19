@@ -122,15 +122,7 @@ namespace Tijori.ViewModels
                 OrdersList = new ObservableCollection<ServiceOrder>(list);
                 TotalOrdersCount = OrdersList.Count;
                 FilteredOrders = CollectionViewSource.GetDefaultView(OrdersList);
-                FilteredOrders.Filter = (obj) =>
-                {
-                    if (obj is not ServiceOrder item) return false;
-                    if (string.IsNullOrWhiteSpace(SearchText)) return true;
-                    var term = SearchText.Trim();
-                    return (item.OrderNumber != null && item.OrderNumber.Contains(term, StringComparison.OrdinalIgnoreCase))
-                        || (item.CustomerName != null && item.CustomerName.Contains(term, StringComparison.OrdinalIgnoreCase))
-                        || (item.OrderStatus != null && item.OrderStatus.Contains(term, StringComparison.OrdinalIgnoreCase));
-                };
+                FilteredOrders.Filter = FilterOrder;
                 OnPropertyChanged(nameof(FilteredOrders));
             });
         }
@@ -475,6 +467,50 @@ namespace Tijori.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"Submission error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        private async Task ApproveAndReleaseToProductionAsync(ServiceOrder? order)
+        {
+            if (order == null) return;
+
+            if (order.OrderStatus != "Draft")
+            {
+                MessageBox.Show($"Only 'Draft' orders can be approved. Current status: {order.OrderStatus}", "Action Blocked", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            var confirm = MessageBox.Show(
+                $"Approve Order #{order.OrderNumber} and spawn batch production orders?\n\nThis will lock the order and generate dedicated batch work orders for all line items.",
+                "Confirm Production Release",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (confirm != MessageBoxResult.Yes) return;
+
+            try
+            {
+                var spawnedBatches = await _orderService.ApproveAndSpawnBatchesAsync(order.OrderId);
+
+                string batchNumbers = string.Join("\n• ", spawnedBatches.Select(b => $"{b.BatchNumber} ({b.BrandName} - {b.BatchSize:N0} Units)"));
+
+                MessageBox.Show(
+                    $"Order #{order.OrderNumber} released to production!\n\nSpawned Batches:\n• {batchNumbers}",
+                    "Batches Generated Successfully",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+
+                await LoadOrdersListAsync();
+
+                if (IsFormOpen && CurrentOrder.OrderId == order.OrderId)
+                {
+                    IsFormOpen = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error approving order: {ex.Message}", "Processing Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

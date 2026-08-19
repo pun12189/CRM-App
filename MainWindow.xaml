@@ -107,6 +107,9 @@
         <DataTemplate DataType="{x:Type vm:ServiceOrderViewModel}">
             <views:ServiceOrderWorkspaceView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:BatchTrackerViewModel}">
+            <views:BatchTrackerView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -557,8 +560,8 @@
                     <MenuItem Header="Orders" Icon="{materialDesign:PackIcon Kind=Briefcase}" Click="TopLevelMenuItem_Click">
                         <MenuItem Header="Proforma" Icon="{materialDesign:PackIcon Kind=FileDocumentCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Proforma"/>
                         <MenuItem Header="Product Orders" Icon="{materialDesign:PackIcon Kind=CartCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Orders"/>
-                        <MenuItem Header="Service Line Orders" Icon="{materialDesign:PackIcon Kind=CustomerService}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="ServiceOrder"/>
-                        <!--<MenuItem Header="Item/Product List" Icon="{materialDesign:PackIcon Kind=PackageVariant}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>-->
+                        <MenuItem Header="Service Line Orders" Icon="{materialDesign:PackIcon Kind=CartPlus}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="ServiceOrder"/>
+                        <MenuItem Header="Batch Orders" Icon="{materialDesign:PackIcon Kind=SelectGroup}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Batch"/>
                         <MenuItem Header="Ledger" Icon="{materialDesign:PackIcon Kind=BookOpenPageVariant}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Ledger"/>
                         
                         <!--<MenuItem Header="HRMS" IsEnabled="False" Icon="{materialDesign:PackIcon Kind=HumanFemale}" Style="{StaticResource SubItemStyle}" />

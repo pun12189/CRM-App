@@ -1,0 +1,152 @@
+﻿<UserControl x:Class="Tijori.Views.StockLedgerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:conv="clr-namespace:Tijori.Converters"
+             xmlns:local="clr-namespace:Tijori.Views"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             Background="#F8FAFC">
+    <UserControl.Resources>
+        <materialDesign:BooleanToVisibilityConverter x:Key="InvertedBoolToVisConverter" TrueValue="Collapsed" FalseValue="Visible" />
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <materialDesign:InvertBooleanConverter x:Key="InvertBooleanConverter"/>
+        <conv:StringMatchToVisConverter x:Key="StringMatchToVisConverter" />
+        <conv:InvertedStringMatchToVisConverter x:Key="InvertedStringMatchToVisConverter" />
+        <conv:StringToBoolConverter x:Key="StringToBoolConverter" />
+    </UserControl.Resources>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Toolbar & Movement Type Filters -->
+            <RowDefinition Height="*"/>
+            <!-- Stock Ledger Grid -->
+        </Grid.RowDefinitions>
+
+        <!-- 1. TOOLBAR -->
+        <Border Grid.Row="0" Background="White" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1" Padding="12,10" Margin="0,0,0,12">
+            <DockPanel LastChildFill="False">
+
+                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
+                    <materialDesign:PackIcon Kind="BookOpenOutline" Width="24" Height="24" Foreground="#1794A1" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Inventory Stock Ledger" FontSize="15" FontWeight="Bold" Foreground="#0F172A" VerticalAlignment="Center"/>
+                            <Border Background="#E0F2FE" CornerRadius="10" Padding="8,2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding TotalEntriesCount, StringFormat='{}{0} Transactions'}" FontSize="10.5" FontWeight="Bold" Foreground="#0369A1"/>
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Text="Complete audit trail of raw material consumption and production yield" FontSize="11" Foreground="#64748B"/>
+                    </StackPanel>
+
+                    <!-- Filters -->
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <RadioButton Content="All" IsChecked="{Binding SelectedMovementFilter, Converter={StaticResource StringToBoolConverter}, ConverterParameter='All'}" 
+                                     GroupName="LedgerFilters" Style="{StaticResource MaterialDesignTabRadioButton}" Height="32" Margin="0,0,4,0"/>
+                        <RadioButton Content="Production Consume" IsChecked="{Binding SelectedMovementFilter, Converter={StaticResource StringToBoolConverter}, ConverterParameter='Production_Consume'}" 
+                                     GroupName="LedgerFilters" Style="{StaticResource MaterialDesignTabRadioButton}" Height="32" Margin="0,0,4,0"/>
+                        <RadioButton Content="Production Yield" IsChecked="{Binding SelectedMovementFilter, Converter={StaticResource StringToBoolConverter}, ConverterParameter='Production_Yield'}" 
+                                     GroupName="LedgerFilters" Style="{StaticResource MaterialDesignTabRadioButton}" Height="32" Margin="0,0,4,0"/>
+                        <RadioButton Content="Purchase Inward" IsChecked="{Binding SelectedMovementFilter, Converter={StaticResource StringToBoolConverter}, ConverterParameter='Purchase_Inward'}" 
+                                     GroupName="LedgerFilters" Style="{StaticResource MaterialDesignTabRadioButton}" Height="32"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Background="#F1F5F9" CornerRadius="6" Width="240" Height="36" Padding="8,0" Margin="0,0,8,0" VerticalAlignment="Center">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <materialDesign:PackIcon Kind="Magnify" Grid.Column="0" Width="16" Height="16" Foreground="#94A3B8" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBox Grid.Column="1" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                                     materialDesign:HintAssist.Hint="Search Product, Batch Ref..." BorderThickness="0" Background="Transparent" VerticalAlignment="Center" FontSize="11.5"/>
+                        </Grid>
+                    </Border>
+                    <Button Command="{Binding RefreshLedgerCommand}" Style="{StaticResource MaterialDesignIconButton}" Width="32" Height="32" Padding="0">
+                        <materialDesign:PackIcon Kind="Refresh" Width="16" Height="16" Foreground="#64748B"/>
+                    </Button>
+                </StackPanel>
+
+            </DockPanel>
+        </Border>
+
+        <!-- 2. DATA TABLE -->
+        <Border Grid.Row="1" Background="White" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1">
+            <DataGrid ItemsSource="{Binding FilteredEntries}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" RowHeight="38" Style="{StaticResource MaterialDesignDataGrid}">
+                <DataGrid.Columns>
+
+                    <DataGridTextColumn Header="Date &amp; Time" Binding="{Binding CreatedDate, StringFormat='{}{0:dd MMM yyyy HH:mm}'}" Width="140"/>
+                    <DataGridTextColumn Header="Product / Chemical Name" Binding="{Binding ProductName}" FontWeight="Bold" Width="2*"/>
+                    <DataGridTextColumn Header="Batch Number" Binding="{Binding BatchNumber}" Width="150"/>
+                    <DataGridTextColumn Header="Reference Doc" Binding="{Binding ReferenceDocument}" FontWeight="SemiBold" Width="150"/>
+
+                    <!-- Movement Type -->
+                    <DataGridTemplateColumn Header="Movement Type" Width="150">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="#F1F5F9"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MovementType}" Value="Production_Yield">
+                                                    <Setter Property="Background" Value="#DCFCE7"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding MovementType}" Value="Production_Consume">
+                                                    <Setter Property="Background" Value="#FEE2E2"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding MovementType}" FontSize="10" FontWeight="Bold">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#475569"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding MovementType}" Value="Production_Yield">
+                                                        <Setter Property="Foreground" Value="#15803D"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding MovementType}" Value="Production_Consume">
+                                                        <Setter Property="Foreground" Value="#B91C1C"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Quantity (Color coded: Green for positive, Red for negative) -->
+                    <DataGridTemplateColumn Header="Quantity" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#15803D"/>
+                                            <Setter Property="Text" Value="{Binding Quantity, StringFormat='{}+{0:N3}'}"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding MovementType}" Value="Production_Consume">
+                                                    <Setter Property="Foreground" Value="#B91C1C"/>
+                                                    <Setter Property="Text" Value="{Binding Quantity, StringFormat='{}{0:N3}'}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn Header="Unit" Binding="{Binding Unit}" Width="70"/>
+                    <DataGridTextColumn Header="Notes / Audit Trail" Binding="{Binding Notes}" Width="2*"/>
+
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </Grid>
+</UserControl>

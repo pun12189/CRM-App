@@ -310,6 +310,14 @@ namespace Tijori.ViewModels
                         }, DispatcherPriority.Background);
 
                         break;
+                    case "StockLedger":
+                        var vm13 = _serviceProvider.GetRequiredService<StockLedgerViewModel>();
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm13;
+                        }, DispatcherPriority.Background);
+
+                        break;
                         // Add other cases as you build them
                 }
             }

@@ -9,6 +9,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Documents;
+using Tijori.Dialogs;
 using Tijori.Models;
 using Tijori.Services;
 
@@ -140,6 +142,29 @@ namespace Tijori.ViewModels
             catch (Exception ex)
             {
                 MessageBox.Show($"Error advancing stage: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
+        private void PrintBmrDocument()
+        {
+            if (ActiveBatch == null) return;
+
+            try
+            {
+                var doc = _trackerService.CreateBmrFlowDocument(ActiveBatch, ActiveBatchBOM);
+                
+                var previewWin = new PrintPreviewWindow
+                {
+                    Owner = Application.Current.MainWindow
+                };
+
+                previewWin.LoadFlowDocument(doc, $"BMR - {ActiveBatch.BatchNumber}");
+                previewWin.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error printing BMR sheet: {ex.Message}", "Print Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
     }

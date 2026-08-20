@@ -459,7 +459,7 @@
                                         </materialDesign:PopupBox.ToggleContent>                                        
 
                                         <StackPanel Width="140" Margin="2">
-                                            <Button Command="{Binding DataContext.DownloadInvoiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                            <Button Command="{Binding DataContext.PrintTaxInvoiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                 CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Height="32" Padding="6,0">
                                                 <StackPanel Orientation="Horizontal">
                                                     <materialDesign:PackIcon Kind="Download" Width="14" Height="14" Foreground="#2563EB" Margin="0,0,6,0" VerticalAlignment="Center"/>

@@ -110,6 +110,9 @@
         <DataTemplate DataType="{x:Type vm:BatchTrackerViewModel}">
             <views:BatchTrackerView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:StockLedgerViewModel}">
+            <views:StockLedgerView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>
@@ -552,6 +555,7 @@
 
                     <MenuItem Header="Items" Icon="{materialDesign:PackIcon Kind=AccountCancel}" Click="TopLevelMenuItem_Click">
                         <MenuItem Header="List" Icon="{materialDesign:PackIcon Kind=CloseCircle}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>
+                        <MenuItem Header="Stock Ledger" Icon="{materialDesign:PackIcon Kind=InvoiceScheduled}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="StockLedger"/>
                         <MenuItem Header="Purchase Orders" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Purchase"/>
                         <MenuItem Header="Vendors" Icon="{materialDesign:PackIcon Kind=PersonBox}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Vendor"/>
                     </MenuItem>

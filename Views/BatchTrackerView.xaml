@@ -205,6 +205,16 @@
                             <TextBlock Text="Target Batch Size:" FontSize="10" Foreground="#64748B"/>
                             <TextBlock Text="{Binding ActiveBatch.BatchSize, StringFormat='{}{0:N0} Units'}" FontSize="12" FontWeight="Bold" Foreground="#1794A1"/>
                         </StackPanel>
+
+                        <!-- 🖨️ PRINT BMR BUTTON -->
+                        <Button Command="{Binding PrintBmrDocumentCommand}" 
+                                Background="#0284C7" BorderBrush="#0284C7" Foreground="White" 
+                                FontWeight="SemiBold" Height="32" Padding="12,0">
+                            <StackPanel Orientation="Horizontal">
+                                <materialDesign:PackIcon Kind="PrinterOutline" Width="14" Height="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="PRINT BMR" FontSize="11" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </DockPanel>
             </Border>
@@ -298,9 +308,12 @@
 
                     <!-- Advance Action Button -->
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="BACK TO BATCHES" Command="{Binding CloseBatchWorkspaceCommand}" Style="{StaticResource MaterialDesignOutlinedButton}" Height="34" Margin="0,0,8,0"/>
+                        <Button Content="PRINT BMR SHEET" Command="{Binding PrintBmrDocumentCommand}" 
+                            Style="{StaticResource MaterialDesignOutlinedButton}" Height="34" Margin="0,0,8,0"/>
+                        <Button Content="BACK TO BATCHES" Command="{Binding CloseBatchWorkspaceCommand}" 
+                            Style="{StaticResource MaterialDesignOutlinedButton}" Height="34" Margin="0,0,8,0"/>
                         <Button Content="COMPLETE STAGE &amp; ADVANCE ➔" Command="{Binding AdvanceCurrentStageCommand}" 
-                                Background="#1794A1" BorderBrush="#1794A1" Foreground="White" FontWeight="Bold" Height="34" Padding="18,0"/>
+                            Background="#1794A1" BorderBrush="#1794A1" Foreground="White" FontWeight="Bold" Height="34" Padding="18,0"/>
                     </StackPanel>
 
                     <!-- Active Stage Operator Sign-Off Input -->

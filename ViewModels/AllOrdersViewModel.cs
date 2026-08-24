@@ -1,10 +1,4 @@
-﻿using Tijori.Core;
-using Tijori.Dialogs;
-using Tijori.Interfaces;
-using Tijori.Models;
-using Tijori.Models.Enums;
-using Tijori.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using MySqlX.XDevAPI;
@@ -16,7 +10,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Data;
+using System.Windows.Documents;
+using Tijori.Core;
+using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Models.Enums;
+using Tijori.Services;
 
 namespace Tijori.ViewModels
 {
@@ -29,6 +31,7 @@ namespace Tijori.ViewModels
         private readonly IUserSession _userSession;
         private readonly IOrderHistoryService _orderHistoryService;
         private readonly IActionSecurityGuard _actionSecurityGuard;
+        private readonly InvoiceService _invoiceService;
 
         [ObservableProperty] private ObservableCollection<Order> _allOrders = new();
         [ObservableProperty] private bool _isLoading;
@@ -63,12 +66,13 @@ namespace Tijori.ViewModels
         [ObservableProperty]
         private object _tabsDataContext;
 
-        public AllOrdersViewModel(LeadService service, IDialogService dialogService, OrderService orderService, CategoryService categoryService, IUserSession userSession, IOrderHistoryService orderHistoryService, IActionSecurityGuard actionSecurityGuard)
+        public AllOrdersViewModel(LeadService service, IDialogService dialogService, OrderService orderService, CategoryService categoryService, IUserSession userSession, IOrderHistoryService orderHistoryService, IActionSecurityGuard actionSecurityGuard, InvoiceService invoiceService)
         {
             _service = service;
             _dialogService = dialogService;
             _orderService = orderService;
             _categoryService = categoryService;
+            _invoiceService = invoiceService;
             _orderHistoryService = orderHistoryService;
             _userSession = userSession;
             _actionSecurityGuard = actionSecurityGuard;
@@ -305,6 +309,35 @@ namespace Tijori.ViewModels
         public void HideLeadWorkspace()
         {
             WorkspaceViewIsActive = false;
+        }
+
+        [RelayCommand]
+        private async Task PrintTaxInvoiceAsync(Order selectedOrder)
+        {
+            try
+            {
+                var invoiceData = await _invoiceService.GetOrderInvoiceDataAsync(selectedOrder.OrderId);
+                if (invoiceData == null)
+                {
+                    MessageBox.Show("Unable to load invoice data for Order #" + selectedOrder.FormattedOrderId, "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                double printableWidth = 793.7;
+                var doc = _invoiceService.CreateTaxInvoiceDocument(invoiceData, printableWidth);
+
+                var previewWin = new PrintPreviewWindow
+                {
+                    Owner = Application.Current.MainWindow
+                };
+
+                previewWin.LoadFlowDocument(doc, $"Invoice Preview - {invoiceData.InvoiceNumber}");
+                previewWin.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error generating invoice: {ex.Message}", "Invoice Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }

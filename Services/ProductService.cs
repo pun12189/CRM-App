@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -19,7 +20,7 @@ namespace Tijori.Services
         {
             using var db = _context.CreateConnection();
             string sql = @"
-                SELECT p.*, c.CategoryName 
+                SELECT p.*, c.CategoryName, c.CategoryType 
                 FROM Products p
                 LEFT JOIN Categories c ON p.CategoryId = c.Id
                 ORDER BY p.Name ASC";
@@ -34,6 +35,7 @@ namespace Tijori.Services
                 SELECT 
                     p.*, 
                     c.CategoryName AS CategoryName,
+                    c.CategoryType,
                     IFNULL(b.AggStock, 0) AS RemainingStock,
                     IFNULL(b.BatchCount, 0) AS TotalBatchesCount,
                     CASE 
@@ -48,11 +50,10 @@ namespace Tijori.Services
                         SUM(CurrentStock) AS AggStock,
                         COUNT(BatchId) AS BatchCount,
                         SUM(CurrentStock * MinimumSellingPrice) AS TotalValue
-                    FROM ProductBatches
-                    WHERE DivisionId = @DivId
+                    FROM ProductBatches                    
                     GROUP BY ProductId
                 ) b ON p.ProductId = b.ProductId        
-                ORDER BY p.Name ASC;";
+                ORDER BY p.Name ASC;"; /*WHERE DivisionId = @DivId*/
 
             return await db.QueryAsync<Product>(sql, new { DivId = divisionId });
         }
@@ -60,8 +61,8 @@ namespace Tijori.Services
         public async Task<IEnumerable<Product>> GetProductsWithBatchesAsync(int divisionId)
         {
             const string sql = @"
-                SELECT * FROM Products WHERE DivisionId = @DivId;
-                SELECT * FROM ProductBatches WHERE DivisionId = @DivId AND CurrentStock > 0;";
+                SELECT * FROM Products;
+                SELECT * FROM ProductBatches;"; /*WHERE DivisionId = @DivId -- both queries are executed in a single round-trip to the database*/
 
             using var db = _context.CreateConnection();
             using var gridReader = await db.QueryMultipleAsync(sql, new { DivId = divisionId });
@@ -109,8 +110,8 @@ namespace Tijori.Services
                     MfgDate, ExpiryDate, QuantityReceived, CurrentStock, 
                     MinimumSellingPrice, CreatedAt
                 FROM ProductBatches
-                WHERE ProductId = @ProdId AND DivisionId = @DivId
-                ORDER BY ExpiryDate ASC, BatchId DESC;";
+                WHERE ProductId = @ProdId 
+                ORDER BY ExpiryDate ASC, BatchId DESC;"; /*AND DivisionId = @DivId*/
 
             try
             {
@@ -261,7 +262,7 @@ namespace Tijori.Services
             return count > 0;
         }
 
-        public async Task<int> SaveProductAssemblyAsync(Product product, ProductBatch initialBatch)
+        public async Task<int> SaveProductAssemblyAsync(Product product, ProductBatch? initialBatch = null)
         {
             using var conn = _context.CreateConnection();
             if (conn.State == ConnectionState.Closed) await ((System.Data.Common.DbConnection)conn).OpenAsync();
@@ -270,32 +271,37 @@ namespace Tijori.Services
             try
             {
                 const string productSql = @"
-                    INSERT INTO Products (
-                        DivisionId, Name, ShortName, SKU, Unit, CategoryId, 
-                        Manufacturer, Packaging, InitialStock, RemainingStock, 
-                        MRP, CostPrice, SellingPrice, GSTPercent, TotalCost, TrackCost, HasBatchTracking, CreatedAt
-                    ) VALUES (
-                        @DivisionId, @Name, @ShortName, @SKU, @Unit, @CategoryId, 
-                        @Manufacturer, @Packaging, @InitialStock, @RemainingStock, 
-                        @MRP, @CostPrice, @SellingPrice, @GSTPercent, @TotalCost, @TrackCost, @HasBatchTracking, NOW()
-                    );
-                    SELECT LAST_INSERT_ID();";
+            INSERT INTO Products (
+                DivisionId, Name, ShortName, SKU, Unit, CategoryId, 
+                Manufacturer, Packaging, InitialStock, RemainingStock, 
+                MRP, CostPrice, SellingPrice, GSTPercent, TotalCost, TrackCost, HasBatchTracking, CreatedAt
+            ) VALUES (
+                @DivisionId, @Name, @ShortName, @SKU, @Unit, @CategoryId, 
+                @Manufacturer, @Packaging, @InitialStock, @RemainingStock, 
+                @MRP, @CostPrice, @SellingPrice, @GSTPercent, @TotalCost, @TrackCost, @HasBatchTracking, NOW()
+            );
+            SELECT LAST_INSERT_ID();";
 
                 int generatedProductId = await conn.ExecuteScalarAsync<int>(productSql, product, transaction);
 
                 product.ProductId = generatedProductId;
-                initialBatch.ProductId = generatedProductId;
 
-                const string batchSql = @"
-                    INSERT INTO ProductBatches (
-                        ProductId, DivisionId, BatchNumber, MfgDate, ExpiryDate, 
-                        QuantityReceived, CurrentStock, MinimumSellingPrice, CreatedAt
-                    ) VALUES (
-                        @ProductId, @DivisionId, @BatchNumber, @MfgDate, @ExpiryDate, 
-                        @QuantityReceived, @CurrentStock, @MinimumSellingPrice, NOW()
-                    );";
+                // Insert batch only if provided
+                if (initialBatch != null)
+                {
+                    initialBatch.ProductId = generatedProductId;
 
-                await conn.ExecuteAsync(batchSql, initialBatch, transaction);
+                    const string batchSql = @"
+                INSERT INTO ProductBatches (
+                    ProductId, DivisionId, BatchNumber, MfgDate, ExpiryDate, 
+                    QuantityReceived, CurrentStock, MinimumSellingPrice, CreatedAt
+                ) VALUES (
+                    @ProductId, @DivisionId, @BatchNumber, @MfgDate, @ExpiryDate, 
+                    @QuantityReceived, @CurrentStock, @MinimumSellingPrice, NOW()
+                );";
+
+                    await conn.ExecuteAsync(batchSql, initialBatch, transaction);
+                }
 
                 transaction.Commit();
                 return generatedProductId;

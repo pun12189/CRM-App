@@ -51,74 +51,22 @@
                                 Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0"/>
                             <Button Grid.Column="2" Content="NEW ORDER" Command="{Binding AddNewOrderCommand}" 
                                  Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0" HorizontalAlignment="Right"/>
-                            <ComboBox Grid.Column="3" x:Name="AskAIComboBox" Height="34" Padding="10,0"
-                              Style="{StaticResource MaterialDesignOutlinedComboBox}"
-                              materialDesign:HintAssist.Hint="Ask AI"
-                              materialDesign:HintAssist.Foreground="#7B1FA2"
-                              BorderBrush="#7B1FA2"
-                              Foreground="#4A148C"
-                              FontWeight="SemiBold"
-                              Width="150"
-                              VerticalAlignment="Center">
-                                <ComboBoxItem Padding="8,6">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="FileExcel" 
-                                     Foreground="#1D6F42" 
-                                     Width="22" Height="22" 
-                                     Margin="0,0,12,0" 
-                                     VerticalAlignment="Center"/>
-                                        <TextBlock Text="Upload Excel" 
-                       Foreground="#2E7D32" 
-                       FontWeight="SemiBold" 
-                       VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </ComboBoxItem>
 
-                                <!-- Upload Image -->
-                                <ComboBoxItem Padding="8,6">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="ImageOutline" 
-                                     Foreground="#0288D1" 
-                                     Width="22" Height="22" 
-                                     Margin="0,0,12,0" 
-                                     VerticalAlignment="Center"/>
-                                        <TextBlock Text="Upload Image" 
-                       Foreground="#0277BD" 
-                       FontWeight="SemiBold" 
-                       VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </ComboBoxItem>
-
-                                <!-- Upload PDF -->
-                                <ComboBoxItem Padding="8,6">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="FilePdfBox" 
-                                     Foreground="#D32F2F" 
-                                     Width="22" Height="22" 
-                                     Margin="0,0,12,0" 
-                                     VerticalAlignment="Center"/>
-                                        <TextBlock Text="Upload Pdf" 
-                       Foreground="#C62828" 
-                       FontWeight="SemiBold" 
-                       VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </ComboBoxItem>
-
-                                <!-- Prompt / AI -->
-                                <ComboBoxItem Padding="8,6">
-                                    <StackPanel Orientation="Horizontal">
-                                        <materialDesign:PackIcon Kind="Sparkles" 
-                                     Foreground="#FFB300" 
-                                     Width="22" Height="22" 
-                                     Margin="0,0,12,0" 
-                                     VerticalAlignment="Center"/>
-                                        <TextBlock Text="Prompt" 
-                       Foreground="#6A1B9A" 
-                       FontWeight="Bold" 
-                       VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </ComboBoxItem>
-                            </ComboBox>
+                            <Menu Grid.Column="3" Background="#d47131" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0">
+                                <MenuItem Header="ASK AI" Icon="{materialDesign:PackIcon Kind=Sparkles}" FontWeight="SemiBold" FontSize="13" Height="32" Padding="10,5,20,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                                <MenuItem Height="32" Width="30" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+                                    <MenuItem.Header>
+                                        <materialDesign:PackIcon Kind="MenuDown" Width="20" Height="20" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="2,2,0,0"/>
+                                    </MenuItem.Header>
+                                    <MenuItem.Items>
+                                        <MenuItem Header="Upload Excel" Icon="{materialDesign:PackIcon Kind=MicrosoftExcel}" Height="30" Padding="10,5,20,0" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#1D6F42"/>
+                                        <MenuItem Header="Upload Image" Icon="{materialDesign:PackIcon Kind=Image360}" Height="30" Padding="10,5,20,0" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#0288D1" />
+                                        <MenuItem Header="Upload Pdf" Icon="{materialDesign:PackIcon Kind=AutoUpload}" Height="30" Padding="10,5,20,0" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#D32F2F" />
+                                        <MenuItem Header="Prompt" Icon="{materialDesign:PackIcon Kind=AutoFix}" Height="30" Padding="10,5,20,0" FontSize="12" FontWeight="SemiBold" Background="White" Foreground="#FFB300" />
+                                        
+                                    </MenuItem.Items>
+                                </MenuItem>
+                            </Menu>                            
                             
                             <ToggleButton Grid.Column="4" 
                               IsChecked="{Binding IsCounterPanelExpanded}" 
@@ -350,15 +298,16 @@
                                         </TextBlock>
 
                                         <!-- Compact Order Type Tag -->
-                                        <Border x:Name="TypeBadge" CornerRadius="3" Padding="4,1" Margin="0,2,0,0" HorizontalAlignment="Center" Background="#16A34A">
-                                            <TextBlock Text="{Binding OrderType}" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                        <Border CornerRadius="3" Padding="4,1" Margin="0,2,0,0" HorizontalAlignment="Center" Background="LightBlue">
+                                            <TextBlock Text="{Binding InvoiceNumber, StringFormat='Ref id: {0}'}" FontSize="9" FontWeight="Bold" Foreground="Black">
+                                                <TextBlock.InputBindings>
+                                                    <MouseBinding MouseAction="LeftClick" 
+                                                      Command="{Binding DataContext.ShowOrderDetailsCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
+                                                      CommandParameter="{Binding}" />
+                                                </TextBlock.InputBindings>
+                                            </TextBlock>
                                         </Border>
-                                    </StackPanel>
-                                    <DataTemplate.Triggers>
-                                        <DataTrigger Binding="{Binding OrderType}" Value="Repeat">
-                                            <Setter TargetName="TypeBadge" Property="Background" Value="#2563EB"/>
-                                        </DataTrigger>
-                                    </DataTemplate.Triggers>
+                                    </StackPanel>                                    
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
@@ -376,29 +325,45 @@
                         </DataGridTemplateColumn>
 
                         <!-- 3. TOTAL PRICE -->
-                        <DataGridTextColumn Header="Total Price" Binding="{Binding TotalAmount, StringFormat=C0, ConverterCulture=en-IN}" Width="1.1*">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Center"/>
-                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                    <Setter Property="Margin" Value="0,0,8,0"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-
+                        <DataGridTemplateColumn Header="Total Price" Width="1.1*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,8,0">
+                                        <TextBlock Text="{Binding TotalAmount, StringFormat=C0, ConverterCulture=en-IN}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" FontSize="12"/>
+                                        <Border x:Name="TypeBadge" CornerRadius="3" Padding="4,1" Margin="0,2,0,0" HorizontalAlignment="Center" Background="#16A34A">
+                                            <TextBlock Text="{Binding OrderType}" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding OrderType}" Value="Repeat">
+                                            <Setter TargetName="TypeBadge" Property="Background" Value="#2563EB"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        
                         <!-- 4. BALANCE -->
-                        <DataGridTextColumn Header="Balance" Binding="{Binding OrderBalance, StringFormat=C0, ConverterCulture=en-IN}" Width="1.1*">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Center"/>
-                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                    <Setter Property="Foreground" Value="#DC2626"/>
-                                    <Setter Property="Margin" Value="0,0,8,0"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
+                        <DataGridTemplateColumn Header="Balance" Width="1.1*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,8,0">
+                                        <TextBlock Text="{Binding OrderBalance, StringFormat=C0, ConverterCulture=en-IN}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="#DC2626" FontSize="12"/>
+                                        <Border x:Name="PaymentBadge" CornerRadius="3" Padding="4,1" Margin="0,2,0,0" HorizontalAlignment="Center" Background="#DC2626">
+                                            <TextBlock Text="{Binding PaymentStatus}" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding PaymentStatus}" Value="Fully Paid">
+                                            <Setter TargetName="PaymentBadge" Property="Background" Value="#16A34A"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding PaymentStatus}" Value="Partially Paid">
+                                            <Setter TargetName="PaymentBadge" Property="Background" Value="#EA580C"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
                         <!-- 5. STATUS & PAYMENT STATUS (COMBINED) -->
                         <DataGridTemplateColumn Header="Status" Width="1.4*">
@@ -406,13 +371,8 @@
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
                                         <!-- Order Status Badge -->
-                                        <Border x:Name="StatusBadge" CornerRadius="3" Padding="6,2" Margin="0,0,0,2" Background="#DC2626" HorizontalAlignment="Center">
+                                        <Border x:Name="StatusBadge" CornerRadius="3" Padding="6,2" Margin="0,0,0,2" Background="#d1622a" HorizontalAlignment="Center">
                                             <TextBlock Text="{Binding Status}" FontSize="10" FontWeight="Bold" Foreground="White"/>
-                                        </Border>
-
-                                        <!-- Payment Status Badge -->
-                                        <Border x:Name="PaymentBadge" CornerRadius="3" Padding="6,2" Background="#DC2626" HorizontalAlignment="Center">
-                                            <TextBlock Text="{Binding PaymentStatus}" FontSize="10" FontWeight="Bold" Foreground="White"/>
                                         </Border>
                                     </StackPanel>
 
@@ -423,14 +383,6 @@
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Status}" Value="Accepted">
                                             <Setter TargetName="StatusBadge" Property="Background" Value="#D97706"/>
-                                        </DataTrigger>
-
-                                        <!-- Payment Status Triggers -->
-                                        <DataTrigger Binding="{Binding PaymentStatus}" Value="Fully Paid">
-                                            <Setter TargetName="PaymentBadge" Property="Background" Value="#16A34A"/>
-                                        </DataTrigger>
-                                        <DataTrigger Binding="{Binding PaymentStatus}" Value="Partially Paid">
-                                            <Setter TargetName="PaymentBadge" Property="Background" Value="#EA580C"/>
                                         </DataTrigger>
                                     </DataTemplate.Triggers>
                                 </DataTemplate>
@@ -459,7 +411,7 @@
                                         </materialDesign:PopupBox.ToggleContent>                                        
 
                                         <StackPanel Width="140" Margin="2">
-                                            <Button Command="{Binding DataContext.DownloadInvoiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+                                            <Button Command="{Binding DataContext.PrintTaxInvoiceCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                                                 CommandParameter="{Binding}" Style="{StaticResource MaterialDesignFlatButton}" HorizontalContentAlignment="Left" Height="32" Padding="6,0">
                                                 <StackPanel Orientation="Horizontal">
                                                     <materialDesign:PackIcon Kind="Download" Width="14" Height="14" Foreground="#2563EB" Margin="0,0,6,0" VerticalAlignment="Center"/>
@@ -487,30 +439,27 @@
                         </DataGridTemplateColumn>
 
                         <!-- 7. TEAM / ASSIGNED (COMBINED LEAD HOLDER & PROCESSED BY) -->
-                        <DataGridTemplateColumn Header="Assigned / Taken" Width="1.2*">
+                        <DataGridTemplateColumn Header="Assigned" Width="1.2*">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding LeadHolder, TargetNullValue='—'}" FontSize="11" Foreground="#475569" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="{Binding ProcessedBy, StringFormat='By: {0}'}" FontSize="10" Foreground="#94A3B8" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{Binding LeadHolder, TargetNullValue='—'}" FontSize="11" Foreground="#475569" HorizontalAlignment="Center"/>                                        
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
                         <!-- 8. CREATED AT -->
-                        <DataGridTextColumn Header="Created At" Binding="{Binding OrderDate, StringFormat='dd-MM-yyyy'}" Width="110">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="HorizontalAlignment" Value="Center"/>
-                                    <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="TextAlignment" Value="Center"/>
-                                    <Setter Property="FontSize" Value="11"/>
-                                    <Setter Property="Foreground" Value="#475569"/>
-                                    <Setter Property="TextWrapping" Value="Wrap"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
+                        <DataGridTemplateColumn Header="Created By" Width="1.2*">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,8,0">
+                                        <TextBlock Text="{Binding ProcessedBy, TargetNullValue='—'}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" Foreground="#4177c4"/>
+                                        <TextBlock Text="{Binding OrderDate, StringFormat='dd-MM-yyyy'}" FontSize="10" TextWrapping="Wrap" Foreground="#475569"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
 
                         <!-- 9. ACTION BUTTONS -->
                         <DataGridTemplateColumn Header="Action" Width="70">

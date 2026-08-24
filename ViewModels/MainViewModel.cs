@@ -82,7 +82,7 @@ namespace Tijori.ViewModels
             // Load Dashboard by default
             _ = Navigate("Dashboard");
 
-            SetupIdleTimer();
+            // SetupIdleTimer();
 
             LoadingService.OnLoadingStateChanged += HandleGlobalLoadingEvent;
         }
@@ -294,6 +294,30 @@ namespace Tijori.ViewModels
                         }, DispatcherPriority.Background);
 
                         break;
+                    case "ServiceOrder":
+                        var vm11 = _serviceProvider.GetRequiredService<ServiceOrderViewModel>();
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm11;
+                        }, DispatcherPriority.Background);
+
+                        break;
+                    case "Batch":
+                        var vm12 = _serviceProvider.GetRequiredService<BatchTrackerViewModel>();
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm12;
+                        }, DispatcherPriority.Background);
+
+                        break;
+                    case "StockLedger":
+                        var vm13 = _serviceProvider.GetRequiredService<StockLedgerViewModel>();
+                        await App.Current.Dispatcher.InvokeAsync(() =>
+                        {
+                            CurrentView = vm13;
+                        }, DispatcherPriority.Background);
+
+                        break;
                         // Add other cases as you build them
                 }
             }
@@ -332,7 +356,7 @@ namespace Tijori.ViewModels
         [RelayCommand]
         private async Task Logout()
         {
-            _idleTimer.Stop();
+            //_idleTimer.Stop();
 
             if (_session.LogId > 0)
             {

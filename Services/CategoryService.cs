@@ -20,18 +20,21 @@ namespace Tijori.Services
         private readonly CrmDbContext _context;
         public CategoryService(CrmDbContext context) => _context = context;
 
+        /// <summary>
+        /// Fetches category tree in-memory hierarchy.
+        /// </summary>
         public async Task<List<Category>> GetCategoryTreeAsync()
         {
             using var db = _context.CreateConnection();
-            var allCategories = (await db.QueryAsync<Category>("SELECT * FROM Categories")).ToList();
+            const string sql = "SELECT Id, CategoryName, ParentId, HierarchyLevel, CategoryType FROM categories";
+            var allCategories = (await db.QueryAsync<Category>(sql)).ToList();
 
-            // Map children to parents in memory
             var lookup = allCategories.ToDictionary(x => x.Id);
             var rootNodes = new List<Category>();
 
             foreach (var cat in allCategories)
             {
-                if (cat.ParentId == null)
+                if (cat.ParentId == null || cat.ParentId == 0)
                 {
                     rootNodes.Add(cat);
                 }
@@ -44,27 +47,28 @@ namespace Tijori.Services
         }
 
         /// <summary>
-        /// Fetches all categories with their Parent's Name using a Left Join.
-        /// Used for the tabular view in Admin Settings.
+        /// Fetches all categories with their Parent's Name, HierarchyLevel, and CategoryType using a Left Join.
         /// </summary>
         public async Task<IEnumerable<Category>> GetAllCategoriesAsync()
         {
             using var db = _context.CreateConnection();
-            string sql = @"
-            SELECT 
-                child.Id, 
-                child.CategoryName, 
-                child.ParentId, 
-                parent.CategoryName as ParentName
-            FROM Categories child
-            LEFT JOIN Categories parent ON child.ParentId = parent.Id
-            ORDER BY child.CategoryName ASC";
+            const string sql = @"
+        SELECT 
+            child.Id, 
+            child.CategoryName, 
+            child.ParentId, 
+            child.HierarchyLevel,
+            child.CategoryType,
+            parent.CategoryName AS ParentName
+        FROM categories child
+        LEFT JOIN categories parent ON child.ParentId = parent.Id
+        ORDER BY child.CategoryName ASC";
 
             return await db.QueryAsync<Category>(sql);
         }
 
         /// <summary>
-        /// Handles both Insert and Update for Categories.
+        /// Handles both Insert and Update for categories including HierarchyLevel and CategoryType.
         /// </summary>
         public async Task<bool> UpsertCategoryAsync(Category category)
         {
@@ -73,27 +77,29 @@ namespace Tijori.Services
 
             if (category.Id == 0) // New Category
             {
-                sql = @"INSERT INTO Categories (CategoryName, ParentId) 
-                    VALUES (@CategoryName, @ParentId)";
+                sql = @"INSERT INTO categories (CategoryName, ParentId, HierarchyLevel, CategoryType) 
+                VALUES (@CategoryName, @ParentId, @HierarchyLevel, @CategoryType)";
             }
             else // Update Existing
             {
-                sql = @"UPDATE Categories 
-                    SET CategoryName = @CategoryName, ParentId = @ParentId 
-                    WHERE Id = @Id";
+                sql = @"UPDATE categories 
+                SET CategoryName = @CategoryName, 
+                    ParentId = @ParentId, 
+                    HierarchyLevel = @HierarchyLevel,
+                    CategoryType = @CategoryType 
+                WHERE Id = @Id";
             }
 
             return await db.ExecuteAsync(sql, category) > 0;
         }
 
         /// <summary>
-        /// Deletes a category. 
-        /// Note: Ensure the DB has ON DELETE CASCADE or handle subcategories first.
+        /// Deletes a category by Id.
         /// </summary>
         public async Task<bool> DeleteCategoryAsync(int id)
         {
             using var db = _context.CreateConnection();
-            string sql = "DELETE FROM Categories WHERE Id = @id";
+            const string sql = "DELETE FROM categories WHERE Id = @id";
             return await db.ExecuteAsync(sql, new { id }) > 0;
         }
 

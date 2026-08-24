@@ -50,6 +50,7 @@ namespace Tijori.Views
                     case "LeadSettings": targetSection = SecLeadSettings; break;
                     case "Integrations": targetSection = SecIntegrations; break;
                     case "Automations": targetSection = SecAutomations; break;
+                    case "Manufacturing": targetSection = SecManufacturing; break;
                 }
 
                 if (targetSection != null)
@@ -103,11 +104,16 @@ namespace Tijori.Views
             double leadSettingsTop = GetSectionTopOffset(SecLeadSettings);
             double integrationsTop = GetSectionTopOffset(SecIntegrations);
             double automationsTop = GetSectionTopOffset(SecAutomations);
+            double manufacturingTop = GetSectionTopOffset(SecManufacturing);
 
             // Turn off event hooks temporarily to change check states safely without loops
             _isInternalScrollUpdate = true;
 
-            if (currentOffset >= automationsTop - scrollBuffer || currentOffset >= MainWorkspaceScroller.ScrollableHeight - 10)
+            if (currentOffset >= manufacturingTop - scrollBuffer || currentOffset >= MainWorkspaceScroller.ScrollableHeight - 10)
+            {
+                RbManufacturing.IsChecked = true;
+            }
+            else if (currentOffset >= automationsTop - scrollBuffer)
             {
                 RbAutomations.IsChecked = true;
             }

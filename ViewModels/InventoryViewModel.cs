@@ -106,7 +106,7 @@ namespace Tijori.ViewModels
             OnPropertyChanged(nameof(FilteredProducts));
 
             RefreshDashboardMetrics();
-        }
+            }
 
         [RelayCommand]
         private async Task ToggleBatchDetails(Product selectedProduct)
@@ -130,6 +130,8 @@ namespace Tijori.ViewModels
                 }
 
                 selectedProduct.IsExpanded = true;
+
+                selectedProduct.TotalBatchesCount = selectedProduct.InnerBatchesCollection.Count;
             }
         }
 

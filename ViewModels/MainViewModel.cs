@@ -82,7 +82,7 @@ namespace Tijori.ViewModels
             // Load Dashboard by default
             _ = Navigate("Dashboard");
 
-            SetupIdleTimer();
+            // SetupIdleTimer();
 
             LoadingService.OnLoadingStateChanged += HandleGlobalLoadingEvent;
         }
@@ -356,7 +356,7 @@ namespace Tijori.ViewModels
         [RelayCommand]
         private async Task Logout()
         {
-            _idleTimer.Stop();
+            //_idleTimer.Stop();
 
             if (_session.LogId > 0)
             {

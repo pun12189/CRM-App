@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media.Imaging;
+using Tijori.Models.Enums;
 
 namespace Tijori.Models
 {
@@ -23,6 +24,7 @@ namespace Tijori.Models
         [ObservableProperty] private string _unit = "Pcs";
         [ObservableProperty] private int _categoryId;
         [ObservableProperty] private string _categoryName = string.Empty; // For Display
+        public ItemClassification CategoryType { get; set; }
 
         [ObservableProperty] private string _manufacturer = string.Empty;
         [ObservableProperty] private string _packaging = string.Empty;

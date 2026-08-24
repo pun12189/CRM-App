@@ -1,7 +1,4 @@
-﻿using Tijori.Data;
-using Tijori.Models;
-using Tijori.Models.Enums;
-using Dapper;
+﻿using Dapper;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Mysqlx.Crud;
 using Org.BouncyCastle.Asn1.X509;
@@ -11,8 +8,12 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Transactions;
+using Tijori.Data;
+using Tijori.Models;
+using Tijori.Models.Enums;
 
 namespace Tijori.Services
 {
@@ -1621,31 +1622,50 @@ ORDER BY l.LeadId DESC;";
 
         public async Task<IEnumerable<GlobalSearchRowItem>> SearchGlobalQueryAsync(string textPattern)
         {
+            if (string.IsNullOrWhiteSpace(textPattern))
+                return Enumerable.Empty<GlobalSearchRowItem>();
+
             try
             {
                 using var conn = _context.CreateConnection();
 
-                // Sweeps across the primary Name, Contact, and Office fields in a single rapid pass
-                string sql = @"
-                    SELECT 
-                        LeadId AS Id, 
-                        CustomerName, 
-                        CompanyName, 
-                        Phone,
-                        AltPhone,
-                        IF(CompanyName IS NOT NULL AND CompanyName != '', 1, 0) AS HasCompany
-                    FROM Leads
-                    WHERE CustomerName LIKE @Query 
-                       OR Phone LIKE @Query 
-                       OR AltPhone LIKE @Query
-                       OR CompanyName LIKE @Query
-                    LIMIT 8;";
+                // 1. Clean digits for phone matching (removes +, spaces, dashes, parentheses)
+                string cleanDigits = Regex.Replace(textPattern, @"[^\d]", "");
 
-                var rows = await conn.QueryAsync<GlobalSearchRowItem>(sql, new { Query = $"%{textPattern}%" });
+                // Strip country code prefix (e.g. 91xxxxxxxxxx -> xxxxxxxxxx) if present
+                if (cleanDigits.StartsWith("91") && cleanDigits.Length > 10)
+                {
+                    cleanDigits = cleanDigits.Substring(2);
+                }
+
+                // 2. MySQL Query: Cleans spaces/hyphens on DB side for Phone & AltPhone comparison
+                const string sql = @"
+            SELECT 
+                LeadId AS Id, 
+                CustomerName, 
+                CompanyName, 
+                Phone, 
+                AltPhone,
+                IF(CompanyName IS NOT NULL AND CompanyName != '', 1, 0) AS HasCompany
+            FROM Leads
+            WHERE CustomerName LIKE @Query 
+               OR CompanyName LIKE @Query
+               OR REPLACE(REPLACE(REPLACE(REPLACE(IFNULL(Phone, ''), ' ', ''), '-', ''), '+', ''), '(', '') LIKE @PhoneQuery
+               OR REPLACE(REPLACE(REPLACE(REPLACE(IFNULL(AltPhone, ''), ' ', ''), '-', ''), '+', ''), '(', '') LIKE @PhoneQuery
+            LIMIT 8;";
+
+                var rows = await conn.QueryAsync<GlobalSearchRowItem>(sql, new
+                {
+                    Query = $"%{textPattern.Trim()}%",
+                    PhoneQuery = string.IsNullOrEmpty(cleanDigits) ? $"%{textPattern.Trim()}%" : $"%{cleanDigits}%"
+                });
 
                 return rows;
             }
-            catch { return Enumerable.Empty<GlobalSearchRowItem>(); }
+            catch
+            {
+                return Enumerable.Empty<GlobalSearchRowItem>();
+            }
         }
 
         public async Task<IEnumerable<Lead>> GetCustomerByDashboardContextAsync(DashboardTargetView target, DashboardFilter? filter)

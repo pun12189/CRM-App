@@ -45,7 +45,19 @@
                     <TextBlock Text="Adjust parameters, global ledger flags, margin allocations, and workflow triggers." Style="{StaticResource MaterialDesignBody2TextBlock}" Opacity="0.7" Margin="0,4,0,0"/>
                 </StackPanel>
 
-                <Button DockPanel.Dock="Right" Content="+ CREATE CATEGORY" Command="{Binding OpenAddCategoryCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Background="#1794A1" BorderBrush="#1794A1" Height="42"/>
+                <Button DockPanel.Dock="Right" Content="+ CREATE CATEGORY" Command="{Binding OpenAddCategoryCommand}" Background="#1794A1" BorderBrush="#1794A1" Height="42">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <!-- 🌟 Hide button when Items domain is selected 🌟 -->
+                                <DataTrigger Binding="{Binding SelectedContext}" Value="{x:Static enums:CategoryContext.Items}">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
             </DockPanel>
 
             <ContentControl Grid.Row="1">

@@ -40,6 +40,9 @@ namespace Tijori.ViewModels
         [ObservableProperty]
         private string _searchText = string.Empty;
 
+        [ObservableProperty]
+        private string _pageName = "Today Tasks";
+
         // This is what the DataGrid actually binds to now
         public ICollectionView LeadsCollection => _leadsCollection;
 
@@ -120,10 +123,12 @@ namespace Tijori.ViewModels
             if (mode == LeadViewMode.FutureFollowUp)
             {
                 IsFuture = true;
+                this.PageName = "Future Tasks";
             }
             else
             {
                 IsFuture = false;
+                this.PageName = "Today Tasks";
             }
 
             await LoadLeads();
@@ -323,7 +328,7 @@ namespace Tijori.ViewModels
 
             // Reminders: Follow-up date is today or overdue
             RemindersCount = _rawLeadsList.Count(l => IsReminderDue(l));
-        }
+        }       
 
         private async Task LoadLeads()
         {
@@ -373,7 +378,7 @@ namespace Tijori.ViewModels
 
             if (card.RawModel is Lead lead)
             {
-                return FilterLeads(lead);
+                return CombinedFilter(lead);
             }
 
             return card.PrimaryTitle.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
@@ -386,6 +391,11 @@ namespace Tijori.ViewModels
         {
             _leadsCollection?.Refresh();
             _cardsCollection?.Refresh();
+        }
+
+        private bool IsCustomer(Lead l)
+        {
+            return string.Equals(l.Status.ToLower(), "matured", StringComparison.OrdinalIgnoreCase);
         }
 
         private bool IsReminderDue(Lead l)
@@ -438,13 +448,7 @@ namespace Tijori.ViewModels
                    (lead.CustomFields?.Any(cf => cf.Key.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false) ||
                    (lead.LeadSource?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.LeadTag?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false);
-        }
-
-        // This logic runs every time SearchText changes
-        partial void OnSearchTextChanged(string value)
-        {
-            _leadsCollection?.Refresh();
-        }        
+        }    
 
         [RelayCommand]
         private void OpenAddLeadDialog()

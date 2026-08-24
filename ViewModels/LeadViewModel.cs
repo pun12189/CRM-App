@@ -1,19 +1,21 @@
-﻿using Tijori.Dialogs;
-using Tijori.Interfaces;
-using Tijori.Models;
-using Tijori.Models.Enums;
-using Tijori.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DocumentFormat.OpenXml.InkML;
 using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Extensions.DependencyInjection;
+using PdfSharp.Pdf.Filters;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Formats.Tar;
 using System.Windows;
 using System.Windows.Data;
+using Tijori.Dialogs;
+using Tijori.Helper;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Models.Enums;
+using Tijori.Services;
 
 namespace Tijori.ViewModels
 {
@@ -30,7 +32,15 @@ namespace Tijori.ViewModels
         private readonly NotificationRoutingService _routingService;
         private readonly CategoryService _categoryService;
         private readonly IActionSecurityGuard _securityGuard;
+
         private ICollectionView _leadsCollection;
+        private ICollectionView _cardsCollection;
+
+        // ==========================================
+        // 1. VIEW MODE & SEARCH / FILTER STATE
+        // ==========================================
+        [ObservableProperty]
+        private WorkspaceViewMode _currentViewMode = WorkspaceViewMode.Table;
 
         // 1. Pagination Core State Tracking Variables
         [ObservableProperty]
@@ -63,6 +73,9 @@ namespace Tijori.ViewModels
 
         // This is what the DataGrid actually binds to now
         public ICollectionView LeadsCollection => _leadsCollection;
+
+        // Bound to Generic Tile / Card View
+        public ICollectionView CardsCollection => _cardsCollection;
 
         [ObservableProperty] private bool _workspaceViewIsActive;
         [ObservableProperty] private Lead? _activeProfileLead;
@@ -151,6 +164,14 @@ namespace Tijori.ViewModels
             foreach (var item in LeadsCollection.Cast<Lead>())
             {
                 item.IsSelectedForAction = isChecked.Value;
+            }
+
+            if (CardsCollection != null)
+            {
+                foreach (var card in CardsCollection.Cast<ITileCardItem>())
+                {
+                    card.IsSelectedForAction = isChecked.Value;
+                }
             }
         }
 
@@ -423,6 +444,11 @@ namespace Tijori.ViewModels
                     // 4. Re-apply your search filter logic
                     _leadsCollection.Filter = FilterLeads;
 
+                    var cardList = new ObservableCollection<ITileCardItem>(list.Select(l => l.ToTileCard()));
+                    _cardsCollection = CollectionViewSource.GetDefaultView(cardList);
+                    _cardsCollection.Filter = FilterCards;
+                    OnPropertyChanged(nameof(CardsCollection));
+
                     // 5. Notify the UI to refresh the table
                     OnPropertyChanged(nameof(LeadsCollection));
 
@@ -446,6 +472,7 @@ namespace Tijori.ViewModels
         partial void OnSearchTextChanged(string value)
         {
             _leadsCollection?.Refresh();
+            _cardsCollection?.Refresh();
         }
 
         private bool FilterLeads(object obj)
@@ -471,6 +498,21 @@ namespace Tijori.ViewModels
                    (lead.CustomFields?.Any(cf => cf.Key.Contains(SearchText, StringComparison.OrdinalIgnoreCase)) ?? false) ||
                    (lead.LeadSource?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
                    (lead.LeadTag?.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ?? false);
+        }
+
+        private bool FilterCards(object obj)
+        {
+            if (obj is not ITileCardItem card) return false;
+            if (string.IsNullOrWhiteSpace(SearchText)) return true;
+
+            if (card.RawModel is Lead lead)
+            {
+                return FilterLeads(lead);
+            }
+
+            return card.PrimaryTitle.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                   card.HeaderTag.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                   card.OwnerOrMetaLabel.Contains(SearchText, StringComparison.OrdinalIgnoreCase);
         }
 
         [RelayCommand]
@@ -513,6 +555,18 @@ namespace Tijori.ViewModels
             }
         }
 
+        // ==========================================
+        // 6. GENERIC TILE / CARD ACTION DISPATCHERS
+        // ==========================================
+        [RelayCommand]
+        private async Task EditItem(object? rawModel)
+        {
+            if (rawModel is Lead lead)
+            {
+                await EditLead(lead);
+            }
+        }
+
         [RelayCommand]
         private async Task EditLead(Lead leadToEdit)
         {
@@ -531,6 +585,15 @@ namespace Tijori.ViewModels
             if (dialogWindow.ShowDialog() == true)
             {
                 await LoadLeads(); // Refresh list after update                
+            }
+        }
+
+        [RelayCommand]
+        private async Task DeleteItem(object? rawModel)
+        {
+            if (rawModel is Lead lead)
+            {
+                await DeleteLead(lead);
             }
         }
 
@@ -564,6 +627,15 @@ namespace Tijori.ViewModels
             historyWindow.DataContext = historyVm;
             historyWindow.Owner = App.Current.MainWindow; // Set parent window
             historyWindow.ShowDialog();
+        }
+
+        [RelayCommand]
+        private void MoreOptions(object? rawModel)
+        {
+            if (rawModel is Lead lead)
+            {
+                OpenLeadProfile(lead);
+            }
         }
 
         [RelayCommand]
@@ -669,10 +741,24 @@ namespace Tijori.ViewModels
 
                 // Tell the WPF DataGrid explicitly to drop its visual index cache and look at the new collection
                 OnPropertyChanged(nameof(LeadsCollection));
+
+                var cardList = new ObservableCollection<ITileCardItem>(list.Select(l => l.ToTileCard()));
+                _cardsCollection = CollectionViewSource.GetDefaultView(cardList);
+                _cardsCollection.Filter = FilterCards;
+                OnPropertyChanged(nameof(CardsCollection));
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message);
+            }
+        }
+
+        [RelayCommand]
+        private void UpdateStatus(object? rawModel)
+        {
+            if (rawModel is Lead lead)
+            {
+                ShowLeadWorkspace(lead);
             }
         }
 
@@ -769,6 +855,12 @@ namespace Tijori.ViewModels
             {
                 CurrentPage--;
             }
+        }
+
+        [RelayCommand]
+        private void ItemSelectionChanged(object? item)
+        {
+            RecalculateSelectionStates();
         }
     }
 }

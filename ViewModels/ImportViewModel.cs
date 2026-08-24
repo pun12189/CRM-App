@@ -1041,7 +1041,7 @@ namespace Tijori.ViewModels
             OnPropertyChanged(nameof(IsMapped));
             // Trigger parent to remove this selected header from all other dropdown options
             _parentViewModel?.RefreshAvailableHeadersForAllRows();
-            _parentViewModel?.UpdateUnmappedHeadersAndTier2Lists();
+            // _parentViewModel?.UpdateUnmappedHeadersAndTier2Lists();
         }
     }
 }

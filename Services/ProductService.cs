@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DocumentFormat.OpenXml.Wordprocessing;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -49,11 +50,10 @@ namespace Tijori.Services
                         SUM(CurrentStock) AS AggStock,
                         COUNT(BatchId) AS BatchCount,
                         SUM(CurrentStock * MinimumSellingPrice) AS TotalValue
-                    FROM ProductBatches
-                    WHERE DivisionId = @DivId
+                    FROM ProductBatches                    
                     GROUP BY ProductId
                 ) b ON p.ProductId = b.ProductId        
-                ORDER BY p.Name ASC;";
+                ORDER BY p.Name ASC;"; /*WHERE DivisionId = @DivId*/
 
             return await db.QueryAsync<Product>(sql, new { DivId = divisionId });
         }
@@ -61,8 +61,8 @@ namespace Tijori.Services
         public async Task<IEnumerable<Product>> GetProductsWithBatchesAsync(int divisionId)
         {
             const string sql = @"
-                SELECT * FROM Products WHERE DivisionId = @DivId;
-                SELECT * FROM ProductBatches WHERE DivisionId = @DivId AND CurrentStock > 0;";
+                SELECT * FROM Products;
+                SELECT * FROM ProductBatches;"; /*WHERE DivisionId = @DivId -- both queries are executed in a single round-trip to the database*/
 
             using var db = _context.CreateConnection();
             using var gridReader = await db.QueryMultipleAsync(sql, new { DivId = divisionId });
@@ -110,8 +110,8 @@ namespace Tijori.Services
                     MfgDate, ExpiryDate, QuantityReceived, CurrentStock, 
                     MinimumSellingPrice, CreatedAt
                 FROM ProductBatches
-                WHERE ProductId = @ProdId AND DivisionId = @DivId
-                ORDER BY ExpiryDate ASC, BatchId DESC;";
+                WHERE ProductId = @ProdId 
+                ORDER BY ExpiryDate ASC, BatchId DESC;"; /*AND DivisionId = @DivId*/
 
             try
             {

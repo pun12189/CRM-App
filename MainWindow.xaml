@@ -225,6 +225,7 @@
                               SelectedItem="{Binding SelectedGlobalSearchLead}"
                               Text="{Binding GlobalSearchQueryText, UpdateSourceTrigger=PropertyChanged}"
                               IsEditable="True"
+                                  IsTextSearchEnabled="False"
                               materialDesign:HintAssist.Hint="Search for leads, customers, phone numbers..."
                               materialDesign:TextFieldAssist.HasClearButton="True"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"

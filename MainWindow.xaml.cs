@@ -126,6 +126,13 @@ namespace Tijori
                     // Cleanly close the dropdown box if the search query is completely erased
                     comboBox.IsDropDownOpen = false;
                 }
+
+                if (comboBox.Template.FindName("PART_EditableTextBox", comboBox) is TextBox textBox)
+                {
+                    // Deselect text and keep caret at the end
+                    textBox.SelectionLength = 0;
+                    textBox.CaretIndex = textBox.Text.Length;
+                }
             }
         }
 

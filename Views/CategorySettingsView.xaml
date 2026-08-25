@@ -39,7 +39,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,25">
+            <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,15">
                 <StackPanel DockPanel.Dock="Left">
                     <TextBlock Text="Category Registry" Style="{StaticResource MaterialDesignTitleMediumTextBlock}" FontWeight="Bold"/>
                     <TextBlock Text="Adjust parameters, global ledger flags, margin allocations, and workflow triggers." Style="{StaticResource MaterialDesignBody2TextBlock}" Opacity="0.7" Margin="0,4,0,0"/>

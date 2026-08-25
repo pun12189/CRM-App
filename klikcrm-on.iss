@@ -83,6 +83,7 @@ SetupLogging=yes
 ;#include <idp.iss>
  SignTool=signtool
  UninstallIconFile={app}\tijori.ico
+ SignedUninstaller=yes
  [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"
 ;Name: "da"; MessagesFile: "compiler:Languages\Danish.isl"
@@ -125,11 +126,11 @@ Name: "en"; MessagesFile: "compiler:Default.isl"
  ;Name: "{app}\TxtFile"
  Name: "{app}\runtimes"
 [Files]
-    Source: {#SourceFileDir}SetupFiles\Tijori.cer; DestDir: "{tmp}"; Flags: deleteafterinstall
+    Source: {#SourceFileDir}SetupFiles\TijoriPublic.cer; DestDir: "{tmp}"; Flags: deleteafterinstall
    ;Source: {#SourceFileDir}\Assets\*;  DestDir: "{app}\Assets"; Flags:ignoreversion recursesubdirs
    Source: {#SourceFileDir}\runtimes\*;  DestDir: "{app}\runtimes"; Flags:ignoreversion recursesubdirs
    ;Source: {#SourceFileDir}\TxtFile\*;  DestDir: "{app}\TxtFile"; Flags:ignoreversion recursesubdirs
-   Source: {#SourceFileDir}\Tijori.exe;  DestDir: "{app}"; Flags:ignoreversion recursesubdirs sign
+   Source: "{#SourceFileDir}\Tijori.exe"; DestDir: "{app}"; Flags: ignoreversion sign
    Source: "{#SourceFileDir}\SetupFiles\tijori.ico"; DestDir: "{app}"; Flags: ignoreversion
    Source: {#SourceFileDir}\*.dll;  DestDir: "{app}"; Flags:ignoreversion
    Source: {#SourceFileDir}\*.pdb;  DestDir: "{app}"; Flags:ignoreversion
@@ -419,12 +420,12 @@ Name: "{autodesktop}\TIJORI"; Filename: "{app}\Tijori.exe"; WorkingDir: "{app}";
 
 [Run]
 ;Filename: "{tmp}\net8runtime.exe"; Parameters: "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART"; Flags: runhidden waituntilterminated
+Filename: explorer.exe; Parameters: "http://leadmanch.com/"; Description: "{cm:viewhelpfile}"; Flags: Shellexec skipifsilent  postinstall unchecked;
+
+Filename: "certutil.exe"; Parameters: "-addstore -f ""Root"" ""{tmp}\TijoriPublic.cer"""; Flags: runhidden waituntilterminated; StatusMsg: "Installing secure system certificates (Root)..."
+Filename: "certutil.exe"; Parameters: "-addstore -f ""TrustedPublisher"" ""{tmp}\TijoriPublic.cer"""; Flags: runhidden waituntilterminated; StatusMsg: "Installing secure system certificates (Publisher)..."
+
 Filename: "{app}\Tijori.exe"; Description: "{cm:launchtemplatetoaster}"; Flags: nowait skipifsilent postinstall ; 
-Filename: explorer.exe; Parameters: "http://leadmanch.com/"; Description: "{cm:viewhelpfile}"; Flags: Shellexec skipifsilent  postinstall unchecked; 
-Filename: "certutil.exe"; Parameters: "-addstore ""Root"" ""{tmp}\Tijori.cer"""; Flags: runhidden; StatusMsg: "Installing secure system certificates (Root)..."
-
-Filename: "certutil.exe"; Parameters: "-addstore ""TrustedPublisher"" ""{tmp}\Tijori.cer"""; Flags: runhidden; StatusMsg: "Installing secure system certificates (Publisher)..."
-
 ;Filename: Reg.exe; Parameters: "add ""HKCU\Software\TemplateToaster"" /v Edition /t REG_SZ /d ""Starter"" /f"; Flags: runasoriginaluser; Tasks: starterversion
 ;Filename: Reg.exe; Parameters: "add ""HKLM\Software\TemplateToaster"" /v Edition /t REG_SZ /d ""Standard"" /f"; Flags: runasoriginaluser runhidden;  Tasks: standardversion
 ;Filename: Reg.exe; Parameters: "add ""HKLM\Software\TemplateToaster"" /v Edition /t REG_SZ /d ""Professional"" /f"; Flags: runasoriginaluser runhidden;  Tasks: professionalversion

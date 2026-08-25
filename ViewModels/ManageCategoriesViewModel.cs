@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MaterialDesignThemes.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,65 +19,51 @@ namespace Tijori.ViewModels
     {
         private readonly CategoryService _service;
 
-        // Collections
+        [ObservableProperty] private bool _isDialogOpen;
+
         [ObservableProperty] private ObservableCollection<Category> _allCategories = new();
-        [ObservableProperty] private ObservableCollection<Category> _potentialParentCategories = new();
         [ObservableProperty] private ObservableCollection<ItemClassification> _availableClassifications = new();
 
-        // Form Bindings
-        [ObservableProperty] private string _newCategoryName = string.Empty;
-        [ObservableProperty] private Category? _selectedParent;
-        [ObservableProperty] private ItemClassification _selectedCategoryType = ItemClassification.FinishedGood;
+        // Dialog state bindings
+        [ObservableProperty] private string _dialogTitle = "Add Root Category";
+        [ObservableProperty] private string _dialogIcon = "FolderPlus";
+        [ObservableProperty] private string _submitButtonText = "CREATE";
+        [ObservableProperty] private string _formCategoryName = string.Empty;
+        [ObservableProperty] private ItemClassification _formCategoryType = ItemClassification.FinishedGood;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(SubmitButtonContent))]
-        [NotifyPropertyChangedFor(nameof(IsEditMode))]
-        [NotifyPropertyChangedFor(nameof(FormHeaderTitle))]
-        private Category? _editingCategory;
+        [NotifyPropertyChangedFor(nameof(HasParent))]
+        [NotifyPropertyChangedFor(nameof(ParentDisplayName))]
+        private Category? _selectedParent;
 
-        public string SubmitButtonContent => EditingCategory == null ? "ADD NEW" : "UPDATE";
-        public bool IsEditMode => EditingCategory != null;
-        public string FormHeaderTitle => EditingCategory == null ? "Add New Category" : $"Edit Category: {EditingCategory.CategoryName}";
+        [ObservableProperty] private Category? _editingCategory;
+
+        public bool HasParent => SelectedParent != null;
+        public string ParentDisplayName => SelectedParent?.CategoryName ?? string.Empty;
 
         public ManageCategoriesViewModel(CategoryService service)
         {
             _service = service;
 
             // Populate Enum options for dropdown
-            AvailableClassifications = new ObservableCollection<ItemClassification>(
-                Enum.GetValues<ItemClassification>()
-            );
-
+            AvailableClassifications = new ObservableCollection<ItemClassification>(Enum.GetValues<ItemClassification>());
             _ = LoadCategories();
-        }
-
-        // Auto-inherit CategoryType when selecting a Parent category
-        partial void OnSelectedParentChanged(Category? value)
-        {
-            // Only auto-inherit from parent if we are NOT in Edit Mode
-            if (!IsEditMode && value != null)
-            {
-                SelectedCategoryType = value.CategoryType;
-            }
         }
 
         public async Task LoadCategories()
         {
             var rawList = (await _service.GetAllCategoriesAsync()).ToList();
 
-            // 1. Group children by ParentId for fast lookup
             var lookup = rawList
                 .Where(c => c.ParentId.HasValue && c.ParentId.Value > 0)
                 .GroupBy(c => c.ParentId!.Value)
                 .ToDictionary(g => g.Key, g => g.OrderBy(c => c.CategoryName).ToList());
 
-            // 2. Identify top-level root nodes
             var rootNodes = rawList
                 .Where(c => c.ParentId == null || c.ParentId == 0 || !rawList.Any(p => p.Id == c.ParentId))
                 .OrderBy(c => c.CategoryName)
                 .ToList();
 
-            // 3. Recursive traversal to flatten the tree in exact parent-child order
             var structuredList = new List<Category>();
 
             void AppendChildren(Category parent, int currentLevel)
@@ -101,24 +88,77 @@ namespace Tijori.ViewModels
             App.Current.Dispatcher.Invoke(() =>
             {
                 AllCategories = new ObservableCollection<Category>(structuredList);
-                RefreshParentDropdown(rawList);
             });
         }
 
-        private void RefreshParentDropdown(IEnumerable<Category> list)
+        [RelayCommand]
+        private async Task OpenAddRootDialog()
         {
-            // Exclude the currently edited category and prevent self-referencing
-            var available = list
-                .Where(c => !IsEditMode || c.Id != EditingCategory?.Id)
-                .OrderBy(c => c.CategoryName);
+            EditingCategory = null;
+            SelectedParent = null;
+            FormCategoryName = string.Empty;
+            FormCategoryType = ItemClassification.FinishedGood;
 
-            PotentialParentCategories = new ObservableCollection<Category>(available);
+            DialogTitle = "Add Root Category";
+            DialogIcon = "FolderPlus";
+            SubmitButtonText = "CREATE ROOT";
+
+            IsDialogOpen = true;
+        }
+
+        [RelayCommand]
+        private async Task OpenAddSubCategoryDialog(Category parentCategory)
+        {
+            if (parentCategory == null) return;
+
+            EditingCategory = null;
+            SelectedParent = parentCategory;
+            FormCategoryName = string.Empty;
+            FormCategoryType = parentCategory.CategoryType; // Auto-inherit classification
+
+            DialogTitle = $"Add Sub-Category under '{parentCategory.CategoryName}'";
+            DialogIcon = "SubdirectoryArrowRight";
+            SubmitButtonText = "ADD SUB-CATEGORY";
+
+            IsDialogOpen = true;
+        }
+
+        [RelayCommand]
+        private async Task OpenEditDialog(Category category)
+        {
+            if (category == null) return;
+
+            EditingCategory = category;
+
+            if (category.ParentId.HasValue && category.ParentId.Value > 0)
+            {
+                SelectedParent = AllCategories.FirstOrDefault(c => c.Id == category.ParentId.Value);
+            }
+            else
+            {
+                SelectedParent = null;
+            }
+
+            FormCategoryName = category.CategoryName;
+            FormCategoryType = category.CategoryType;
+
+            DialogTitle = $"Edit '{category.CategoryName}'";
+            DialogIcon = "Pencil";
+            SubmitButtonText = "UPDATE";
+
+            IsDialogOpen = true;
+        }
+
+        [RelayCommand]
+        private void CloseDialog()
+        {
+            IsDialogOpen = false;
         }
 
         [RelayCommand]
         private async Task SaveCategory()
         {
-            if (string.IsNullOrWhiteSpace(NewCategoryName))
+            if (string.IsNullOrWhiteSpace(FormCategoryName))
             {
                 MessageBox.Show("Please enter a category name.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
@@ -127,40 +167,17 @@ namespace Tijori.ViewModels
             var category = new Category
             {
                 Id = EditingCategory?.Id ?? 0,
-                CategoryName = NewCategoryName.Trim(),
+                CategoryName = FormCategoryName.Trim(),
                 ParentId = SelectedParent?.Id,
-                CategoryType = SelectedCategoryType,
+                CategoryType = FormCategoryType,
                 HierarchyLevel = SelectedParent != null ? SelectedParent.HierarchyLevel + 1 : 0
             };
 
             await _service.UpsertCategoryAsync(category);
 
-            ClearForm();
+            // Close the dialog and refresh data
+            IsDialogOpen = false;
             await LoadCategories();
-        }
-
-        [RelayCommand]
-        private void Edit(Category category)
-        {
-            if (category == null) return;
-
-            EditingCategory = category;
-            NewCategoryName = category.CategoryName;
-
-            RefreshParentDropdown(AllCategories);
-            SelectedParent = PotentialParentCategories.FirstOrDefault(x => x.Id == category.ParentId);
-
-            SelectedCategoryType = category.CategoryType;
-        }
-
-        [RelayCommand]
-        private void ClearForm()
-        {
-            EditingCategory = null;
-            NewCategoryName = string.Empty;
-            SelectedParent = null;
-            SelectedCategoryType = ItemClassification.FinishedGood;
-            RefreshParentDropdown(AllCategories);
         }
 
         [RelayCommand]
@@ -168,7 +185,6 @@ namespace Tijori.ViewModels
         {
             if (category == null) return;
 
-            // Check if this category has subcategories
             bool hasChildren = AllCategories.Any(c => c.ParentId == category.Id);
             if (hasChildren)
             {

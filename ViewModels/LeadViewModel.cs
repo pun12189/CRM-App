@@ -395,20 +395,24 @@ namespace Tijori.ViewModels
             SystemUsersList = new ObservableCollection<User>(users);
 
             var labels = await _settingService.GetSettingsAsync("LeadLabels");
-
             AvailableLabelsList = new ObservableCollection<SettingItem>(labels);
 
-            // 1. Calculate the starting position offset row boundary point
             int calculatedOffset = (CurrentPage - 1) * PageSize;
 
             try
             {
                 if (_isInitialized) return;
-                // 2. Request the paged payload data block over the active database factory 
-                var (leadsList, totalCount) = await _leadService.GetLeadsPagedAsync(PageSize, calculatedOffset);
+
+                // 1. Pass CurrentMode and UserId directly to database query
+                var (leadsList, totalCount) = await _leadService.GetLeadsPagedAsync(
+                    PageSize,
+                    calculatedOffset,
+                    CurrentMode,
+                    _session.CurrentUser);
 
                 if (_isInitialized) return;
-                // 3. Update the tracking variable so the view dynamically computes the footer count text strings
+
+                // 2. Accurate total matching records for the current mode
                 TotalEntries = totalCount;
 
                 int runningSerialNumber = calculatedOffset + 1;
@@ -417,42 +421,22 @@ namespace Tijori.ViewModels
                     lead.SerialNumber = runningSerialNumber++;
                 }
 
-                // 4. Repopulate the data collection array cleanly inside the UI grid thread
+                // 3. Populate collection directly without secondary in-memory filtering
                 App.Current.Dispatcher.Invoke(() =>
                 {
                     var list = new ObservableCollection<Lead>(leadsList);
 
-                    if (CurrentMode == LeadViewMode.MyLeads)
-                    {
-                        var userId = _session.CurrentUser;
-                        list = new ObservableCollection<Lead>(list.Where(l => l.LeadHolder == userId));
-                    }
-
-                    if (CurrentMode == LeadViewMode.Dead)
-                    {
-                        list = new ObservableCollection<Lead>(list.Where(l => l.Status.ToLower() == "dead".ToLower()));
-                    }
-
-                    if (CurrentMode == LeadViewMode.WinbackPool)
-                    {
-                        list = new ObservableCollection<Lead>(list.Where(l => l.Status.ToLower() == "winback pool".ToLower()));
-                    }
-
-                    /// 3. Update the CollectionView (the actual source for your DataGrid)
                     _leadsCollection = CollectionViewSource.GetDefaultView(list);
-
-                    // 4. Re-apply your search filter logic
                     _leadsCollection.Filter = FilterLeads;
 
                     var cardList = new ObservableCollection<ITileCardItem>(list.Select(l => l.ToTileCard()));
                     _cardsCollection = CollectionViewSource.GetDefaultView(cardList);
                     _cardsCollection.Filter = FilterCards;
-                    OnPropertyChanged(nameof(CardsCollection));
 
-                    // 5. Notify the UI to refresh the table
+                    OnPropertyChanged(nameof(CardsCollection));
                     OnPropertyChanged(nameof(LeadsCollection));
 
-                    UpdatePaginationStripUI(); // Ensure pagination button matrix regenerates bounds accurately
+                    UpdatePaginationStripUI();
                 });
             }
             catch (Exception ex)

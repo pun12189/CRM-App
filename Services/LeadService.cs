@@ -221,61 +221,79 @@ namespace Tijori.Services
 
         /// <summary>
         /// Highly optimized database pagination system. Fetches page data and total row counts 
-        /// cleanly in a fast, single-connection execution pass.
+        /// cleanly in a fast, single-connection execution pass with dynamic view mode filtering.
         /// </summary>
-        public async Task<(IEnumerable<Lead> Leads, int TotalCount)> GetLeadsPagedAsync(int limit, int offset)
+        public async Task<(IEnumerable<Lead> Leads, int TotalCount)> GetLeadsPagedAsync(
+            int limit,
+            int offset,
+            LeadViewMode mode = LeadViewMode.AllLeads,
+            string? currentUserId = null)
         {
             using var db = _context.CreateConnection();
 
-            // 1. First execution pass: Instantly extract total counts for pagination array mappings
-            const string countSql = "SELECT COUNT(*) FROM Leads;";
-            int totalCount = await db.ExecuteScalarAsync<int>(countSql);
+            // 1. Build the dynamic WHERE clause based on the selected mode
+            var whereFilter = mode switch
+            {
+                LeadViewMode.MyLeads => "WHERE LeadHolder = @UserId",
+                LeadViewMode.Dead => "WHERE LOWER(Status) = 'dead'",
+                LeadViewMode.WinbackPool => "WHERE LOWER(Status) = 'winback pool'",
+                _ => "WHERE (LOWER(Status) NOT IN ('dead', 'winback pool') OR Status IS NULL)" // Default: Active Leads only
+            };
 
-            // If there are zero entries overall, short-circuit out to save computing overhead
+            var parameters = new
+            {
+                Limit = limit,
+                Offset = offset,
+                UserId = currentUserId ?? string.Empty
+            };
+
+            // 2. Count execution: Get total count matching ONLY the filtered criteria
+            string countSql = $"SELECT COUNT(*) FROM Leads {whereFilter};";
+            int totalCount = await db.ExecuteScalarAsync<int>(countSql, parameters);
+
             if (totalCount == 0)
             {
                 return (Enumerable.Empty<Lead>(), 0);
             }
 
-            // 2. Second execution pass: Fetch the specific page slice using pre-aggregated joins
-            string dataSql = @"
-                SELECT 
-                    l.*, 
-                    COALESCE(hc.HistCount, 0) AS HistoryCount,
-                    COALESCE(oc.OrdCount, 0) AS OrderCount,
-                    bc.*,
-                    h.*, 
-                    d.*
-                FROM (
-                    -- CRITICAL FIX: Limit the unique core Leads FIRST before running any row-multiplying joins
-                    SELECT * FROM Leads                      
-                    ORDER BY LeadId DESC 
-                    LIMIT @Limit OFFSET @Offset
-                ) l
+            // 3. Data query: Apply the whereFilter inside the inner core Leads subquery BEFORE joins
+            string dataSql = $@"
+        SELECT 
+            l.*, 
+            COALESCE(hc.HistCount, 0) AS HistoryCount,
+            COALESCE(oc.OrdCount, 0) AS OrderCount,
+            bc.*,
+            h.*, 
+            d.*
+        FROM (
+            SELECT * FROM Leads 
+            {whereFilter}
+            ORDER BY LeadId DESC 
+            LIMIT @Limit OFFSET @Offset
+        ) l
     
-                -- Now safely join histories and divisions without losing your page size target count
-                LEFT JOIN (
-                    SELECT lh.* FROM LeadHistory lh
-                    INNER JOIN (
-                        SELECT LeadId, MAX(HistoryId) as MaxId 
-                        FROM LeadHistory 
-                        GROUP BY LeadId
-                    ) latest ON lh.HistoryId = latest.MaxId
-                ) h ON l.LeadId = h.LeadId
+        LEFT JOIN (
+            SELECT lh.* FROM LeadHistory lh
+            INNER JOIN (
+                SELECT LeadId, MAX(HistoryId) as MaxId 
+                FROM LeadHistory 
+                GROUP BY LeadId
+            ) latest ON lh.HistoryId = latest.MaxId
+        ) h ON l.LeadId = h.LeadId
     
-                LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId 
-                LEFT JOIN Divisions d ON ld.DivisionId = d.Id
-                LEFT JOIN BusinessCategories bc ON l.CategoryId = bc.CategoryId
+        LEFT JOIN LeadDivisions ld ON l.LeadId = ld.LeadId 
+        LEFT JOIN Divisions d ON ld.DivisionId = d.Id
+        LEFT JOIN BusinessCategories bc ON l.CategoryId = bc.CategoryId
     
-                LEFT JOIN (
-                    SELECT LeadId, COUNT(*) - 1 AS HistCount FROM LeadHistory GROUP BY LeadId
-                ) hc ON l.LeadId = hc.LeadId
+        LEFT JOIN (
+            SELECT LeadId, COUNT(*) - 1 AS HistCount FROM LeadHistory GROUP BY LeadId
+        ) hc ON l.LeadId = hc.LeadId
     
-                LEFT JOIN (
-                    SELECT LeadId, COUNT(*) AS OrdCount FROM Orders GROUP BY LeadId
-                ) oc ON l.LeadId = oc.LeadId
+        LEFT JOIN (
+            SELECT LeadId, COUNT(*) AS OrdCount FROM Orders GROUP BY LeadId
+        ) oc ON l.LeadId = oc.LeadId
     
-                ORDER BY l.LeadId DESC;";
+        ORDER BY l.LeadId DESC;";
 
             var leadMap = new Dictionary<int, Lead>();
 
@@ -289,7 +307,6 @@ namespace Tijori.Services
                         currentLead.AssignedDivisions = new ObservableCollection<Division>();
                         currentLead.LatestUpdate = history;
 
-                        // Localized dynamic string conversions run only once per record entry
                         if (!string.IsNullOrEmpty(currentLead.MetadataJson))
                         {
                             currentLead.CustomFields = JsonSerializer.Deserialize<Dictionary<string, string>>(currentLead.MetadataJson)
@@ -305,7 +322,6 @@ namespace Tijori.Services
                         leadMap.Add(currentLead.LeadId, currentLead);
                     }
 
-                    // Append divisions maps cleanly on joint duplications steps
                     if (division != null && !currentLead.AssignedDivisions.Any(x => x.Id == division.Id))
                     {
                         currentLead.AssignedDivisions.Add(division);
@@ -313,7 +329,7 @@ namespace Tijori.Services
 
                     return currentLead;
                 },
-                new { Limit = limit, Offset = offset },
+                parameters,
                 splitOn: "HistoryId,Id"
             );
 

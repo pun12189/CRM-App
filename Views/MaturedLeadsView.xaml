@@ -76,9 +76,10 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Orientation="Horizontal" Grid.Column="0" Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" Grid.Column="0">
+                            <TextBlock Text="Customers" FontSize="16" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,20,0"/>
                             <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="Gray"/>
-                            <Grid Width="250">
+                            <Grid Width="200">
                                 <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
                  VerticalContentAlignment="Center" Height="30"
                  Padding="5,0"/>

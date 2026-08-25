@@ -92,7 +92,27 @@
                         </Grid.ColumnDefinitions>
 
                         <StackPanel Orientation="Horizontal" Grid.Column="0">
-                            <TextBlock Text="All Leads" FontSize="16" VerticalAlignment="Center" FontWeight="Bold"/>
+                            <TextBlock Text="All Leads" FontSize="16" VerticalAlignment="Center" FontWeight="Bold" Margin="0,0,20,0"/>
+                            <TextBlock Text="🔍" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="Gray"/>
+                            <Grid Width="200">
+                                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" 
+                                    VerticalContentAlignment="Center" Height="30"
+                                    Padding="5,0"/>
+                                <TextBlock Text="Search by Name, City, Phone..." 
+                                      IsHitTestVisible="False" VerticalAlignment="Center" 
+                                      Margin="10,0" Foreground="LightGray">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding SearchText}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
                         </StackPanel>
 
                         <!-- 🌟 VIEW MODE SWITCHER (TABLE <-> TILES) 🌟 -->

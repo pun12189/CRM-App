@@ -271,7 +271,7 @@ Padding="10,0" Height="28">
                                 </TabItem.Header>
                             </TabItem>
                         </TabControl>
-                        <Button Grid.Column="1" 
+                        <Button Grid.Column="1" Visibility="{Binding CurrentViewMode, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Table}"
                     Style="{StaticResource MaterialDesignOutlinedButton}"
                     BorderBrush="#0284C7"
                     Foreground="#0284C7"

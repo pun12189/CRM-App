@@ -11,9 +11,9 @@ namespace Tijori.Services
 {
     public class UserDashboardSettings
     {
-        public DashboardViewMode ProductViewMode { get; set; } = DashboardViewMode.Cards;
-        public DashboardViewMode AllTimeDataViewMode { get; set; } = DashboardViewMode.Cards;
-        public DashboardViewMode OrderViewMode { get; set; } = DashboardViewMode.Cards;
+        public GlobalDashboardViewMode ProductViewMode { get; set; } = GlobalDashboardViewMode.Cards;
+        public GlobalDashboardViewMode AllTimeDataViewMode { get; set; } = GlobalDashboardViewMode.Cards;
+        public GlobalDashboardViewMode OrderViewMode { get; set; } = GlobalDashboardViewMode.Cards;
     }
 
     public static class UserPreferencesService

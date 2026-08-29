@@ -8,11 +8,14 @@ namespace Tijori.Models.Enums
 {
     public enum DashboardTargetView
     {
+        // Leads Targets
         AllLeads,
         OpenLeads,
         FollowupLeads,
         NoFollowupLeads,
         DeadLeads,
+
+        // Customers Targets
         Customers,
         NoUpdation7Days,
         NoRepeatOrders,
@@ -34,6 +37,20 @@ namespace Tijori.Models.Enums
         NewOrders,
         RepeatedOrders,
         UnpaidOrders,
-        PartiallyPaidOrders
+        PartiallyPaidOrders,
+
+        // ====================================================================
+        // 🌟 NEW MISSING NAVIGATION TARGETS
+        // ====================================================================
+        TasksView,
+        OverdueTasksView,
+        OccupiedLocationsView,
+        VacantLocationsView,
+        ProformaView,
+        PurchaseOrdersView,
+        VendorsView,
+        ServiceOrdersView,
+        BatchTrackerView,
+        BatchQaHoldView
     }
 }

@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Tijori.Models.Enums
 {
-    public enum DashboardViewMode
+    public enum GlobalDashboardViewMode
     {
         Cards = 0,
-        BarChart = 1,
-        PieChart = 2
+        ComparativeCharts = 1,
+        DistributionMix = 2
     }
 }

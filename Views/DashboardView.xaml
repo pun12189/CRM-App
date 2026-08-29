@@ -3,641 +3,687 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:conv="clr-namespace:Tijori.Converters"
-             xmlns:local="clr-namespace:Tijori.Views"
-             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
              xmlns:enums="clr-namespace:Tijori.Models.Enums"
+             xmlns:viewmodels="clr-namespace:Tijori.ViewModels"
+             xmlns:converters="clr-namespace:Tijori.Converters"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="1200" d:DesignWidth="1500">
     <UserControl.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <conv:EnumToVisibilityConverter x:Key="EnumToVisConverter"/>
-
-        <Style x:Key="ViewToggleButtonStyle" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignTabRadioButton}">
-            <Setter Property="Height" Value="24"/>
-            <Setter Property="Padding" Value="6,2"/>
+        <converters:EnumToVisibilityConverter x:Key="EnumToVisConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <Style x:Key="GlobalViewToggleBtn" TargetType="RadioButton" BasedOn="{StaticResource MaterialDesignTabRadioButton}">
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="10,4"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
-        
     </UserControl.Resources>
-    <Grid Background="#F5F7F9">
+
+    <Grid Background="#F8FAFC">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- Top Action Header -->
             <RowDefinition Height="Auto"/>
+            <!-- Financial Strip -->
             <RowDefinition Height="*"/>
+            <!-- Main Dashboard Body -->
         </Grid.RowDefinitions>
 
-        <DockPanel Grid.Row="0" Margin="20,10" Visibility="Collapsed">
-            <StackPanel VerticalAlignment="Center">
-                <TextBlock Text="Dashboard" FontSize="20" FontWeight="Bold" Foreground="#333"/>
-                <TextBlock Text="Welcome to Tijori Dashboard" FontSize="11" Foreground="#888"/>
-            </StackPanel>
+        <!-- ============================================================== -->
+        <!-- ROW 0: COMMAND HEADER & SINGLE MASTER VIEW SWITCHER            -->
+        <!-- ============================================================== -->
+        <Border Grid.Row="0" Background="White" Padding="16,12" Margin="15,10,15,10" CornerRadius="8" BorderBrush="#E2E8F0" BorderThickness="1">
+            <DockPanel LastChildFill="False">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Executive Command Center" FontSize="18" FontWeight="Bold" Foreground="#0F172A"/>
+                    <TextBlock Text="Consolidated Operations, Sales, Manufacturing &amp; Financials" FontSize="11" Foreground="#64748B"/>
+                </StackPanel>
 
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <materialDesign:Chip Content="{Binding LastUpdatedStatus}" 
-                         Background="#E0E6ED" Margin="10,0"/>
-                <Button Command="{Binding RefreshCommand}" 
-                    Background="#FF8A3D" BorderBrush="#FF8A3D"
-                    Style="{StaticResource MaterialDesignFloatingActionMiniButton}">
-                    <materialDesign:PackIcon Kind="Refresh" Foreground="White"/>
-                </Button>
-            </StackPanel>
-        </DockPanel>
+                <!-- Right Controls: View Switcher, Filter, Refresh -->
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding DataUpdatedStatus}" FontWeight="SemiBold" Foreground="#64748B" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
-        <ProgressBar Grid.Row="1" Style="{StaticResource MaterialDesignLinearProgressBar}" 
-             Value="0" IsIndeterminate="True" 
-             Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
-              VerticalAlignment="Top"/>
-
-        <TabControl Grid.Row="2" Style="{StaticResource MaterialDesignTabControl}" Margin="10,0" materialDesign:ColorZoneAssist.Mode="PrimaryDark">
-            <TabItem Header="Analytics">
-                <Grid Margin="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="300"/>
-                    </Grid.ColumnDefinitions>
-
-                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,5,0">
-                        <StackPanel>
-                            <DockPanel Margin="0,10">
-                                <TextBlock Text="{Binding DataUpdatedStatus}" FontWeight="Bold" VerticalAlignment="Center"/>
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Command="{Binding OpenFilterCommand}" 
-                                Content="Filter" Background="#FF8A3D" BorderBrush="#FF8A3D"
-                                HorizontalAlignment="Right" Height="25" FontSize="11">
-                                        <materialDesign:ButtonAssist.CornerRadius>5</materialDesign:ButtonAssist.CornerRadius>
-                                    </Button>
-                                    <Button Command="{Binding ClearFilterCommand}" 
-                                Content="Clear Filter" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#C62828"
-                                HorizontalAlignment="Right" Height="25" FontSize="11" Margin="5,0,0,0" Visibility="{Binding IsFilterActive, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <materialDesign:ButtonAssist.CornerRadius>5</materialDesign:ButtonAssist.CornerRadius>
-                                    </Button>
+                    <Border Background="#F1F5F9" CornerRadius="6" Padding="3" Margin="0,0,10,0">
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton Style="{StaticResource GlobalViewToggleBtn}"
+                                         GroupName="MasterViewMode"
+                                         Command="{Binding SetGlobalViewModeCommand}"
+                                         CommandParameter="{x:Static enums:GlobalDashboardViewMode.Cards}"
+                                         IsChecked="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards, Mode=OneWay}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ViewDashboardOutline" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="KPI Tiles" VerticalAlignment="Center"/>
                                 </StackPanel>
+                            </RadioButton>
+                            <RadioButton Style="{StaticResource GlobalViewToggleBtn}"
+                                         GroupName="MasterViewMode"
+                                         Command="{Binding SetGlobalViewModeCommand}"
+                                         CommandParameter="{x:Static enums:GlobalDashboardViewMode.ComparativeCharts}"
+                                         IsChecked="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=ComparativeCharts, Mode=OneWay}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ChartBar" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Comparative Bars" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton Style="{StaticResource GlobalViewToggleBtn}"
+                                         GroupName="MasterViewMode"
+                                         Command="{Binding SetGlobalViewModeCommand}"
+                                         CommandParameter="{x:Static enums:GlobalDashboardViewMode.DistributionMix}"
+                                         IsChecked="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=DistributionMix, Mode=OneWay}">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="ChartPie" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                                    <TextBlock Text="Distribution Mix" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </RadioButton>
+                        </StackPanel>
+                    </Border>
+
+                    <Button Command="{Binding OpenFilterCommand}" Content="Filter" Background="#7C3AED" BorderBrush="#7C3AED" Height="28" FontSize="11" Margin="0,0,5,0">
+                        <materialDesign:ButtonAssist.CornerRadius>5</materialDesign:ButtonAssist.CornerRadius>
+                    </Button>
+                    <Button Command="{Binding ClearFilterCommand}" Content="Clear" Style="{StaticResource MaterialDesignFlatButton}" Foreground="#EF4444" Height="28" FontSize="11" Visibility="{Binding IsFilterActive, Converter={StaticResource BoolToVisConverter}}"/>
+                    <Button Command="{Binding RefreshCommand}" Style="{StaticResource MaterialDesignIconButton}" Height="28" Width="28" Foreground="#64748B" ToolTip="Refresh">
+                        <materialDesign:PackIcon Kind="Refresh"/>
+                    </Button>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ============================================================== -->
+        <!-- ROW 1: EXECUTIVE FINANCIAL STRIP                               -->
+        <!-- ============================================================== -->
+        <UniformGrid Grid.Row="1" Columns="5" Margin="15,0,15,10">
+            <materialDesign:Card Margin="4" Padding="14" Background="White" UniformCornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="TOTAL BILLED SALES" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding Data.Financials.TotalInvoicedSales, StringFormat='₹ {0:N2}'}" FontSize="18" FontWeight="Bold" Foreground="#10B981" Margin="0,4,0,0"/>
+                    <TextBlock Text="{Binding Data.Financials.GrossMarginPercentage, StringFormat='Gross Margin: {0}%'}" FontSize="10" Foreground="#059669" Margin="0,2,0,0"/>
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Margin="4" Padding="14" Background="White" UniformCornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="PROFORMA PIPELINE" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding Data.Financials.ProformaPipelineValue, StringFormat='₹ {0:N2}'}" FontSize="18" FontWeight="Bold" Foreground="#3B82F6" Margin="0,4,0,0"/>
+                    <TextBlock Text="Active Quotations" FontSize="10" Foreground="#2563EB" Margin="0,2,0,0"/>
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Margin="4" Padding="14" Background="White" UniformCornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="UNPAID / CREDIT RISK" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding Data.Financials.TotalUnpaidCreditRisk, StringFormat='₹ {0:N2}'}" FontSize="18" FontWeight="Bold" Foreground="#EF4444" Margin="0,4,0,0"/>
+                    <TextBlock Text="Pending Receivables" FontSize="10" Foreground="#DC2626" Margin="0,2,0,0"/>
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Margin="4" Padding="14" Background="White" UniformCornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="VENDOR PO OUTSTANDING" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding Data.Financials.VendorPoOutstandingValue, StringFormat='₹ {0:N2}'}" FontSize="18" FontWeight="Bold" Foreground="#F59E0B" Margin="0,4,0,0"/>
+                    <TextBlock Text="Committed Payables" FontSize="10" Foreground="#D97706" Margin="0,2,0,0"/>
+                </StackPanel>
+            </materialDesign:Card>
+            <materialDesign:Card Margin="4" Padding="14" Background="White" UniformCornerRadius="8">
+                <StackPanel>
+                    <TextBlock Text="TOTAL BUSINESS REALIZED" FontSize="10" FontWeight="Bold" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding Data.Financials.TotalBusinessRealized, StringFormat='₹ {0:N2}'}" FontSize="18" FontWeight="Bold" Foreground="#129A98" Margin="0,4,0,0"/>
+                    <TextBlock Text="Collected Turnaround" FontSize="10" Foreground="#0E7490" Margin="0,2,0,0"/>
+                </StackPanel>
+            </materialDesign:Card>
+        </UniformGrid>
+
+        <!-- ============================================================== -->
+        <!-- ROW 2: MAIN DASHBOARD STAGE (LEFT ARENA + RIGHT SIDEBAR)       -->
+        <!-- ============================================================== -->
+        <Grid Grid.Row="2" Margin="15,0,15,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="300"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT ARENA -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,10,0">
+                <StackPanel>
+
+                    <!-- 1. PRODUCT & INVENTORY COUNTERS -->
+                    <materialDesign:Card Background="White" UniformCornerRadius="8" Padding="16" Margin="0,0,0,12">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="Product &amp; Inventory Counters" FontSize="14" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Catalog, SKUs, Expiry Health" HorizontalAlignment="Right" FontSize="11" Foreground="#64748B" DockPanel.Dock="Right"/>
                             </DockPanel>
 
-                            <materialDesign:Card Margin="5,15,5,5" Background="White" UniformCornerRadius="6">
-                                <Expander IsExpanded="True" Background="Transparent" Foreground="#2C3E50" FontWeight="Bold" FontSize="13">
-                                    <Expander.Header>
-                                        <DockPanel LastChildFill="False">
-                                            <TextBlock Text="Product Counters" VerticalAlignment="Center" FontWeight="Bold"/>
-                                            <Border DockPanel.Dock="Right" Background="#F1F5F9" CornerRadius="4" Padding="2" Margin="10,0,0,0">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <RadioButton Style="{StaticResource ViewToggleButtonStyle}"
-                                                                 Command="{Binding SetProductViewModeCommand}" 
-                                                                 CommandParameter="{x:Static enums:DashboardViewMode.Cards}"
-                                                                 IsChecked="{Binding ProductViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards, Mode=OneWay}"
-                                                                 ToolTip="Tiles / Metric Cards">
-                                                        <materialDesign:PackIcon Kind="ViewDashboardOutline" Width="14" Height="14"/>
-                                                    </RadioButton>
-                                                    <RadioButton Style="{StaticResource ViewToggleButtonStyle}"
-                                                                 Command="{Binding SetProductViewModeCommand}" 
-                                                                 CommandParameter="{x:Static enums:DashboardViewMode.BarChart}"
-                                                                 IsChecked="{Binding ProductViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=BarChart, Mode=OneWay}"
-                                                                 ToolTip="Bar / Column Chart">
-                                                        <materialDesign:PackIcon Kind="ChartBar" Width="14" Height="14"/>
-                                                    </RadioButton>
-                                                    <RadioButton Style="{StaticResource ViewToggleButtonStyle}"
-                                                                 Command="{Binding SetProductViewModeCommand}" 
-                                                                 CommandParameter="{x:Static enums:DashboardViewMode.PieChart}"
-                                                                 IsChecked="{Binding ProductViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=PieChart, Mode=OneWay}"
-                                                                 ToolTip="Pie / Doughnut Chart">
-                                                        <materialDesign:PackIcon Kind="ChartPie" Width="14" Height="14"/>
-                                                    </RadioButton>
-                                                </StackPanel>
-                                            </Border>
-                                        </DockPanel>
-                                    </Expander.Header>
-                                    <Grid Margin="5,10">
-                                        <UniformGrid Columns="5">
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.CategoriesList}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.TotalCategoriesUsed}" FontSize="24" FontWeight="Bold" Foreground="#34495E" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Total Categories" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.ProductsList}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.TotalProducts}" FontSize="24" FontWeight="Bold" Foreground="#2980B9" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Total Products" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NewProducts}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.TotalNewProducts}" FontSize="24" FontWeight="Bold" Foreground="#16A085" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="New Products" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.FastMovingProducts}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.FastMovingProducts}" FontSize="24" FontWeight="Bold" Foreground="#D35400" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Fast Moving" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.SlowMovingProducts}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.SlowMovingProducts}" FontSize="24" FontWeight="Bold" Foreground="#C0392B" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Slow Moving" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Background="#FEF2F2" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NearSkuProducts}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.NearSkuCount}" FontSize="22" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Near SKU" FontSize="10" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
+                            <!-- Tiles Mode -->
+                            <UniformGrid Columns="5" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards}">
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.CategoriesList}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Inventory.TotalCategoriesUsed}" FontSize="22" FontWeight="Bold" Foreground="#34495E" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Total Categories" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.ProductsList}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Inventory.TotalProducts}" FontSize="22" FontWeight="Bold" Foreground="#2980B9" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Total Products" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.NewProducts}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Inventory.TotalNewProducts}" FontSize="22" FontWeight="Bold" Foreground="#16A085" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="New Products" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.FastMovingProducts}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Inventory.FastMovingProducts}" FontSize="22" FontWeight="Bold" Foreground="#D35400" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Fast Moving" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.SlowMovingProducts}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Inventory.SlowMovingProducts}" FontSize="22" FontWeight="Bold" Foreground="#C0392B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Slow Moving" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#FEF2F2" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.NearSkuProducts}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Inventory.NearSkuAlertCount}" FontSize="22" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Near SKU" FontSize="11" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#FFF7ED" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.NearExpiryBatches}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Inventory.NearExpiryBatchCount}" FontSize="22" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Near Expiry" FontSize="11" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F5F3FF" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.SkippedProducts}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Inventory.SkippedProductsCount}" FontSize="22" FontWeight="Bold" Foreground="#6D28D9" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Skipped Products" FontSize="11" Foreground="#6D28D9" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F8FAFC" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.PurchaseOrdersView}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Inventory.OpenVendorPurchaseOrders}" FontSize="22" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Open Vendor POs" FontSize="11" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F8FAFC" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.VendorsView}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Inventory.ActiveVendorsCount}" FontSize="22" FontWeight="Bold" Foreground="#7C3AED" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Active Vendors" FontSize="11" Foreground="#64748B" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
 
-                                            <!-- NEW ADDITION SLOT 2: EXPIRY MONITORING RUNWAY TILE -->
-                                            <Border Background="#FFF7ED" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NearExpiryBatches}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.NearExpiryCount}" FontSize="22" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Near Expiry" FontSize="10" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
+                            <!-- Charts Mode -->
+                            <Grid Height="240" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=ComparativeCharts}">
+                                <lvc:CartesianChart Series="{Binding InventoryTrendLineSeries}" 
+                                XAxes="{Binding InventoryTrendXAxes}" 
+                                YAxes="{Binding InventoryTrendYAxes}"
+                                LegendPosition="Top"
+                                TooltipPosition="Top"/>
+                            </Grid>
 
-                                            <!-- NEW ADDITION SLOT 3: SKIPPED PRODUCTS VELOCITY EXCLUSION TILE -->
-                                            <Border Background="#F5F3FF" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.SkippedProducts}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.SkippedProductsCount}" FontSize="22" FontWeight="Bold" Foreground="#6D28D9" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Skipped Products" FontSize="10" Foreground="#6D28D9" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </UniformGrid>
-
-                                        <Grid Height="220" Visibility="{Binding ProductViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=BarChart}">
-                                            <lvc:CartesianChart Series="{Binding ProductBarSeries}" XAxes="{Binding ProductXAxes}"/>
-                                        </Grid>
-
-                                        <!-- View 3: Pie Chart -->
-                                        <Grid Height="220" Visibility="{Binding ProductViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=PieChart}">
-                                            <lvc:PieChart Series="{Binding ProductPieSeries}" InitialRotation="-90" MaxAngle="360"/>
-                                        </Grid>
-                                        
-                                    </Grid>
-                                </Expander>
-                            </materialDesign:Card>
-
-                            <materialDesign:Card Margin="5,15,5,5" Background="White" UniformCornerRadius="6">
-                                <Expander IsExpanded="False" Background="Transparent" Foreground="#2C3E50" FontWeight="Bold" FontSize="13">
-                                    <Expander.Header>
-                                        <DockPanel LastChildFill="False">
-                                            <TextBlock Text="All Time Data" VerticalAlignment="Center" FontWeight="Bold"/>
-                                            <Border DockPanel.Dock="Right" Background="#F1F5F9" CornerRadius="4" Padding="2" Margin="10,0,0,0">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <RadioButton Style="{StaticResource ViewToggleButtonStyle}"
-                                     GroupName="AllTimeDataToggle"
-                                     Command="{Binding DataContext.SetAllTimeDataViewModeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                     CommandParameter="{x:Static enums:DashboardViewMode.Cards}"
-                                     IsChecked="{Binding AllTimeDataViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards, Mode=OneWay}"
-                                     ToolTip="Tiles / Metric Cards">
-                                                        <materialDesign:PackIcon Kind="ViewDashboardOutline" Width="14" Height="14"/>
-                                                    </RadioButton>
-                                                    <RadioButton Style="{StaticResource ViewToggleButtonStyle}"
-                                     GroupName="AllTimeDataToggle"
-                                     Command="{Binding DataContext.SetAllTimeDataViewModeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                     CommandParameter="{x:Static enums:DashboardViewMode.BarChart}"
-                                     IsChecked="{Binding AllTimeDataViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=BarChart, Mode=OneWay}"
-                                     ToolTip="Bar / Column Chart">
-                                                        <materialDesign:PackIcon Kind="ChartBar" Width="14" Height="14"/>
-                                                    </RadioButton>
-                                                    <RadioButton Style="{StaticResource ViewToggleButtonStyle}"
-                                     GroupName="AllTimeDataToggle"
-                                     Command="{Binding DataContext.SetAllTimeDataViewModeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                                     CommandParameter="{x:Static enums:DashboardViewMode.PieChart}"
-                                     IsChecked="{Binding AllTimeDataViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=PieChart, Mode=OneWay}"
-                                     ToolTip="Pie / Doughnut Chart">
-                                                        <materialDesign:PackIcon Kind="ChartPie" Width="14" Height="14"/>
-                                                    </RadioButton>
-                                                </StackPanel>
-                                            </Border>
-                                        </DockPanel>
-                                    </Expander.Header>
-                                    <Grid Margin="5,10">
-                                        <UniformGrid Columns="5" Visibility="{Binding AllTimeDataViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards}">
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.AllLeads}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.AllLeads}" FontSize="24" FontWeight="Bold" Foreground="#34495E" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="ALL LEADS" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <!-- OPEN LEADS -->
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.OpenLeads}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.NewLeads}" FontSize="24" FontWeight="Bold" Foreground="#2980B9" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="OPEN" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                    <TextBlock Text="{Binding Stats.NewLeadsPercentage, StringFormat={}({0}%)}" FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center" Opacity="0.8"/>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <!-- FOLLOW UP -->
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.FollowupLeads}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.FollowupLeads}" FontSize="24" FontWeight="Bold" Foreground="#16A085" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="FOLLOW UP" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                    <TextBlock Text="{Binding Stats.FollowupLeadsPercentage, StringFormat={}({0}%)}" FontSize="10" Foreground="#16A085" HorizontalAlignment="Center" Opacity="0.8"/>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <!-- NO FOLLOW UP -->
-                                            <Border Background="#FFF7ED" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoFollowupLeads}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.NoFollowupLeads}" FontSize="24" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="NO FOLLOW UP" FontSize="11" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                    <TextBlock Text="(Since 30 Days)" FontSize="10" Foreground="#C2410C" HorizontalAlignment="Center" Opacity="0.8"/>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <!-- DEAD LEADS -->
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.DeadLeads}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.Dead}" FontSize="24" FontWeight="Bold" Foreground="#C0392B" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="DEAD" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                    <TextBlock Text="{Binding Stats.DeadPercentage, StringFormat={}({0}%)}" FontSize="10" Foreground="#C0392B" HorizontalAlignment="Center" Opacity="0.8"/>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <!-- CUSTOMERS -->
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.Customers}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.Customers}" FontSize="24" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="CUSTOMERS" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                    <TextBlock Text="{Binding Stats.CustomersPercentage, StringFormat={}({0}%)}" FontSize="10" Foreground="#27AE60" HorizontalAlignment="Center" Opacity="0.8"/>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <!-- NO UPDATION (7 DAYS) -->
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoUpdation7Days}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.NoUpdation7Days}" FontSize="24" FontWeight="Bold" Foreground="#D35400" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="NO UPDATION" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                    <TextBlock Text="(Since 7 Days)" FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center" Opacity="0.8"/>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <!-- NO REPEAT ORDER -->
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoRepeatOrders}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.NoRepeatOrder}" FontSize="24" FontWeight="Bold" Foreground="#8E44AD" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="NO REPEAT ORDER" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <!-- NO ORDER (30 DAYS) -->
-                                            <Border Background="#FEF2F2" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoOrders30Days}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.NoOrder}" FontSize="24" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="NO ORDER" FontSize="11" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                    <TextBlock Text="(Since 30 Days)" FontSize="10" Foreground="#991B1B" HorizontalAlignment="Center" Opacity="0.8"/>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <!-- BELOW TARGET -->
-                                            <Border Background="#F5F3FF" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.BelowTargetCustomers}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.BelowTarget}" FontSize="24" FontWeight="Bold" Foreground="#6D28D9" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="BELOW TARGET" FontSize="11" Foreground="#6D28D9" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                    <TextBlock Text="(Last Month)" FontSize="10" Foreground="#6D28D9" HorizontalAlignment="Center" Opacity="0.8"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </UniformGrid>
-                                        <Grid Visibility="{Binding AllTimeDataViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=BarChart}">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <!-- Leads Pipeline Bar Chart -->
-                                            <Border Grid.Column="0" Background="#F8FAFC" CornerRadius="6" Margin="0,0,5,0" Padding="10">
-                                                <DockPanel>
-                                                    <TextBlock Text="Lead Pipeline Overview" FontWeight="SemiBold" FontSize="12" Foreground="#475569" DockPanel.Dock="Top" Margin="0,0,0,8"/>
-                                                    <Grid Height="250">
-                                                        <lvc:CartesianChart Series="{Binding LeadBarSeries}" XAxes="{Binding LeadXAxes}"/>
-                                                    </Grid>
-                                                </DockPanel>
-                                            </Border>
-
-                                            <!-- Customer Retention Bar Chart -->
-                                            <Border Grid.Column="1" Background="#F8FAFC" CornerRadius="6" Margin="5,0,0,0" Padding="10">
-                                                <DockPanel>
-                                                    <TextBlock Text="Customer Retention &amp; Activity" FontWeight="SemiBold" FontSize="12" Foreground="#475569" DockPanel.Dock="Top" Margin="0,0,0,8"/>
-                                                    <Grid Height="250">
-                                                        <lvc:CartesianChart Series="{Binding CustomerBarSeries}" XAxes="{Binding CustomerXAxes}"/>
-                                                    </Grid>
-                                                </DockPanel>
-                                            </Border>
-                                        </Grid>
-
-                                        <!-- ============================================================== -->
-                                        <!-- VIEW 3: SIDE-BY-SIDE PIE CHARTS (LEADS & CUSTOMERS)            -->
-                                        <!-- ============================================================== -->
-                                        <Grid Visibility="{Binding AllTimeDataViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=PieChart}">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-
-                                            <!-- Leads Pipeline Pie Chart -->
-                                            <Border Grid.Column="0" Background="#F8FAFC" CornerRadius="6" Margin="0,0,5,0" Padding="10">
-                                                <DockPanel>
-                                                    <TextBlock Text="Leads Breakdown" FontWeight="SemiBold" FontSize="12" Foreground="#475569" DockPanel.Dock="Top" Margin="0,0,0,8"/>
-                                                    <Grid Height="220">
-                                                        <lvc:PieChart Series="{Binding LeadPieSeries}" InitialRotation="-90" MaxAngle="360"/>
-                                                    </Grid>
-                                                </DockPanel>
-                                            </Border>
-
-                                            <!-- Customer Retention Pie Chart -->
-                                            <Border Grid.Column="1" Background="#F8FAFC" CornerRadius="6" Margin="5,0,0,0" Padding="10">
-                                                <DockPanel>
-                                                    <TextBlock Text="Customer Base Health" FontWeight="SemiBold" FontSize="12" Foreground="#475569" DockPanel.Dock="Top" Margin="0,0,0,8"/>
-                                                    <Grid Height="220">
-                                                        <lvc:PieChart Series="{Binding CustomerPieSeries}" InitialRotation="-90" MaxAngle="360"/>
-                                                    </Grid>
-                                                </DockPanel>
-                                            </Border>
-                                        </Grid>
-                                    </Grid>
-                                </Expander>
-                            </materialDesign:Card>
-
-                            <materialDesign:Card Margin="5,10,5,15" Background="White" UniformCornerRadius="6">
-                                <Expander IsExpanded="False" Background="Transparent" Foreground="#2C3E50" FontWeight="Bold" FontSize="13">
-                                    <Expander.Header>
-                                        <DockPanel LastChildFill="False">
-                                            <TextBlock Text="Order Counters" VerticalAlignment="Center" FontWeight="Bold"/>
-                                            <Border DockPanel.Dock="Right" Background="#F1F5F9" CornerRadius="4" Padding="2" Margin="10,0,0,0">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <RadioButton Style="{StaticResource ViewToggleButtonStyle}"
-                                                                 Command="{Binding SetOrderViewModeCommand}" 
-                                                                 CommandParameter="{x:Static enums:DashboardViewMode.Cards}"
-                                                                 IsChecked="{Binding OrderViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards, Mode=OneWay}"
-                                                                 ToolTip="Tiles / Metric Cards">
-                                                        <materialDesign:PackIcon Kind="ViewDashboardOutline" Width="14" Height="14"/>
-                                                    </RadioButton>
-                                                    <RadioButton Style="{StaticResource ViewToggleButtonStyle}"
-                                                                 Command="{Binding SetOrderViewModeCommand}" 
-                                                                 CommandParameter="{x:Static enums:DashboardViewMode.BarChart}"
-                                                                 IsChecked="{Binding OrderViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=BarChart, Mode=OneWay}"
-                                                                 ToolTip="Bar / Column Chart">
-                                                        <materialDesign:PackIcon Kind="ChartBar" Width="14" Height="14"/>
-                                                    </RadioButton>
-                                                    <RadioButton Style="{StaticResource ViewToggleButtonStyle}"
-                                                                 Command="{Binding SetOrderViewModeCommand}" 
-                                                                 CommandParameter="{x:Static enums:DashboardViewMode.PieChart}"
-                                                                 IsChecked="{Binding OrderViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=PieChart, Mode=OneWay}"
-                                                                 ToolTip="Pie / Doughnut Chart">
-                                                        <materialDesign:PackIcon Kind="ChartPie" Width="14" Height="14"/>
-                                                    </RadioButton>
-                                                </StackPanel>
-                                            </Border>
-                                        </DockPanel>
-                                    </Expander.Header>
-                                    <Grid Margin="5,10">
-                                        <UniformGrid Columns="5" Margin="5,10">
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.AllOrders}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.TotalOrders}" FontSize="24" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Total Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NewOrders}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.TotalNewOrders}" FontSize="24" FontWeight="Bold" Foreground="#2980B9" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="First Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.RepeatedOrders}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.TotalRepeatedOrders}" FontSize="24" FontWeight="Bold" Foreground="#8E44AD" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Repeated Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.UnpaidOrders}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.TotalUnpaidOrders}" FontSize="24" FontWeight="Bold" Foreground="#C0392B" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Unpaid Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                            <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
-                                                <Border.InputBindings>
-                                                    <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.PartiallyPaidOrders}"/>
-                                                </Border.InputBindings>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Stats.TotalPartialPaidOrders}" FontSize="24" FontWeight="Bold" Foreground="#F39C12" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="Partially Paid" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </UniformGrid>
-
-                                        <Grid Height="220" Visibility="{Binding OrderViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=BarChart}">
-                                            <lvc:CartesianChart Series="{Binding OrderBarSeries}" XAxes="{Binding OrderXAxes}"/>
-                                        </Grid>
-
-                                        <!-- View 3: Pie Chart -->
-                                        <Grid Height="220" Visibility="{Binding OrderViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=PieChart}">
-                                            <lvc:PieChart Series="{Binding OrderPieSeries}" InitialRotation="-90" MaxAngle="360" />
-                                        </Grid>
-                                    </Grid>
-                                </Expander>
-                            </materialDesign:Card>
+                            <!-- VIEW 3: MODERN CALLOUT DOUGHNUT (When user selects Distribution Mix Mode) -->
+                            <Grid Height="340" Margin="10" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=DistributionMix}">
+                                <lvc:PieChart Series="{Binding InventoryDonutSeries}" 
+                  InitialRotation="-90" 
+                  MaxAngle="360"
+                  LegendPosition="Hidden"
+                  HorizontalAlignment="Center"
+                  Width="480"/>
+                            </Grid>
                         </StackPanel>
-                    </ScrollViewer>
+                    </materialDesign:Card>
 
-                    <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,5,0">
-                        <StackPanel Margin="20,0,0,0">
-                            <materialDesign:Card Padding="15" Margin="0,0,0,15" Background="White">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Total Business: " FontWeight="Bold" Foreground="#666" FontSize="16"/>
-                                    <TextBlock Text="{Binding Stats.TotalBusiness, StringFormat='{}{0:N2}'}" 
-                       Foreground="#1794A1" FontWeight="Bold" FontSize="16" Margin="5,0,0,0"/>
-                                </StackPanel>
-                            </materialDesign:Card>
+                    <!-- 2. ALL TIME DATA: LEADS, CUSTOMERS & TERRITORY -->
+                    <materialDesign:Card Background="White" UniformCornerRadius="8" Padding="16" Margin="0,0,0,12">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="All Time Data &amp; Territory Saturation" FontSize="14" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Leads Funnel, Retention, Coverage" HorizontalAlignment="Right" FontSize="11" Foreground="#64748B" DockPanel.Dock="Right"/>
+                            </DockPanel>
 
-                            <Expander Header="Reminders" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">
-                                <ItemsControl ItemsSource="{Binding ReminderCounters, IsAsync=True}" Margin="10,5">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <WrapPanel Orientation="Horizontal"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Background="#129A98" CornerRadius="4" Padding="8,4" Margin="4">
-                                                <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding Key}" Foreground="White" FontSize="12" FontWeight="SemiBold"/>
-                                                    <TextBlock Text=" - " Foreground="White" FontSize="12"/>
-                                                    <TextBlock Text="{Binding Value}" Foreground="White" FontSize="12" FontWeight="Bold"/>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </Expander>
+                            <!-- Tiles Mode -->
+                            <UniformGrid Columns="6" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards}">
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.AllLeads}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.SalesPipeline.AllLeads}" FontSize="22" FontWeight="Bold" Foreground="#34495E" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="ALL LEADS" FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.OpenLeads}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.SalesPipeline.NewLeads}" FontSize="22" FontWeight="Bold" Foreground="#2980B9" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="OPEN" FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Data.SalesPipeline.NewLeadsPercentage, StringFormat={}({0}%)}" FontSize="9" Foreground="#7F8C8D" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.FollowupLeads}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.SalesPipeline.FollowupLeads}" FontSize="22" FontWeight="Bold" Foreground="#16A085" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="FOLLOW UP" FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Data.SalesPipeline.FollowupLeadsPercentage, StringFormat={}({0}%)}" FontSize="9" Foreground="#16A085" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#FFF7ED" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.NoFollowupLeads}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.SalesPipeline.NoFollowupLeads30Days}" FontSize="22" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="NO FOLLOW UP" FontSize="10" FontWeight="Bold" Foreground="#C2410C" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="(>30 Days)" FontSize="9" Foreground="#C2410C" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.DeadLeads}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.SalesPipeline.DeadLeads}" FontSize="22" FontWeight="Bold" Foreground="#C0392B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="DEAD" FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Data.SalesPipeline.DeadPercentage, StringFormat={}({0}%)}" FontSize="9" Foreground="#C0392B" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.Customers}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.SalesPipeline.ActiveCustomers}" FontSize="22" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="CUSTOMERS" FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="{Binding Data.SalesPipeline.CustomersPercentage, StringFormat={}({0}%)}" FontSize="9" Foreground="#27AE60" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.NoUpdation7Days}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.SalesPipeline.NoUpdation7Days}" FontSize="22" FontWeight="Bold" Foreground="#D35400" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="NO UPDATION" FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="(>7 Days)" FontSize="9" Foreground="#7F8C8D" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.NoRepeatOrders}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.SalesPipeline.NoRepeatOrders}" FontSize="22" FontWeight="Bold" Foreground="#8E44AD" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="SINGLE ORDER" FontSize="10" Foreground="#7F8C8D" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="No Repeat" FontSize="9" Foreground="#7F8C8D" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#FEF2F2" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.NoOrders30Days}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.SalesPipeline.Dormant30DaysNoOrders}" FontSize="22" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="NO ORDER" FontSize="10" FontWeight="Bold" Foreground="#991B1B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="(>30 Days)" FontSize="9" Foreground="#991B1B" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F5F3FF" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.BelowTargetCustomers}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.SalesPipeline.BelowTargetCustomers}" FontSize="22" FontWeight="Bold" Foreground="#6D28D9" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="BELOW TARGET" FontSize="10" Foreground="#6D28D9" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="(Last Month)" FontSize="9" Foreground="#6D28D9" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F5F3FF" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.OccupiedLocationsView}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Territory.CoveredPincodes}" FontSize="22" FontWeight="Bold" Foreground="#7C3AED" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="COVERED PINCODES" FontSize="10" Foreground="#6D28D9" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#FFFBEB" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.VacantLocationsView}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Territory.VacantPincodes}" FontSize="22" FontWeight="Bold" Foreground="#F59E0B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="VACANT PINCODES" FontSize="10" Foreground="#B45309" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
 
-                            <Expander Header="Followup Stages" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">
-                                <ItemsControl ItemsSource="{Binding FollowupStagesCounters, IsAsync=True}" Margin="10,5">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel Orientation="Horizontal"/>
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border CornerRadius="4" Padding="8,4" Margin="4">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="#F39C12"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Key}" Value="All FollowUps">
-                                                                    <Setter Property="Background" Value="#129A98"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding Key}" Foreground="White" FontSize="12" FontWeight="SemiBold"/>
-                                                        <TextBlock Text=" - " Foreground="White" FontSize="12"/>
-                                                        <TextBlock Text="{Binding Value}" Foreground="White" FontSize="12" FontWeight="Bold"/>
-                                                    </StackPanel>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                            </Expander>
-                            <Expander Header="Mature Stages" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">
-                                <ItemsControl ItemsSource="{Binding MatureStagesCounters, IsAsync=True}" Margin="10,5">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel Orientation="Horizontal"/>
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border CornerRadius="4" Padding="8,4" Margin="4">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="#2ECC71"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Key}" Value="All Matured">
-                                                                    <Setter Property="Background" Value="#129A98"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding Key}" Foreground="White" FontSize="12" FontWeight="SemiBold"/>
-                                                        <TextBlock Text=" - " Foreground="White" FontSize="12"/>
-                                                        <TextBlock Text="{Binding Value}" Foreground="White" FontSize="12" FontWeight="Bold"/>
-                                                    </StackPanel>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                            </Expander>
-                            <Expander Header="Lead Labels" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">
-                                <ItemsControl ItemsSource="{Binding LeadLabelsCounters, IsAsync=True}" Margin="10,5">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel Orientation="Horizontal"/>
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border CornerRadius="4" Padding="8,4" Margin="4">
-                                                    <Border.Style>
-                                                        <Style TargetType="Border">
-                                                            <Setter Property="Background" Value="#2ECC71"/>
-                                                            <Style.Triggers>
-                                                                <DataTrigger Binding="{Binding Key}" Value="All Labels">
-                                                                    <Setter Property="Background" Value="#129A98"/>
-                                                                </DataTrigger>
-                                                            </Style.Triggers>
-                                                        </Style>
-                                                    </Border.Style>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding Key}" Foreground="White" FontSize="12" FontWeight="SemiBold"/>
-                                                        <TextBlock Text=" - " Foreground="White" FontSize="12"/>
-                                                        <TextBlock Text="{Binding Value}" Foreground="White" FontSize="12" FontWeight="Bold"/>
-                                                    </StackPanel>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                            </Expander>
+                            <!-- Charts Mode -->
+                            <Grid Height="220" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=ComparativeCharts}">
+                                <lvc:CartesianChart Series="{Binding SalesFunnelSeries}" XAxes="{Binding SalesFunnelXAxes}"/>
+                            </Grid>
+                            <Grid Height="240" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=DistributionMix}">
+                                <lvc:PieChart Series="{Binding TerritoryPieSeries}" InitialRotation="-90" MaxAngle="360"/>
+                            </Grid>
                         </StackPanel>
-                    </ScrollViewer>
-                </Grid>
-            </TabItem>
+                    </materialDesign:Card>
 
-            <TabItem Header="MIS" />
-        </TabControl>
+                    <!-- 3. 3P MANUFACTURING & BATCH TRACKER -->
+                    <materialDesign:Card Background="White" UniformCornerRadius="8" Padding="16" Margin="0,0,0,12">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="3P Contract Manufacturing &amp; Batch Line Tracker" FontSize="14" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Service Line Orders, QA, Batches" HorizontalAlignment="Right" FontSize="11" Foreground="#64748B" DockPanel.Dock="Right"/>
+                            </DockPanel>
+
+                            <!-- Tiles Mode -->
+                            <UniformGrid Columns="6" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards}">
+                                <Border Background="#F8FAFC" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.ServiceOrdersView}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Manufacturing.Active3POrders}" FontSize="22" FontWeight="Bold" Foreground="#3B82F6" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="3P Orders" FontSize="11" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F8FAFC" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.BatchTrackerView}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Manufacturing.RunningBatches}" FontSize="22" FontWeight="Bold" Foreground="#129A98" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Running Batches" FontSize="11" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F8FAFC" CornerRadius="6" Margin="3" Padding="8" Height="85">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Manufacturing.BatchesInFormulation}" FontSize="22" FontWeight="Bold" Foreground="#6366F1" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="In Formulation" FontSize="11" Foreground="#64748B" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#FFFBEB" CornerRadius="6" Margin="3" Padding="8" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.BatchQaHoldView}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Manufacturing.BatchesInQaHold}" FontSize="22" FontWeight="Bold" Foreground="#F59E0B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="QA / Lab Hold" FontSize="11" Foreground="#B45309" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F0FDF4" CornerRadius="6" Margin="3" Padding="8" Height="85">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Manufacturing.ReadyForDispatch}" FontSize="22" FontWeight="Bold" Foreground="#10B981" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Ready for Dispatch" FontSize="11" Foreground="#059669" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#FEF2F2" CornerRadius="6" Margin="3" Padding="8" Height="85">
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Manufacturing.DelayedBatchesAlert}" FontSize="22" FontWeight="Bold" Foreground="#EF4444" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Delayed (SLA Alert)" FontSize="11" Foreground="#B91C1C" HorizontalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+
+                            <!-- Charts Mode -->
+                            <Grid Height="220" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=ComparativeCharts}">
+                                <lvc:CartesianChart Series="{Binding ManufacturingThroughputSeries}" XAxes="{Binding ManufacturingXAxes}"/>
+                            </Grid>
+                            <Grid Height="240" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=DistributionMix}">
+                                <lvc:PieChart Series="{Binding ManufacturingQualityPieSeries}" InitialRotation="-90" MaxAngle="360"/>
+                            </Grid>
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                    <!-- 4. ORDER PERFORMANCE COUNTERS -->
+                    <materialDesign:Card Background="White" UniformCornerRadius="8" Padding="16" Margin="0,0,0,12">
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="Order Performance &amp; Payment Status" FontSize="14" FontWeight="Bold" Foreground="#0F172A"/>
+                                <TextBlock Text="Orders, Punched Sales, Receivables" HorizontalAlignment="Right" FontSize="11" Foreground="#64748B" DockPanel.Dock="Right"/>
+                            </DockPanel>
+
+                            <!-- Tiles Mode -->
+                            <UniformGrid Columns="5" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards}">
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.AllOrders}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Orders.TotalOrders}" FontSize="22" FontWeight="Bold" Foreground="#27AE60" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Total Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.NewOrders}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Orders.TotalNewOrders}" FontSize="22" FontWeight="Bold" Foreground="#2980B9" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="First Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.RepeatedOrders}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Orders.TotalRepeatedOrders}" FontSize="22" FontWeight="Bold" Foreground="#8E44AD" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Repeated Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.UnpaidOrders}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Orders.TotalUnpaidOrders}" FontSize="22" FontWeight="Bold" Foreground="#C0392B" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Unpaid Orders" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#F4F6F7" CornerRadius="6" Margin="3" Padding="10" Height="85" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.PartiallyPaidOrders}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Data.Orders.TotalPartialPaidOrders}" FontSize="22" FontWeight="Bold" Foreground="#F39C12" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Partially Paid" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                    </StackPanel>
+                                </Border>
+                            </UniformGrid>
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- RIGHT SIDEBAR -->
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="5,0,0,0">
+                <StackPanel>
+                    <!-- Staff Tasks & Reminders -->
+                    <materialDesign:Card Padding="12" Margin="0,0,0,10" Background="White" UniformCornerRadius="8">
+                        <StackPanel>
+                            <TextBlock Text="Staff Tasks &amp; Schedule Alarms" FontSize="13" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8"/>
+                            <WrapPanel Orientation="Horizontal">
+                                <Border Background="#3B82F6" CornerRadius="4" Padding="6,3" Margin="2" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.TasksView}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Open Tasks" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                        <TextBlock Text=" - " Foreground="White" FontSize="11"/>
+                                        <TextBlock Text="{Binding Data.StaffTasks.TotalOpenTasks}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Border>
+                                <Border Background="#EF4444" CornerRadius="4" Padding="6,3" Margin="2" Cursor="Hand">
+                                    <Border.InputBindings>
+                                        <MouseBinding MouseAction="LeftClick" Command="{Binding NavigateFromCounterCommand}" CommandParameter="{x:Static enums:DashboardTargetView.OverdueTasksView}"/>
+                                    </Border.InputBindings>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Overdue Today" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                        <TextBlock Text=" - " Foreground="White" FontSize="11"/>
+                                        <TextBlock Text="{Binding Data.StaffTasks.OverdueTasksToday}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Border>
+                            </WrapPanel>
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                    <!-- Reminders (Unpaid Invoices) -->
+                    <materialDesign:Card Background="White" UniformCornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Reminders (Unpaid Invoices)" FontSize="13" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8"/>
+                            <ItemsControl ItemsSource="{Binding ReminderCounters}" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#129A98" CornerRadius="4" Padding="6,3" Margin="2">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Key}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                                <TextBlock Text=" - " Foreground="White" FontSize="11"/>
+                                                <TextBlock Text="{Binding Value}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Grid Height="140" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=DistributionMix}">
+                                <lvc:PieChart Series="{Binding RemindersPieSeries}" InitialRotation="-90" MaxAngle="360"/>
+                            </Grid>
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                    <!-- Followup Stages -->
+                    <materialDesign:Card Background="White" UniformCornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Followup Stages" FontSize="13" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8"/>
+                            <ItemsControl ItemsSource="{Binding FollowupStagesCounters}" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#F59E0B" CornerRadius="4" Padding="6,3" Margin="2">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Key}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                                <TextBlock Text=" - " Foreground="White" FontSize="11"/>
+                                                <TextBlock Text="{Binding Value}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Grid Height="160" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=ComparativeCharts}">
+                                <lvc:CartesianChart Series="{Binding FollowupStagesBarSeries}" YAxes="{Binding FollowupStagesYAxes}"/>
+                            </Grid>
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                    <!-- Mature Stages -->
+                    <materialDesign:Card Background="White" UniformCornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Mature Stages" FontSize="13" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8"/>
+                            <ItemsControl ItemsSource="{Binding MatureStagesCounters}" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#10B981" CornerRadius="4" Padding="6,3" Margin="2">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Key}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                                <TextBlock Text=" - " Foreground="White" FontSize="11"/>
+                                                <TextBlock Text="{Binding Value}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Grid Height="140" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=ComparativeCharts}">
+                                <lvc:CartesianChart Series="{Binding MatureStagesBarSeries}" XAxes="{Binding MatureStagesXAxes}"/>
+                            </Grid>
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                    <!-- Lead Labels -->
+                    <materialDesign:Card Background="White" UniformCornerRadius="8" Padding="12" Margin="0,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Lead Labels" FontSize="13" FontWeight="Bold" Foreground="#0F172A" Margin="0,0,0,8"/>
+                            <ItemsControl ItemsSource="{Binding LeadLabelsCounters}" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=Cards}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="#129A98" CornerRadius="4" Padding="6,3" Margin="2">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding Key}" Foreground="White" FontSize="11" FontWeight="SemiBold"/>
+                                                <TextBlock Text=" - " Foreground="White" FontSize="11"/>
+                                                <TextBlock Text="{Binding Value}" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Grid Height="180" Visibility="{Binding GlobalViewMode, Converter={StaticResource EnumToVisConverter}, ConverterParameter=ComparativeCharts}">
+                                <lvc:CartesianChart Series="{Binding LeadLabelsBarSeries}" YAxes="{Binding LeadLabelsYAxes}"/>
+                            </Grid>
+                        </StackPanel>
+                    </materialDesign:Card>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </UserControl>

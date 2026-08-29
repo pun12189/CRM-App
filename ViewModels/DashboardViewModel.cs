@@ -22,90 +22,88 @@ namespace Tijori.ViewModels
 {
     public partial class DashboardViewModel : ObservableObject
     {
-        private readonly LeadService _service;
+        private readonly DashboardService _dashboardService;
         private readonly IDialogService _dialog;
         private readonly IServiceProvider _serviceProvider;
         private readonly MainViewModel _mainViewModel;
 
-        [ObservableProperty] private object? _selectedTabContent;
-
         [ObservableProperty] private bool _isLoading;
         [ObservableProperty] private string _lastUpdatedStatus = "Last Updated: Just Now";
-        [ObservableProperty] private string _dataUpdatedStatus;
-
-        // Stats Counters
-        [ObservableProperty] private DashboardStats _stats;
-
-        // This property controls the button's visibility
+        [ObservableProperty] private string _dataUpdatedStatus = string.Empty;
         [ObservableProperty] private bool _isFilterActive;
         private DashboardFilter? _currentActiveFilter;
 
-        // ====================================================================
-        // NEW ADDITIONS: SIDEBAR STAGE SUMMARY COLLECTIONS
-        // ====================================================================
+        // Master Consolidated DTO
+        [ObservableProperty] private ExecutiveDashboardData _data = new();
+
+        // Single Master View Controller
+        [ObservableProperty] private GlobalDashboardViewMode _globalViewMode = GlobalDashboardViewMode.Cards;
+
+        // Sidebar Stage Summary Collections
         [ObservableProperty] private ObservableCollection<KeyValuePair<string, int>> _reminderCounters = new();
         [ObservableProperty] private ObservableCollection<KeyValuePair<string, int>> _followupStagesCounters = new();
         [ObservableProperty] private ObservableCollection<KeyValuePair<string, int>> _matureStagesCounters = new();
         [ObservableProperty] private ObservableCollection<KeyValuePair<string, int>> _leadLabelsCounters = new();
 
-        // ==========================================
-        // 🌟 MULTI-VIEW TOGGLES & CHART SERIES
-        // ==========================================
-        [ObservableProperty] private DashboardViewMode _productViewMode;
-        [ObservableProperty] private DashboardViewMode _allTimeDataViewMode;
-        [ObservableProperty] private DashboardViewMode _orderViewMode;
+        // 🌟 LIVECHARTS SERIES BINDINGS
+        // 1. Inventory & Products
+        [ObservableProperty] private ISeries[] _inventoryTrendLineSeries = Array.Empty<ISeries>();
+        [ObservableProperty] private Axis[] _inventoryTrendXAxes = Array.Empty<Axis>();
+        [ObservableProperty] private Axis[] _inventoryTrendYAxes = Array.Empty<Axis>();
+        [ObservableProperty] private ISeries[] _inventoryDonutSeries = Array.Empty<ISeries>();
 
-        // Product Charts
-        [ObservableProperty] private ISeries[] _productBarSeries = Array.Empty<ISeries>();
-        [ObservableProperty] private Axis[] _productXAxes = Array.Empty<Axis>();
-        [ObservableProperty] private ISeries[] _productPieSeries = Array.Empty<ISeries>();
+        // 2. Sales, Leads & Territory
+        [ObservableProperty] private ISeries[] _salesFunnelSeries = Array.Empty<ISeries>();
+        [ObservableProperty] private Axis[] _salesFunnelXAxes = Array.Empty<Axis>();
+        [ObservableProperty] private ISeries[] _territoryPieSeries = Array.Empty<ISeries>();
 
-        // Lead / All-Time Data Charts
-        [ObservableProperty] private ISeries[] _leadBarSeries = Array.Empty<ISeries>();
-        [ObservableProperty] private Axis[] _leadXAxes = Array.Empty<Axis>();
-        [ObservableProperty] private ISeries[] _leadPieSeries = Array.Empty<ISeries>();
+        // 3. 3P Manufacturing & Batches
+        [ObservableProperty] private ISeries[] _manufacturingThroughputSeries = Array.Empty<ISeries>();
+        [ObservableProperty] private Axis[] _manufacturingXAxes = Array.Empty<Axis>();
+        [ObservableProperty] private ISeries[] _manufacturingQualityPieSeries = Array.Empty<ISeries>();
 
-        // Customer / All-Time Data Charts
-        [ObservableProperty] private ISeries[] _customerBarSeries = Array.Empty<ISeries>();
-        [ObservableProperty] private Axis[] _customerXAxes = Array.Empty<Axis>();
-        [ObservableProperty] private ISeries[] _customerPieSeries = Array.Empty<ISeries>();
-
-        // Order Charts
-        [ObservableProperty] private ISeries[] _orderBarSeries = Array.Empty<ISeries>();
-        [ObservableProperty] private Axis[] _orderXAxes = Array.Empty<Axis>();
-        [ObservableProperty] private ISeries[] _orderPieSeries = Array.Empty<ISeries>();
+        // 4. Sidebar Dynamic Series
+        [ObservableProperty] private ISeries[] _remindersPieSeries = Array.Empty<ISeries>();
+        [ObservableProperty] private ISeries[] _followupStagesBarSeries = Array.Empty<ISeries>();
+        [ObservableProperty] private Axis[] _followupStagesYAxes = Array.Empty<Axis>();
+        [ObservableProperty] private ISeries[] _matureStagesBarSeries = Array.Empty<ISeries>();
+        [ObservableProperty] private Axis[] _matureStagesXAxes = Array.Empty<Axis>();
+        [ObservableProperty] private ISeries[] _leadLabelsBarSeries = Array.Empty<ISeries>();
+        [ObservableProperty] private Axis[] _leadLabelsYAxes = Array.Empty<Axis>();
 
         private bool _isInitializing = true;
 
-        public DashboardViewModel(LeadService service, IDialogService dialog, IServiceProvider serviceProvider, MainViewModel mainViewModel)
+        public DashboardViewModel(DashboardService dashboardService, IDialogService dialog, IServiceProvider serviceProvider, MainViewModel mainViewModel)
         {
-            _service = service;
+            _dashboardService = dashboardService;
             _dialog = dialog;
             _serviceProvider = serviceProvider;
             _mainViewModel = mainViewModel;
+
             LoadUserPreferences();
             _isInitializing = false;
-            RefreshCommand.Execute(null);
+            _ = Refresh();
         }
 
         private void LoadUserPreferences()
         {
             var saved = UserPreferencesService.LoadDashboardPreferences();
-            _productViewMode = saved.ProductViewMode;
-            _allTimeDataViewMode = saved.AllTimeDataViewMode;
-            _orderViewMode = saved.OrderViewMode;
+            _globalViewMode = (GlobalDashboardViewMode)saved.AllTimeDataViewMode;
         }
 
-        private void SaveCurrentPreferences()
+        partial void OnGlobalViewModeChanged(GlobalDashboardViewMode value)
         {
             if (_isInitializing) return;
-
             UserPreferencesService.SaveDashboardPreferences(new UserDashboardSettings
             {
-                ProductViewMode = this.ProductViewMode,
-                AllTimeDataViewMode = this.AllTimeDataViewMode,
-                OrderViewMode = this.OrderViewMode
+                AllTimeDataViewMode = (GlobalDashboardViewMode)value
             });
+        }
+
+        [RelayCommand]
+        private void SetGlobalViewMode(GlobalDashboardViewMode mode)
+        {
+            GlobalViewMode = mode;
         }
 
         [RelayCommand]
@@ -114,17 +112,14 @@ namespace Tijori.ViewModels
             IsLoading = true;
             try
             {
-                // 1. Fetch Stats for Tiles
-                Stats = await _service.GetDashboardStatsAsync();                
+                Data = await _dashboardService.GetExecutiveDashboardDataAsync(_currentActiveFilter);
 
-                var stagesData = await _service.GetDashboardStageSummariesAsync();
+                ReminderCounters = new ObservableCollection<KeyValuePair<string, int>>(Data.Sidebar.Reminders);
+                FollowupStagesCounters = new ObservableCollection<KeyValuePair<string, int>>(Data.Sidebar.FollowupStages);
+                MatureStagesCounters = new ObservableCollection<KeyValuePair<string, int>>(Data.Sidebar.MatureStages);
+                LeadLabelsCounters = new ObservableCollection<KeyValuePair<string, int>>(Data.Sidebar.LeadLabels);
 
-                ReminderCounters = new ObservableCollection<KeyValuePair<string, int>>(stagesData.Reminders);
-                FollowupStagesCounters = new ObservableCollection<KeyValuePair<string, int>>(stagesData.FollowupStages);
-                MatureStagesCounters = new ObservableCollection<KeyValuePair<string, int>>(stagesData.MatureStages);
-                LeadLabelsCounters = new ObservableCollection<KeyValuePair<string, int>>(stagesData.LeadLabels);
-
-                PopulateAllChartSeries(Stats);
+                PopulateExecutiveCharts(Data);
             }
             finally
             {
@@ -135,266 +130,383 @@ namespace Tijori.ViewModels
         [RelayCommand]
         private async Task OpenFilter()
         {
-            // 1. Open the popup and wait for result
             var filterResult = await _dialog.ShowFilterDialog();
-
             if (filterResult != null)
             {
-                // 2. Call the filtered service method
-                await RefreshDashboardWithFilter(filterResult);
+                _currentActiveFilter = filterResult;
                 IsFilterActive = true;
+                LastUpdatedStatus = $"Filtered ({filterResult.PresetRange})";
+                DataUpdatedStatus = $"Target: {filterResult.LeadHolder ?? "All Operations"}";
+                await Refresh();
             }
         }
 
         [RelayCommand]
         private async Task ClearFilter()
         {
-            await Refresh();
-            DataUpdatedStatus = string.Empty;
+            _currentActiveFilter = null;
             IsFilterActive = false;
+            DataUpdatedStatus = string.Empty;
+            await Refresh();
         }
 
-        private async Task RefreshDashboardWithFilter(DashboardFilter filter)
+        private void PopulateProductAndInventoryCharts(ExecutiveDashboardData d)
         {
-            IsLoading = true;
-            try
+            var slateText = new SolidColorPaint(SKColor.Parse("#475569"))
             {
-                Stats = await _service.GetDashboardStatsFilteredAsync(filter);
+                SKTypeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold)
+            };
+            var dividerGrid = new SolidColorPaint(SKColor.Parse("#F1F5F9"));
 
-                var filteredStages = await _service.GetDashboardStageSummariesFilteredAsync(filter);
+            // Color Palette matching reference screenshot
+            var bluePrimary = SKColor.Parse("#0052CC"); // Active/Healthy
+            var slateAccent = SKColor.Parse("#8993A4"); // Slow Moving
+            var coralAlert = SKColor.Parse("#FF5630"); // Near Low SKU
+            var amberWarning = SKColor.Parse("#F59E0B"); // Near Expiry
 
-                ReminderCounters = new ObservableCollection<KeyValuePair<string, int>>(filteredStages.Reminders);
-                FollowupStagesCounters = new ObservableCollection<KeyValuePair<string, int>>(filteredStages.FollowupStages);
-                MatureStagesCounters = new ObservableCollection<KeyValuePair<string, int>>(filteredStages.MatureStages);
-                LeadLabelsCounters = new ObservableCollection<KeyValuePair<string, int>>(filteredStages.LeadLabels);
+            // ---------------------------------------------------------------------
+            // A. PROPER MUTUALLY EXCLUSIVE DOUGHNUT RING (Sum = 100%)
+            // ---------------------------------------------------------------------
+            int totalCatalog = Math.Max(1, d.Inventory.TotalProducts);
 
-                PopulateAllChartSeries(Stats);
+            // Non-overlapping healthy base calculation
+            int nearSku = d.Inventory.NearSkuAlertCount;
+            int fastMoving = d.Inventory.FastMovingProducts;
+            int slowMoving = Math.Max(0, totalCatalog - nearSku - fastMoving);
 
-                // Optional: Update 'Last Updated' timestamp
-                LastUpdatedStatus = $"Filtered by {filter.LeadHolder ?? "All"} ({filter.PresetRange})";
-                DataUpdatedStatus = $"Filtered Target Group: {filter.LeadHolder ?? "All Staff Operations"} ({filter.PresetRange})";
-            }
-            finally
+            InventoryDonutSeries = new ISeries[]
             {
-                IsLoading = false;
-            }
-        }
-
-        private void PopulateAllChartSeries(DashboardStats s)
+        new PieSeries<double>
         {
-            if (s == null) return;
-
-            // 1. PRODUCT METRICS
-            ProductBarSeries = new ISeries[]
-            {
-                new ColumnSeries<int>
-                {
-                    Name = "Stock Metric Count",
-                    Values = new int[] { s.TotalCategoriesUsed, s.TotalProducts, s.TotalNewProducts, s.FastMovingProducts, s.SlowMovingProducts, s.NearSkuCount, s.NearExpiryCount, s.SkippedProductsCount },
-                    Fill = new SolidColorPaint(new SKColor(41, 128, 185)),
-                    DataLabelsPaint = new SolidColorPaint(new SKColor(44, 62, 80)),
-                    DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top
-                }
-            };
-            ProductXAxes = new Axis[]
-            {
-                new Axis
-                {
-                    Labels = new string[] { "Categories", "Total", "New", "Fast Moving", "Slow Moving", "Near SKU", "Near Expiry", "Skipped" },
-                    LabelsRotation = 0, // 🌟 Keep horizontal
-                    TextSize = 11,
-                    LabelsPaint = new SolidColorPaint(new SKColor(100, 116, 139)), // Muted slate color (#64748B)
-                    SeparatorsPaint = new SolidColorPaint(new SKColor(241, 245, 249)) // Subtle divider lines
-                }
-            };
-            ProductPieSeries = new ISeries[]
-            {
-                new PieSeries<int> { Name = "New Products", Values = new int[] { s.TotalNewProducts }, Fill = new SolidColorPaint(new SKColor(22, 160, 133)) },
-                new PieSeries<int> { Name = "Fast Moving", Values = new int[] { s.FastMovingProducts }, Fill = new SolidColorPaint(new SKColor(211, 84, 0)) },
-                new PieSeries<int> { Name = "Slow Moving", Values = new int[] { s.SlowMovingProducts }, Fill = new SolidColorPaint(new SKColor(192, 57, 43)) },
-                new PieSeries<int> { Name = "Near SKU", Values = new int[] { s.NearSkuCount }, Fill = new SolidColorPaint(new SKColor(153, 27, 27)) },
-                new PieSeries<int> { Name = "Near Expiry", Values = new int[] { s.NearExpiryCount }, Fill = new SolidColorPaint(new SKColor(194, 65, 12)) },
-                new PieSeries<int> { Name = "Skipped", Values = new int[] { s.SkippedProductsCount }, Fill = new SolidColorPaint(new SKColor(109, 40, 217)) }
-            };
-
-            // 2. LEADS ENTITY PIPELINE
-            LeadBarSeries = new ISeries[]
-            {
-                new ColumnSeries<int>
-                {
-                    Name = "Leads Volume",
-                    Values = new int[] { s.AllLeads, s.NewLeads, s.FollowupLeads, s.NoFollowupLeads, s.Dead },
-                    Fill = new SolidColorPaint(new SKColor(23, 148, 161)),
-                    DataLabelsPaint = new SolidColorPaint(new SKColor(44, 62, 80)),
-                    DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top
-                }
-            };
-            LeadXAxes = new Axis[]
-            {
-                new Axis
-                {
-                    Labels = new string[] { "All", "Open", "Follow-ups", "Overdue\n(>30d)", "Dead" },
-                    LabelsRotation = 0, // 🌟 Keep horizontal
-                    TextSize = 11,
-                    LabelsPaint = new SolidColorPaint(new SKColor(100, 116, 139)),
-                    SeparatorsPaint = new SolidColorPaint(new SKColor(241, 245, 249))
-                }
-            };
-            LeadPieSeries = new ISeries[]
-            {
-                new PieSeries<int> { Name = "Open / New Leads", Values = new int[] { s.NewLeads }, Fill = new SolidColorPaint(new SKColor(41, 128, 185)) },
-                new PieSeries<int> { Name = "In Follow-up", Values = new int[] { s.FollowupLeads }, Fill = new SolidColorPaint(new SKColor(22, 160, 133)) },
-                new PieSeries<int> { Name = "No Follow-up (>30d)", Values = new int[] { s.NoFollowupLeads }, Fill = new SolidColorPaint(new SKColor(194, 65, 12)) },
-                new PieSeries<int> { Name = "Dead Leads", Values = new int[] { s.Dead }, Fill = new SolidColorPaint(new SKColor(192, 57, 43)) }
-            };
-
-            // 3. CUSTOMERS ENTITY & RETENTION
-            CustomerBarSeries = new ISeries[]
-            {
-                new ColumnSeries<int>
-                {
-                    Name = "Customer Metrics",
-                    Values = new int[] { s.Customers, s.NoUpdation7Days, s.NoRepeatOrder, s.NoOrder, s.BelowTarget },
-                    Fill = new SolidColorPaint(new SKColor(39, 174, 96)),
-                    DataLabelsPaint = new SolidColorPaint(new SKColor(44, 62, 80)),
-                    DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top
-                }
-            };
-            CustomerXAxes = new Axis[]
-            {
-                new Axis
-                {
-                    Labels = new string[] { "Total", "No Update\n(>7d)", "Single\nOrder", "Dormant\n(>30d)", "Below\nTarget" },
-                    LabelsRotation = 0, // 🌟 Keep horizontal
-                    TextSize = 11,
-                    LabelsPaint = new SolidColorPaint(new SKColor(100, 116, 139)),
-                    SeparatorsPaint = new SolidColorPaint(new SKColor(241, 245, 249))
-                }
-            };
-            CustomerPieSeries = new ISeries[]
-            {
-                new PieSeries<int> { Name = "Active Base", Values = new int[] { Math.Max(0, s.Customers - s.NoOrder) }, Fill = new SolidColorPaint(new SKColor(39, 174, 96)) },
-                new PieSeries<int> { Name = "No Update (7d)", Values = new int[] { s.NoUpdation7Days }, Fill = new SolidColorPaint(new SKColor(211, 84, 0)) },
-                new PieSeries<int> { Name = "Single Order Only", Values = new int[] { s.NoRepeatOrder }, Fill = new SolidColorPaint(new SKColor(142, 68, 173)) },
-                new PieSeries<int> { Name = "Dormant (30d)", Values = new int[] { s.NoOrder }, Fill = new SolidColorPaint(new SKColor(153, 27, 27)) },
-                new PieSeries<int> { Name = "Below Target", Values = new int[] { s.BelowTarget }, Fill = new SolidColorPaint(new SKColor(109, 40, 217)) }
-            };
-
-            // 4. ORDER METRICS
-            OrderBarSeries = new ISeries[]
-            {
-                new ColumnSeries<int>
-                {
-                    Name = "Orders Count",
-                    Values = new int[] { s.TotalOrders, s.TotalNewOrders, s.TotalRepeatedOrders, s.TotalUnpaidOrders, s.TotalPartialPaidOrders },
-                    Fill = new SolidColorPaint(new SKColor(41, 128, 185)),
-                    DataLabelsPaint = new SolidColorPaint(new SKColor(44, 62, 80)),
-                    DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top
-                }
-            };
-            OrderXAxes = new Axis[]
-            {
-                new Axis
-                {
-                    Labels = new string[] { "Total Orders", "First Orders", "Repeated", "Unpaid", "Partially Paid" },
-                    LabelsRotation = 0, // 🌟 Keep horizontal
-                    TextSize = 11,
-                    LabelsPaint = new SolidColorPaint(new SKColor(100, 116, 139)),
-                    SeparatorsPaint = new SolidColorPaint(new SKColor(241, 245, 249))
-                }
-            };
-            OrderPieSeries = new ISeries[]
-            {
-                new PieSeries<int> { Name = "First Orders", Values = new int[] { s.TotalNewOrders }, Fill = new SolidColorPaint(new SKColor(41, 128, 185)) },
-                new PieSeries<int> { Name = "Repeated Orders", Values = new int[] { s.TotalRepeatedOrders }, Fill = new SolidColorPaint(new SKColor(142, 68, 173)) },
-                new PieSeries<int> { Name = "Unpaid Orders", Values = new int[] { s.TotalUnpaidOrders }, Fill = new SolidColorPaint(new SKColor(192, 57, 43)) },
-                new PieSeries<int> { Name = "Partially Paid", Values = new int[] { s.TotalPartialPaidOrders }, Fill = new SolidColorPaint(new SKColor(243, 156, 18)) }
-            };
-        }
-
-        partial void OnProductViewModeChanged(DashboardViewMode value) => SaveCurrentPreferences();
-        partial void OnAllTimeDataViewModeChanged(DashboardViewMode value) => SaveCurrentPreferences();
-        partial void OnOrderViewModeChanged(DashboardViewMode value) => SaveCurrentPreferences();
-
-        [RelayCommand]
-        private void SetProductViewMode(DashboardViewMode mode)
+            Name = "Slow Moving",
+            Values = new double[] { Math.Round(((double)slowMoving / totalCatalog) * 100, 1) },
+            Fill = new SolidColorPaint(slateAccent),
+            InnerRadius = 95, // Defined hollow center ring
+            DataLabelsPaint = slateText,
+            DataLabelsSize = 11,
+            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+            DataLabelsFormatter = point => $"{point.Context.Series.Name} {point.Model:N1}%"
+        },
+        new PieSeries<double>
         {
-            ProductViewMode = mode;
-        }
-
-        [RelayCommand]
-        private void SetAllTimeDataViewMode(DashboardViewMode mode)
+            Name = "Near Low SKU",
+            Values = new double[] { Math.Round(((double)nearSku / totalCatalog) * 100, 1) },
+            Fill = new SolidColorPaint(coralAlert),
+            InnerRadius = 95,
+            DataLabelsPaint = slateText,
+            DataLabelsSize = 11,
+            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+            DataLabelsFormatter = point => $"{point.Context.Series.Name} {point.Model:N1}%"
+        },
+        new PieSeries<double>
         {
-            AllTimeDataViewMode = mode;
+            Name = "Fast Moving",
+            Values = new double[] { Math.Round(((double)fastMoving / totalCatalog) * 100, 1) },
+            Fill = new SolidColorPaint(bluePrimary),
+            InnerRadius = 95,
+            DataLabelsPaint = slateText,
+            DataLabelsSize = 11,
+            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+            DataLabelsFormatter = point => $"{point.Context.Series.Name} {point.Model:N1}%"
         }
+            };
 
-        [RelayCommand]
-        private void SetOrderViewMode(DashboardViewMode mode)
+            // ---------------------------------------------------------------------
+            // B. DUAL-AXIS LINE SPLINE GRAPH
+            // ---------------------------------------------------------------------
+            InventoryTrendLineSeries = new ISeries[]
+            {
+        new LineSeries<int>
         {
-            OrderViewMode = mode;
+            Name = "Stock Volume Movement",
+            Values = new int[] { d.Inventory.TotalCategoriesUsed * 5, d.Inventory.FastMovingProducts, d.Inventory.SlowMovingProducts, d.Inventory.NearSkuAlertCount, d.Inventory.TotalProducts },
+            Stroke = new SolidColorPaint(bluePrimary) { StrokeThickness = 3 },
+            Fill = null,
+            GeometrySize = 0,
+            LineSmoothness = 0.65,
+            ScalesYAt = 0
+        },
+        new LineSeries<int>
+        {
+            Name = "Procurement Pipeline",
+            Values = new int[] { d.Inventory.ActiveVendorsCount, d.Inventory.OpenVendorPurchaseOrders, 2, d.Inventory.OpenVendorPurchaseOrders * 2, d.Inventory.ActiveVendorsCount * 3 },
+            Stroke = new SolidColorPaint(SKColor.Parse("#00B4D8")) { StrokeThickness = 3 },
+            Fill = null,
+            GeometrySize = 0,
+            LineSmoothness = 0.65,
+            ScalesYAt = 1
+        }
+            };
+
+            InventoryTrendXAxes = new Axis[]
+            {
+        new Axis
+        {
+            Labels = new string[] { "Categories", "Fast Movers", "Slow Movers", "Near SKU", "Total Catalog" },
+            LabelsRotation = 0,
+            TextSize = 11,
+            LabelsPaint = slateText,
+            SeparatorsPaint = dividerGrid
+        }
+            };
+
+            InventoryTrendYAxes = new Axis[]
+            {
+        new Axis
+        {
+            Name = "Stock Count",
+            Position = LiveChartsCore.Measure.AxisPosition.Start,
+            Labeler = val => val >= 1000 ? $"{(val / 1000):N0}K" : val.ToString("N0"),
+            TextSize = 10,
+            LabelsPaint = slateText,
+            SeparatorsPaint = dividerGrid
+        },
+        new Axis
+        {
+            Name = "POs / Vendors",
+            Position = LiveChartsCore.Measure.AxisPosition.End,
+            ShowSeparatorLines = false,
+            TextSize = 10,
+            LabelsPaint = slateText
+        }
+            };
         }
 
-        /// <summary>
-        /// Global Click Routing Engine for Dashboard Tiles
-        /// </summary>
+        private void PopulateExecutiveCharts(ExecutiveDashboardData d)
+        {
+            var slateText = new SolidColorPaint(SKColor.Parse("#64748B"));
+            var dividerGrid = new SolidColorPaint(SKColor.Parse("#F1F5F9"));
+
+            // Color Palette Definition (Coupler.io UI styling)
+            var bluePrimary = SKColor.Parse("#0052CC");
+            var cyanAccent = SKColor.Parse("#00A3BF");
+            var purpleAccent = SKColor.Parse("#6554C0");
+            var slateAccent = SKColor.Parse("#8993A4");
+            var coralAlert = SKColor.Parse("#FF5630");
+            var greenSuccess = SKColor.Parse("#36B37E");
+            var amberWarning = SKColor.Parse("#F59E0B");
+
+            this.PopulateProductAndInventoryCharts(d);
+
+            // =========================================================================
+            // 2. SALES PIPELINE STAGE CALLOUT DOUGHNUT
+            // =========================================================================
+            double totalLeads = Math.Max(1, d.SalesPipeline.AllLeads);
+
+            SalesFunnelSeries = new ISeries[]
+            {
+        new ColumnSeries<int>
+        {
+            Name = "Pipeline Volume",
+            Values = new int[] { d.SalesPipeline.AllLeads, d.SalesPipeline.FollowupLeads, d.SalesPipeline.ActiveCustomers, Math.Max(0, d.SalesPipeline.ActiveCustomers - d.SalesPipeline.NoRepeatOrders) },
+            Fill = new SolidColorPaint(bluePrimary),
+            DataLabelsPaint = new SolidColorPaint(SKColor.Parse("#1E293B")),
+            DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top
+        }
+            };
+            SalesFunnelXAxes = new Axis[]
+            {
+        new Axis
+        {
+            Labels = new string[] { "Total Leads", "In Follow-up", "Converted", "Repeat Buyers" },
+            LabelsRotation = 0,
+            TextSize = 11,
+            LabelsPaint = slateText,
+            SeparatorsPaint = dividerGrid
+        }
+            };
+
+            double totalPincodes = Math.Max(1, d.Territory.CoveredPincodes + d.Territory.VacantPincodes);
+            TerritoryPieSeries = new ISeries[]
+            {
+        new PieSeries<double>
+        {
+            Name = "Lead In (Open)",
+            Values = new double[] { Math.Round((d.SalesPipeline.NewLeads / totalLeads) * 100, 2) },
+            Fill = new SolidColorPaint(bluePrimary),
+            InnerRadius = 60,
+            DataLabelsPaint = slateText,
+            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+            DataLabelsFormatter = point => $"{point.Context.Series.Name} {point.Model:N1}%"
+        },
+        new PieSeries<double>
+        {
+            Name = "In Follow-up",
+            Values = new double[] { Math.Round((d.SalesPipeline.FollowupLeads / totalLeads) * 100, 2) },
+            Fill = new SolidColorPaint(cyanAccent),
+            InnerRadius = 60,
+            DataLabelsPaint = slateText,
+            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+            DataLabelsFormatter = point => $"{point.Context.Series.Name} {point.Model:N1}%"
+        },
+        new PieSeries<double>
+        {
+            Name = "Matured Accounts",
+            Values = new double[] { Math.Round((d.SalesPipeline.ActiveCustomers / totalLeads) * 100, 2) },
+            Fill = new SolidColorPaint(greenSuccess),
+            InnerRadius = 60,
+            DataLabelsPaint = slateText,
+            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+            DataLabelsFormatter = point => $"{point.Context.Series.Name} {point.Model:N1}%"
+        },
+        new PieSeries<double>
+        {
+            Name = "Closed Lost (Dead)",
+            Values = new double[] { Math.Round((d.SalesPipeline.DeadLeads / totalLeads) * 100, 2) },
+            Fill = new SolidColorPaint(purpleAccent),
+            InnerRadius = 60,
+            DataLabelsPaint = slateText,
+            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+            DataLabelsFormatter = point => $"{point.Context.Series.Name} {point.Model:N1}%"
+        }
+            };
+
+            // =========================================================================
+            // 3. 3P MANUFACTURING THROUGHPUT & QUALITY DOUGHNUT
+            // =========================================================================
+            ManufacturingThroughputSeries = new ISeries[]
+            {
+        new ColumnSeries<int>
+        {
+            Name = "Batches in Stage",
+            Values = new int[] { d.Manufacturing.RunningBatches, d.Manufacturing.BatchesInFormulation, d.Manufacturing.BatchesInQaHold, d.Manufacturing.BatchesInPackaging, d.Manufacturing.ReadyForDispatch },
+            Fill = new SolidColorPaint(purpleAccent),
+            DataLabelsPaint = new SolidColorPaint(SKColor.Parse("#1E293B")),
+            DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top
+        }
+            };
+            ManufacturingXAxes = new Axis[]
+            {
+        new Axis
+        {
+            Labels = new string[] { "Running", "Formulation", "QA Hold", "Packaging", "Ready" },
+            LabelsRotation = 0,
+            TextSize = 11,
+            LabelsPaint = slateText,
+            SeparatorsPaint = dividerGrid
+        }
+            };
+
+            double totalBatches = Math.Max(1, d.Manufacturing.RunningBatches);
+            int onTrackBatches = Math.Max(0, d.Manufacturing.RunningBatches - d.Manufacturing.DelayedBatchesAlert - d.Manufacturing.BatchesInQaHold);
+
+            ManufacturingQualityPieSeries = new ISeries[]
+            {
+        new PieSeries<double>
+        {
+            Name = "On Schedule",
+            Values = new double[] { Math.Round((onTrackBatches / totalBatches) * 100, 2) },
+            Fill = new SolidColorPaint(greenSuccess),
+            InnerRadius = 60,
+            DataLabelsPaint = slateText,
+            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+            DataLabelsFormatter = point => $"{point.Context.Series.Name} {point.Model:N1}%"
+        },
+        new PieSeries<double>
+        {
+            Name = "QA / Lab Hold",
+            Values = new double[] { Math.Round((d.Manufacturing.BatchesInQaHold / totalBatches) * 100, 2) },
+            Fill = new SolidColorPaint(amberWarning),
+            InnerRadius = 60,
+            DataLabelsPaint = slateText,
+            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+            DataLabelsFormatter = point => $"{point.Context.Series.Name} {point.Model:N1}%"
+        },
+        new PieSeries<double>
+        {
+            Name = "Delayed (SLA Alert)",
+            Values = new double[] { Math.Round((d.Manufacturing.DelayedBatchesAlert / totalBatches) * 100, 2) },
+            Fill = new SolidColorPaint(coralAlert),
+            InnerRadius = 60,
+            DataLabelsPaint = slateText,
+            DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+            DataLabelsFormatter = point => $"{point.Context.Series.Name} {point.Model:N1}%"
+        }
+            };
+
+            // =========================================================================
+            // 4. SIDEBAR STAGE DOUGHNUTS & RANK BARS
+            // =========================================================================
+            // Reminders Callout Doughnut
+            var remList = d.Sidebar.Reminders.Where(k => !k.Key.StartsWith("All", StringComparison.OrdinalIgnoreCase)).ToList();
+            double totalReminders = Math.Max(1, remList.Sum(x => x.Value));
+
+            RemindersPieSeries = remList.Select(x => new PieSeries<double>
+            {
+                Name = x.Key,
+                Values = new double[] { Math.Round((x.Value / totalReminders) * 100, 2) },
+                Fill = x.Key.Equals("New", StringComparison.OrdinalIgnoreCase) ? new SolidColorPaint(bluePrimary) : new SolidColorPaint(cyanAccent),
+                InnerRadius = 50,
+                DataLabelsPaint = slateText,
+                DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
+                DataLabelsFormatter = point => $"{point.Context.Series.Name} {point.Model:N1}%"
+            }).ToArray();
+
+            // Followup Stages Horizontal Bar
+            var folList = d.Sidebar.FollowupStages.Where(k => !k.Key.StartsWith("All", StringComparison.OrdinalIgnoreCase)).ToList();
+            FollowupStagesBarSeries = new ISeries[]
+            {
+        new RowSeries<int>
+        {
+            Values = folList.Select(x => x.Value).ToArray(),
+            Fill = new SolidColorPaint(amberWarning),
+            DataLabelsPaint = slateText,
+            DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.End
+        }
+            };
+            FollowupStagesYAxes = new Axis[] { new Axis { Labels = folList.Select(x => x.Key).ToArray(), TextSize = 10, LabelsPaint = slateText } };
+
+            // Mature Stages Column Bar
+            var matList = d.Sidebar.MatureStages.Where(k => !k.Key.StartsWith("All", StringComparison.OrdinalIgnoreCase)).ToList();
+            MatureStagesBarSeries = new ISeries[]
+            {
+        new ColumnSeries<int>
+        {
+            Values = matList.Select(x => x.Value).ToArray(),
+            Fill = new SolidColorPaint(greenSuccess),
+            DataLabelsPaint = slateText,
+            DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top
+        }
+            };
+            MatureStagesXAxes = new Axis[] { new Axis { Labels = matList.Select(x => x.Key).ToArray(), LabelsRotation = 0, TextSize = 10, LabelsPaint = slateText } };
+
+            // Lead Labels Horizontal Bar
+            var lblList = d.Sidebar.LeadLabels.Where(k => !k.Key.StartsWith("All", StringComparison.OrdinalIgnoreCase)).ToList();
+            LeadLabelsBarSeries = new ISeries[]
+            {
+        new RowSeries<int>
+        {
+            Values = lblList.Select(x => x.Value).ToArray(),
+            Fill = new SolidColorPaint(cyanAccent),
+            DataLabelsPaint = slateText,
+            DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.End
+        }
+            };
+            LeadLabelsYAxes = new Axis[] { new Axis { Labels = lblList.Select(x => x.Key).ToArray(), TextSize = 10, LabelsPaint = slateText } };
+        }
+
         [RelayCommand]
         private async Task NavigateFromCounter(DashboardTargetView target)
         {
             try
             {
                 LoadingService.Show("Loading view... Please wait.");
-
-                object targetViewModel = null;
-
-                // 1. Map your target enum context to the exact DI View Model requested
-                switch (target)
+                object? targetViewModel = target switch
                 {
-                    case DashboardTargetView.AllLeads:
-                    case DashboardTargetView.OpenLeads:
-                    case DashboardTargetView.FollowupLeads:
-                    case DashboardTargetView.NoFollowupLeads:
-                    case DashboardTargetView.DeadLeads:
-                        targetViewModel = _serviceProvider.GetRequiredService<LeadViewModel>();
-                        break;
-
-                    case DashboardTargetView.Customers:
-                    case DashboardTargetView.NoUpdation7Days:
-                    case DashboardTargetView.NoRepeatOrders:
-                    case DashboardTargetView.NoOrders30Days:
-                    case DashboardTargetView.BelowTargetCustomers:
-                        targetViewModel = _serviceProvider.GetRequiredService<MaturedLeadsViewModel>();
-                        break;
-
-                    case DashboardTargetView.ProductsList:
-                    case DashboardTargetView.CategoriesList:
-                    case DashboardTargetView.NewProducts:
-                    case DashboardTargetView.FastMovingProducts:
-                    case DashboardTargetView.SlowMovingProducts:
-                    case DashboardTargetView.NearSkuProducts:
-                    case DashboardTargetView.NearExpiryBatches:
-                    case DashboardTargetView.SkippedProducts:
-                        targetViewModel = _serviceProvider.GetRequiredService<InventoryViewModel>();
-                        break;
-
-                    case DashboardTargetView.AllOrders:
-                    case DashboardTargetView.NewOrders:
-                    case DashboardTargetView.RepeatedOrders:
-                    case DashboardTargetView.UnpaidOrders:
-                    case DashboardTargetView.PartiallyPaidOrders:
-                        targetViewModel = _serviceProvider.GetRequiredService<AllOrdersViewModel>();
-                        break;
-                }
+                    DashboardTargetView.AllLeads or DashboardTargetView.OpenLeads or DashboardTargetView.FollowupLeads or DashboardTargetView.NoFollowupLeads or DashboardTargetView.DeadLeads => _serviceProvider.GetRequiredService<LeadViewModel>(),
+                    DashboardTargetView.Customers or DashboardTargetView.NoUpdation7Days or DashboardTargetView.NoRepeatOrders or DashboardTargetView.NoOrders30Days or DashboardTargetView.BelowTargetCustomers => _serviceProvider.GetRequiredService<MaturedLeadsViewModel>(),
+                    DashboardTargetView.ProductsList or DashboardTargetView.CategoriesList or DashboardTargetView.NewProducts or DashboardTargetView.FastMovingProducts or DashboardTargetView.SlowMovingProducts or DashboardTargetView.NearSkuProducts or DashboardTargetView.NearExpiryBatches or DashboardTargetView.SkippedProducts => _serviceProvider.GetRequiredService<InventoryViewModel>(),
+                    DashboardTargetView.AllOrders or DashboardTargetView.NewOrders or DashboardTargetView.RepeatedOrders or DashboardTargetView.UnpaidOrders or DashboardTargetView.PartiallyPaidOrders => _serviceProvider.GetRequiredService<AllOrdersViewModel>(),
+                    _ => null
+                };
 
                 if (targetViewModel == null) return;
 
-                // 2. Inject the current filter context state into the resolved view model
                 if (targetViewModel is IDashboardFilterable filterableVm)
                 {
-                    // Passes your filter state (or null if unfiltered) along with the specific tile context clicked
                     filterableVm.ApplyDashboardFilter(IsFilterActive ? _currentActiveFilter : null, target);
                 }
 
-                // 3. Switch the workspace layout smoothly via the Main Window dispatcher frame
                 await App.Current.Dispatcher.InvokeAsync(() =>
                 {
                     _mainViewModel.CurrentView = targetViewModel;
@@ -402,15 +514,13 @@ namespace Tijori.ViewModels
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"An error occurred while navigating: {ex.Message}");
+                Debug.WriteLine($"Navigation error: {ex.Message}");
             }
             finally
             {
                 LoadingService.Hide();
-            }            
+            }
         }
-
-        // Keep your existing Refresh, OpenFilter, and ClearFilter methods completely unchanged
     }
 }
 

@@ -149,6 +149,7 @@ namespace Tijori
             services.AddSingleton<BatchTrackerService>();
             services.AddSingleton<StockLedgerService>();
             services.AddSingleton<InvoiceService>();
+            services.AddSingleton<DashboardService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();

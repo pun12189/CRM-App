@@ -196,100 +196,297 @@ namespace Tijori.Services
                     // --------------------------------------------------------------------
                     else if (type == ImportType.Product)
                     {
-                        int? catId = await GetOrCreateLookupIdAsync(connection, transaction, "Categories", "CategoryName", row.GetValueOrDefault("CategoryName")?.ToString());
-
-                        int initialStock = int.TryParse(row.GetValueOrDefault("InitialStock")?.ToString(), out var initStk) ? initStk : 0;
-                        decimal costPrice = decimal.TryParse(row.GetValueOrDefault("CostPrice")?.ToString(), out var cPrice) ? cPrice : 0.00m;
-                        decimal sellingPrice = decimal.TryParse(row.GetValueOrDefault("SellingPrice")?.ToString(), out var sPrice) ? sPrice : 0.00m;
-                        decimal mrp = decimal.TryParse(row.GetValueOrDefault("MRP")?.ToString(), out var itemMrp) ? itemMrp : 0.00m;
-                        decimal gstPercent = decimal.TryParse(row.GetValueOrDefault("GSTPercent")?.ToString(), out var gst) ? gst : 0.00m;
-
-                        decimal totalCost = decimal.TryParse(row.GetValueOrDefault("TotalCost")?.ToString(), out var tCost)
-                            ? tCost
-                            : (costPrice * initialStock);
-
-                        parameters.Add("Name", row.GetValueOrDefault("Name"));
-                        parameters.Add("ShortName", row.GetValueOrDefault("ShortName"));
-                        parameters.Add("SKU", row.GetValueOrDefault("SKU"));
-                        parameters.Add("Unit", row.GetValueOrDefault("Unit") ?? "Pcs");
-                        parameters.Add("CategoryId", catId);
-                        parameters.Add("Manufacturer", row.GetValueOrDefault("Manufacturer"));
-                        parameters.Add("Packaging", row.GetValueOrDefault("Packaging"));
-                        parameters.Add("InitialStock", initialStock);
-                        parameters.Add("RemainingStock", initialStock);
-                        parameters.Add("MRP", mrp);
-                        parameters.Add("CostPrice", costPrice);
-                        parameters.Add("SellingPrice", sellingPrice);
-                        parameters.Add("GSTPercent", gstPercent);
-                        parameters.Add("TotalCost", totalCost);
-                        parameters.Add("TrackCost", 1);
-                        parameters.Add("DivisionId", row.ContainsKey("DivisionId") ? row["DivisionId"] : null);
-                        parameters.Add("BrandName", row.GetValueOrDefault("BrandName"));
-
-                        string insertProductSql = @"
-                    INSERT INTO Products (
-                        Name, ShortName, SKU, Unit, CategoryId, Manufacturer, Packaging, 
-                        InitialStock, RemainingStock, MRP, CostPrice, SellingPrice, 
-                        GSTPercent, TotalCost, TrackCost, DivisionId, BrandName, CreatedAt
-                    ) VALUES (
-                        @Name, @ShortName, @SKU, @Unit, @CategoryId, @Manufacturer, @Packaging, 
-                        @InitialStock, @RemainingStock, @MRP, @CostPrice, @SellingPrice, 
-                        @GSTPercent, @TotalCost, @TrackCost, @DivisionId, @BrandName, NOW()
-                    );
-                    SELECT LAST_INSERT_ID();";
-
-                        int newProductId = await connection.ExecuteScalarAsync<int>(insertProductSql, parameters, transaction);
-
-                        // Insert Product Batch
-                        var batchParams = new DynamicParameters();
-                        string batchNo = row.GetValueOrDefault("BatchNumber")?.ToString() ?? "BATCH-INITIAL";
-                        DateTime? mfgDate = DateTime.TryParse(row.GetValueOrDefault("MfgDate")?.ToString(), out var mfg) ? mfg : (DateTime?)null;
-                        DateTime? expDate = DateTime.TryParse(row.GetValueOrDefault("ExpiryDate")?.ToString(), out var exp) ? exp : (DateTime?)null;
-
-                        batchParams.Add("ProductId", newProductId);
-                        batchParams.Add("DivisionId", row.ContainsKey("DivisionId") ? row["DivisionId"] : null);
-                        batchParams.Add("BatchNumber", batchNo.Trim());
-                        batchParams.Add("MfgDate", mfgDate);
-                        batchParams.Add("ExpiryDate", expDate);
-                        batchParams.Add("QuantityReceived", initialStock);
-                        batchParams.Add("CurrentStock", initialStock);
-                        batchParams.Add("MinimumSellingPrice", sellingPrice);
-
-                        string insertBatchSql = @"
-                    INSERT INTO ProductBatches (
-                        ProductId, DivisionId, BatchNumber, MfgDate, ExpiryDate, 
-                        QuantityReceived, CurrentStock, MinimumSellingPrice, CreatedAt
-                    ) VALUES (
-                        @ProductId, @DivisionId, @BatchNumber, @MfgDate, @ExpiryDate, 
-                        @QuantityReceived, @CurrentStock, @MinimumSellingPrice, NOW()
-                    );";
-
-                        await connection.ExecuteAsync(insertBatchSql, batchParams, transaction);
-
-                        // SAVE MAPPED TIER 3 CUSTOM VALUES TO CustomFieldValues TABLE
-                        foreach (var propName in mappedTier3PropertyNames)
+                        // =========================================================================
+                        // 1. GENERIC HELPER LAMBDAS (Multi-Alias Resolution)
+                        // =========================================================================
+                        string? GetValue(params string[] propertyAliases)
                         {
-                            if (customFieldIdMap.TryGetValue(propName, out int fieldId))
+                            foreach (var alias in propertyAliases)
                             {
-                                string? valStr = row.GetValueOrDefault(propName)?.ToString()?.Trim();
-                                if (!string.IsNullOrEmpty(valStr))
+                                if (row.TryGetValue(alias, out var val) && val != null && !string.IsNullOrWhiteSpace(val.ToString()))
                                 {
-                                    string insertValSql = @"
-                                INSERT INTO CustomFieldValues (EntityId, FieldId, ModuleType, Value)
-                                VALUES (@EntityId, @FieldId, 'Product', @Value)
-                                ON DUPLICATE KEY UPDATE Value = @Value;";
-
-                                    await connection.ExecuteAsync(insertValSql, new
-                                    {
-                                        EntityId = newProductId,
-                                        FieldId = fieldId,
-                                        Value = valStr
-                                    }, transaction);
+                                    string strVal = val.ToString()!.Trim();
+                                    if (strVal != "--" && strVal != "N/A" && strVal != "null")
+                                        return strVal;
                                 }
                             }
+                            return null;
                         }
 
-                        await SaveTier3CustomValuesAsync(connection, transaction, newProductId, moduleType, row, mappedTier3PropertyNames, customFieldIdMap);
+                        decimal GetDecimal(decimal fallback, params string[] propertyAliases)
+                        {
+                            string? val = GetValue(propertyAliases);
+                            return decimal.TryParse(val, out var parsed) ? parsed : fallback;
+                        }
+
+                        int GetInt(int fallback, params string[] propertyAliases)
+                        {
+                            string? val = GetValue(propertyAliases);
+                            return int.TryParse(val, out var parsed) ? parsed : fallback;
+                        }
+
+                        DateTime? GetDate(params string[] propertyAliases)
+                        {
+                            string? val = GetValue(propertyAliases);
+                            return DateTime.TryParse(val, out var parsed) ? parsed : (DateTime?)null;
+                        }
+
+                        // =========================================================================
+                        // 2. EXTRACT CORE PRODUCT PROPERTIES
+                        // =========================================================================
+                        string? productName = GetValue("Name", "ProductName", "Product Name", "ItemName");
+                        if (string.IsNullOrWhiteSpace(productName))
+                        {
+                            continue; // Skip invalid or empty row
+                        }
+
+                        string? sku = GetValue("SKU", "Code", "ItemCode", "ProductCode");
+                        string unit = GetValue("Unit", "UOM") ?? "Pcs";
+                        string? packaging = GetValue("Packaging", "Packing");
+                        string? manufacturer = GetValue("Manufacturer", "MfgBy");
+                        string? brandName = GetValue("BrandName", "Brand", "Company");
+                        string? vendorName = GetValue("Supplier", "VendorName", "Vendor", "SupplierName");
+                        string? shortName = GetValue("ShortName","Code") ?? (productName.Length > 20 ? productName[..20] : productName);
+
+                        int stockQty = GetInt(0, "Current Stock", "InitialStock", "CurrentStock", "Stock", "Qty", "Quantity");
+                        decimal costPrice = GetDecimal(0.00m, "Cost Price", "Purchase Price", "CostPrice", "PurchasePrice", "Rate");
+                        decimal mrp = GetDecimal(0.00m, "M.R.P.", "MRP", "MaxRetailPrice");
+
+                        decimal parsedSellingPrice = GetDecimal(0.00m, "Sales Price", "SellingPrice", "SalesPrice", "Price");
+                        decimal sellingPrice = parsedSellingPrice > 0
+                            ? parsedSellingPrice
+                            : (mrp > 0 ? mrp : (costPrice > 0 ? costPrice * 1.25m : 0.00m));
+
+                        decimal gstPercent = GetDecimal(18.00m, "GSTPercent", "GST", "TaxPercent");
+                        decimal totalCost = GetDecimal(costPrice * Math.Max(0, stockQty), "TotalCost", "Value");
+
+                        // Tier 2: Dynamic Category & Division resolution
+                        string? categoryName = GetValue("CategoryName", "Category");
+                        int? catId = !string.IsNullOrEmpty(categoryName)
+                            ? await GetOrCreateLookupIdAsync(connection, transaction, "Categories", "CategoryName", categoryName)
+                            : (int.TryParse(GetValue("CategoryId"), out var cId) ? cId : (int?)null);
+
+                        object? divisionId = row.ContainsKey("DivisionId") && row["DivisionId"] != null ? row["DivisionId"] : null;
+
+                        // =========================================================================
+                        // 3. ATOMIC PRODUCT DEDUPLICATION: FIND EXISTING OR INSERT NEW
+                        // =========================================================================
+                        int productId = 0;
+
+                        if (!string.IsNullOrEmpty(sku))
+                        {
+                            productId = await connection.ExecuteScalarAsync<int>(
+                                "SELECT ProductId FROM Products WHERE SKU = @SKU LIMIT 1;",
+                                new { SKU = sku },
+                                transaction);
+                        }
+
+                        if (productId == 0)
+                        {
+                            productId = await connection.ExecuteScalarAsync<int>(
+                                "SELECT ProductId FROM Products WHERE Name = @Name LIMIT 1;",
+                                new { Name = productName },
+                                transaction);
+                        }
+
+                        if (productId == 0)
+                        {
+                            var productParams = new DynamicParameters();
+                            productParams.Add("Name", productName);
+                            productParams.Add("ShortName", shortName);
+                            productParams.Add("SKU", sku);
+                            productParams.Add("Unit", unit);
+                            productParams.Add("CategoryId", catId);
+                            productParams.Add("Manufacturer", manufacturer ?? vendorName);
+                            productParams.Add("Packaging", packaging);
+                            productParams.Add("InitialStock", Math.Max(0, stockQty));
+                            productParams.Add("RemainingStock", Math.Max(0, stockQty));
+                            productParams.Add("MRP", mrp);
+                            productParams.Add("CostPrice", costPrice);
+                            productParams.Add("SellingPrice", sellingPrice);
+                            productParams.Add("GSTPercent", gstPercent);
+                            productParams.Add("TotalCost", totalCost);
+                            productParams.Add("TrackCost", 1);
+                            productParams.Add("HasBatchTracking", 1);
+                            productParams.Add("DivisionId", divisionId);
+                            productParams.Add("BrandName", brandName);
+
+                            string insertProductSql = @"
+                            INSERT INTO Products (
+                                Name, ShortName, SKU, Unit, CategoryId, Manufacturer, Packaging, 
+                                InitialStock, RemainingStock, MRP, CostPrice, SellingPrice, 
+                                GSTPercent, TotalCost, TrackCost, HasBatchTracking, DivisionId, BrandName, CreatedAt
+                            ) VALUES (
+                                @Name, @ShortName, @SKU, @Unit, @CategoryId, @Manufacturer, @Packaging, 
+                                @InitialStock, @RemainingStock, @MRP, @CostPrice, @SellingPrice, 
+                                @GSTPercent, @TotalCost, @TrackCost, @HasBatchTracking, @DivisionId, @BrandName, NOW()
+                            );
+                            SELECT LAST_INSERT_ID();";
+
+                            productId = await connection.ExecuteScalarAsync<int>(insertProductSql, productParams, transaction);
+                        }
+                        else
+                        {
+                            string updateProductSql = @"
+                            UPDATE Products 
+                            SET RemainingStock = GREATEST(0, RemainingStock + @StockQty),
+                                InitialStock = GREATEST(0, InitialStock + @StockQty),
+                                MRP = CASE WHEN @MRP > 0 THEN @MRP ELSE MRP END,
+                                CostPrice = CASE WHEN @CostPrice > 0 THEN @CostPrice ELSE CostPrice END,
+                                SellingPrice = CASE WHEN @SellingPrice > 0 THEN @SellingPrice ELSE SellingPrice END,
+                                CategoryId = COALESCE(CategoryId, @CategoryId),
+                                BrandName = COALESCE(BrandName, @BrandName),
+                                Manufacturer = COALESCE(Manufacturer, @Manufacturer)
+                            WHERE ProductId = @ProductId;";
+
+                            await connection.ExecuteAsync(updateProductSql, new
+                            {
+                                StockQty = stockQty,
+                                MRP = mrp,
+                                CostPrice = costPrice,
+                                SellingPrice = sellingPrice,
+                                CategoryId = catId,
+                                BrandName = brandName,
+                                Manufacturer = manufacturer,
+                                ProductId = productId
+                            }, transaction);
+                        }
+
+                        // =========================================================================
+                        // 4. VENDOR AUTO-RESOLVE & PRODUCT-VENDOR LINKING
+                        // =========================================================================
+                        if (!string.IsNullOrWhiteSpace(vendorName))
+                        {
+                            // Check if Vendor exists by CompanyName
+                            int vendorId = await connection.ExecuteScalarAsync<int>(
+                                "SELECT VendorId FROM vendors WHERE CompanyName = @CompanyName LIMIT 1;",
+                                new { CompanyName = vendorName },
+                                transaction);
+
+                            if (vendorId == 0)
+                            {
+                                string vendorPhone = GetValue("VendorPhone", "Phone", "Mobile") ?? "0000000000";
+                                string? vendorEmail = GetValue("VendorEmail", "Email");
+                                string? vendorGst = GetValue("GSTIN", "GstNumber", "VendorGST");
+                                string? vendorAddress = GetValue("VendorAddress", "Address");
+                                string? contactPerson = GetValue("ContactPerson");
+
+                                string insertVendorSql = @"
+                                INSERT INTO vendors (
+                                    CompanyName, ContactPerson, Phone, Email, GstNumber, Address, Status, CreatedAt
+                                ) VALUES (
+                                    @CompanyName, @ContactPerson, @Phone, @Email, @GstNumber, @Address, 'Active', NOW()
+                                );
+                                SELECT LAST_INSERT_ID();";
+
+                                vendorId = await connection.ExecuteScalarAsync<int>(insertVendorSql, new
+                                {
+                                    CompanyName = vendorName,
+                                    ContactPerson = contactPerson,
+                                    Phone = vendorPhone,
+                                    Email = vendorEmail,
+                                    GstNumber = vendorGst,
+                                    Address = vendorAddress
+                                }, transaction);
+                            }
+
+                            // Link Vendor to Product in vendorproductlinks (Idempotent upsert)
+                            string supplierSku = GetValue("SupplierSku", "SupplierCode", "Code") ?? sku;
+
+                            string linkVendorProductSql = @"
+                                INSERT INTO vendorproductlinks (
+                                    VendorId, ProductId, SupplierSku, PurchasePrice
+                                ) VALUES (
+                                    @VendorId, @ProductId, @SupplierSku, @PurchasePrice
+                                )
+                                ON DUPLICATE KEY UPDATE 
+                                    PurchasePrice = CASE WHEN @PurchasePrice > 0 THEN @PurchasePrice ELSE PurchasePrice END,
+                                    SupplierSku = COALESCE(@SupplierSku, SupplierSku);";
+
+                            await connection.ExecuteAsync(linkVendorProductSql, new
+                            {
+                                VendorId = vendorId,
+                                ProductId = productId,
+                                SupplierSku = supplierSku,
+                                PurchasePrice = costPrice
+                            }, transaction);
+                        }
+
+                        // =========================================================================
+                        // 5. PRODUCT BATCH UPSERT (CHECK -> UPDATE OR INSERT)
+                        // =========================================================================
+                        string batchNo = GetValue("Batch", "BatchNumber", "BatchNo", "LotNumber", "LotNo")
+                                         ?? $"BAT-{DateTime.UtcNow:yyyyMM}-{processedRecordsCount + 1:D3}";
+
+                        DateTime? mfgDate = GetDate("MFG", "MfgDate", "ManufacturingDate", "RecDate", "Rec.Date");
+                        DateTime? expDate = GetDate("EXP", "ExpiryDate", "ExpDate", "BestBefore");
+
+                        // Check if this batch already exists for this specific product
+                        string checkBatchSql = @"
+                            SELECT BatchId 
+                            FROM ProductBatches 
+                            WHERE ProductId = @ProductId AND BatchNumber = @BatchNumber 
+                            LIMIT 1;";
+
+                        int existingBatchId = await connection.ExecuteScalarAsync<int>(
+                            checkBatchSql,
+                            new { ProductId = productId, BatchNumber = batchNo },
+                            transaction);
+
+                        var batchParams = new DynamicParameters();
+                        batchParams.Add("ProductId", productId);
+                        batchParams.Add("DivisionId", divisionId);
+                        batchParams.Add("BatchNumber", batchNo);
+                        batchParams.Add("MfgDate", mfgDate);
+                        batchParams.Add("ExpiryDate", expDate);
+                        batchParams.Add("Quantity", Math.Max(0, stockQty));
+                        batchParams.Add("MinimumSellingPrice", sellingPrice);
+
+                        if (existingBatchId > 0)
+                        {
+                            // UPDATE EXISTING BATCH: Accumulate received & current stock, refresh dates and rate if available
+                            batchParams.Add("BatchId", existingBatchId);
+
+                            string updateBatchSql = @"
+                                UPDATE ProductBatches 
+                                SET 
+                                    CurrentStock = GREATEST(0, CurrentStock + @Quantity),
+                                    QuantityReceived = QuantityReceived + @Quantity,
+                                    MfgDate = COALESCE(@MfgDate, MfgDate),
+                                    ExpiryDate = COALESCE(@ExpiryDate, ExpiryDate),
+                                    MinimumSellingPrice = CASE WHEN @MinimumSellingPrice > 0 THEN @MinimumSellingPrice ELSE MinimumSellingPrice END,
+                                    DivisionId = COALESCE(@DivisionId, DivisionId)
+                                WHERE BatchId = @BatchId;";
+
+                            await connection.ExecuteAsync(updateBatchSql, batchParams, transaction);
+                        }
+                        else
+                        {
+                            // INSERT NEW BATCH RECORD
+                            string insertBatchSql = @"
+                                INSERT INTO ProductBatches (
+                                    ProductId, DivisionId, BatchNumber, MfgDate, ExpiryDate, 
+                                    QuantityReceived, CurrentStock, MinimumSellingPrice, CreatedAt
+                                ) VALUES (
+                                    @ProductId, @DivisionId, @BatchNumber, @MfgDate, @ExpiryDate, 
+                                    @Quantity, @Quantity, @MinimumSellingPrice, NOW()
+                                );";
+
+                            await connection.ExecuteAsync(insertBatchSql, batchParams, transaction);
+                        }
+
+                        // =========================================================================
+                        // 6. TIER-3 CUSTOM VALUES DISPATCH
+                        // =========================================================================
+                        await SaveTier3CustomValuesAsync(
+                            connection,
+                            transaction,
+                            productId,
+                            moduleType,
+                            row,
+                            mappedTier3PropertyNames,
+                            customFieldIdMap);
+
                         processedRecordsCount++;
                     }
                     else if (type == ImportType.Order)

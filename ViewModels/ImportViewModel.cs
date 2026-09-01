@@ -623,7 +623,7 @@ namespace Tijori.ViewModels
                 var systemKeywords = _masterTier2Fields.Select(f => f.DisplayLabel)
                     .Concat(_masterTier2Fields.Select(f => f.FieldName))
                     .Concat(configuredFields.Select(f => string.IsNullOrEmpty(f.DisplayLabel) ? f.FieldName : f.DisplayLabel))
-                    .Concat(new[] { "Party", "Name", "Date", "Bill", "Invoice", "Qty", "Amount", "Rate", "MRP", "GST", "Phone", "Code", "Type", "Item" })
+                    .Concat(new[] { "Party", "Name", "Date", "Bill", "Invoice", "Qty", "Amount", "Rate", "MRP", "GST", "Phone", "Code", "Type", "Item", "Product Name", "Cost Price", "Batch" })
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
@@ -638,56 +638,89 @@ namespace Tijori.ViewModels
 
                     if (lastRowUsed == null) return rowsPayload;
 
-                    // ⚡ DYNAMIC HEADER ROW LOCATION
+                    // 1. Detect the main header row (usually row 5 or 6 in this report)
                     int headerRowIndex = DetectHeaderRowIndex(sheet, systemKeywords);
                     int lastRow = lastRowUsed.RowNumber();
+                    int lastCol = sheet.Row(headerRowIndex).LastCellUsed()?.Address.ColumnNumber
+                                  ?? sheet.LastColumnUsed()?.ColumnNumber() ?? 40;
 
                     if (lastRow <= headerRowIndex)
                     {
-                        return rowsPayload; // No data rows present below header
+                        return rowsPayload;
                     }
 
-                    // Fetch headers from detected row and map to 1-based ClosedXML column indices
-                    var totalExcelColumns = sheet.Row(headerRowIndex).CellsUsed()
-                        .Select(c => c.GetValue<string>().Trim())
-                        .ToList();
+                    // 2. Check if the immediately following row is a sub-header tier (e.g. Deal, Free)
+                    int subRowIndex = headerRowIndex + 1;
+                    bool hasSubHeaderTier = false;
 
-                    var columnIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-                    for (int i = 0; i < totalExcelColumns.Count; i++)
+                    for (int col = 1; col <= lastCol; col++)
                     {
-                        string headerName = totalExcelColumns[i];
-                        if (!columnIndexMap.ContainsKey(headerName))
+                        string subVal = sheet.Cell(subRowIndex, col).GetString().Trim();
+                        if (subVal.Equals("Deal", StringComparison.OrdinalIgnoreCase) ||
+                            subVal.Equals("Free", StringComparison.OrdinalIgnoreCase))
                         {
-                            columnIndexMap[headerName] = i + 1; // 1-based ClosedXML index
+                            hasSubHeaderTier = true;
+                            break;
                         }
                     }
+
+                    // 3. Build valid column map, specifically omitting double-decker scheme columns
+                    var columnIndexMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+                    for (int col = 1; col <= lastCol; col++)
+                    {
+                        string mainHeader = sheet.Cell(headerRowIndex, col).GetString().Trim();
+                        string subHeader = hasSubHeaderTier ? sheet.Cell(subRowIndex, col).GetString().Trim() : string.Empty;
+
+                        // Omit ONLY columns that are part of Deal / Free / Scheme groups
+                        bool isSchemeColumn = mainHeader.Contains("Scheme", StringComparison.OrdinalIgnoreCase)
+                                           || subHeader.Equals("Deal", StringComparison.OrdinalIgnoreCase)
+                                           || subHeader.Equals("Free", StringComparison.OrdinalIgnoreCase);
+
+                        if (isSchemeColumn)
+                        {
+                            // ❌ Skip this column completely so it doesn't shift data
+                            continue;
+                        }
+
+                        // Use the main header name (or subheader if main was blank)
+                        string cleanHeader = !string.IsNullOrWhiteSpace(mainHeader) ? mainHeader : subHeader;
+
+                        if (!string.IsNullOrWhiteSpace(cleanHeader) && !columnIndexMap.ContainsKey(cleanHeader))
+                        {
+                            columnIndexMap[cleanHeader] = col; // Save physical 1-based column index
+                        }
+                    }
+
+                    // 4. Data starts after subheaders if present, else directly after header row
+                    int dataStartRow = hasSubHeaderTier ? subRowIndex + 1 : headerRowIndex + 1;
 
                     var claimedHeaders = activeFieldMappings
                         .Select(m => m.SelectedExcelHeader!)
                         .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-                    // ⚡ START PARSING DATA ROWS AT headerRowIndex + 1
-                    for (int r = headerRowIndex + 1; r <= lastRow; r++)
+                    // 5. Read all data rows cleanly
+                    for (int r = dataStartRow; r <= lastRow; r++)
                     {
                         var rowData = sheet.Row(r);
+                        if (rowData.IsEmpty()) continue;
 
-                        // Skip summary/total lines often found at bottom of Marg/Busy exports
-                        string firstCellValue = rowData.Cell(1).Value.ToString().Trim();
+                        string firstCellValue = rowData.Cell(1).GetString().Trim();
                         if (firstCellValue.Equals("TOTAL", StringComparison.OrdinalIgnoreCase) ||
                             firstCellValue.Equals("GRAND TOTAL", StringComparison.OrdinalIgnoreCase))
                         {
                             continue;
                         }
 
-                        var dbRow = new Dictionary<string, object?>();
+                        var dbRow = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
 
-                        // STEP A: Map explicitly mapped target destination parameters (Tier 1, 2, 3)
+                        // STEP A: Explicit mapped fields
                         foreach (var m in activeFieldMappings)
                         {
                             if (columnIndexMap.TryGetValue(m.SelectedExcelHeader!, out int colIndex))
                             {
-                                var cellValue = rowData.Cell(colIndex).Value;
-                                dbRow[m.InternalPropertyName] = cellValue.IsBlank ? null : cellValue.ToString().Trim();
+                                var cell = rowData.Cell(colIndex);
+                                dbRow[m.InternalPropertyName] = cell.IsEmpty() ? null : cell.GetString().Trim();
                             }
                             else
                             {
@@ -695,17 +728,23 @@ namespace Tijori.ViewModels
                             }
                         }
 
-                        // STEP B: CATCH-ALL RULE for unmapped Excel columns
-                        foreach (var header in totalExcelColumns)
+                        // STEP B: Unmapped Excel columns catch-all
+                        foreach (var kvp in columnIndexMap)
                         {
-                            if (!claimedHeaders.Contains(header) && columnIndexMap.TryGetValue(header, out int colIndex))
+                            string header = kvp.Key;
+                            int colIndex = kvp.Value;
+
+                            if (!claimedHeaders.Contains(header) && !dbRow.ContainsKey(header))
                             {
-                                var cellValue = rowData.Cell(colIndex).Value;
-                                dbRow[header] = cellValue.IsBlank ? null : cellValue.ToString().Trim();
+                                var cell = rowData.Cell(colIndex);
+                                dbRow[header] = cell.IsEmpty() ? null : cell.GetString().Trim();
                             }
                         }
 
-                        rowsPayload.Add(dbRow);
+                        if (dbRow.Values.Any(v => v != null && !string.IsNullOrWhiteSpace(v.ToString())))
+                        {
+                            rowsPayload.Add(dbRow);
+                        }
                     }
 
                     return rowsPayload;

@@ -201,7 +201,7 @@ namespace Tijori.Services
             const string headerSql = @"
                 SELECT 
                     so.*,
-                    c.Name AS CustomerName,
+                    c.CustomerName AS CustomerName,
                     (SELECT COUNT(1) FROM production_work_orders pwo WHERE pwo.OrderId = so.OrderId) AS BatchOrdersCount
                 FROM service_orders so
                 LEFT JOIN leads c ON so.CustomerId = c.LeadId

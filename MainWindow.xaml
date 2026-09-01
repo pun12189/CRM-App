@@ -226,7 +226,7 @@
                               Text="{Binding GlobalSearchQueryText, UpdateSourceTrigger=PropertyChanged}"
                               IsEditable="True"
                                   IsTextSearchEnabled="False"
-                              materialDesign:HintAssist.Hint="Search for leads, customers, phone numbers..."
+                              materialDesign:HintAssist.Hint="Search for customers, phone numbers..."
                               materialDesign:TextFieldAssist.HasClearButton="True"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"
                               Background="#F1F5F9"
@@ -274,7 +274,7 @@
 
                             <StackPanel Background="White" Margin="0,-6">
 
-                                <MenuItem Command="{Binding QuickAddLeadCommand}" Height="38">
+                                <MenuItem Command="{Binding QuickAddLeadCommand}" Height="38" Visibility="Collapsed">
                                     <MenuItem.Header>
                                         <StackPanel Orientation="Horizontal" Margin="-10,0,0,0">
                                             <materialDesign:PackIcon Kind="AccountPlus" Foreground="#10B981" Width="18" Height="18" VerticalAlignment="Center"/>
@@ -301,7 +301,7 @@
                                     </MenuItem.Header>
                                 </MenuItem>
 
-                                <MenuItem Command="{Binding QuickAddOrderCommand}" Height="38">
+                                <MenuItem Command="{Binding QuickAddOrderCommand}" Height="38" Visibility="Collapsed">
                                     <MenuItem.Header>
                                         <StackPanel Orientation="Horizontal" Margin="-10,0,0,0">
                                             <materialDesign:PackIcon Kind="CartAdd" Foreground="#EC4899" Width="18" Height="18" VerticalAlignment="Center"/>
@@ -534,20 +534,21 @@
 
                     <MenuItem Header="Dashboard" Icon="{materialDesign:PackIcon Kind=ViewDashboard}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Dashboard"/>
 
-                    <MenuItem Header="Task's" Icon="{materialDesign:PackIcon Kind=Clockwise}" Click="TopLevelMenuItem_Click">
+                    <MenuItem Header="Task's" Icon="{materialDesign:PackIcon Kind=Clockwise}" Click="TopLevelMenuItem_Click" Visibility="Collapsed">
                         <MenuItem Header="Today's Task" Icon="{materialDesign:PackIcon Kind=CalendarToday}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Today"/>
                         <MenuItem Header="Future Task" Icon="{materialDesign:PackIcon Kind=CalendarClock}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Future"/>
                     </MenuItem>
 
-                    <MenuItem Header="Leads" Icon="{materialDesign:PackIcon Kind=AccountGroup}" Click="TopLevelMenuItem_Click">
+                    <MenuItem Header="Customers" Icon="{materialDesign:PackIcon Kind=AccountGroup}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Customers"/>
+                    <!--<MenuItem Header="Leads" Icon="{materialDesign:PackIcon Kind=AccountGroup}" Click="TopLevelMenuItem_Click">
                         <MenuItem Header="All Leads" Icon="{materialDesign:PackIcon Kind=AccountMultiple}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Leads"/>
                         <MenuItem Header="Customers" Icon="{materialDesign:PackIcon Kind=CardAccountDetails}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Customers"/>
                         <MenuItem Header="My Leads" Icon="{materialDesign:PackIcon Kind=Account}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="MyLeads"/>
                         <MenuItem Header="Dead Leads" Icon="{materialDesign:PackIcon Kind=CloseCircle}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dead"/>
                         <MenuItem Header="Winback Pool" Icon="{materialDesign:PackIcon Kind=Pool}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="WinbackPool"/>
-                    </MenuItem>
+                    </MenuItem>-->
 
-                    <MenuItem Header="Occupied Locations" Icon="{materialDesign:PackIcon Kind=MapMarkerRadius}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Location"/>
+                    <!--<MenuItem Header="Occupied Locations" Icon="{materialDesign:PackIcon Kind=MapMarkerRadius}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Location"/>-->
 
                     <!--<MenuItem Header="Dead Leads" Icon="{materialDesign:PackIcon Kind=AccountCancel}" Click="TopLevelMenuItem_Click">
                         <MenuItem Header="Dead" Icon="{materialDesign:PackIcon Kind=CloseCircle}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Dead"/>
@@ -556,17 +557,17 @@
 
                     <MenuItem Header="Items" Icon="{materialDesign:PackIcon Kind=AccountCancel}" Click="TopLevelMenuItem_Click">
                         <MenuItem Header="List" Icon="{materialDesign:PackIcon Kind=CloseCircle}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Inventory"/>
-                        <MenuItem Header="Stock Ledger" Icon="{materialDesign:PackIcon Kind=InvoiceScheduled}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="StockLedger"/>
+                        <!--<MenuItem Header="Stock Ledger" Icon="{materialDesign:PackIcon Kind=InvoiceScheduled}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="StockLedger"/>-->
                         <MenuItem Header="Purchase Orders" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Purchase"/>
                         <MenuItem Header="Vendors" Icon="{materialDesign:PackIcon Kind=PersonBox}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Vendor"/>
                     </MenuItem>
 
                     <!--<MenuItem Header="Purchase" Icon="{materialDesign:PackIcon Kind=InboxArrowDown}" Click="TopLevelMenuItem_Click" Command="{Binding NavigateCommand}" CommandParameter="Purchase"/>-->
                     <MenuItem Header="Orders" Icon="{materialDesign:PackIcon Kind=Briefcase}" Click="TopLevelMenuItem_Click">
-                        <MenuItem Header="Proforma" Icon="{materialDesign:PackIcon Kind=FileDocumentCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Proforma"/>
+                        <!--<MenuItem Header="Proforma" Icon="{materialDesign:PackIcon Kind=FileDocumentCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Proforma"/>-->
                         <MenuItem Header="Product Orders" Icon="{materialDesign:PackIcon Kind=CartCheck}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Orders"/>
-                        <MenuItem Header="Service Line Orders" Icon="{materialDesign:PackIcon Kind=CartPlus}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="ServiceOrder"/>
-                        <MenuItem Header="Batch Orders" Icon="{materialDesign:PackIcon Kind=SelectGroup}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Batch"/>
+                        <!--<MenuItem Header="Service Line Orders" Icon="{materialDesign:PackIcon Kind=CartPlus}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="ServiceOrder"/>
+                        <MenuItem Header="Batch Orders" Icon="{materialDesign:PackIcon Kind=SelectGroup}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Batch"/>-->
                         <MenuItem Header="Ledger" Icon="{materialDesign:PackIcon Kind=BookOpenPageVariant}" Style="{StaticResource SubItemStyle}" Command="{Binding NavigateCommand}" CommandParameter="Ledger"/>
                         
                         <!--<MenuItem Header="HRMS" IsEnabled="False" Icon="{materialDesign:PackIcon Kind=HumanFemale}" Style="{StaticResource SubItemStyle}" />

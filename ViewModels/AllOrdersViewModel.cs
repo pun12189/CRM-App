@@ -43,7 +43,7 @@ namespace Tijori.ViewModels
         [ObservableProperty] private decimal _totalPaymentsReceived;
         [ObservableProperty] private decimal _totalOutstandingBalance;
 
-        [ObservableProperty] private bool _isCounterPanelExpanded = true;
+        [ObservableProperty] private bool _isCounterPanelExpanded = false;
         [ObservableProperty] private CustomerStats _customerStats = new();
         [ObservableProperty] private bool _workspaceViewIsActive;
 

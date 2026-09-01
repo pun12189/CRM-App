@@ -280,7 +280,7 @@
                                                 </TextBlock.InputBindings>
                                             </TextBlock>
                                             <StackPanel Margin="0,5" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                                                <Button security:SecurityGuard.Requires="Customer:Update" BorderThickness="0" Padding="8" Margin="2" ToolTip="Update Info" Command="{Binding DataContext.OpenLeadProfileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Green" Foreground="White" FontWeight="Bold">
+                                                <Button security:SecurityGuard.Requires="Customer:Update" Visibility="Collapsed" BorderThickness="0" Padding="8" Margin="2" ToolTip="Update Info" Command="{Binding DataContext.OpenLeadProfileCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="Green" Foreground="White" FontWeight="Bold">
                                                     <icon:BootstrapIcons Kind="JournalText"/>
                                                 </Button>
                                                 <Button security:SecurityGuard.Requires="Customer:Edit" BorderThickness="0" Padding="8" Margin="2" ToolTip="Edit Info" Command="{Binding DataContext.EditLeadCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Center" Background="CadetBlue" Foreground="White" FontWeight="Bold">
@@ -433,7 +433,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Header="Followup Date/Time" Width="*">
+                            <DataGridTemplateColumn Header="Followup Date/Time" Width="*" Visibility="Collapsed">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <StackPanel VerticalAlignment="Center">
@@ -453,7 +453,7 @@
                     </DataTemplate>
                 </DataGridTemplateColumn.CellTemplate>
             </DataGridTemplateColumn>-->
-                            <DataGridTemplateColumn Header="Last Message" Width="*">
+                            <DataGridTemplateColumn Header="Last Message" Width="*" Visibility="Collapsed">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Grid>

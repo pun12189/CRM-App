@@ -64,7 +64,7 @@
                 <!-- Rating Badge & Quick Contact Icons -->
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Dynamic Delay Rating Box -->
-                    <Border Background="#FEF3C7" CornerRadius="8" Padding="12,6" Margin="0,0,16,0">
+                    <Border Background="#FEF3C7" CornerRadius="8" Padding="12,6" Margin="0,0,16,0" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Star" Foreground="#D97706" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,4,0"/>
                             <TextBlock Text="{Binding DelayRating, StringFormat='{}{0:F1} / 5.0'}" FontWeight="Bold" FontSize="14" Foreground="#92400E" VerticalAlignment="Center"/>
@@ -135,7 +135,7 @@
                             </Border>
 
                             <!-- Card 3: Delay Rating & Performance -->
-                            <Border Grid.Column="2" Background="#FFFBEB" CornerRadius="8" Padding="16" Margin="8,0,0,0">
+                            <Border Grid.Column="2" Background="#FFFBEB" CornerRadius="8" Padding="16" Margin="8,0,0,0" Visibility="Collapsed">
                                 <StackPanel>
                                     <TextBlock Text="Delivery Performance Metrics" FontWeight="Bold" Foreground="#92400E" Margin="0,0,0,12"/>
                                     <Grid Margin="0,0,0,6">

@@ -157,7 +157,7 @@ namespace Tijori.ViewModels
 
         private void RefreshOrderTotals()
         {
-            PoTotalAmount = PoLines.Sum(l => l.TotalCost);
+            PoTotalAmount = PoLines.Sum(l => l.TotalAmount);
             SavePurchaseOrderCommand.NotifyCanExecuteChanged();
         }
 

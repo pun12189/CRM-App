@@ -10,19 +10,26 @@ namespace Tijori.Models
     public partial class PurchaseOrder : ObservableObject
     {
         [ObservableProperty] private int _purchaseOrderId;
-        [ObservableProperty] private string _poNumber = string.Empty; // e.g., PO-2026-0001
+        [ObservableProperty] private string _poNumber = string.Empty; // e.g. PO-2026-0001 or Bill No from Marg
         [ObservableProperty] private int _vendorId;
         [ObservableProperty] private DateTime _orderDate = DateTime.Today;
+        [ObservableProperty] private DateTime? _invoiceDate;
 
-        // --- NEW: Delivery Tracking Fields ---
-        [ObservableProperty] private DateTime? _expectedDeliveryDate = DateTime.Today.AddDays(7); // Default expected turnaround
-        [ObservableProperty] private DateTime? _actualDeliveryDate; // Populated upon GRN / Received status
+        // Delivery Tracking
+        [ObservableProperty] private DateTime? _expectedDeliveryDate = DateTime.Today.AddDays(7);
+        [ObservableProperty] private DateTime? _actualDeliveryDate;
 
+        // Financial & Tax Summary
+        [ObservableProperty] private decimal _taxableAmount;
+        [ObservableProperty] private decimal _discountAmount;
+        [ObservableProperty] private decimal _taxAmount;
+        [ObservableProperty] private decimal _roundOff;
         [ObservableProperty] private decimal _totalAmount;
+
         [ObservableProperty] private string _orderStatus = "Draft"; // Draft, Ordered, Received, Cancelled
         [ObservableProperty] private string _createdBy = "Admin";
 
-        // Code-linked display property populated by the Service layer join query
+        // Display & Join Properties
         [ObservableProperty] private string _vendorName = string.Empty;
 
         // --- Dynamic Delay Helpers ---

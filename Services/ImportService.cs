@@ -693,91 +693,344 @@ namespace Tijori.Services
                     {
                         int? defaultCategoryId = await GetOrCreateLookupIdAsync(connection, transaction, "Categories", "CategoryName", "General");
 
+                        // Helper to extract values by multiple possible column aliases
+                        string GetVal(IDictionary<string, object?> row, params string[] keys)
+                        {
+                            foreach (var k in keys)
+                            {
+                                var match = row.FirstOrDefault(kvp => kvp.Key.Trim().Equals(k, StringComparison.OrdinalIgnoreCase));
+                                if (match.Value != null && !string.IsNullOrWhiteSpace(match.Value.ToString()))
+                                    return match.Value.ToString()!.Trim();
+                            }
+                            return string.Empty;
+                        }
+
+                        // 1. Filter out summary/total rows and invalid entries
                         var validPurchaseRows = rowsList.Where(r =>
                         {
-                            string po = r.GetValueOrDefault("PoNumber")?.ToString()?.Trim() ?? "";
-                            string vendor = r.GetValueOrDefault("VendorId")?.ToString()?.Trim() ?? "";
-                            return !string.IsNullOrEmpty(po) && po != "TOTAL" && vendor != "TOTAL";
+                            string billNo = GetVal(r, "Bill No#", "Bill No", "BillNo", "PoNumber", "InvoiceNo", "VCN");
+                            string party = GetVal(r, "Party Name", "PartyName", "VendorId", "VendorName", "Supplier");
+                            string item = GetVal(r, "Item Name", "ItemName", "ProductName", "ProductId", "Particulars");
+
+                            return !string.IsNullOrWhiteSpace(billNo) &&
+                                   !billNo.Equals("TOTAL", StringComparison.OrdinalIgnoreCase) &&
+                                   !billNo.Equals("GRAND TOTAL", StringComparison.OrdinalIgnoreCase) &&
+                                   !string.IsNullOrWhiteSpace(item) &&
+                                   !item.Equals("TOTAL", StringComparison.OrdinalIgnoreCase) &&
+                                   !string.IsNullOrWhiteSpace(party) &&
+                                   !party.Equals("TOTAL", StringComparison.OrdinalIgnoreCase);
                         }).ToList();
 
-                        var poGroups = validPurchaseRows
-                            .GroupBy(r => r.GetValueOrDefault("PoNumber")?.ToString()?.Trim())
+                        // 2. Group strictly by Bill Number (e.g., "AP-11455", "LGST26272824", "DN00017")
+                        var purchaseGroups = validPurchaseRows
+                            .GroupBy(r => GetVal(r, "Bill No#", "Bill No", "BillNo", "PoNumber", "InvoiceNo", "VCN"), StringComparer.OrdinalIgnoreCase)
+                            .Where(g => !string.IsNullOrWhiteSpace(g.Key))
                             .ToList();
 
-                        foreach (var group in poGroups)
+                        foreach (var group in purchaseGroups)
                         {
-                            string poNumber = group.Key!;
+                            string billNumber = group.Key!;
                             var primaryRow = group.First();
 
-                            int? vendorId = await GetOrCreateLookupIdAsync(connection, transaction, "Vendors", "CompanyName", primaryRow.GetValueOrDefault("VendorId")?.ToString());
-                            if (!vendorId.HasValue) continue;
+                            string vendorName = GetVal(primaryRow, "Party Name", "PartyName", "VendorId", "VendorName", "Supplier");
+                            string vendorGst = GetVal(primaryRow, "GST No.", "GST No", "GSTIN", "GstNumber");
+                            string vendorPan = GetVal(primaryRow, "PAN", "PAN No", "PanNumber");
+                            string transType = GetVal(primaryRow, "Type", "TransactionType", "TransType");
+                            bool isDebitNote = transType.Equals("P/Re", StringComparison.OrdinalIgnoreCase) || transType.Contains("Return", StringComparison.OrdinalIgnoreCase);
 
-                            DateTime orderDate = DateTime.TryParse(primaryRow.GetValueOrDefault("OrderDate")?.ToString(), out var oDate) ? oDate : DateTime.Now;
-                            DateTime? expDelivery = DateTime.TryParse(primaryRow.GetValueOrDefault("ExpectedDeliveryDate")?.ToString(), out var expD) ? expD : (DateTime?)null;
+                            DateTime orderDate = DateTime.TryParse(GetVal(primaryRow, "Date", "OrderDate", "InvoiceDate"), out var parsedDate) ? parsedDate : DateTime.Now;
 
-                            decimal accumulatedTotal = 0;
-                            var purchaseItems = new List<DynamicParameters>();
+                            // 3. Resolve or Create Vendor with GST/PAN Enrichment
+                            int vendorId = await connection.ExecuteScalarAsync<int>(
+                                "SELECT VendorId FROM Vendors WHERE CompanyName = @CompanyName LIMIT 1;",
+                                new { CompanyName = vendorName }, transaction);
 
-                            foreach (var line in group)
+                            if (vendorId == 0)
                             {
-                                string itemName = line.GetValueOrDefault("ProductName")?.ToString()?.Trim() ?? "";
-                                if (string.IsNullOrEmpty(itemName)) continue;
-
-                                int qty = int.TryParse(line.GetValueOrDefault("Quantity")?.ToString(), out var q) ? q : 0;
-                                decimal unitPrice = decimal.TryParse(line.GetValueOrDefault("UnitPrice")?.ToString(), out var price) ? price : 0.00m;
-                                decimal lineTotal = qty * price;
-
-                                accumulatedTotal += lineTotal;
-
-                                var (productId, _) = await GetOrCreateProductContextAsync(
-                                    connection, transaction, itemName, line.GetValueOrDefault("SupplierSku")?.ToString() ?? "", price, 0, defaultCategoryId, null, "");
-
-                                var itemParams = new DynamicParameters();
-                                itemParams.Add("ProductId", productId);
-                                itemParams.Add("Quantity", qty);
-                                itemParams.Add("UnitPrice", price);
-                                itemParams.Add("TotalCost", lineTotal);
-
-                                purchaseItems.Add(itemParams);
+                                const string insertVendorSql = @"
+                INSERT INTO Vendors (CompanyName, GstNumber, Status, CreatedAt) 
+                VALUES (@CompanyName, @GstNumber, 'Active', NOW());
+                SELECT LAST_INSERT_ID();";
+                                vendorId = await connection.ExecuteScalarAsync<int>(insertVendorSql, new { CompanyName = vendorName, GstNumber = vendorGst }, transaction);
+                            }
+                            else if (!string.IsNullOrWhiteSpace(vendorGst))
+                            {
+                                await connection.ExecuteAsync("UPDATE Vendors SET GstNumber = @GstNumber WHERE VendorId = @VendorId AND (GstNumber IS NULL OR GstNumber = '');",
+                                    new { GstNumber = vendorGst, VendorId = vendorId }, transaction);
                             }
 
-                            // Insert Parent Purchase Order
-                            var poParams = new DynamicParameters();
-                            poParams.Add("PoNumber", poNumber);
-                            poParams.Add("VendorId", vendorId.Value);
-                            poParams.Add("OrderDate", orderDate);
-                            poParams.Add("ExpectedDeliveryDate", expDelivery);
-                            poParams.Add("TotalAmount", accumulatedTotal);
-                            poParams.Add("OrderStatus", primaryRow.GetValueOrDefault("OrderStatus") ?? "Received");
-                            poParams.Add("CreatedBy", primaryRow.GetValueOrDefault("CreatedBy") ?? (_session.CurrentUser ?? "Admin"));
+                            // =====================================================================
+                            // ROUTE A: PURCHASE RETURNS / DEBIT NOTES (P/Re)
+                            // =====================================================================
+                            if (isDebitNote)
+                            {
+                                const string checkPrSql = "SELECT PurchaseReturnId FROM PurchaseReturns WHERE ReturnDebitNo = @ReturnDebitNo LIMIT 1;";
+                                int existingPrId = await connection.ExecuteScalarAsync<int>(checkPrSql, new { ReturnDebitNo = billNumber }, transaction);
+                                if (existingPrId > 0) continue;
 
-                            string insertPoSql = @"
-                        INSERT INTO PurchaseOrders (
-                            PoNumber, VendorId, OrderDate, ExpectedDeliveryDate, TotalAmount, OrderStatus, CreatedBy, CreatedAt
+                                decimal returnTotalAmount = 0;
+                                decimal returnTaxAmount = 0;
+                                var returnLinesToInsert = new List<DynamicParameters>();
+
+                                foreach (var rowz in group)
+                                {
+                                    string itemName = GetVal(rowz, "Item Name", "ItemName", "ProductName", "ProductId");
+                                    if (string.IsNullOrWhiteSpace(itemName)) continue;
+
+                                    int qty = Math.Abs(int.TryParse(GetVal(rowz, "Qty", "Quantity"), out var q) ? q : 0);
+                                    decimal rate = Math.Abs(decimal.TryParse(GetVal(rowz, "Rate", "UnitPrice"), out var r) ? r : 0.00m);
+                                    decimal taxPercent = decimal.TryParse(GetVal(rowz, "GST %", "TaxPercent", "GSTPercent"), out var tp) ? tp : 0.00m;
+                                    decimal taxAmt = Math.Abs(decimal.TryParse(GetVal(rowz, "Tax Amount", "TaxAmount", "GST / Tax Amount"), out var ta) ? ta : 0.00m);
+                                    decimal lineTotal = Math.Abs(decimal.TryParse(GetVal(rowz, "Amount", "Total", "TotalCost"), out var lt) ? lt : (qty * rate));
+                                    string batchNo = GetVal(rowz, "Batch", "BatchNumber");
+                                    string brand = GetVal(rowz, "Company Name", "BrandName", "Brand");
+
+                                    returnTotalAmount += lineTotal;
+                                    returnTaxAmount += taxAmt;
+
+                                    var (productId, _) = await GetOrCreateProductContextAsync(connection, transaction, itemName, GetVal(rowz, "SupplierSku", "SKU"), rate, taxPercent, defaultCategoryId, null, brand);
+
+                                    var prLineParams = new DynamicParameters();
+                                    prLineParams.Add("ProductId", productId);
+                                    prLineParams.Add("BatchNumber", batchNo);
+                                    prLineParams.Add("Quantity", qty);
+                                    prLineParams.Add("UnitPrice", rate);
+                                    prLineParams.Add("TaxPercent", taxPercent);
+                                    prLineParams.Add("TaxAmount", taxAmt);
+                                    prLineParams.Add("TotalAmount", lineTotal);
+
+                                    returnLinesToInsert.Add(prLineParams);
+                                }
+
+                                const string insertPrSql = @"
+                INSERT INTO PurchaseReturns (
+                    ReturnDebitNo, VendorId, ReturnDate, TotalAmount, TaxAmount, Reason, Status, CreatedBy, CreatedAt
+                ) VALUES (
+                    @ReturnDebitNo, @VendorId, @ReturnDate, @TotalAmount, @TaxAmount, 'Imported Marg Debit Note', 'Completed', @CreatedBy, NOW()
+                );
+                SELECT LAST_INSERT_ID();";
+
+                                int generatedPrId = await connection.ExecuteScalarAsync<int>(insertPrSql, new
+                                {
+                                    ReturnDebitNo = billNumber,
+                                    VendorId = vendorId,
+                                    ReturnDate = orderDate,
+                                    TotalAmount = returnTotalAmount,
+                                    TaxAmount = returnTaxAmount,
+                                    CreatedBy = _session.CurrentUser ?? "Admin"
+                                }, transaction);
+
+                                foreach (var lineParam in returnLinesToInsert)
+                                {
+                                    lineParam.Add("PurchaseReturnId", generatedPrId);
+
+                                    const string insertPrDetailSql = @"
+                    INSERT INTO PurchaseReturnDetails (
+                        PurchaseReturnId, ProductId, BatchNumber, Quantity, UnitPrice, TaxPercent, TaxAmount, TotalAmount
+                    ) VALUES (
+                        @PurchaseReturnId, @ProductId, @BatchNumber, @Quantity, @UnitPrice, @TaxPercent, @TaxAmount, @TotalAmount
+                    );";
+                                    await connection.ExecuteAsync(insertPrDetailSql, lineParam, transaction);
+
+                                    // Deduct outward stock from physical warehouse and batch
+                                    int prodId = lineParam.Get<int>("ProductId");
+                                    int deductQty = lineParam.Get<int>("Quantity");
+                                    string bNo = lineParam.Get<string>("BatchNumber");
+
+                                    await connection.ExecuteAsync("UPDATE Products SET RemainingStock = GREATEST(0, RemainingStock - @Qty) WHERE ProductId = @ProductId;", new { Qty = deductQty, ProductId = prodId }, transaction);
+                                    if (!string.IsNullOrWhiteSpace(bNo))
+                                    {
+                                        await connection.ExecuteAsync("UPDATE ProductBatches SET CurrentStock = GREATEST(0, CurrentStock - @Qty) WHERE ProductId = @ProductId AND BatchNumber = @BatchNumber;", new { Qty = deductQty, ProductId = prodId, BatchNumber = bNo }, transaction);
+                                    }
+                                }
+
+                                await SaveTier3CustomValuesAsync(connection, transaction, generatedPrId, "PurchaseReturn", primaryRow, mappedTier3PropertyNames, customFieldIdMap);
+                                processedRecordsCount++;
+                                continue;
+                            }
+
+                            // =====================================================================
+                            // ROUTE B: REGULAR PURCHASE ORDERS (Purc)
+                            // =====================================================================
+                            const string checkExistingPoSql = @"
+            SELECT PurchaseOrderId FROM PurchaseOrders 
+            WHERE PoNumber = @PoNumber AND VendorId = @VendorId 
+            LIMIT 1;";
+
+                            int existingPoId = await connection.ExecuteScalarAsync<int>(checkExistingPoSql, new { PoNumber = billNumber, VendorId = vendorId }, transaction);
+                            if (existingPoId > 0)
+                            {
+                                continue; // Skip already imported invoice
+                            }
+
+                            decimal accumulatedTaxableAmount = 0;
+                            decimal accumulatedTaxAmount = 0;
+                            decimal accumulatedDiscountAmount = 0;
+                            decimal accumulatedChargesAmount = 0;
+
+                            var purchaseItemsToInsert = new List<DynamicParameters>();
+                            var chargesToInsert = new List<DynamicParameters>();
+
+                            foreach (var rowz in group)
+                            {
+                                string itemName = GetVal(rowz, "Item Name", "ItemName", "ProductName", "ProductId");
+                                if (string.IsNullOrWhiteSpace(itemName)) continue;
+
+                                int qty = int.TryParse(GetVal(rowz, "Qty", "Quantity"), out var q) ? q : 0;
+                                int freeQty = int.TryParse(GetVal(rowz, "Free Qty", "FreeQuantity", "Free"), out var fq) ? fq : 0;
+                                int totalUnits = qty + freeQty;
+
+                                decimal rate = decimal.TryParse(GetVal(rowz, "Rate", "UnitPrice"), out var r) ? r : 0.00m;
+                                decimal mrp = decimal.TryParse(GetVal(rowz, "MRP", "M.R.P."), out var m) ? m : 0.00m;
+                                decimal discPercent = decimal.TryParse(GetVal(rowz, "Discou", "DiscountPercent", "Disc %", "Schem%"), out var dp) ? dp : 0.00m;
+                                decimal taxPercent = decimal.TryParse(GetVal(rowz, "GST %", "TaxPercent", "GSTPercent"), out var tp) ? tp : 0.00m;
+                                decimal taxAmount = decimal.TryParse(GetVal(rowz, "Tax Amount", "TaxAmount", "GST / Tax Amount"), out var ta) ? ta : 0.00m;
+                                decimal taxableBase = decimal.TryParse(GetVal(rowz, "Amount", "TotalCost", "Subtotal"), out var lt) ? lt : (qty * rate);
+                                decimal lineTotalAmount = taxableBase + taxAmount;
+
+                                string batchNo = GetVal(rowz, "Batch", "BatchNumber");
+                                string brand = GetVal(rowz, "Company Name", "BrandName", "Brand");
+
+                                // Overhead charge detection (e.g. Courier, Cylinder, Packing Charges)
+                                if (totalUnits == 0 || itemName.Equals("FREIGHT", StringComparison.OrdinalIgnoreCase) || itemName.Contains("CHARGE", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    accumulatedChargesAmount += lineTotalAmount;
+                                    accumulatedTaxAmount += taxAmount;
+
+                                    var chargeParam = new DynamicParameters();
+                                    chargeParam.Add("VendorId", vendorId);
+                                    chargeParam.Add("VendorInvoiceNo", billNumber);
+                                    chargeParam.Add("InvoiceDate", orderDate);
+                                    chargeParam.Add("ChargeName", itemName);
+                                    chargeParam.Add("Amount", taxableBase);
+                                    chargeParam.Add("SGSTPercent", taxPercent);
+                                    chargeParam.Add("TaxAmount", taxAmount);
+                                    chargeParam.Add("TotalAmount", lineTotalAmount);
+                                    chargesToInsert.Add(chargeParam);
+                                    continue;
+                                }
+
+                                // Physical product processing
+                                if (totalUnits > 0)
+                                {
+                                    var (productId, _) = await GetOrCreateProductContextAsync(connection, transaction, itemName, GetVal(rowz, "SupplierSku", "SKU"), rate, taxPercent, defaultCategoryId, null, brand);
+
+                                    // Update Master Product Catalog Pricing & Brand
+                                    await connection.ExecuteAsync(@"
+                    UPDATE Products 
+                    SET MRP = CASE WHEN @MRP > 0 THEN @MRP ELSE MRP END,
+                        CostPrice = CASE WHEN @CostPrice > 0 THEN @CostPrice ELSE CostPrice END,
+                        BrandName = CASE WHEN @BrandName != '' THEN @BrandName ELSE BrandName END
+                    WHERE ProductId = @ProductId;",
+                                        new { MRP = mrp, CostPrice = rate, BrandName = brand, ProductId = productId }, transaction);
+
+                                    // Upsert Vendor Product Link
+                                    await connection.ExecuteAsync(@"
+                    INSERT INTO VendorProductLinks (VendorId, ProductId, PurchasePrice) VALUES (@VendorId, @ProductId, @Price)
+                    ON DUPLICATE KEY UPDATE PurchasePrice = CASE WHEN @Price > 0 THEN @Price ELSE PurchasePrice END;",
+                                        new { VendorId = vendorId, ProductId = productId, Price = rate }, transaction);
+
+                                    // Upsert Product Batch
+                                    if (!string.IsNullOrWhiteSpace(batchNo))
+                                    {
+                                        await connection.ExecuteAsync(@"
+                        INSERT INTO ProductBatches (
+                            ProductId, BatchNumber, MfgDate, ExpiryDate, QuantityReceived, CurrentStock, MinimumSellingPrice, CreatedAt
                         ) VALUES (
-                            @PoNumber, @VendorId, @OrderDate, @ExpectedDeliveryDate, @TotalAmount, @OrderStatus, @CreatedBy, NOW()
-                        );
-                        SELECT LAST_INSERT_ID();";
+                            @ProductId, @BatchNumber, @MfgDate, @ExpiryDate, @TotalUnits, @TotalUnits, @MRP, NOW()
+                        )
+                        ON DUPLICATE KEY UPDATE 
+                            CurrentStock = CurrentStock + @TotalUnits, 
+                            QuantityReceived = QuantityReceived + @TotalUnits;",
+                                            new { ProductId = productId, BatchNumber = batchNo, MfgDate = orderDate, ExpiryDate = orderDate.AddYears(2), TotalUnits = totalUnits, MRP = mrp }, transaction);
+                                    }
+
+                                    accumulatedTaxableAmount += taxableBase;
+                                    accumulatedTaxAmount += taxAmount;
+
+                                    var itemParams = new DynamicParameters();
+                                    itemParams.Add("ProductId", productId);
+                                    itemParams.Add("BatchNumber", batchNo);
+                                    itemParams.Add("Quantity", qty);
+                                    itemParams.Add("FreeQuantity", freeQty);
+                                    itemParams.Add("UnitPrice", rate);
+                                    itemParams.Add("MRP", mrp);
+                                    itemParams.Add("DiscountPercent", discPercent);
+                                    itemParams.Add("TaxPercent", taxPercent);
+                                    itemParams.Add("TaxAmount", taxAmount);
+                                    itemParams.Add("TotalAmount", lineTotalAmount);
+                                    itemParams.Add("TotalUnits", totalUnits);
+
+                                    purchaseItemsToInsert.Add(itemParams);
+                                }
+                            }
+
+                            decimal grandTotal = accumulatedTaxableAmount + accumulatedTaxAmount + accumulatedChargesAmount - accumulatedDiscountAmount;
+
+                            // Insert Purchase Order Header Record
+                            var poParams = new DynamicParameters();
+                            poParams.Add("PoNumber", billNumber);
+                            poParams.Add("VendorId", vendorId);
+                            poParams.Add("OrderDate", orderDate);
+                            poParams.Add("InvoiceDate", orderDate);
+                            poParams.Add("ExpectedDeliveryDate", orderDate);
+                            poParams.Add("ActualDeliveryDate", orderDate);
+                            poParams.Add("TaxableAmount", accumulatedTaxableAmount);
+                            poParams.Add("DiscountAmount", accumulatedDiscountAmount);
+                            poParams.Add("TaxAmount", accumulatedTaxAmount);
+                            poParams.Add("RoundOff", 0.00m);
+                            poParams.Add("TotalAmount", grandTotal);
+                            poParams.Add("OrderStatus", "Received");
+                            poParams.Add("CreatedBy", _session.CurrentUser ?? "Admin");
+
+                            const string insertPoSql = @"
+            INSERT INTO PurchaseOrders (
+                PoNumber, VendorId, OrderDate, InvoiceDate, ExpectedDeliveryDate, ActualDeliveryDate,
+                TaxableAmount, DiscountAmount, TaxAmount, RoundOff, TotalAmount, OrderStatus, CreatedBy
+            ) VALUES (
+                @PoNumber, @VendorId, @OrderDate, @InvoiceDate, @ExpectedDeliveryDate, @ActualDeliveryDate,
+                @TaxableAmount, @DiscountAmount, @TaxAmount, @RoundOff, @TotalAmount, @OrderStatus, @CreatedBy
+            );
+            SELECT LAST_INSERT_ID();";
 
                             int generatedPoId = await connection.ExecuteScalarAsync<int>(insertPoSql, poParams, transaction);
 
-                            // Insert Purchase Order Items & Increment Stock Balances
-                            foreach (var itemParam in purchaseItems)
+                            // Insert Line Items & Inward Warehouse Stock
+                            foreach (var itemParam in purchaseItemsToInsert)
                             {
                                 itemParam.Add("PurchaseOrderId", generatedPoId);
-                                string insertPoItemSql = @"
-                            INSERT INTO PurchaseOrderItems (PurchaseOrderId, ProductId, Quantity, UnitPrice, TotalCost)
-                            VALUES (@PurchaseOrderId, @ProductId, @Quantity, @UnitPrice, @TotalCost);";
 
-                                await connection.ExecuteAsync(insertPoItemSql, itemParam, transaction);
+                                const string insertPoDetailSql = @"
+                INSERT INTO PurchaseOrderDetails (
+                    PurchaseOrderId, ProductId, BatchNumber, Quantity, FreeQuantity,
+                    UnitPrice, MRP, DiscountPercent, TaxPercent, TaxAmount, TotalAmount
+                ) VALUES (
+                    @PurchaseOrderId, @ProductId, @BatchNumber, @Quantity, @FreeQuantity,
+                    @UnitPrice, @MRP, @DiscountPercent, @TaxPercent, @TaxAmount, @TotalAmount
+                );";
+                                await connection.ExecuteAsync(insertPoDetailSql, itemParam, transaction);
 
-                                // Inward inventory: Increase stock levels for purchased items
-                                int targetProdId = itemParam.Get<int>("ProductId");
-                                int incrementQty = itemParam.Get<int>("Quantity");
-                                await connection.ExecuteAsync("UPDATE Products SET RemainingStock = RemainingStock + @Qty WHERE ProductId = @ProductId;", new { Qty = incrementQty, ProductId = targetProdId }, transaction);
+                                // Inward aggregate stock to Products master
+                                await connection.ExecuteAsync(
+                                    "UPDATE Products SET RemainingStock = RemainingStock + @TotalUnits WHERE ProductId = @ProductId;",
+                                    itemParam, transaction);
                             }
 
-                            // Save Tier 3 Custom Field Values for Purchase
+                            // Insert Overhead / Service Charges
+                            foreach (var chargeParam in chargesToInsert)
+                            {
+                                chargeParam.Add("PurchaseOrderId", generatedPoId);
+
+                                const string insertChargeSql = @"
+                INSERT INTO purchase_charges (
+                    PurchaseOrderId, VendorId, VendorInvoiceNo, InvoiceDate, ChargeName, Amount, SGSTPercent, TaxAmount, TotalAmount, CreatedAt
+                ) VALUES (
+                    @PurchaseOrderId, @VendorId, @VendorInvoiceNo, @InvoiceDate, @ChargeName, @Amount, @SGSTPercent, @TaxAmount, @TotalAmount, NOW()
+                );";
+                                await connection.ExecuteAsync(insertChargeSql, chargeParam, transaction);
+                            }
+
+                            // Save Custom Fields
                             await SaveTier3CustomValuesAsync(connection, transaction, generatedPoId, "Purchase", primaryRow, mappedTier3PropertyNames, customFieldIdMap);
                             processedRecordsCount++;
                         }

@@ -241,12 +241,41 @@ namespace Tijori.ViewModels
 
                 "Purchase" => new List<SystemFieldDescriptor>
         {
+            // --- 1. Order & Invoice Identifiers ---
+            new() { FieldName = "PoNumber", DisplayLabel = "Bill / PO Number", InfoTooltip = "Purchase Order or Supplier Invoice/Bill number" },
+            new() { FieldName = "VendorId", DisplayLabel = "Vendor / Party Name", InfoTooltip = "Supplier / Vendor business entity name" },
+            new() { FieldName = "OrderDate", DisplayLabel = "Order Date", InfoTooltip = "Date when the PO was placed" },
+            new() { FieldName = "InvoiceDate", DisplayLabel = "Invoice / Bill Date", InfoTooltip = "Vendor's tax invoice generated date" },
+            new() { FieldName = "TransactionType", DisplayLabel = "Transaction Type", InfoTooltip = "Type of entry: Purc (Purchase) or P/Re (Purchase Return / Debit Note)" },
+
+            // --- 2. Vendor Statutory & Compliance ---
+            new() { FieldName = "GstNumber", DisplayLabel = "Vendor GSTIN", InfoTooltip = "Supplier's 15-digit Goods & Services Tax Number" },
+            new() { FieldName = "PanNumber", DisplayLabel = "Vendor PAN", InfoTooltip = "Supplier's Permanent Account Number" },
+
+            // --- 3. Product & Batch Identification ---
+            new() { FieldName = "ProductName", DisplayLabel = "Item Name / Particulars", InfoTooltip = "Master product or medication name" },
+            new() { FieldName = "SupplierSku", DisplayLabel = "Supplier SKU / Code", InfoTooltip = "Vendor's internal item or catalog code" },
+            new() { FieldName = "BrandName", DisplayLabel = "Brand / Company Name", InfoTooltip = "Manufacturer or marketer company code" },
+            new() { FieldName = "BatchNumber", DisplayLabel = "Batch Number", InfoTooltip = "Unique batch or lot code assigned to the product" },
+
+            // --- 4. Quantities & Pricing ---
+            new() { FieldName = "Quantity", DisplayLabel = "Billed Quantity", InfoTooltip = "Invoiced unit count" },
+            new() { FieldName = "FreeQuantity", DisplayLabel = "Free / Scheme Quantity", InfoTooltip = "Bonus / free units received" },
+            new() { FieldName = "UnitPrice", DisplayLabel = "Purchase Rate", InfoTooltip = "Unit purchase rate / cost price per item" },
+            new() { FieldName = "MRP", DisplayLabel = "M.R.P.", InfoTooltip = "Maximum Retail Price printed on packaging" },
+
+            // --- 5. Taxes & Financial Summary ---
+            new() { FieldName = "DiscountPercent", DisplayLabel = "Discount %", InfoTooltip = "Trade discount percentage" },
+            new() { FieldName = "TaxPercent", DisplayLabel = "GST %", InfoTooltip = "Applicable GST tax bracket rate" },
+            new() { FieldName = "TaxAmount", DisplayLabel = "GST / Tax Amount", InfoTooltip = "Calculated GST amount" },
+            new() { FieldName = "TotalCost", DisplayLabel = "Taxable Base Amount", InfoTooltip = "Subtotal base amount before taxes" },
+            new() { FieldName = "TotalAmount", DisplayLabel = "Net Invoice Total", InfoTooltip = "Total payable invoice grand total" },
+
+            // --- 6. Delivery Tracking & Status ---
             new() { FieldName = "ExpectedDeliveryDate", DisplayLabel = "Expected Delivery Date", InfoTooltip = "Target delivery schedule date" },
-            new() { FieldName = "ActualDeliveryDate", DisplayLabel = "Actual Delivery Date", InfoTooltip = "Actual received date" },
-            new() { FieldName = "OrderStatus", DisplayLabel = "Order Status", InfoTooltip = "Purchase order fulfillment status" },
-            new() { FieldName = "CreatedBy", DisplayLabel = "Created By", InfoTooltip = "User who raised the PO" },
-            new() { FieldName = "SupplierSku", DisplayLabel = "Supplier SKU", InfoTooltip = "Vendor's item code / SKU" },
-            new() { FieldName = "TotalCost", DisplayLabel = "Total Cost", InfoTooltip = "Total PO cost valuation" }
+            new() { FieldName = "ActualDeliveryDate", DisplayLabel = "Actual Delivery Date", InfoTooltip = "Actual goods receipt note (GRN) date" },
+            new() { FieldName = "OrderStatus", DisplayLabel = "Order Status", InfoTooltip = "Purchase order fulfillment status (Draft, Received, Cancelled)" },
+            new() { FieldName = "CreatedBy", DisplayLabel = "Created By", InfoTooltip = "User who entered or imported the PO" }
         },
 
                 _ => new List<SystemFieldDescriptor>()

@@ -35,6 +35,12 @@ namespace Tijori.ViewModels
         public event Action? OnNavigateBackRequested;
 
         [ObservableProperty]
+        private ObservableCollection<PurchaseCharge> _purchaseCharges = new();
+
+        [ObservableProperty]
+        private decimal _totalChargesAmount;
+
+        [ObservableProperty]
         private ObservableCollection<PurchaseReturn> _debitNotes = new();
 
         [ObservableProperty]
@@ -155,6 +161,10 @@ namespace Tijori.ViewModels
 
             // 3. Calculate Total Units
             TotalQuantityOrdered = OrderItems.Sum(item => item.Quantity);
+
+            var charges = await _poService.GetChargesByPurchaseOrderIdAsync(purchaseOrderId);
+            PurchaseCharges = new ObservableCollection<PurchaseCharge>(charges);
+            TotalChargesAmount = PurchaseCharges.Sum(c => c.TotalAmount);
 
             await LoadUnifiedDocumentsWorkspaceAsync(purchaseOrderId, "Purchase");
 

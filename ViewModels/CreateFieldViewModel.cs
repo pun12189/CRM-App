@@ -169,10 +169,22 @@ namespace Tijori.ViewModels
         },
 
                 "Purchase" => new List<string>
-        {
-            "ExpectedDeliveryDate", "ActualDeliveryDate", "OrderStatus",
-            "CreatedBy", "SupplierSku", "TotalCost"
-        },
+            {
+                // --- Invoice & Vendor Identifiers ---
+                "InvoiceDate", "TransactionType", "GstNumber", "PanNumber",
+
+                // --- Product, Brand & Batch Traceability ---
+                "SupplierSku", "BrandName", "BatchNumber",
+
+                // --- Quantities & Pricing ---
+                "FreeQuantity", "MRP",
+
+                // --- Taxes & Financial Breakdown ---
+                "DiscountPercent", "TaxPercent", "TaxAmount", "TotalCost",
+
+                // --- Logistics & Workflow Status ---
+                "ExpectedDeliveryDate", "ActualDeliveryDate", "OrderStatus", "CreatedBy"
+            },
 
                 _ => new List<string>()
             };

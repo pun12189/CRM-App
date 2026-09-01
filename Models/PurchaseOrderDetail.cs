@@ -12,21 +12,21 @@ namespace Tijori.Models
         [ObservableProperty] private int _poDetailId;
         [ObservableProperty] private int _purchaseOrderId;
         [ObservableProperty] private int _productId;
+        [ObservableProperty] private string? _batchNumber;
+        [ObservableProperty] private int _quantity;
+        [ObservableProperty] private int _freeQuantity;
+        [ObservableProperty] private decimal _unitPrice;
+        [ObservableProperty] private decimal _mRP;
+        [ObservableProperty] private decimal _discountPercent;
+        [ObservableProperty] private decimal _taxPercent;
+        [ObservableProperty] private decimal _taxAmount;
+        [ObservableProperty] private decimal _totalAmount;
 
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(TotalCost))]
-        private int _quantity;
-
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(TotalCost))]
-        private decimal _unitPrice;
-
+        // Join / Display Properties
+        [ObservableProperty] private string _productName = string.Empty;
         [ObservableProperty] private string? _supplierSku;
 
-        // Dynamic calculated property for binding inside items grids
-        public decimal TotalCost => Quantity * UnitPrice;
-
-        // Code-linked display property populated by the Service layer join query
-        [ObservableProperty] private string _productName = string.Empty;
+        // Helper for Total Inward Stock
+        public int TotalPhysicalUnits => Quantity + FreeQuantity;
     }
 }

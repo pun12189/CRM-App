@@ -135,6 +135,48 @@
                                         <DataGridTextColumn Header="Total Cost (₹)" Binding="{Binding TotalCost, StringFormat='{}{0:N2}'}" Width="*" FontWeight="Bold"/>
                                     </DataGrid.Columns>
                                 </DataGrid>
+
+                                <!-- Extra Charges / Overhead Section (Shown only if PurchaseCharges.Count > 0) -->
+                                <Border Background="White" CornerRadius="8" Padding="16" Margin="0,16,0,0" BorderBrush="#E2E8F0" BorderThickness="1">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding PurchaseCharges.Count}" Value="0">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+
+                                    <StackPanel>
+                                        <DockPanel Margin="0,0,0,12">
+                                            <TextBlock Text="Overhead &amp; Service Charges" FontWeight="Bold" Foreground="#1E293B" FontSize="14" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding TotalChargesAmount, StringFormat='Total Charges: ₹ {0:N2}'}" 
+                       FontWeight="Bold" Foreground="#D97706" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        </DockPanel>
+
+                                        <DataGrid ItemsSource="{Binding PurchaseCharges}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
+                  GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White" RowHeight="38">
+                                            <DataGrid.Columns>
+                                                <DataGridTextColumn Header="Charge Name / Particulars" Binding="{Binding ChargeName}" Width="2*" FontWeight="SemiBold"/>
+                                                <DataGridTextColumn Header="HSN Code" Binding="{Binding HsnCode, TargetNullValue='—'}" Width="*"/>
+                                                <DataGridTextColumn Header="Company Code" Binding="{Binding CompanyCode, TargetNullValue='—'}" Width="*"/>
+                                                <DataGridTextColumn Header="Taxable Base (₹)" Binding="{Binding Amount, StringFormat='₹ {0:N2}'}" Width="*"/>
+                                                <DataGridTextColumn Header="GST %" Binding="{Binding SgstPercent, StringFormat='{}{0}%'}" Width="80"/>
+                                                <DataGridTextColumn Header="Tax (₹)" Binding="{Binding TaxAmount, StringFormat='₹ {0:N2}'}" Width="*"/>
+                                                <DataGridTextColumn Header="Net Amount (₹)" Binding="{Binding TotalAmount, StringFormat='₹ {0:N2}'}" Width="*" FontWeight="Bold">
+                                                    <DataGridTextColumn.ElementStyle>
+                                                        <Style TargetType="TextBlock">
+                                                            <Setter Property="Foreground" Value="#D97706"/>
+                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                        </Style>
+                                                    </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                    </StackPanel>
+                                </Border>
                             </StackPanel>
                         </Border>
                     </StackPanel>

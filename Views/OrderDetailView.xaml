@@ -77,6 +77,22 @@
                                 </StackPanel>
 
                                 <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                                    <Button Command="{Binding CreditNoteCommand}" 
+                                        Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                                        Background="#7C3AED" 
+                                        BorderBrush="Transparent" 
+                                        Foreground="White" 
+                                        FontWeight="Bold"
+                                        Height="36"
+                                        Padding="12,0"
+                                        Margin="0,0,10,0"
+                                        ToolTip="Issue Customer Sales Return / Credit Note">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CashRefund" Width="18" Height="18" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Text="Credit Note" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button>
+                                    
                                     <Button Command="{Binding SendEmailInvoiceCommand}" Content="Send Invoice on email" 
                                             Background="#F97316" BorderBrush="#F97316" Foreground="White" 
                                             Margin="0,0,10,0" Style="{StaticResource MaterialDesignRaisedButton}"/>
@@ -725,6 +741,62 @@
                             </DataGrid>
                         </Grid>
                     </materialDesign:DialogHost>
+                </TabItem>
+
+                <!-- TAB 5: CREDIT NOTES (SALES RETURNS) -->
+                <TabItem Header="Credit Notes" Style="{StaticResource ModernTabItemStyle}">
+                    <Grid Margin="20">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Top Summary Bar -->
+                        <Border Grid.Row="0" Background="#F8FAFC" CornerRadius="6" Padding="16,12" Margin="0,0,0,16" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <DockPanel LastChildFill="True">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Background="#EDE9FE" CornerRadius="6" Padding="12,6" Margin="0,0,16,0">
+                                        <StackPanel Orientation="Horizontal">
+                                            <materialDesign:PackIcon Kind="CreditCardRefund" Foreground="#7C3AED" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBlock Text="{Binding CreditNotes.Count, StringFormat='Total Credit Notes: {0}'}" FontWeight="Bold" Foreground="#5B21B6" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <TextBlock Text="{Binding TotalCreditNotesAmount, StringFormat='Total Credited Value: ₹ {0:N2}'}" FontWeight="Black" FontSize="15" Foreground="#7C3AED" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DockPanel>
+                        </Border>
+
+                        <!-- Credit Notes DataGrid -->
+                        <Border Grid.Row="1" Background="White" CornerRadius="6" Padding="16" BorderBrush="#E2E8F0" BorderThickness="1">
+                            <DataGrid ItemsSource="{Binding CreditNotes}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
+                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White" RowHeight="42">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Credit Note #" Binding="{Binding CreditNoteNo}" Width="160" FontWeight="Bold"/>
+                                    <DataGridTextColumn Header="Date Issued" Binding="{Binding ReturnDate, StringFormat='dd-MMM-yyyy'}" Width="130"/>
+                                    <DataGridTextColumn Header="Customer" Binding="{Binding CustomerName}" Width="2*"/>
+                                    <DataGridTextColumn Header="Reason / Details" Binding="{Binding Reason, TargetNullValue='—'}" Width="2*"/>
+                                    <DataGridTextColumn Header="Tax (₹)" Binding="{Binding TaxAmount, StringFormat='₹ {0:N2}'}" Width="120"/>
+                                    <DataGridTextColumn Header="Credited Total (₹)" Binding="{Binding TotalAmount, StringFormat='₹ {0:N2}'}" Width="150" FontWeight="Bold">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="#7C3AED"/>
+                                                <Setter Property="FontWeight" Value="Bold"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTemplateColumn Header="Status" Width="120">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#DCFCE7" CornerRadius="4" Padding="8,3" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding Status}" Foreground="#166534" FontSize="11" FontWeight="Bold"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </Grid>
                 </TabItem>
 
             </TabControl>

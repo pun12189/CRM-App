@@ -32,6 +32,7 @@ namespace Tijori.ViewModels
         private readonly IOrderHistoryService _orderHistoryService;
         private readonly IActionSecurityGuard _actionSecurityGuard;
         private readonly InvoiceService _invoiceService;
+        private readonly IServiceProvider _serviceProvider;
 
         [ObservableProperty] private ObservableCollection<Order> _allOrders = new();
         [ObservableProperty] private bool _isLoading;
@@ -66,12 +67,13 @@ namespace Tijori.ViewModels
         [ObservableProperty]
         private object _tabsDataContext;
 
-        public AllOrdersViewModel(LeadService service, IDialogService dialogService, OrderService orderService, CategoryService categoryService, IUserSession userSession, IOrderHistoryService orderHistoryService, IActionSecurityGuard actionSecurityGuard, InvoiceService invoiceService)
+        public AllOrdersViewModel(LeadService service, IDialogService dialogService, OrderService orderService, CategoryService categoryService, IUserSession userSession, IOrderHistoryService orderHistoryService, IActionSecurityGuard actionSecurityGuard, InvoiceService invoiceService, IServiceProvider serviceProvider)
         {
             _service = service;
             _dialogService = dialogService;
             _orderService = orderService;
             _categoryService = categoryService;
+            _serviceProvider = serviceProvider;
             _invoiceService = invoiceService;
             _orderHistoryService = orderHistoryService;
             _userSession = userSession;
@@ -227,7 +229,7 @@ namespace Tijori.ViewModels
         [RelayCommand]
         private async Task ImportOrders()
         {
-            var vm = App.ServiceProvider.GetRequiredService<ImportViewModel>();
+            var vm = _serviceProvider.GetRequiredService<ImportViewModel>();
             await vm.InitializeAsync(ImportType.Order);
             var dialogWindow = new ImportView { DataContext = vm };
             // No need for a close event here since the ImportViewModel can directly call LoadOrders() after a successful import
@@ -294,12 +296,14 @@ namespace Tijori.ViewModels
         }
 
         [RelayCommand]
-        public void ShowOrderDetails(Order selectedOrder)
+        public async Task ShowOrderDetails(Order selectedOrder)
         {
             LoadingService.Show("Loading view... Please wait.");
             if (selectedOrder == null) return;
 
-            dynamic profileVm = new OrderDetailsViewModel(this, selectedOrder, _service, _orderService, _categoryService, _userSession, _orderHistoryService, _actionSecurityGuard);
+            dynamic profileVm = _serviceProvider.GetRequiredService<OrderDetailsViewModel>();
+
+            await profileVm.InitializeAsync(this, selectedOrder);
 
             this.TabsDataContext = profileVm;
             WorkspaceViewIsActive = true; // Swaps grid out for profile workspace view layout instantly

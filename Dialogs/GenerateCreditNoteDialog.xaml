@@ -1,0 +1,111 @@
+﻿<Window x:Class="Tijori.Dialogs.GenerateCreditNoteDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Tijori.Dialogs"
+        mc:Ignorable="d"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Generate Sales Return (Credit Note)" 
+        Height="540" Width="760"
+        WindowStartupLocation="CenterOwner" 
+        ResizeMode="NoResize" 
+        Background="#F8FAFC">
+    <Window.Resources>
+        <materialDesign:BooleanToVisibilityConverter TrueValue="Collapsed" FalseValue="Visible" x:Key="InverseBoolConverter"/>
+    </Window.Resources>
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 1. Header -->
+        <TextBlock Grid.Row="0" Text="Issue Customer Credit Note" FontSize="18" FontWeight="Bold" Foreground="#1E293B"/>
+
+        <!-- 2. Metadata Section -->
+        <Border Grid.Row="1" Background="White" CornerRadius="6" Padding="12" Margin="0,10,0,10" BorderBrush="#E2E8F0" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                    <TextBlock Text="Credit Note #" FontSize="11" Foreground="#64748B"/>
+                    <TextBox Text="{Binding CreditNoteNo}" FontWeight="SemiBold"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Margin="8,0,8,0">
+                    <TextBlock Text="Customer" FontSize="11" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding CustomerName}" FontWeight="Bold" Foreground="#7C3AED" TextTrimming="CharacterEllipsis"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Margin="8,0,8,0">
+                    <TextBlock Text="Original Order #" FontSize="11" Foreground="#64748B"/>
+                    <TextBlock Text="{Binding OrderNumber}" FontWeight="SemiBold" Foreground="#334155"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="3" Margin="8,0,0,0">
+                    <TextBlock Text="Return Reason" FontSize="11" Foreground="#64748B"/>
+                    <TextBox Text="{Binding Reason}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- 3. Items & Return Qty Entry DataGrid -->
+        <DataGrid Grid.Row="2" 
+                  ItemsSource="{Binding ReturnLines}" 
+                  AutoGenerateColumns="False" 
+                  CanUserAddRows="False" 
+                  Background="White" 
+                  BorderBrush="#E2E8F0"
+                  GridLinesVisibility="Horizontal"
+                  HeadersVisibility="Column"
+                  RowHeaderWidth="0">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Product Name" Binding="{Binding ProductName}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Batch" Binding="{Binding BatchNumber}" Width="120" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Sold Qty" Binding="{Binding MaxAvailableQty}" Width="75" IsReadOnly="True"/>
+                <DataGridTemplateColumn Header="Return Qty" Width="90">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" 
+                                     FontWeight="Bold" 
+                                     HorizontalContentAlignment="Center"
+                                     Background="#EFF6FF"
+                                     BorderBrush="#3B82F6"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Unit Price" Binding="{Binding UnitPrice, StringFormat='₹ {0:N2}'}" Width="90" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Tax Amount" Binding="{Binding TaxAmount, StringFormat='₹ {0:N2}'}" Width="90" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Refund Total" Binding="{Binding TotalAmount, StringFormat='₹ {0:N2}'}" Width="110" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- 4. Summary and Real-time Status -->
+        <DockPanel Grid.Row="3" Margin="0,10,0,10">
+            <TextBlock Text="{Binding StatusMessage}" Foreground="#DC2626" VerticalAlignment="Center" FontWeight="Medium"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
+                <TextBlock Text="Total Credit Amount: " FontWeight="Bold" FontSize="13" VerticalAlignment="Center" Foreground="#475569"/>
+                <TextBlock Text="{Binding CalculatedTotal, StringFormat='₹ {0:N2}'}" FontSize="18" FontWeight="Bold" Foreground="#7C3AED"/>
+            </StackPanel>
+        </DockPanel>
+
+        <!-- 5. Actions Footer -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel" Width="90" Height="32" Margin="0,0,10,0" 
+                    Command="{Binding CancelCommand}"/>
+            <Button Content="Post Credit Note" Width="140" Height="32" 
+                    Background="#7C3AED" Foreground="White" FontWeight="Bold" 
+                    Command="{Binding SaveCreditNoteCommand}" 
+                    IsEnabled="{Binding IsSaving, Converter={StaticResource InverseBoolConverter}}"/>
+        </StackPanel>
+    </Grid>
+</Window>

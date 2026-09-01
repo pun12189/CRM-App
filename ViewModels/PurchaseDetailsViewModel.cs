@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MaterialDesignThemes.Wpf;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using MySqlX.XDevAPI;
 using System;
@@ -14,6 +15,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Tijori.Core;
+using Tijori.Dialogs;
 using Tijori.Interfaces;
 using Tijori.Models;
 using Tijori.Services;
@@ -27,8 +29,16 @@ namespace Tijori.ViewModels
         private readonly CategoryService _categoryService;
         private readonly IUserSession _userSession;
         private readonly IActionSecurityGuard _securityGuard;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ReturnService _returnService;
 
         public event Action? OnNavigateBackRequested;
+
+        [ObservableProperty]
+        private ObservableCollection<PurchaseReturn> _debitNotes = new();
+
+        [ObservableProperty]
+        private decimal _totalDebitNotesAmount;
 
         [ObservableProperty] private PurchaseOrder _currentPurchaseOrder = new();
         [ObservableProperty] private Vendor _currentVendor = new();
@@ -83,12 +93,14 @@ namespace Tijori.ViewModels
             }
         }
 
-        public PurchaseDetailsViewModel(PurchaseService poService, CategoryService categoryService, IUserSession userSession, IActionSecurityGuard securityGuard)
+        public PurchaseDetailsViewModel(PurchaseService poService, CategoryService categoryService, IUserSession userSession, IActionSecurityGuard securityGuard, IServiceProvider serviceProvider, ReturnService returnService)
         {
             _poService = poService;
             _categoryService = categoryService;
             _userSession = userSession;
             _securityGuard = securityGuard;
+            _returnService = returnService;
+            _serviceProvider = serviceProvider;
 
             UnifiedDocumentsCollection.CollectionChanged += (s, e) =>
             {
@@ -105,6 +117,22 @@ namespace Tijori.ViewModels
             if (e.PropertyName == nameof(UploadedDocumentRow.IsSelected))
             {
                 OnPropertyChanged(nameof(IsSelectedEnabled));
+            }
+        }
+
+        public async Task LoadDebitNotesAsync()
+        {
+            if (CurrentPurchaseOrder == null || CurrentPurchaseOrder.PurchaseOrderId <= 0) return;
+
+            try
+            {
+                var records = await _returnService.GetPurchaseReturnsByPoIdAsync(CurrentPurchaseOrder.PurchaseOrderId);
+                DebitNotes = new ObservableCollection<PurchaseReturn>(records);
+                TotalDebitNotesAmount = DebitNotes.Sum(d => d.TotalAmount);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[DEBIT NOTES ERROR] {ex.Message}");
             }
         }
 
@@ -129,6 +157,8 @@ namespace Tijori.ViewModels
             TotalQuantityOrdered = OrderItems.Sum(item => item.Quantity);
 
             await LoadUnifiedDocumentsWorkspaceAsync(purchaseOrderId, "Purchase");
+
+            await LoadDebitNotesAsync();
         }
 
         /// <summary>
@@ -163,6 +193,43 @@ namespace Tijori.ViewModels
         private void NavigateBack()
         {
             OnNavigateBackRequested?.Invoke();
+        }
+
+        // =========================================================================
+        // PURCHASE RETURN (DEBIT NOTE) DIALOG INTEGRATION COMMAND
+        // =========================================================================
+        [RelayCommand]
+        private async Task OpenDebitNoteDialog()
+        {
+            if (CurrentPurchaseOrder == null || CurrentPurchaseOrder.PurchaseOrderId <= 0)
+            {
+                MessageBox.Show("Invalid purchase order context.", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!OrderItems.Any())
+            {
+                MessageBox.Show("No line items found to return for this purchase order.", "Cannot Generate Return", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var debitNoteVm = _serviceProvider.GetRequiredService<GenerateDebitNoteViewModel>();
+
+            // Populate dialog with current PO and lines
+            debitNoteVm.LoadFromPurchase(CurrentPurchaseOrder, OrderItems, $"BAT-PO{CurrentPurchaseOrder.PurchaseOrderId}");
+
+            var dialog = new GenerateDebitNoteDialog(debitNoteVm)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                MessageBox.Show("Debit Note successfully created and stock deducted!", "Debit Note Issued", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // Refresh PO details, lines, and stock
+                await InitializeAsync(CurrentPurchaseOrder.PurchaseOrderId);
+            }
         }
 
         #region TAB 4: DOCUMENTS COMMANDS

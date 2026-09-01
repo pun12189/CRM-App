@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MaterialDesignThemes.Wpf;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 using MySqlX.XDevAPI;
 using System;
@@ -24,13 +25,21 @@ namespace Tijori.ViewModels
 {
     public partial class OrderDetailsViewModel : ObservableObject
     {
-        private readonly AllOrdersViewModel _parentViewModel;
+        private AllOrdersViewModel _parentViewModel;
         private readonly LeadService _leadService;
         private readonly OrderService _orderService;
         private readonly CategoryService _categoryService;
         private readonly IUserSession _userSession;
         private readonly IOrderHistoryService _orderHistoryService;
         private readonly IActionSecurityGuard _securityGuard;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly ReturnService _returnService;
+
+        [ObservableProperty]
+        private ObservableCollection<SalesReturn> _creditNotes = new();
+
+        [ObservableProperty]
+        private decimal _totalCreditNotesAmount;
 
         #region OBSERVABLE PROPERTIES
         // Reference to parent ViewModel so the Back button can trigger HideLeadWorkspaceCommand
@@ -110,6 +119,13 @@ namespace Tijori.ViewModels
         public bool CanDispatchOrder => SelectedOrder != null
             && !string.Equals(SelectedOrder.Status, "Dispatched", StringComparison.OrdinalIgnoreCase);
 
+        /// <summary>
+        /// Credit note can be issued only if the order has itemized products and is not draft/pending.
+        /// </summary>
+        public bool CanIssueCreditNote => SelectedOrder != null
+            && SelectedOrder.Items != null
+            && SelectedOrder.Items.Count > 0;
+
         #endregion
 
         #region DYNAMIC FINANCIAL SUMMARY PROPERTIES
@@ -159,16 +175,16 @@ namespace Tijori.ViewModels
 
         #region CONSTRUCTOR
 
-        public OrderDetailsViewModel(AllOrdersViewModel parentViewModel, Order selectedOrder, LeadService leadService, OrderService orderService, CategoryService categoryService, IUserSession userSession, IOrderHistoryService orderHistoryService, IActionSecurityGuard securityGuard)
-        {
-            _parentViewModel = parentViewModel;
-            _selectedOrder = selectedOrder;
+        public OrderDetailsViewModel(LeadService leadService, OrderService orderService, CategoryService categoryService, IUserSession userSession, IOrderHistoryService orderHistoryService, IActionSecurityGuard securityGuard, IServiceProvider serviceProvider, ReturnService returnService)
+        {            
             _leadService = leadService;
             _orderService = orderService;
             _categoryService = categoryService;
             _userSession = userSession;
+            _returnService = returnService;
             _orderHistoryService = orderHistoryService;
             _securityGuard = securityGuard;
+            _serviceProvider = serviceProvider;
 
             UnifiedDocumentsCollection.CollectionChanged += (s, e) =>
             {
@@ -177,10 +193,32 @@ namespace Tijori.ViewModels
                     foreach (UploadedDocumentRow item in e.NewItems)
                         item.PropertyChanged += Item_PropertyChanged;
                 }
-            };
+            };            
+        }
 
-            // Load dummy/real collection data for testing if child collections are null
-            _ = LoadFullOrderDetailsAsync();            
+        public async Task LoadCreditNotesAsync()
+        {
+            if (SelectedOrder == null || SelectedOrder.OrderId <= 0) return;
+
+            try
+            {
+                var records = await _returnService.GetSalesReturnsByOrderIdAsync(SelectedOrder.OrderId);
+                CreditNotes = new ObservableCollection<SalesReturn>(records);
+                TotalCreditNotesAmount = CreditNotes.Sum(c => c.TotalAmount);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[CREDIT NOTES ERROR] {ex.Message}");
+            }
+        }
+
+        public async Task InitializeAsync(AllOrdersViewModel parent, Order order)
+        {
+            _parentViewModel = parent;
+            SelectedOrder = order;
+
+            await LoadFullOrderDetailsAsync();
+            await LoadCreditNotesAsync();
         }
 
         private void Item_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -356,6 +394,67 @@ namespace Tijori.ViewModels
         #endregion
 
         #region TAB 1: ORDER DETAILS COMMANDS
+
+        [RelayCommand(CanExecute = nameof(CanIssueCreditNote))]
+        private async Task CreditNoteAsync()
+        {
+            if (SelectedOrder == null || SelectedOrder.OrderId <= 0) return;
+
+            if (SelectedOrder.Items == null || !SelectedOrder.Items.Any())
+            {
+                MessageBox.Show("This order does not have any itemized products to return.", "Cannot Generate Return", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var creditNoteVm = _serviceProvider.GetRequiredService<GenerateCreditNoteViewModel>();
+
+            var items = SelectedOrder.Items.Select(i => (
+                i.ProductId,
+                i.ProductName,
+                i.BatchNumber ?? "DEFAULT",
+                i.Quantity,
+                i.UnitPrice
+            ));
+
+            string customerName = SelectedLead?.CustomerName ?? SelectedLead?.CompanyName ?? "Direct Customer";
+            creditNoteVm.LoadFromOrder(
+                SelectedOrder.OrderId,
+                SelectedOrder.LeadId,
+                customerName,
+                SelectedOrder.FormattedOrderId,
+                items);
+
+            var dialog = new GenerateCreditNoteDialog(creditNoteVm)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                // 1. Log activity in order history audit
+                var historyLog = new OrderHistoryEntry
+                {
+                    OrderId = SelectedOrder.OrderId,
+                    LeadId = SelectedOrder.LeadId,
+                    ActionTitle = "Credit Note Issued",
+                    Description = $"Sales return credit note #{creditNoteVm.CreditNoteNo} posted for ₹ {creditNoteVm.CalculatedTotal:N2}.",
+                    ActionType = "SalesReturn",
+                    PreviousState = SelectedOrder.Status,
+                    NewState = SelectedOrder.Status,
+                    PerformedBy = _userSession?.CurrentUser ?? "Admin",
+                    LogDate = DateTime.Now,
+                    IsImportant = true
+                };
+                await _orderHistoryService.LogActivityAsync(historyLog);
+
+                // 2. Refresh full order view, payment ledger, and inventory
+                await LoadFullOrderDetailsAsync();
+                await LoadOrderPaymentsAsync();
+                await LoadOrderHistoryAsync();
+
+                MessageBox.Show($"Credit Note #{creditNoteVm.CreditNoteNo} generated successfully and inventory restocked!", "Credit Note Posted", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
 
         [RelayCommand]
         private async Task SendEmailInvoiceAsync()

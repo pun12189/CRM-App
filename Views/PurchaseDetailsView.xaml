@@ -48,6 +48,20 @@
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Command="{Binding OpenDebitNoteDialogCommand}"
+                        Style="{StaticResource MaterialDesignFlatMidBgButton}"
+                        Background="#DC2626"
+                        BorderBrush="Transparent"
+                        Height="40"
+                        Padding="14,0"
+                        Margin="0,0,12,0"
+                        ToolTip="Issue a Purchase Return / Debit Note against this PO">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ReceiptRoll" Width="18" Height="18" Foreground="White" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                            <TextBlock Text="Issue Debit Note" FontWeight="Bold" Foreground="White" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    
                     <Border Background="#F0FDF4" CornerRadius="8" Padding="16,8">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="CurrencyInr" Foreground="#16A34A" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -309,6 +323,62 @@
                         </DataGrid>
                     </Grid>
                 </materialDesign:DialogHost>
+            </TabItem>
+
+            <!-- TAB 3: DEBIT NOTES (PURCHASE RETURNS) -->
+            <TabItem Header="Debit Notes" FontSize="14" FontWeight="SemiBold">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Top Metric & Action Card -->
+                    <Border Grid.Row="0" Background="White" CornerRadius="8" Padding="16,12" Margin="0,0,0,16" BorderBrush="#E2E8F0" BorderThickness="1">
+                        <DockPanel LastChildFill="True">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Background="#FEE2E2" CornerRadius="6" Padding="12,6" Margin="0,0,16,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="CreditCardRefund" Foreground="#DC2626" Width="20" Height="20" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <TextBlock Text="{Binding DebitNotes.Count, StringFormat='Total Debit Notes: {0}'}" FontWeight="Bold" Foreground="#991B1B" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+                                <TextBlock Text="{Binding TotalDebitNotesAmount, StringFormat='Total Debited Value: ₹ {0:N2}'}" FontWeight="Black" FontSize="15" Foreground="#DC2626" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Debit Notes Grid -->
+                    <Border Grid.Row="1" Background="White" CornerRadius="8" Padding="16" BorderBrush="#E2E8F0" BorderThickness="1">
+                        <DataGrid ItemsSource="{Binding DebitNotes}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" 
+                      GridLinesVisibility="Horizontal" HeadersVisibility="Column" Background="White" RowHeight="42">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Debit Note #" Binding="{Binding ReturnDebitNo}" Width="160" FontWeight="Bold"/>
+                                <DataGridTextColumn Header="Date Logged" Binding="{Binding ReturnDate, StringFormat='dd-MMM-yyyy'}" Width="130"/>
+                                <DataGridTextColumn Header="Vendor Name" Binding="{Binding VendorName}" Width="2*"/>
+                                <DataGridTextColumn Header="Reason / Note" Binding="{Binding Reason, TargetNullValue='—'}" Width="2*"/>
+                                <DataGridTextColumn Header="Tax (₹)" Binding="{Binding TaxAmount, StringFormat='₹ {0:N2}'}" Width="120"/>
+                                <DataGridTextColumn Header="Debit Amount (₹)" Binding="{Binding TotalAmount, StringFormat='₹ {0:N2}'}" Width="150" FontWeight="Bold">
+                                    <DataGridTextColumn.ElementStyle>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Foreground" Value="#DC2626"/>
+                                            <Setter Property="FontWeight" Value="Bold"/>
+                                        </Style>
+                                    </DataGridTextColumn.ElementStyle>
+                                </DataGridTextColumn>
+                                <DataGridTemplateColumn Header="Status" Width="120">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#FEF3C7" CornerRadius="4" Padding="8,3" HorizontalAlignment="Left">
+                                                <TextBlock Text="{Binding Status}" Foreground="#92400E" FontSize="11" FontWeight="Bold"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>

@@ -26,6 +26,7 @@ namespace Tijori.ViewModels
         private readonly CategoryService _categoryService;
         private readonly IUserSession _userSession;
         private readonly IActionSecurityGuard _securityGuard;
+        private readonly IServiceProvider _serviceProvider;
 
         [ObservableProperty] private ObservableCollection<PurchaseOrder> _purchaseOrdersList = new();
         [ObservableProperty] private PurchaseOrder? _selectedOrder;
@@ -33,12 +34,13 @@ namespace Tijori.ViewModels
         [ObservableProperty]
         private object _tabsDataContext;
 
-        public PurchaseViewModel(PurchaseService purchaseService, VendorService vendorService, ProductService productService, CategoryService categoryService, IUserSession userSession, IActionSecurityGuard securityGuard)
+        public PurchaseViewModel(PurchaseService purchaseService, VendorService vendorService, ProductService productService, CategoryService categoryService, IUserSession userSession, IActionSecurityGuard securityGuard, IServiceProvider serviceProvider)
         {
             _purchaseService = purchaseService;
             _vendorService = vendorService;
             _productService = productService;
             _categoryService = categoryService;
+            _serviceProvider = serviceProvider;
             _userSession = userSession;
             _securityGuard = securityGuard;
             _ = LoadPurchaseOrdersAsync();
@@ -89,7 +91,7 @@ namespace Tijori.ViewModels
         {
             if (selectedOrder == null) return;
 
-            var profileVm = new PurchaseDetailsViewModel(_purchaseService, _categoryService, _userSession, _securityGuard);
+            var profileVm = _serviceProvider.GetRequiredService<PurchaseDetailsViewModel>();
             profileVm.OnNavigateBackRequested += () =>
             {
                 // Hide the workspace view & return to the main Purchase Orders grid
@@ -105,7 +107,7 @@ namespace Tijori.ViewModels
         [RelayCommand]
         private async Task ImportPO()
         {
-            var vm = App.ServiceProvider.GetRequiredService<ImportViewModel>();
+            var vm = _serviceProvider.GetRequiredService<ImportViewModel>();
             await vm.InitializeAsync(ImportType.Purchase);
             var dialogWindow = new ImportView { DataContext = vm };
             // No need for a close event here since the ImportViewModel can directly call LoadOrders() after a successful import

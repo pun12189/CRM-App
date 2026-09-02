@@ -202,6 +202,7 @@ namespace Tijori
             services.AddTransient<GenerateDebitNoteViewModel>();
             services.AddTransient<OrderDetailsViewModel>();
             services.AddTransient<PurchaseDetailsViewModel>();
+            services.AddTransient<MargExportGuideViewModel>();
 
             // 4. Register Views
             services.AddTransient<LoginView>();

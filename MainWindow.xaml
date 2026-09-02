@@ -113,6 +113,9 @@
         <DataTemplate DataType="{x:Type vm:StockLedgerViewModel}">
             <views:StockLedgerView />
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:MargExportGuideViewModel}">
+            <views:MargExportGuideView />
+        </DataTemplate>
         <!--<Style x:Key="MenuButtonStyle" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="White"/>

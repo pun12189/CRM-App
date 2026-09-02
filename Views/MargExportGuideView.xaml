@@ -1,0 +1,169 @@
+﻿<UserControl x:Class="Tijori.Views.MargExportGuideView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" 
+             Background="#F8FAFC">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="24" MaxWidth="960" HorizontalAlignment="Left">
+
+            <!-- Page Header -->
+            <StackPanel Margin="0,0,0,24">
+                <TextBlock Text="Marg ERP — Export Navigation Directory" 
+                           FontSize="22" 
+                           FontWeight="Bold" 
+                           Foreground="#0F172A"/>
+                <TextBlock Text="Quick reference menu paths and filter instructions to export raw data sheets from Marg ERP." 
+                           FontSize="13" 
+                           Foreground="#64748B" 
+                           Margin="0,4,0,0"/>
+            </StackPanel>
+
+            <!-- CARD 1: SALES REPORT -->
+            <materialDesign:Card UniformCornerRadius="8" Padding="20" Margin="0,0,0,16" Background="White">
+                <StackPanel>
+                    <!-- Header -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <Border Background="#E0F2FE" CornerRadius="6" Width="36" Height="36" Margin="0,0,12,0">
+                            <materialDesign:PackIcon Kind="CartOutline" Foreground="#0284C7" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="1. Export Sales Report" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="Party-wise &amp; item-level sales ledger details" FontSize="12" Foreground="#64748B"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Menu Breadcrumb Path -->
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="MENU NAVIGATION" FontSize="10" FontWeight="Bold" Foreground="#94A3B8" Margin="0,0,0,6"/>
+                            <WrapPanel Orientation="Horizontal">
+                                <Border Background="#E2E8F0" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="Menu Bar" FontWeight="SemiBold" FontSize="12" Foreground="#1E293B"/>
+                                </Border>
+                                <materialDesign:PackIcon Kind="ChevronRight" Foreground="#94A3B8" Width="16" Height="16" VerticalAlignment="Center" Margin="4,0,4,0"/>
+                                <Border Background="#E2E8F0" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="Daily Reports" FontWeight="SemiBold" FontSize="12" Foreground="#1E293B"/>
+                                </Border>
+                                <materialDesign:PackIcon Kind="ChevronRight" Foreground="#94A3B8" Width="16" Height="16" VerticalAlignment="Center" Margin="4,0,4,0"/>
+                                <Border Background="#BAE6FD" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="Business &amp; Analysis" FontWeight="Bold" FontSize="12" Foreground="#0369A1"/>
+                                </Border>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Filter & Export Details -->
+                    <Border Background="#FFFFFF" BorderBrush="#F1F5F9" BorderThickness="1" CornerRadius="6" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="Filter &amp; Export Instructions:" FontWeight="SemiBold" FontSize="12" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="• Set filters in analysis: Party vs items" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Select 'Sales analysis' &amp; 'Details' in the next 2 dropdowns" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Set desired date range > Click 'Show'" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Click the 'Excel' icon or press Alt + P to export file" FontWeight="SemiBold" FontSize="12" Foreground="#0284C7" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- CARD 2: PURCHASE REPORT -->
+            <materialDesign:Card UniformCornerRadius="8" Padding="20" Margin="0,0,0,16" Background="White">
+                <StackPanel>
+                    <!-- Header -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <Border Background="#DCFCE7" CornerRadius="6" Width="36" Height="36" Margin="0,0,12,0">
+                            <materialDesign:PackIcon Kind="TruckDeliveryOutline" Foreground="#16A34A" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="2. Export Purchase Report" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="Inward supplier bills and purchase analysis breakdown" FontSize="12" Foreground="#64748B"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Menu Breadcrumb Path -->
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="MENU NAVIGATION" FontSize="10" FontWeight="Bold" Foreground="#94A3B8" Margin="0,0,0,6"/>
+                            <WrapPanel Orientation="Horizontal">
+                                <Border Background="#E2E8F0" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="Menu Bar" FontWeight="SemiBold" FontSize="12" Foreground="#1E293B"/>
+                                </Border>
+                                <materialDesign:PackIcon Kind="ChevronRight" Foreground="#94A3B8" Width="16" Height="16" VerticalAlignment="Center" Margin="4,0,4,0"/>
+                                <Border Background="#E2E8F0" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="Daily Reports" FontWeight="SemiBold" FontSize="12" Foreground="#1E293B"/>
+                                </Border>
+                                <materialDesign:PackIcon Kind="ChevronRight" Foreground="#94A3B8" Width="16" Height="16" VerticalAlignment="Center" Margin="4,0,4,0"/>
+                                <Border Background="#BBF7D0" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="Business Analysis" FontWeight="Bold" FontSize="12" Foreground="#15803D"/>
+                                </Border>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Filter & Export Details -->
+                    <Border Background="#FFFFFF" BorderBrush="#F1F5F9" BorderThickness="1" CornerRadius="6" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="Filter &amp; Export Instructions:" FontWeight="SemiBold" FontSize="12" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="• Select: Party vs All" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Set Dropdown 1: Purchase Analysis" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Set Dropdown 2: Detail" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Set date range > Click 'Show'" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Export Excel sheet (.xls / .xlsx)" FontWeight="SemiBold" FontSize="12" Foreground="#16A34A" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </materialDesign:Card>
+
+            <!-- CARD 3: STOCK / INVENTORY REPORT -->
+            <materialDesign:Card UniformCornerRadius="8" Padding="20" Margin="0,0,0,16" Background="White">
+                <StackPanel>
+                    <!-- Header -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                        <Border Background="#FEF3C7" CornerRadius="6" Width="36" Height="36" Margin="0,0,12,0">
+                            <materialDesign:PackIcon Kind="PackageVariantClosed" Foreground="#D97706" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="3. Export Stock / Inventory Report" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="Closing inventory valuation, batches, and remaining balances" FontSize="12" Foreground="#64748B"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Menu Breadcrumb Path -->
+                    <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="MENU NAVIGATION" FontSize="10" FontWeight="Bold" Foreground="#94A3B8" Margin="0,0,0,6"/>
+                            <WrapPanel Orientation="Horizontal">
+                                <Border Background="#E2E8F0" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="Menu Bar" FontWeight="SemiBold" FontSize="12" Foreground="#1E293B"/>
+                                </Border>
+                                <materialDesign:PackIcon Kind="ChevronRight" Foreground="#94A3B8" Width="16" Height="16" VerticalAlignment="Center" Margin="4,0,4,0"/>
+                                <Border Background="#E2E8F0" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="Stocks" FontWeight="SemiBold" FontSize="12" Foreground="#1E293B"/>
+                                </Border>
+                                <materialDesign:PackIcon Kind="ChevronRight" Foreground="#94A3B8" Width="16" Height="16" VerticalAlignment="Center" Margin="4,0,4,0"/>
+                                <Border Background="#FDE68A" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="Stock Report / Current Stock" FontWeight="Bold" FontSize="12" Foreground="#B45309"/>
+                                </Border>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Filter & Export Details -->
+                    <Border Background="#FFFFFF" BorderBrush="#F1F5F9" BorderThickness="1" CornerRadius="6" Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="Filter &amp; Export Instructions:" FontWeight="SemiBold" FontSize="12" Foreground="#334155" Margin="0,0,0,6"/>
+                            <TextBlock Text="• Store Filter: Select 'Whole' or 'Main Store'" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Select 'Batch Details' = Yes (to preserve batch numbers &amp; expiry)" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Value with: Cost Price / WAC" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Press Alt + P > Choose 'Excel Sheet' > Save file" FontWeight="SemiBold" FontSize="12" Foreground="#D97706" Margin="0,6,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </materialDesign:Card>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -104,15 +104,9 @@ namespace Tijori.ViewModels
                 case "Tijori":
                 case "ECom":
                 case "MargTally":
-                    if (!Core.LicenseManager.Current.AreOnlineServicesAllowed)
-                    {
-                        MessageBox.Show(
-                            "This operation requires online communication access permissions.\n\n" +
-                            "Please activate your product license and enable 'Online Services' inside the Admin Settings dashboard configuration layout panel.",
-                            "Action Restricted", MessageBoxButton.OK, MessageBoxImage.Warning);
-                        BackToGrid();
-                        return;
-                    }
+                    // 👈 Sets the static SOP export guide view
+                    CurrentSettingView = _serviceProvider.GetRequiredService<MargExportGuideViewModel>();
+                    _isInSubDetailView = false;
                     break;
                 case "Email":
                     if (!Core.LicenseManager.Current.AreOnlineServicesAllowed)

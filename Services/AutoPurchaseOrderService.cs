@@ -40,7 +40,7 @@ namespace Tijori.Services
                             p.Name AS ProductName,
                             p.ShortName AS SupplierSku,
                             p.RemainingStock,
-                            CAST(NULLIF(REGEXP_REPLACE(p.StockKeepingUnit, '[^0-9]', ''), '') AS SIGNED) AS ThresholdLimit,
+                            CAST(NULLIF(REGEXP_REPLACE(p.SKU, '[^0-9]', ''), '') AS SIGNED) AS ThresholdLimit,
                             COALESCE(NULLIF(p.ReorderQuantity, 0), 50) AS ReorderQty,
                             p.CostPrice AS DefaultCostPrice,
                             p.MRP,
@@ -57,7 +57,7 @@ namespace Tijori.Services
                         INNER JOIN vendors v ON vpl.VendorId = v.VendorId
                         WHERE p.AutoReorderEnabled = 1
                           -- Filter where remaining stock has touched or breached the SKU limit
-                          AND p.RemainingStock <= CAST(NULLIF(REGEXP_REPLACE(p.StockKeepingUnit, '[^0-9]', ''), '') AS SIGNED)
+                          AND p.RemainingStock <= CAST(NULLIF(REGEXP_REPLACE(p.SKU, '[^0-9]', ''), '') AS SIGNED)
                           -- Duplicate Order Guard: Don't reorder if an open/draft PO is already in progress
                           AND p.ProductId NOT IN (
                               SELECT pod.ProductId 

@@ -429,29 +429,65 @@
 
                         <!-- Product DataGrid -->
                         <DataGrid Grid.Row="1" 
-                      ItemsSource="{Binding VendorProducts}" 
-                      AutoGenerateColumns="False" 
-                      CanUserAddRows="False" 
-                      IsReadOnly="True" 
-                      GridLinesVisibility="Horizontal" 
-                      HeadersVisibility="Column" 
-                      Background="White" 
-                      RowHeight="48">
+          ItemsSource="{Binding VendorProducts}" 
+          AutoGenerateColumns="False" 
+          CanUserAddRows="False" 
+          IsReadOnly="True" 
+          GridLinesVisibility="Horizontal" 
+          HeadersVisibility="Column" 
+          Background="White" 
+          RowHeight="48">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="Product Name" Binding="{Binding ProductName}" Width="2.5*" FontWeight="SemiBold"/>
-                                <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="1.5*"/>
-                                <DataGridTextColumn Header="Supplier SKU" Binding="{Binding SupplierSku}" Width="1.5*"/>
-                                <DataGridTextColumn Header="Agreed Cost Price" Binding="{Binding PurchasePrice, StringFormat='₹{0:N2}'}" Width="1.5*"/>
-                                <DataGridTextColumn Header="Stock In-Hand" Binding="{Binding CurrentStock}" Width="1.2*"/>
+                                <DataGridTextColumn Header="Category" Binding="{Binding CategoryName}" Width="1.3*"/>
+                                <DataGridTextColumn Header="Supplier SKU" Binding="{Binding SupplierSku}" Width="1.2*"/>
+                                <DataGridTextColumn Header="Agreed Cost Price" Binding="{Binding PurchasePrice, StringFormat='₹{0:N2}'}" Width="1.3*"/>
+                                <DataGridTextColumn Header="Stock In-Hand" Binding="{Binding CurrentStock}" Width="1.1*"/>
+
+                                <!-- 1. Preferred Vendor Status Badge -->
+                                <DataGridTemplateColumn Header="Preferred" Width="100">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <!-- Shows Star / Green Badge if Preferred -->
+                                                <Border Background="#DCFCE7" CornerRadius="4" Padding="6,2" 
+                                Visibility="{Binding IsPreferredVendor, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Kind="Star" Foreground="#15803D" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                                        <TextBlock Text="Primary" Foreground="#15803D" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <!-- Shows Muted Text if Secondary -->
+                                                <TextBlock Text="—" Foreground="#94A3B8" 
+                                   HorizontalAlignment="Center"
+                                   Visibility="{Binding IsPreferredVendor, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- 2. Priority Rank (1 = Primary, 2 = Secondary, etc.) -->
+                                <DataGridTemplateColumn Header="Priority" Width="80">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#F1F5F9" CornerRadius="4" Padding="8,2" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding VendorPriority, StringFormat='#{0}'}" FontWeight="SemiBold" Foreground="#334155" FontSize="11"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+
+                                <!-- 3. Lead Time (Turnaround Days) -->
+                                <DataGridTextColumn Header="Lead Time" Binding="{Binding LeadTimeDays, StringFormat='{}{0} Days'}" Width="100"/>
 
                                 <!-- Actions Column -->
                                 <DataGridTemplateColumn Header="Actions" Width="80">
                                     <DataGridTemplateColumn.CellTemplate>
                                         <DataTemplate>
                                             <Button Style="{StaticResource MaterialDesignIconButton}" 
-                                        Command="{Binding DataContext.EditProductLinkCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                        CommandParameter="{Binding}"
-                                        Width="30" Height="30" ToolTip="Edit Pricing / SKU">
+                            Command="{Binding DataContext.EditProductLinkCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}"
+                            Width="30" Height="30" ToolTip="Edit Pricing, Priority &amp; SKU">
                                                 <materialDesign:PackIcon Kind="PencilOutline" Foreground="#0284C7" Width="18" Height="18"/>
                                             </Button>
                                         </DataTemplate>

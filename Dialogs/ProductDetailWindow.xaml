@@ -55,6 +55,12 @@
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"
                                      ToolTip="Used to send low-stock notification alerts."/>
 
+                            <TextBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='ReorderQuantity|Reorder Quantity'}" 
+                                     Text="{Binding NewProduct.ReorderQuantity, UpdateSourceTrigger=PropertyChanged}" 
+                                     Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='ReorderQuantity'}"
+                                     Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"
+                                     ToolTip="Used to trigger PO with this quantity."/>
+
                             <!-- Measurement Unit (TIER 2 - OPTIONAL MODEL FIELD) -->
                             <ComboBox materialDesign:HintAssist.Hint="{Binding FieldConfigMap, Converter={StaticResource FieldLabelConverter}, ConverterParameter='Unit|Measurement Unit'}" 
                                       SelectedValue="{Binding NewProduct.Unit, UpdateSourceTrigger=PropertyChanged}"
@@ -94,6 +100,21 @@
                                      Visibility="{Binding FieldConfigMap, Converter={StaticResource FieldVisibilityConverter}, ConverterParameter='Packaging'}"
                                      Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5"
                                      ToolTip="e.g., Pack of 10, Bottle of 500ml"/>
+
+                            <CheckBox IsChecked="{Binding NewProduct.AutoReorderEnabled, Mode=TwoWay}"
+                              Margin="5" 
+                              VerticalAlignment="Center">
+                                                    <StackPanel Orientation="Vertical">
+                                                        <TextBlock Text="Enable Auto Purchase Order Generation" 
+                                       FontWeight="SemiBold" 
+                                       FontSize="13" 
+                                       Foreground="#1E293B"/>
+                                                        <TextBlock Text="When enabled, dropping below minimum SKU threshold creates a draft PO." 
+                                       FontSize="11" 
+                                       Foreground="#64748B" TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                </CheckBox>
+                            
                         </UniformGrid>
                     </StackPanel>
                 </materialDesign:Card>

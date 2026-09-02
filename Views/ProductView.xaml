@@ -10,6 +10,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <materialDesign:BooleanToVisibilityConverter TrueValue="Collapsed" FalseValue="Visible" x:Key="InverseBooleanToVisibilityConverter"/>
         <conv:IndexToNumberConverter x:Key="IndexToNumberConverter"/>
     </UserControl.Resources>
     <Grid Margin="15">
@@ -127,6 +128,9 @@
                         <DataTrigger Binding="{Binding IsExpanded}" Value="True">
                             <Setter Property="DetailsVisibility" Value="Visible"/>
                         </DataTrigger>
+                        <DataTrigger Binding="{Binding IsStockThresholdBreached}" Value="True">
+                            <Setter Property="Background" Value="#FFFBEB"/>
+                        </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </DataGrid.RowStyle>
@@ -172,16 +176,17 @@
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Padding" Value="10,0,0,0"/>
+                            <Setter Property="TextWrapping" Value="Wrap"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn Header="Product Category" Binding="{Binding CategoryName}" Width="Auto">
+                <DataGridTextColumn Header="Product Category" Binding="{Binding CategoryName}" Width="120">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="VerticalAlignment" Value="Center"/>
                             <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="TextWrapping" Value="Wrap"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
@@ -197,7 +202,7 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn Header="Standard Selling" 
+                <DataGridTextColumn Header="Selling Price" 
                             Binding="{Binding SellingPrice, StringFormat=C2, ConverterCulture=en-IN}" 
                             Width="1*">
                     <DataGridTextColumn.ElementStyle>
@@ -217,14 +222,74 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
 
-                <DataGridTextColumn Header="Current Stock" Binding="{Binding RemainingStock}" Width="1*">
+                <DataGridTemplateColumn Header="Current Stock" Width="1*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding RemainingStock}" 
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center" 
+                               FontWeight="Bold">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#0F172A"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsStockThresholdBreached}" Value="True">
+                                                <Setter Property="Foreground" Value="#DC2626"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                
+                <DataGridTextColumn Header="Min Threshold" Binding="{Binding StockKeepingUnit}" Width="0.9*">
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="HorizontalAlignment" Value="Center"/>
                             <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="Foreground" Value="#475569"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
+
+                <!-- NEW 2: Replenishment Lot Size (Reorder Qty) -->
+                <DataGridTextColumn Header="Reorder Qty" Binding="{Binding ReorderQuantity}" Width="0.9*">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                            <Setter Property="VerticalAlignment" Value="Center"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Foreground" Value="#0284C7"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+
+                <!-- NEW 3: Auto-Replenishment Status Badge -->
+                <DataGridTemplateColumn Header="Reorder Status" Width="115">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <!-- Alert Badge: Threshold Breached -->
+                                <Border Background="#FEE2E2" CornerRadius="4" Padding="6,2" 
+                                Visibility="{Binding IsStockThresholdBreached, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <materialDesign:PackIcon Kind="AlertCircleOutline" Foreground="#DC2626" Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                        <TextBlock Text="Low Stock" Foreground="#DC2626" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Normal Stock Indicator -->
+                                <Border Background="#F1F5F9" CornerRadius="4" Padding="6,2"
+                                Visibility="{Binding IsStockThresholdBreached, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                                    <TextBlock Text="Adequate" Foreground="#475569" FontSize="11" FontWeight="SemiBold"/>
+                                </Border>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                
                 <DataGridTemplateColumn Header="Batches" Width="*">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
@@ -257,7 +322,8 @@
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Total Cost (Single Product)" 
+
+                <DataGridTextColumn Header="Total Valuation" 
                             Binding="{Binding TotalCost, StringFormat=C2, ConverterCulture=en-IN}" 
                             Width="1.2*">
                     <DataGridTextColumn.ElementStyle>
@@ -267,6 +333,19 @@
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
+
+                <DataGridTemplateColumn Header="Auto-PO" Width="85">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding AutoReorderEnabled, UpdateSourceTrigger=PropertyChanged}"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Command="{Binding DataContext.ToggleAutoReorderCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                      CommandParameter="{Binding}"
+                      ToolTip="Toggle automated replenishment for this product"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
 
                 <!--<DataGridTemplateColumn Header="Actions" Width="Auto">
                     <DataGridTemplateColumn.CellTemplate>

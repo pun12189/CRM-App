@@ -18,34 +18,69 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
+        <!-- Header -->
         <TextBlock Text="Link Catalog Item to Vendor" FontSize="18" FontWeight="Bold" Foreground="#1E293B" Margin="0,0,0,16"/>
 
         <StackPanel Grid.Row="1" VerticalAlignment="Center">
             <!-- Product Selector -->
             <ComboBox ItemsSource="{Binding AllProducts}" 
-                      SelectedItem="{Binding SelectedProduct}" 
-                      DisplayMemberPath="Name"
-                      IsEnabled="{Binding IsEditMode, Converter={StaticResource InverseBooleanConverter}}"
-                      materialDesign:HintAssist.Hint="Select Catalog Product *" 
-                      Style="{StaticResource MaterialDesignOutlinedComboBox}" 
-                      Margin="0,0,0,14"/>
+                  SelectedItem="{Binding SelectedProduct}" 
+                  DisplayMemberPath="Name"
+                  IsEnabled="{Binding IsEditMode, Converter={StaticResource InverseBooleanConverter}}"
+                  materialDesign:HintAssist.Hint="Select Catalog Product *" 
+                  Style="{StaticResource MaterialDesignOutlinedComboBox}" 
+                  Margin="0,0,0,14"/>
 
             <!-- Supplier SKU -->
             <TextBox Text="{Binding SupplierSku, UpdateSourceTrigger=PropertyChanged}" 
-                     materialDesign:HintAssist.Hint="Supplier SKU / Model No." 
-                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
-                     Margin="0,0,0,14"/>
+                 materialDesign:HintAssist.Hint="Supplier SKU / Model No." 
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                 Margin="0,0,0,14"/>
 
             <!-- Purchase Price -->
             <TextBox Text="{Binding PurchasePrice, UpdateSourceTrigger=PropertyChanged, ValidatesOnNotifyDataErrors=True}" 
-                     materialDesign:HintAssist.Hint="Agreed Purchase Price (₹) *" 
-                     Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                 materialDesign:HintAssist.Hint="Agreed Purchase Price (₹) *" 
+                 Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                 Margin="0,0,0,14"/>
+
+            <!-- Lead Time & Priority Rank (Two-Column Layout) -->
+            <Grid Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Delivery Turnaround Days -->
+                <TextBox Grid.Column="0" 
+                     Text="{Binding LeadTimeDays, UpdateSourceTrigger=PropertyChanged}" 
+                     materialDesign:HintAssist.Hint="Lead Time (Days)" 
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                     Margin="0,0,6,0"/>
+
+                <!-- Priority Order (1 = Primary, 2 = Secondary, etc.) -->
+                <TextBox Grid.Column="1" 
+                     Text="{Binding VendorPriority, UpdateSourceTrigger=PropertyChanged}" 
+                     materialDesign:HintAssist.Hint="Priority (1 = Primary)" 
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}" 
+                     Margin="6,0,0,0"/>
+            </Grid>
+
+            <!-- Preferred Supplier Toggle for Auto-Replenishment -->
+            <Border Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="12,8">
+                <CheckBox IsChecked="{Binding IsPreferredVendor}" VerticalAlignment="Center">
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="Preferred Vendor for Auto-Replenishment" FontWeight="SemiBold" Foreground="#1E293B" FontSize="13"/>
+                        <TextBlock Text="The automated PO generator will pick this vendor first when stock reaches threshold." 
+                               FontSize="11" Foreground="#64748B" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </CheckBox>
+            </Border>
         </StackPanel>
 
         <!-- Actions -->
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
             <Button Content="Cancel" Command="{Binding CancelCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Style="{StaticResource MaterialDesignFlatButton}" Margin="0,0,10,0"/>
-            <Button Content="Save Mapping" Command="{Binding SaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Background="#0284C7" BorderBrush="Transparent"/>
+            <Button Content="Save Mapping" Command="{Binding SaveCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}" Background="#0284C7" BorderBrush="Transparent" Foreground="White" FontWeight="Bold"/>
         </StackPanel>
     </Grid>
 </Window>

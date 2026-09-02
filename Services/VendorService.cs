@@ -119,19 +119,22 @@ namespace Tijori.Services
             {
                 using var db = _context.CreateConnection();
                 const string sql = @"
-                    SELECT 
-                        vpl.VendorId,
-                        vpl.ProductId,
-                        p.Name AS ProductName,
-                        COALESCE(c.CategoryName, 'General') AS CategoryName,
-                        COALESCE(vpl.SupplierSku, p.ShortName) AS SupplierSku,
-                        vpl.PurchasePrice,
-                        p.RemainingStock AS CurrentStock
-                    FROM VendorProductLinks vpl
-                    INNER JOIN Products p ON vpl.ProductId = p.ProductId
-                    LEFT JOIN Categories c ON p.CategoryId = c.Id
-                    WHERE vpl.VendorId = @vendorId
-                    ORDER BY p.Name ASC;";
+            SELECT 
+                vpl.VendorId,
+                vpl.ProductId,
+                p.Name AS ProductName,
+                COALESCE(c.CategoryName, 'General') AS CategoryName,
+                COALESCE(vpl.SupplierSku, p.ShortName) AS SupplierSku,
+                vpl.PurchasePrice,
+                p.RemainingStock AS CurrentStock,
+                COALESCE(vpl.IsPreferredVendor, 1) AS IsPreferredVendor,
+                COALESCE(vpl.VendorPriority, 1) AS VendorPriority,
+                COALESCE(vpl.LeadTimeDays, 3) AS LeadTimeDays
+            FROM VendorProductLinks vpl
+            INNER JOIN Products p ON vpl.ProductId = p.ProductId
+            LEFT JOIN Categories c ON p.CategoryId = c.Id
+            WHERE vpl.VendorId = @vendorId
+            ORDER BY vpl.IsPreferredVendor DESC, vpl.VendorPriority ASC, p.Name ASC;";
 
                 var result = await db.QueryAsync<VendorProductLinkDisplay>(sql, new { vendorId });
                 return result.ToList();
@@ -144,19 +147,66 @@ namespace Tijori.Services
         }
 
         // LINK OR UPDATE PRODUCT FOR A VENDOR
-        public async Task<bool> SaveVendorProductLinkAsync(int vendorId, int productId, string supplierSku, decimal purchasePrice)
+        public async Task<bool> SaveVendorProductLinkAsync(
+    int vendorId,
+    int productId,
+    string supplierSku,
+    decimal purchasePrice,
+    int leadTimeDays,
+    int vendorPriority,
+    bool isPreferredVendor)
         {
             try
             {
                 using var db = _context.CreateConnection();
-                const string sql = @"
-                    INSERT INTO VendorProductLinks (VendorId, ProductId, SupplierSku, PurchasePrice)
-                    VALUES (@vendorId, @productId, @supplierSku, @purchasePrice)
-                    ON DUPLICATE KEY UPDATE 
-                        SupplierSku = @supplierSku, 
-                        PurchasePrice = @purchasePrice;";
 
-                int rows = await db.ExecuteAsync(sql, new { vendorId, productId, supplierSku, purchasePrice });
+                // If this vendor is marked as preferred for this product,
+                // clear the preferred flag for other vendors supplying this item
+                if (isPreferredVendor)
+                {
+                    const string demoteSql = @"
+                UPDATE VendorProductLinks 
+                SET IsPreferredVendor = 0 
+                WHERE ProductId = @productId AND VendorId != @vendorId;";
+                    await db.ExecuteAsync(demoteSql, new { productId, vendorId });
+                }
+
+                const string sql = @"
+            INSERT INTO VendorProductLinks (
+                VendorId, ProductId, SupplierSku, PurchasePrice, 
+                LeadTimeDays, VendorPriority, IsPreferredVendor
+            ) VALUES (
+                @vendorId, @productId, @supplierSku, @purchasePrice,
+                @leadTimeDays, @vendorPriority, @isPreferredVendor
+            )
+            ON DUPLICATE KEY UPDATE 
+                SupplierSku = @supplierSku, 
+                PurchasePrice = @purchasePrice,
+                LeadTimeDays = @leadTimeDays,
+                VendorPriority = @vendorPriority,
+                IsPreferredVendor = @isPreferredVendor;";
+
+                int rows = await db.ExecuteAsync(sql, new
+                {
+                    vendorId,
+                    productId,
+                    supplierSku,
+                    purchasePrice,
+                    leadTimeDays,
+                    vendorPriority,
+                    isPreferredVendor = isPreferredVendor ? 1 : 0
+                });
+
+                // Sync SKU back to Products table if empty
+                if (!string.IsNullOrWhiteSpace(supplierSku))
+                {
+                    await db.ExecuteAsync(@"
+                UPDATE Products 
+                SET ShortName = @supplierSku 
+                WHERE ProductId = @productId AND (ShortName IS NULL OR ShortName = '');",
+                        new { supplierSku, productId });
+                }
+
                 return rows > 0;
             }
             catch (Exception ex)

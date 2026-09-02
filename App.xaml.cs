@@ -150,6 +150,7 @@ namespace Tijori
             services.AddSingleton<StockLedgerService>();
             services.AddSingleton<InvoiceService>();
             services.AddSingleton<ReturnService>();
+            services.AddSingleton<AutoPurchaseOrderService>();
 
             // 3. VIEWMODELS (State Layer)
             services.AddSingleton<MainViewModel>();

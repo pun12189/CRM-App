@@ -189,6 +189,23 @@ namespace Tijori.ViewModels
         }
 
         [RelayCommand]
+        private async Task ToggleAutoReorderAsync(Product product)
+        {
+            if (product == null) return;
+
+            try
+            {
+                await _productService.EnableDisableAutoPOAsync(product, product.AutoReorderEnabled);
+            }
+            catch (Exception ex)
+            {
+                // Revert toggle if database update fails
+                product.AutoReorderEnabled = !product.AutoReorderEnabled;
+                MessageBox.Show($"Failed to update reorder status: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        [RelayCommand]
         private async Task Save()
         {
             if (await _productService.UpsertProductWithBatchAsync(CurrentProduct, new ProductBatch()))

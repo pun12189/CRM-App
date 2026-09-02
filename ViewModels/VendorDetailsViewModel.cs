@@ -533,7 +533,6 @@ namespace Tijori.ViewModels
         {
             if (Vendor == null || Vendor.VendorId == 0) return;
 
-            // Fetch master catalog items to select from
             var allProducts = await _productService.GetAllProductsAsync();
 
             var dialogVm = new LinkVendorProductDialogViewModel(Vendor.VendorId, allProducts);
@@ -549,12 +548,14 @@ namespace Tijori.ViewModels
                     Vendor.VendorId,
                     dialogVm.SelectedProduct.ProductId,
                     dialogVm.SupplierSku,
-                    dialogVm.PurchasePrice
+                    dialogVm.PurchasePrice,
+                    dialogVm.LeadTimeDays,
+                    dialogVm.VendorPriority,
+                    dialogVm.IsPreferredVendor
                 );
 
                 if (success)
                 {
-                    // Refresh vendor products list
                     var updatedProducts = await _vendorService.GetProductsByVendorIdAsync(Vendor.VendorId);
                     VendorProducts = new ObservableCollection<VendorProductLinkDisplay>(updatedProducts);
                 }
@@ -585,13 +586,20 @@ namespace Tijori.ViewModels
                     Vendor.VendorId,
                     dialogVm.SelectedProduct.ProductId,
                     dialogVm.SupplierSku,
-                    dialogVm.PurchasePrice
+                    dialogVm.PurchasePrice,
+                    dialogVm.LeadTimeDays,
+                    dialogVm.VendorPriority,
+                    dialogVm.IsPreferredVendor
                 );
 
                 if (success)
                 {
                     var updatedProducts = await _vendorService.GetProductsByVendorIdAsync(Vendor.VendorId);
                     VendorProducts = new ObservableCollection<VendorProductLinkDisplay>(updatedProducts);
+                }
+                else
+                {
+                    MessageBox.Show("Failed to update product vendor link.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }

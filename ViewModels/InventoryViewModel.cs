@@ -92,7 +92,9 @@ namespace Tijori.ViewModels
         public IEnumerable<Product> FilteredProducts => string.IsNullOrWhiteSpace(SearchText)
             ? AllProducts
             : AllProducts.Where(p => p.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                                     p.SKU.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+                                     p.SKU.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                                     p.ShortName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                                     p.CategoryName.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
 
         partial void OnSearchTextChanged(string value) => OnPropertyChanged(nameof(FilteredProducts));
 

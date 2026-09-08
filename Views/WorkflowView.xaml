@@ -5,106 +5,156 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:Tijori.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-             mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Margin="20">
-        <materialDesign:Card Padding="10">
-            <TabControl Style="{StaticResource MaterialDesignTabControl}" 
-                    materialDesign:ColorZoneAssist.Mode="PrimaryLight">
+             Background="#F8FAFC">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </UserControl.Resources>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-                <!-- TAB 1: CREATE WORKFLOW -->
-                <TabItem Header="CREATE WORKFLOW">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
-                        <StackPanel Margin="30" MaxWidth="800" HorizontalAlignment="Stretch">
-                            <TextBlock Text="New Automation Rule" Style="{StaticResource MaterialDesignHeadline5TextBlock}" Margin="0,0,0,20"/>
+        <!-- Top Action Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-                            <TextBox Text="{Binding NewWorkflow.WorkflowName, UpdateSourceTrigger=PropertyChanged}"
-                     materialDesign:HintAssist.Hint="Workflow Name (e.g., 30 Day Service Reminder)" 
-                     Style="{StaticResource MaterialDesignFloatingHintTextBox}" 
-                     Margin="0,0,0,20"
-                     FontSize="16"/>
-                            
-                            <!-- Event Selection -->
-                            <ComboBox ItemsSource="{Binding EventList, IsAsync=True}" 
-                                  SelectedItem="{Binding NewWorkflow.EventName}"
-                                  materialDesign:HintAssist.Hint="Select Trigger Event" 
-                                  Style="{StaticResource MaterialDesignFloatingHintComboBox}" 
-                                  Margin="0,0,0,20"/>
+            <TextBlock Text="Workflows" FontSize="18" FontWeight="Bold" Foreground="#1E293B" VerticalAlignment="Center"/>
 
-                            <!-- Inactivity Logic (Only visible if applicable) -->
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <!-- Only Show if 'OnCustomerInactivity' is selected -->
-                                            <DataTrigger Binding="{Binding NewWorkflow.EventName}" Value="OnCustomerInactivity">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <materialDesign:PackIcon Kind="ClockOutline" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                                <TextBox Text="{Binding NewWorkflow.InactivityDays}" 
-                                     materialDesign:HintAssist.Hint="Inactivity Days (e.g. 30)" 
-                                     Width="150" PreviewTextInput="NumberValidationTextBox"/>
-                                <TextBlock Text="days since last activity" VerticalAlignment="Center" Margin="10,0,0,0" Opacity="0.6"/>
-                            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button Content="+ Add New" 
+                        Command="{Binding OpenCreateDialogCommand}"
+                        Background="#0D9488" BorderBrush="Transparent" Foreground="White"
+                        FontWeight="SemiBold" FontSize="11" Height="28" Padding="12,0"/>
+            </StackPanel>
+        </Grid>
 
-                            <!-- Notification Channels -->
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
-                                <CheckBox Content="Send Email" IsChecked="{Binding NewWorkflow.SendEmail}" Margin="0,0,30,0"/>
-                                <CheckBox Content="Send WhatsApp" IsChecked="{Binding NewWorkflow.SendWhatsApp}"/>
-                            </StackPanel>
+        <!-- Workflows High-Density DataGrid -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4">
+            <DataGrid ItemsSource="{Binding Workflows}"
+                      AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True"
+                      GridLinesVisibility="Horizontal" HeadersVisibility="Column"
+                      HorizontalGridLinesBrush="#E2E8F0" RowHeight="32" Background="White">
 
-                            <!-- Template Editor -->
-                            <Grid>
-                                <TextBox x:Name="TemplateBox"
-                                     Text="{Binding NewWorkflow.TemplateBody, UpdateSourceTrigger=PropertyChanged}"
-                                     AcceptsReturn="True" MinHeight="200" TextWrapping="Wrap"
-                                     materialDesign:HintAssist.Hint="Message Template (Type @ for tags)"
-                                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
-                                     KeyUp="TemplateBox_KeyUp"/>
+                <!-- Crisp Compact Column Header -->
+                <DataGrid.ColumnHeaderStyle>
+                    <Style TargetType="DataGridColumnHeader">
+                        <Setter Property="Background" Value="#F1F5F9"/>
+                        <Setter Property="Foreground" Value="#475569"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="FontSize" Value="11"/>
+                        <Setter Property="Padding" Value="8,4"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                    </Style>
+                </DataGrid.ColumnHeaderStyle>
 
-                                <!-- Floating Tag Popup -->
-                                <Popup IsOpen="{Binding IsTagPopupOpen}" PlacementTarget="{Binding ElementName=TemplateBox}" StaysOpen="False">
-                                    <materialDesign:Card Width="200">
-                                        <ListBox ItemsSource="{Binding AvailableTags}" 
-                                             DisplayMemberPath="DisplayName"
-                                             SelectionChanged="TagList_SelectionChanged"/>
-                                    </materialDesign:Card>
-                                </Popup>
-                            </Grid>
+                <DataGrid.Columns>
+                    <!-- Checkbox Column -->
+                    <DataGridTemplateColumn Width="36">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" 
+                                          HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
 
-                            <Button Content="CREATE WORKFLOW" Command="{Binding SaveWorkflowCommand}" 
-                                Margin="0,20,0,0" HorizontalAlignment="Right" Background="#1794A1"/>
-                        </StackPanel>
-                    </ScrollViewer>
-                </TabItem>
+                    <!-- Row ID -->
+                    <DataGridTextColumn Header="#" Binding="{Binding Id}" Width="45">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="Foreground" Value="#64748B"/>
+                                <Setter Property="HorizontalAlignment" Value="Center"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
 
-                <!-- TAB 2: VIEW WORKFLOWS -->
-                <TabItem Header="VIEW WORKFLOWS">
-                    <DataGrid ItemsSource="{Binding Workflows, IsAsync=True}" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" AutoGenerateColumns="False" IsReadOnly="True" 
-                          CanUserAddRows="False" Margin="10">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Workflow Name" Binding="{Binding WorkflowName}" Width="*"/>
-                            <DataGridTextColumn Header="Event" Binding="{Binding EventName}" Width="150"/>
-                            <DataGridTextColumn Header="Inactivity" Binding="{Binding InactivityDays}" Width="100"/>
-                            <DataGridCheckBoxColumn Header="Email" Binding="{Binding SendEmail}" Width="80"/>
-                            <DataGridCheckBoxColumn Header="WhatsApp" Binding="{Binding SendWhatsApp}" Width="100"/>
-                            <DataGridTemplateColumn Header="Actions" Width="150">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Button Style="{StaticResource MaterialDesignFlatButton}" Content="DELETE" Foreground="Red"
-                                            Command="{Binding DataContext.DeleteWorkflowCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                            CommandParameter="{Binding}"/>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </TabItem>
-            </TabControl>
-        </materialDesign:Card>
+                    <!-- Title -->
+                    <DataGridTextColumn Header="Title" Binding="{Binding WorkflowName}" Width="2.5*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Foreground" Value="#1E293B"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                                <Setter Property="Padding" Value="4,0,0,0"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Event Name -->
+                    <DataGridTextColumn Header="Event" Binding="{Binding EventName}" Width="2*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="Foreground" Value="#334155"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Channels Indicator -->
+                    <DataGridTemplateColumn Header="Channels" Width="1.5*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Background="#DCFCE7" CornerRadius="2" Padding="4,1" Margin="0,0,4,0"
+                                            Visibility="{Binding SendWhatsApp, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Text="WA" FontSize="9" FontWeight="Bold" Foreground="#16A34A"/>
+                                    </Border>
+                                    <Border Background="#E0F2FE" CornerRadius="2" Padding="4,1" Margin="0,0,4,0"
+                                            Visibility="{Binding SendEmail, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Text="Email" FontSize="9" FontWeight="Bold" Foreground="#0284C7"/>
+                                    </Border>
+                                    <Border Background="#FEF3C7" CornerRadius="2" Padding="4,1"
+                                            Visibility="{Binding SendNotification, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <TextBlock Text="Toast" FontSize="9" FontWeight="Bold" Foreground="#D97706"/>
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <!-- Created At -->
+                    <DataGridTextColumn Header="Created at" Binding="{Binding CreatedAt, StringFormat='MM-dd-yyyy hh:mm tt'}" Width="1.5*">
+                        <DataGridTextColumn.ElementStyle>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="FontSize" Value="10"/>
+                                <Setter Property="Foreground" Value="#64748B"/>
+                                <Setter Property="VerticalAlignment" Value="Center"/>
+                            </Style>
+                        </DataGridTextColumn.ElementStyle>
+                    </DataGridTextColumn>
+
+                    <!-- Row Action Buttons (Pencil & Trash) -->
+                    <DataGridTemplateColumn Header="Action" Width="70">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <!-- Edit -->
+                                    <Button Command="{Binding DataContext.EditWorkflowCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource MaterialDesignIconButton}" Width="24" Height="24" Padding="0">
+                                        <materialDesign:PackIcon Kind="Pencil" Foreground="#F59E0B" Width="14" Height="14"/>
+                                    </Button>
+                                    <!-- Delete -->
+                                    <Button Command="{Binding DataContext.DeleteWorkflowCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource MaterialDesignIconButton}" Width="24" Height="24" Padding="0" Margin="4,0,0,0">
+                                        <materialDesign:PackIcon Kind="Delete" Foreground="#EF4444" Width="14" Height="14"/>
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
     </Grid>
 </UserControl>

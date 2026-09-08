@@ -34,6 +34,8 @@ namespace Tijori.ViewModels
         private readonly StaffService _staffService;
         private readonly CategoryService _categoryService;
         private readonly IActionSecurityGuard _securityGuard;
+        private readonly WorkflowEngine _workflowEngine;
+
         private ICollectionView _leadsCollection;
         private List<Lead> _rawLeadsList = new();
 
@@ -101,12 +103,13 @@ namespace Tijori.ViewModels
         [ObservableProperty]
         private WorkspaceViewMode _currentViewMode = WorkspaceViewMode.Table;
 
-        public LeadFollowupViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService, StaffService staffService, CategoryService categoryService, IActionSecurityGuard securityGuard)
+        public LeadFollowupViewModel(LeadService leadService, SettingService settingService, IUserSession session, IDialogService dialogService, ProductService productService, OrderService orderService, OccupiedLocationService locationService, NotificationRoutingService routingService, StaffService staffService, CategoryService categoryService, IActionSecurityGuard securityGuard, WorkflowEngine workflowEngine)
         {
             _leadService = leadService;
             _settingService = settingService;
             _session = session;
             _dialogService = dialogService;
+            _workflowEngine = workflowEngine;
             _staffService = staffService;
             _productService = productService;
             _orderService = orderService;
@@ -560,7 +563,7 @@ namespace Tijori.ViewModels
 
             // 1. Create the ViewModel for the Dialog
             // We pass the LeadService and the Selected Lead instance
-            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, _categoryService, _securityGuard);
+            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, _categoryService, _securityGuard, _workflowEngine);
 
             if (selectedLead.Status?.ToLower() == "matured")
             {
@@ -727,7 +730,7 @@ namespace Tijori.ViewModels
             if (selectedLead == null) return;
             ActiveProfileLead = selectedLead;
 
-            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, _categoryService, _securityGuard, true);
+            dynamic profileVm = new LeadProfileViewModel(_leadService, _settingService, _session, selectedLead, _locationService, _routingService, _productService, _orderService, _categoryService, _securityGuard, _workflowEngine, true);
 
             if (selectedLead.Status?.ToLower() == "matured")
             {

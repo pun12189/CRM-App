@@ -1,10 +1,7 @@
-﻿using Tijori.Models;
-using Tijori.ViewModels;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,17 +10,16 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace Tijori.Views
+namespace Tijori.Dialogs
 {
     /// <summary>
-    /// Interaction logic for WorkflowView.xaml
+    /// Interaction logic for CreateWorkflowDialogWindow.xaml
     /// </summary>
-    public partial class WorkflowView : UserControl
+    public partial class CreateWorkflowDialogWindow : Window
     {
-        public WorkflowView()
+        public CreateWorkflowDialogWindow()
         {
             InitializeComponent();
         }

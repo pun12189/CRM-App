@@ -198,7 +198,7 @@
         <!-- ================================================================= -->
         <!-- MAIN MAIN WORKSPACE DISPLAY FRAMEWORK CONTAINER PANELS            -->
         <!-- ================================================================= -->
-        <Grid Grid.Column="1" Margin="24">
+        <Grid Grid.Column="1" Margin="10,15,10,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>

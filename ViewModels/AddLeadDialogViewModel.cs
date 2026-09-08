@@ -344,7 +344,7 @@ namespace Tijori.ViewModels
                     };
 
                     targetLeadId = await _leadService.SaveLeadAsync(NewLead, historyEntry, _session.CurrentUser);
-                    await _workflowEngine.EnqueueEventAsync("OnLeadCreated", targetLeadId, _isCustomerMode ? "Customer" : "Lead");
+                    await _workflowEngine.EnqueueEventAsync(WorkflowEvents.LeadCreate, targetLeadId, _isCustomerMode ? "Customer" : "Lead");
                 }
 
                 if (targetLeadId > 0)

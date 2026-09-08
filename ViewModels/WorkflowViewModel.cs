@@ -1,6 +1,4 @@
-﻿using Tijori.Interfaces;
-using Tijori.Models;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
@@ -8,6 +6,10 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
 
 namespace Tijori.ViewModels
 {
@@ -15,40 +17,67 @@ namespace Tijori.ViewModels
     {
         private readonly IWorkflowDataService _dataService;
 
-        [ObservableProperty] private Workflow _newWorkflow = new();
-        [ObservableProperty] private ObservableCollection<Workflow> _workflows;
-        [ObservableProperty] private ObservableCollection<string> _eventList;
-        [ObservableProperty] private ObservableCollection<WorkflowTag> _availableTags;
-        [ObservableProperty] private bool _isTagPopupOpen;
+        [ObservableProperty] private ObservableCollection<Workflow> _workflows = new();
+        [ObservableProperty] private bool _isLoading;
 
-        // The service is injected here via DI
         public WorkflowViewModel(IWorkflowDataService dataService)
         {
             _dataService = dataService;
-            EventList = new ObservableCollection<string> { "OnLeadCreated", "OnOrderPlaced", "OnCustomerInactivity" };
-            _ = InitializeAsync();
-        }
-
-        private async Task InitializeAsync()
-        {
-            var list = await _dataService.GetAllWorkflowsAsync();
-            Workflows = new ObservableCollection<Workflow>(list);
-
-            var tags = await _dataService.GetTagsByEventAsync("OnLeadCreated");
-            AvailableTags = new ObservableCollection<WorkflowTag>(tags);
+            _ = LoadWorkflowsAsync();
         }
 
         [RelayCommand]
-        private async Task SaveWorkflow()
+        public async Task LoadWorkflowsAsync()
         {
-            // Simple validation
-            if (string.IsNullOrEmpty(NewWorkflow.EventName)) return;
+            IsLoading = true;
+            var list = await _dataService.GetAllWorkflowsAsync();
+            Workflows = new ObservableCollection<Workflow>(list);
+            IsLoading = false;
+        }
 
-            bool success = await _dataService.SaveWorkflowAsync(NewWorkflow);
-            if (success)
+        [RelayCommand]
+        private async Task OpenCreateDialogAsync()
+        {
+            var dialogVm = new CreateWorkflowDialogViewModel(_dataService);
+            var dialog = new CreateWorkflowDialogWindow
             {
-                NewWorkflow = new Workflow(); // Reset form
-                await InitializeAsync(); // Refresh list
+                DataContext = dialogVm,
+                Owner = Application.Current.MainWindow
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                await LoadWorkflowsAsync();
+            }
+        }
+
+        [RelayCommand]
+        private async Task EditWorkflowAsync(Workflow? item)
+        {
+            if (item == null) return;
+            var dialogVm = new CreateWorkflowDialogViewModel(_dataService, item);
+            var dialog = new CreateWorkflowDialogWindow
+            {
+                DataContext = dialogVm,
+                Owner = Application.Current.MainWindow
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                await LoadWorkflowsAsync();
+            }
+        }
+
+        [RelayCommand]
+        private async Task DeleteWorkflowAsync(Workflow? item)
+        {
+            if (item == null) return;
+
+            var confirm = MessageBox.Show($"Delete automation rule '{item.WorkflowName}'?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Question);
+            if (confirm == MessageBoxResult.Yes)
+            {
+                await _dataService.DeleteWorkflowAsync(item.Id);
+                await LoadWorkflowsAsync();
             }
         }
     }

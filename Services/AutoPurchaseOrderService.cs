@@ -84,7 +84,7 @@ namespace Tijori.Services
                     int vendorId = group.Key;
                     var vendorItems = group.ToList();
 
-                    string poNumber = $"AUTO-PO-{DateTime.Today:yyyyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}";
+                    string poNumber = $"PO-{DateTime.Today:yyyyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}-(AUTO)";
                     int maxLeadDays = vendorItems.Max(i => i.DeliveryDays);
                     DateTime expectedDelivery = DateTime.Today.AddDays(maxLeadDays > 0 ? maxLeadDays : 3);
 

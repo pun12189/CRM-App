@@ -203,6 +203,7 @@ namespace Tijori
             services.AddTransient<OrderDetailsViewModel>();
             services.AddTransient<PurchaseDetailsViewModel>();
             services.AddTransient<MargExportGuideViewModel>();
+            services.AddTransient<CreateWorkflowDialogViewModel>();
 
             // 4. Register Views
             services.AddTransient<LoginView>();
@@ -215,24 +216,24 @@ namespace Tijori
 
             var loginView = ServiceProvider!.GetRequiredService<LoginView>();
             //this.MainWindow = null;
-            loginView.Show();            
+            loginView.Show();
 
-            var engine = ServiceProvider!.GetService<WorkflowEngine>();
+            var engine = ServiceProvider.GetService<WorkflowEngine>();
             if (engine != null)
             {
                 await Task.Run(async () =>
                 {
                     try
                     {
-                        // 1. Process any missed events from when the app was closed
+                        // 1. Process pending immediate tasks that were missed while the app was closed
                         await engine.ProcessQueueAsync();
 
-                        // 2. Run the inactivity check for old customers
-                        await engine.CheckInactivityWorkflowsAsync();
+                        // 2. Evaluate daily time-based rules ('No updation since', 'No order since')
+                        await engine.CheckTimeBasedSchedulesAsync();
                     }
                     catch (Exception ex)
                     {
-                        // Fallback hook to record background engine thread crashes straight to Sentry
+                        System.Diagnostics.Debug.WriteLine($"Workflow background error: {ex.Message}");
                     }
                 });
             }

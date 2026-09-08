@@ -36,6 +36,7 @@ namespace Tijori.ViewModels
         private readonly OrderService _orderService;
         private readonly CategoryService _categoryService;
         private readonly IActionSecurityGuard _securityGuard;
+        private readonly WorkflowEngine _workflowEngine;
 
         [ObservableProperty] private CustomerAnalytics _data;
 
@@ -164,12 +165,13 @@ namespace Tijori.ViewModels
             }
         }
 
-        public LeadProfileViewModel(LeadService service, SettingService settingService, IUserSession session, Lead lead, OccupiedLocationService locationService, NotificationRoutingService notificationRoutingService, ProductService productService, OrderService orderService, CategoryService categoryService, IActionSecurityGuard securityGuard, bool isInEditMode = false)
+        public LeadProfileViewModel(LeadService service, SettingService settingService, IUserSession session, Lead lead, OccupiedLocationService locationService, NotificationRoutingService notificationRoutingService, ProductService productService, OrderService orderService, CategoryService categoryService, IActionSecurityGuard securityGuard, WorkflowEngine workflowEngine, bool isInEditMode = false)
         {
             _leadService = service;
             _settingService = settingService;
             _session = session;
             _locationService = locationService; 
+            _workflowEngine = workflowEngine;
             _notificationRoutingService = notificationRoutingService;
             _productService = productService;
             _orderService = orderService;
@@ -470,6 +472,7 @@ namespace Tijori.ViewModels
                             // Use the service method that handles the transaction
                             await _leadService.MatureLeadWithDoubleHistoryAsync(SelectedLead, newOrder, payment, history);
                             await _notificationRoutingService.DispatchTargetedToastAsync(targetNotification);
+                            await _workflowEngine.EnqueueEventAsync(WorkflowEvents.LeadMatured, SelectedLead.LeadId, "Lead");
                         }
                         else
                         {
@@ -651,6 +654,7 @@ namespace Tijori.ViewModels
             if (success)
             {
                 ActiveProforma = new ProformaHeader();
+                await _workflowEngine.EnqueueEventAsync(WorkflowEvents.NewProforma, SelectedLead.LeadId, "Lead");
                 RecalculateProformaFinancials();
             }
         }

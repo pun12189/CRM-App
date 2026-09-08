@@ -9,20 +9,12 @@ namespace Tijori.Interfaces
 {
     public interface IWorkflowDataService
     {
-        // Workflow CRUD
         Task<IEnumerable<Workflow>> GetAllWorkflowsAsync();
-        Task<bool> SaveWorkflowAsync(Workflow workflow);
-
-        // Tag Operations
-        Task<IEnumerable<WorkflowTag>> GetTagsByEventAsync(string eventName);
-
-        // Queue Operations
+        Task<bool> SaveWorkflowAsync(Workflow wf);
+        Task<bool> DeleteWorkflowAsync(int id);
+        Task<IEnumerable<WorkflowTag>> GetTagsForEventAsync(string eventName);
         Task EnqueueActionAsync(int workflowId, int targetId, string targetType);
         Task<IEnumerable<WorkflowQueueItem>> GetPendingQueueAsync();
         Task MarkAsProcessedAsync(int queueId);
-
-        Task<IEnumerable<Workflow>> GetInactivityWorkflowsAsync();
-        Task<IEnumerable<dynamic>> GetInactiveCustomersAsync(int days);
-        Task<bool> HasAlreadyReceivedInactivityNotice(int customerId, int workflowId);
     }
 }

@@ -163,7 +163,6 @@ namespace Tijori
             services.AddTransient<GenericSettingsViewModel>();
             services.AddTransient<ManageCategoriesViewModel>();
             services.AddTransient<InventoryViewModel>();
-            services.AddTransient<CompanyProfileViewModel>();
             services.AddTransient<OrderStagesViewModel>();
             services.AddTransient<DepartmentsViewModel>();
             services.AddTransient<LoginLogsViewModel>();
@@ -204,6 +203,8 @@ namespace Tijori
             services.AddTransient<PurchaseDetailsViewModel>();
             services.AddTransient<MargExportGuideViewModel>();
             services.AddTransient<CreateWorkflowDialogViewModel>();
+            services.AddTransient<DivisionsDirectoryViewModel>();
+            services.AddTransient<CreateEditDivisionDialogViewModel>();
 
             // 4. Register Views
             services.AddTransient<LoginView>();

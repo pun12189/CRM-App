@@ -15,14 +15,13 @@ using System.Windows.Shapes;
 namespace Tijori.Dialogs
 {
     /// <summary>
-    /// Interaction logic for AddDivisionWindow.xaml
+    /// Interaction logic for CreateEditDivisionDialogWindow.xaml
     /// </summary>
-    public partial class AddDivisionWindow : Window
+    public partial class CreateEditDivisionDialogWindow : Window
     {
-        public AddDivisionWindow()
+        public CreateEditDivisionDialogWindow()
         {
             InitializeComponent();
-            Owner = Application.Current.MainWindow;
         }
     }
 }

@@ -45,9 +45,10 @@
                       AutoGenerateColumns="False" 
                       IsReadOnly="False" 
                       GridLinesVisibility="All"
-                      HorizontalGridLinesBrush="#E2E8F0"
-                      VerticalGridLinesBrush="#E2E8F0"
-                      HeadersVisibility="Column"
+                      HorizontalGridLinesBrush="Black"
+                      VerticalGridLinesBrush="Black"
+                      BorderBrush="Black"
+                      BorderThickness="2"
                       CanUserAddRows="False"
                       Background="White"
                       RowHeaderWidth="0">
@@ -62,7 +63,7 @@
                         <Setter Property="VerticalContentAlignment" Value="Center"/>
                         <Setter Property="Padding" Value="6,10"/>
                         <Setter Property="BorderThickness" Value="0,0,1,1"/>
-                        <Setter Property="BorderBrush" Value="#CBD5E1"/>
+                        <Setter Property="BorderBrush" Value="Black"/>
                     </Style>
                 </DataGrid.ColumnHeaderStyle>
 

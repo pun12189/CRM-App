@@ -74,7 +74,17 @@
 
         <!-- 2. DATA TABLE -->
         <Border Grid.Row="1" Background="White" CornerRadius="6" BorderBrush="#E2E8F0" BorderThickness="1">
-            <DataGrid ItemsSource="{Binding FilteredEntries}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" RowHeight="38" Style="{StaticResource MaterialDesignDataGrid}">
+            <DataGrid ItemsSource="{Binding FilteredEntries}" AutoGenerateColumns="False" CanUserAddRows="False" IsReadOnly="True" RowHeight="38" Style="{StaticResource MaterialDesignDataGrid}" 
+GridLinesVisibility="All"
+HorizontalGridLinesBrush="Black"
+    VerticalGridLinesBrush="Black"
+    BorderThickness="2"
+    BorderBrush="Black"
+VirtualizingPanel.IsVirtualizing="True"
+VirtualizingPanel.VirtualizationMode="Recycling"
+VirtualizingPanel.ScrollUnit="Pixel"
+ScrollViewer.CanContentScroll="True"
+ScrollViewer.HorizontalScrollBarVisibility="Auto">
                 <DataGrid.Columns>
 
                     <DataGridTextColumn Header="Date &amp; Time" Binding="{Binding CreatedDate, StringFormat='{}{0:dd MMM yyyy HH:mm}'}" Width="140"/>

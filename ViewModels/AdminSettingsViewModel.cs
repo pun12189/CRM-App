@@ -1,8 +1,4 @@
-﻿using Tijori.Dialogs;
-using Tijori.Interfaces;
-using Tijori.Models;
-using Tijori.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using QRCoder;
@@ -16,6 +12,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media.Imaging;
 using System.Xml.Linq;
+using Tijori.Dialogs;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
+using Tijori.Views;
 
 namespace Tijori.ViewModels
 {
@@ -74,7 +75,7 @@ namespace Tijori.ViewModels
                     _isInSubDetailView = false;
                     break;
                 case "CProfile":
-                    CurrentSettingView = _serviceProvider.GetRequiredService<CompanyProfileViewModel>();
+                    CurrentSettingView = _serviceProvider.GetRequiredService<DivisionsDirectoryViewModel>();
                     break;
                 case "Category":
                     CurrentSettingView = _serviceProvider.GetRequiredService<CategorySettingsViewModel>();

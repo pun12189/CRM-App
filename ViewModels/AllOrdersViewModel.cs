@@ -320,7 +320,7 @@ namespace Tijori.ViewModels
         {
             try
             {
-                var invoiceData = await _invoiceService.GetOrderInvoiceDataAsync(selectedOrder.OrderId);
+                var invoiceData = await _invoiceService.GetOrderInvoiceDataAsync(selectedOrder.OrderId, selectedOrder.DivisionId);
                 if (invoiceData == null)
                 {
                     MessageBox.Show("Unable to load invoice data for Order #" + selectedOrder.FormattedOrderId, "Error", MessageBoxButton.OK, MessageBoxImage.Warning);

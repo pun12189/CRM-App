@@ -44,8 +44,8 @@
         <DataTemplate DataType="{x:Type vm:InventoryViewModel}">
             <views:ProductView />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type vm:CompanyProfileViewModel}">
-            <views:CompanyProfileView />
+        <DataTemplate DataType="{x:Type vm:DivisionsDirectoryViewModel}">
+            <views:DivisionsDirectoryView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type vm:OrderStagesViewModel}">
             <views:OrderStagesView />

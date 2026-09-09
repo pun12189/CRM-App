@@ -147,7 +147,7 @@ namespace Tijori.Services
                         // Deduct from `Remaining Stock` column
                         const string deductRmStockSql = @"
                     UPDATE products 
-                    SET `Remaining Stock` = `Remaining Stock` - @DeductQty 
+                    SET `RemainingStock` = `RemainingStock` - @DeductQty 
                     WHERE ProductId = @ProductId;";
                         await conn.ExecuteAsync(deductRmStockSql, new { DeductQty = (int)Math.Ceiling(item.CalculatedQuantity), ProductId = item.RawMaterialProductId }, transaction);
 

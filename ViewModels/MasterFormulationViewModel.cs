@@ -72,7 +72,7 @@ namespace Tijori.ViewModels
 
                 // 2. Raw Materials, Excipients & Chemicals (Matches any category marked as RawMaterial)
                 RawMaterialsList = new ObservableCollection<Product>(
-                    allProducts.Where(p => p.CategoryType == ItemClassification.RawMaterial)
+                    allProducts.Where(p => p.CategoryType == ItemClassification.RawMaterial || p.CategoryType == ItemClassification.PackagingMaterial)
                 );
             });
         }

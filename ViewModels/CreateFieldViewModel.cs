@@ -74,6 +74,11 @@ namespace Tijori.ViewModels
         {
             _fieldService = fieldService;
             NewField.SeedValueOptionsList = new ObservableCollection<string>();
+
+            if (NewField != null)
+            {
+                NewField.PropertyChanged += OnNewFieldPropertyChanged;
+            }
         }
 
         public async Task InitializeAsync(string moduleType)

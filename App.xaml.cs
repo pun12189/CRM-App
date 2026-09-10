@@ -8,7 +8,6 @@ using Tijori.Services.Reports;
 using Tijori.ViewModels;
 using Tijori.Views;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Toolkit.Uwp.Notifications;
 using MySql.Data.MySqlClient;
 using System.Windows;
 

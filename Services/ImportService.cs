@@ -329,7 +329,7 @@ namespace Tijori.Services
                         {
                             string updateProductSql = @"
                             UPDATE Products 
-                            SET RemainingStock = GREATEST(0, RemainingStock + @StockQty),
+                            SET RemainingStock = GREATEST(0, @StockQty),
                                 InitialStock = GREATEST(0, InitialStock + @StockQty),
                                 MRP = CASE WHEN @MRP > 0 THEN @MRP ELSE MRP END,
                                 CostPrice = CASE WHEN @CostPrice > 0 THEN @CostPrice ELSE CostPrice END,
@@ -450,7 +450,7 @@ namespace Tijori.Services
                             string updateBatchSql = @"
                                 UPDATE ProductBatches 
                                 SET 
-                                    CurrentStock = GREATEST(0, CurrentStock + @Quantity),
+                                    CurrentStock = GREATEST(0, @Quantity),
                                     QuantityReceived = QuantityReceived + @Quantity,
                                     MfgDate = COALESCE(@MfgDate, MfgDate),
                                     ExpiryDate = COALESCE(@ExpiryDate, ExpiryDate),

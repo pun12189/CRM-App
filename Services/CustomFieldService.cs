@@ -67,6 +67,10 @@ namespace Tijori.Services
                 FieldType = @FieldType,
                 IsVisible = @IsVisible,
                 IsRequired = @IsRequired,
+                IsFilter = @IsFilter,
+                IsAdmin = @IsAdmin,
+                InPdf = @InPdf,
+                InTable = @InTable,
                 SeedValues = @SeedValues
             WHERE FieldId = @FieldId;";
 
@@ -77,15 +81,21 @@ namespace Tijori.Services
             // 2. IF NEW RECORD, INSERT WITH DUPLICATE KEY FALLBACK
             const string insertSql = @"
         INSERT INTO customfielddefinitions (
-            FieldName, DisplayLabel, FieldType, ModuleType, FieldTier, IsVisible, IsRequired, SeedValues
+            FieldName, DisplayLabel, FieldType, ModuleType, FieldTier, 
+            IsVisible, IsRequired, IsFilter, IsAdmin, InPdf, IsTable, SeedValues
         ) VALUES (
-            @FieldName, @DisplayLabel, @FieldType, @ModuleType, @FieldTier, @IsVisible, @IsRequired, @SeedValues
+            @FieldName, @DisplayLabel, @FieldType, @ModuleType, @FieldTier, 
+            @IsVisible, @IsRequired, @IsFilter, @IsAdmin, @InPdf, @IsTable, @SeedValues
         )
         ON DUPLICATE KEY UPDATE
             DisplayLabel = VALUES(DisplayLabel),
             FieldType = VALUES(FieldType),
             IsVisible = VALUES(IsVisible),
             IsRequired = VALUES(IsRequired),
+            IsFilter = VALUES(IsFilter),
+            IsAdmin = VALUES(IsAdmin),
+            InPdf = VALUES(InPdf),
+            IsTable = VALUES(IsTable),
             SeedValues = VALUES(SeedValues);";
 
             int affectedRows = await db.ExecuteAsync(insertSql, field);

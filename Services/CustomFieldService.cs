@@ -82,10 +82,10 @@ namespace Tijori.Services
             const string insertSql = @"
         INSERT INTO customfielddefinitions (
             FieldName, DisplayLabel, FieldType, ModuleType, FieldTier, 
-            IsVisible, IsRequired, IsFilter, IsAdmin, InPdf, IsTable, SeedValues
+            IsVisible, IsRequired, IsFilter, IsAdmin, InPdf, InTable, SeedValues
         ) VALUES (
             @FieldName, @DisplayLabel, @FieldType, @ModuleType, @FieldTier, 
-            @IsVisible, @IsRequired, @IsFilter, @IsAdmin, @InPdf, @IsTable, @SeedValues
+            @IsVisible, @IsRequired, @IsFilter, @IsAdmin, @InPdf, @InTable, @SeedValues
         )
         ON DUPLICATE KEY UPDATE
             DisplayLabel = VALUES(DisplayLabel),
@@ -95,7 +95,7 @@ namespace Tijori.Services
             IsFilter = VALUES(IsFilter),
             IsAdmin = VALUES(IsAdmin),
             InPdf = VALUES(InPdf),
-            IsTable = VALUES(IsTable),
+            InTable = VALUES(InTable),
             SeedValues = VALUES(SeedValues);";
 
             int affectedRows = await db.ExecuteAsync(insertSql, field);

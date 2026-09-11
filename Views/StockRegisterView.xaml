@@ -82,15 +82,20 @@
 
             <!-- 2. MARG-STYLE ITEM HEADLINE & OPENING BALANCE BANNER -->
             <Border Grid.Row="1" Background="#F1F5F9" BorderBrush="#CBD5E1" BorderThickness="1" Padding="12,8" Margin="0,0,0,8" CornerRadius="4">
-                <DockPanel>
+                <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{Binding SelectedItemDisplayName, FallbackValue='Select an Item from Filter to view report'}" 
                                FontSize="14" FontWeight="Bold" Foreground="#0F172A" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,10,0"/>
 
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center" Margin="0,0,5,0">
                         <TextBlock Text="Opening Balance: " FontSize="13" FontWeight="SemiBold" Foreground="#475569"/>
                         <TextBlock Text="{Binding OpeningBalanceQty, StringFormat=\{0:N0\} PCS}" FontSize="13" FontWeight="Bold" Foreground="#2563EB"/>
                     </StackPanel>
-                </DockPanel>
+
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                        <TextBlock Text="As on: " FontSize="13" FontWeight="SemiBold" Foreground="#475569"/>
+                        <TextBlock Text="{Binding FromDate, StringFormat={}{0:dd-MM-yyyy HH:mm'hrs'}}" FontSize="13" FontWeight="Bold" Foreground="#2563EB"/>
+                    </StackPanel>
+                </StackPanel>
             </Border>
 
             <!-- 3. MARG STOCK REGISTER DATAGRID -->
@@ -157,7 +162,7 @@
                         <TextBlock Text="Purchase :" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding TotalReceivedQty, StringFormat={}{0:N0}}" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,3,12,3" Foreground="#0F172A"/>
-                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding TotalReceivedValue, StringFormat={}{0:₹ #.##0.00}}" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,3,0,3" Foreground="#0F172A"/>
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding TotalReceivedValue, StringFormat=₹\{0:N2\}}" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,3,0,3" Foreground="#0F172A"/>
 
                     <!-- Issued Row (Red) -->
                     <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,3,12,3">
@@ -165,7 +170,7 @@
                         <TextBlock Text="Sale :" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TotalIssuedQty, StringFormat={}{0:N0}}" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,3,12,3" Foreground="#0F172A"/>
-                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding TotalIssuedValue, StringFormat={}{0:₹ #.##0.00}}" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,3,0,3" Foreground="#0F172A"/>
+                    <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding TotalIssuedValue, StringFormat=₹\{0:N2\}}" FontWeight="Bold" HorizontalAlignment="Right" Margin="0,3,0,3" Foreground="#0F172A"/>
                 </Grid>
             </Border>
 

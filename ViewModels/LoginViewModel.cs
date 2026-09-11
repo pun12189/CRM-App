@@ -52,22 +52,22 @@ namespace Tijori.ViewModels
         private async Task Login(object passwordBox)
         {
 #if RELEASE
-            await LicenseManager.RefreshCacheAsync();
+            //await LicenseManager.RefreshCacheAsync();
 
-            // Check your model's native properties directly
-            if (LicenseManager.Current.IsExpired)
-            {
-                MessageBox.Show(
-                    "Your software application evaluation trial phase has expired.\n\n" +
-                    "Please contact administration to activate the Full Enterprise Version.",
-                    "Trial License Expired - Tijori",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Stop
-                );
+            //// Check your model's native properties directly
+            //if (LicenseManager.Current.IsExpired)
+            //{
+            //    MessageBox.Show(
+            //        "Your software application evaluation trial phase has expired.\n\n" +
+            //        "Please contact administration to activate the Full Enterprise Version.",
+            //        "Trial License Expired - Tijori",
+            //        MessageBoxButton.OK,
+            //        MessageBoxImage.Stop
+            //    );
 
-                // STOPS EXECUTION IN ITS TRACKS: Prevents login routing and credentials checks
-                return;
-            }
+            //    // STOPS EXECUTION IN ITS TRACKS: Prevents login routing and credentials checks
+            //    return;
+            //}
 #endif
             if (IsBusy) return;
             IsBusy = true;

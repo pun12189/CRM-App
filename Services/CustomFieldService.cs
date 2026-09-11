@@ -20,12 +20,9 @@ namespace Tijori.Services
         public async Task<IEnumerable<CustomFieldDefinition>> GetFieldsByModuleAsync(string moduleType)
         {
             const string sql = @"
-                SELECT 
-                    FieldId, FieldName, DisplayLabel, FieldType, ModuleType, 
-                    FieldTier, IsVisible, IsRequired, SeedValues, CreatedAt
-                FROM customfielddefinitions 
-                WHERE LOWER(ModuleType) = LOWER(@ModuleType)
-                ORDER BY FieldTier ASC, FieldId ASC;";
+        SELECT * FROM customfielddefinitions 
+        WHERE LOWER(ModuleType) = LOWER(@ModuleType)
+        ORDER BY FieldTier ASC, FieldId ASC;";
 
             using var db = _context.CreateConnection();
             if (db.State == ConnectionState.Closed) db.Open();
@@ -34,12 +31,19 @@ namespace Tijori.Services
 
             foreach (var field in fields)
             {
-                if (!string.IsNullOrEmpty(field.SeedValues))
+                if (!string.IsNullOrWhiteSpace(field.SeedValues))
                 {
-                    var options = JsonSerializer.Deserialize<List<string>>(field.SeedValues);
-                    if (options != null)
+                    try
                     {
-                        field.SeedValueOptionsList = new System.Collections.ObjectModel.ObservableCollection<string>(options);
+                        var options = JsonSerializer.Deserialize<List<string>>(field.SeedValues);
+                        if (options != null)
+                        {
+                            field.SeedValueOptionsList = new System.Collections.ObjectModel.ObservableCollection<string>(options);
+                        }
+                    }
+                    catch
+                    {
+                        field.SeedValueOptionsList = new System.Collections.ObjectModel.ObservableCollection<string>();
                     }
                 }
             }

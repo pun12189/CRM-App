@@ -372,7 +372,7 @@
                 <!-- ========================================================= -->
                 <!-- TAB 2: ORDER PAYMENT DETAILS                              -->
                 <!-- ========================================================= -->
-                <TabItem Header="Order Payment Details" Style="{StaticResource ModernTabItemStyle}">
+                <TabItem Header="Order Payment Details" Style="{StaticResource ModernTabItemStyle}" Visibility="Collapsed">
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20">
                         <StackPanel>
 

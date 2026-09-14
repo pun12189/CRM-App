@@ -96,7 +96,7 @@
                                                 <TextBlock Text="New Products" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
-                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Visibility="Collapsed">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.FastMovingProducts}"/>
                                             </Border.InputBindings>
@@ -105,7 +105,7 @@
                                                 <TextBlock Text="Fast Moving" FontSize="11" Foreground="#7F8C8D" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                                             </StackPanel>
                                         </Border>
-                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85">
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Visibility="Collapsed">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.SlowMovingProducts}"/>
                                             </Border.InputBindings>
@@ -152,7 +152,7 @@
                             <materialDesign:Card Margin="5,15,5,5" Background="White" UniformCornerRadius="6">
                                 <Expander Header="All Time Data" IsExpanded="False" Background="Transparent" Foreground="#2C3E50" FontWeight="Bold" FontSize="13">
                                     <UniformGrid Columns="5" Margin="5,10">
-                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand" Visibility="Collapsed">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.AllLeads}"/>
                                             </Border.InputBindings>
@@ -163,7 +163,7 @@
                                         </Border>
 
                                         <!-- OPEN LEADS -->
-                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand" Visibility="Collapsed">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.OpenLeads}"/>
                                             </Border.InputBindings>
@@ -175,7 +175,7 @@
                                         </Border>
 
                                         <!-- FOLLOW UP -->
-                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand" Visibility="Collapsed">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.FollowupLeads}"/>
                                             </Border.InputBindings>
@@ -187,7 +187,7 @@
                                         </Border>
 
                                         <!-- NO FOLLOW UP -->
-                                        <Border Background="#FFF7ED" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
+                                        <Border Background="#FFF7ED" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand" Visibility="Collapsed">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoFollowupLeads}"/>
                                             </Border.InputBindings>
@@ -199,7 +199,7 @@
                                         </Border>
 
                                         <!-- DEAD LEADS -->
-                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand" Visibility="Collapsed">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.DeadLeads}"/>
                                             </Border.InputBindings>
@@ -223,7 +223,7 @@
                                         </Border>
 
                                         <!-- NO UPDATION (7 DAYS) -->
-                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand">
+                                        <Border Background="#F4F6F7" CornerRadius="6" Margin="4" Padding="10" Height="85" Cursor="Hand" Visibility="Collapsed">
                                             <Border.InputBindings>
                                                 <MouseBinding MouseAction="LeftClick" Command="{Binding DataContext.NavigateFromCounterCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" CommandParameter="{x:Static enums:DashboardTargetView.NoUpdation7Days}"/>
                                             </Border.InputBindings>
@@ -357,7 +357,7 @@
                                 </ItemsControl>
                             </Expander>
 
-                            <Expander Header="Followup Stages" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">
+                            <Expander Header="Followup Stages" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE" Visibility="Collapsed">
                                 <ItemsControl ItemsSource="{Binding FollowupStagesCounters, IsAsync=True}" Margin="10,5">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
@@ -417,7 +417,7 @@
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                             </Expander>
-                            <Expander Header="Lead Labels" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE">
+                            <Expander Header="Lead Labels" Background="White" BorderThickness="0,0,0,1" BorderBrush="#EEE" Visibility="Collapsed">
                                 <ItemsControl ItemsSource="{Binding LeadLabelsCounters, IsAsync=True}" Margin="10,5">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>

@@ -164,7 +164,7 @@
                         </StackPanel>
                     </RadioButton>
 
-                    <RadioButton Style="{StaticResource SidebarIconButtonStyle}" x:Name="RbLeadSettings" Click="SidebarButton_Click" Tag="LeadSettings">
+                    <RadioButton Style="{StaticResource SidebarIconButtonStyle}" x:Name="RbLeadSettings" Click="SidebarButton_Click" Tag="LeadSettings" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Settings" Width="20" Height="20" Margin="9,0,0,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Lead Settings" VerticalAlignment="Center" Margin="20,0,0,0" FontSize="14"/>
@@ -178,14 +178,14 @@
                         </StackPanel>
                     </RadioButton>
 
-                    <RadioButton Style="{StaticResource SidebarIconButtonStyle}" x:Name="RbAutomations" Click="SidebarButton_Click" Tag="Automations">
+                    <RadioButton Style="{StaticResource SidebarIconButtonStyle}" x:Name="RbAutomations" Click="SidebarButton_Click" Tag="Automations" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Automatic" Width="20" Height="20" Margin="9,0,0,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Automations" VerticalAlignment="Center" Margin="20,0,0,0" FontSize="14"/>
                         </StackPanel>
                     </RadioButton>
 
-                    <RadioButton Style="{StaticResource SidebarIconButtonStyle}" x:Name="RbManufacturing" Click="SidebarButton_Click" Tag="Manufacturing">
+                    <RadioButton Style="{StaticResource SidebarIconButtonStyle}" x:Name="RbManufacturing" Click="SidebarButton_Click" Tag="Manufacturing" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="Manufacturing" Width="20" Height="20" Margin="9,0,0,0" VerticalAlignment="Center"/>
                             <TextBlock Text="Manufacturing" VerticalAlignment="Center" Margin="20,0,0,0" FontSize="14"/>
@@ -372,7 +372,7 @@
                         <StackPanel x:Name="SecInternalSetup" Margin="0,0,0,32">
                             <TextBlock Text="INTERNAL INFRASTRUCTURE SETTINGS" FontSize="12" FontWeight="Black" Foreground="#64748B" Margin="8,0,0,8"/>
                             <UniformGrid Columns="4">
-                                <Button Style="{StaticResource ModernActionCardStyle}" security:SecurityGuard.Requires="Divisions:View" CommandParameter="CProfile" Command="{Binding NavigateToSettingCommand}">
+                                <Button Style="{StaticResource ModernActionCardStyle}" security:SecurityGuard.Requires="Divisions:View" CommandParameter="CProfile" Command="{Binding NavigateToSettingCommand}" Visibility="Collapsed">
                                     <StackPanel HorizontalAlignment="Center">
                                         <materialDesign:PackIcon Kind="ViewGrid" Foreground="#1794A1" Width="28" Height="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                         <TextBlock Text="Divisions" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
@@ -384,13 +384,13 @@
                                         <TextBlock Text="Staff Management" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource ModernActionCardStyle}" CommandParameter="Permissions" Command="{Binding NavigateToSettingCommand}">
+                                <Button Style="{StaticResource ModernActionCardStyle}" CommandParameter="Permissions" Command="{Binding NavigateToSettingCommand}" Visibility="Collapsed">
                                     <StackPanel HorizontalAlignment="Center">
                                         <materialDesign:PackIcon Kind="ShieldKey" Foreground="#1794A1" Width="28" Height="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                         <TextBlock Text="Permissions Profile" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource ModernActionCardStyle}" security:SecurityGuard.Requires="OrderStage:View" CommandParameter="OrderStages" Command="{Binding NavigateToSettingCommand}">
+                                <Button Style="{StaticResource ModernActionCardStyle}" security:SecurityGuard.Requires="OrderStage:View" CommandParameter="OrderStages" Command="{Binding NavigateToSettingCommand}" Visibility="Collapsed">
                                     <StackPanel HorizontalAlignment="Center">
                                         <materialDesign:PackIcon Kind="StepForward" Foreground="#1794A1" Width="28" Height="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                         <TextBlock Text="Order Stages" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
@@ -408,19 +408,19 @@
                                         <TextBlock Text="All Categories" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource ModernActionCardStyle}" IsEnabled="False" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}">
+                                <Button Style="{StaticResource ModernActionCardStyle}" IsEnabled="False" CommandParameter="Fetch" Command="{Binding NavigateToSettingCommand}" Visibility="Collapsed">
                                     <StackPanel HorizontalAlignment="Center">
                                         <materialDesign:PackIcon Kind="FileDocumentEdit" Foreground="#94A3B8" Width="28" Height="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                         <TextBlock Text="Proforma Invoice" FontSize="13" FontWeight="Medium" Foreground="#94A3B8" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource ModernActionCardStyle}" IsEnabled="False" CommandParameter="Notice" Command="{Binding NavigateToSettingCommand}">
+                                <Button Style="{StaticResource ModernActionCardStyle}" IsEnabled="False" CommandParameter="Notice" Command="{Binding NavigateToSettingCommand}" Visibility="Collapsed">
                                     <StackPanel HorizontalAlignment="Center">
                                         <materialDesign:PackIcon Kind="Bullhorn" Foreground="#94A3B8" Width="28" Height="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                         <TextBlock Text="Notice Board Info" FontSize="13" FontWeight="Medium" Foreground="#94A3B8" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource ModernActionCardStyle}" CommandParameter="Schemes" Command="{Binding NavigateToSettingCommand}">
+                                <Button Style="{StaticResource ModernActionCardStyle}" CommandParameter="Schemes" Command="{Binding NavigateToSettingCommand}" Visibility="Collapsed">
                                     <StackPanel HorizontalAlignment="Center">
                                         <materialDesign:PackIcon Kind="Finance" Foreground="#1794A1" Width="28" Height="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                         <TextBlock Text="Schemes &amp; Incentives" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
@@ -432,7 +432,7 @@
                                         <TextBlock Text="User Login Logs" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource ModernActionCardStyle}" IsEnabled="False" CommandParameter="HRMS" Command="{Binding NavigateToSettingCommand}">
+                                <Button Style="{StaticResource ModernActionCardStyle}" IsEnabled="False" CommandParameter="HRMS" Command="{Binding NavigateToSettingCommand}" Visibility="Collapsed">
                                     <StackPanel HorizontalAlignment="Center">
                                         <materialDesign:PackIcon Kind="Register" Foreground="#1794A1" Width="28" Height="28" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                                         <TextBlock Text="HRMS" FontSize="13" FontWeight="Medium" Foreground="#334155" HorizontalAlignment="Center"/>
@@ -442,7 +442,7 @@
                         </StackPanel>
 
                         <!-- WORKSPACE VIEW 2: SALES LEAD MODULE TRACKING GRID -->
-                        <StackPanel x:Name="SecLeadSettings" Margin="0,0,0,32">
+                        <StackPanel x:Name="SecLeadSettings" Margin="0,0,0,32" Visibility="Collapsed">
                             <TextBlock Text="SALES LEAD PIPELINE RULES" FontSize="12" FontWeight="Black" Foreground="#64748B" Margin="8,0,0,8"/>
                             <UniformGrid Columns="4">
                                 <Button Style="{StaticResource ModernActionCardStyle}" IsEnabled="False" security:SecurityGuard.Requires="Location:View">
@@ -528,7 +528,7 @@
                         </StackPanel>
 
                         <!-- WORKSPACE VIEW 4: AUTOMATION LAYERS CONTROL GRID -->
-                        <StackPanel x:Name="SecAutomations" Margin="0,0,0,32">
+                        <StackPanel x:Name="SecAutomations" Margin="0,0,0,32" Visibility="Collapsed">
                             <TextBlock Text="BACKGROUND WORKFLOW ENGINES" FontSize="12" FontWeight="Black" Foreground="#64748B" Margin="8,0,0,8"/>
                             <UniformGrid Columns="4">
                                 <Button Style="{StaticResource ModernActionCardStyle}" IsEnabled="False" CommandParameter="Templates" Command="{Binding NavigateToSettingCommand}">
@@ -546,7 +546,7 @@
                             </UniformGrid>
                         </StackPanel>
 
-                        <StackPanel x:Name="SecManufacturing" Margin="0,0,0,32">
+                        <StackPanel x:Name="SecManufacturing" Margin="0,0,0,32" Visibility="Collapsed">
                             <TextBlock Text="MANUFACTURING WORKFLOW" FontSize="12" FontWeight="Black" Foreground="#64748B" Margin="8,0,0,8"/>
                             <UniformGrid Columns="4">
                                 <Button Style="{StaticResource ModernActionCardStyle}" CommandParameter="MasterFormulations" Command="{Binding NavigateToSettingCommand}">

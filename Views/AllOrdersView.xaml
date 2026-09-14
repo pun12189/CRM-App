@@ -49,10 +49,10 @@
                             </Grid>
                             <Button Grid.Column="1" Content="IMPORT ORDER's" Command="{Binding ImportOrdersCommand}" HorizontalAlignment="Right"
                                 Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0"/>
-                            <Button Grid.Column="2" Content="NEW ORDER" Command="{Binding AddNewOrderCommand}" Visibility="Collapsed"
+                            <Button Grid.Column="2" Content="NEW ORDER" Command="{Binding AddNewOrderCommand}" 
                                  Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0" HorizontalAlignment="Right"/>
 
-                            <Menu Grid.Column="3" Background="#d47131" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="Collapsed">
+                            <Menu Grid.Column="3" Background="#d47131" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0">
                                 <MenuItem Header="ASK AI" Icon="{materialDesign:PackIcon Kind=Sparkles}" FontWeight="SemiBold" FontSize="13" Height="32" Padding="10,5,20,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                 <MenuItem Height="32" Width="30" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                                     <MenuItem.Header>
@@ -66,9 +66,9 @@
                                         
                                     </MenuItem.Items>
                                 </MenuItem>
-                            </Menu>
-
-                            <ToggleButton Grid.Column="4" Visibility="Collapsed"
+                            </Menu>                            
+                            
+                            <ToggleButton Grid.Column="4" 
                               IsChecked="{Binding IsCounterPanelExpanded}" 
                               Cursor="Hand"
                               Margin="5,0"
@@ -290,7 +290,7 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding InvoiceNumber}" 
+                                        <TextBlock Text="{Binding FormattedOrderId}" 
                                                Foreground="#2563EB" FontWeight="Bold" FontSize="12"
                                                HorizontalAlignment="Center" Cursor="Hand">
                                             <TextBlock.InputBindings>
@@ -301,7 +301,7 @@
                                         </TextBlock>
 
                                         <!-- Compact Order Type Tag -->
-                                        <!--<Border CornerRadius="3" Padding="4,1" Margin="0,2,0,0" HorizontalAlignment="Center" Background="LightBlue">
+                                        <Border CornerRadius="3" Padding="4,1" Margin="0,2,0,0" HorizontalAlignment="Center" Background="LightBlue">
                                             <TextBlock Text="{Binding InvoiceNumber, StringFormat='Ref id: {0}'}" FontSize="9" FontWeight="Bold" Foreground="Black">
                                                 <TextBlock.InputBindings>
                                                     <MouseBinding MouseAction="LeftClick" 
@@ -309,7 +309,7 @@
                                                       CommandParameter="{Binding}" />
                                                 </TextBlock.InputBindings>
                                             </TextBlock>
-                                        </Border>-->
+                                        </Border>
                                     </StackPanel>                                    
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

@@ -1,165 +1,313 @@
-﻿using Tijori.Interfaces;
-using Tijori.Services;
+﻿using Dapper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Tijori.Core;
+using Tijori.Data;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
 
 namespace Tijori.ViewModels
 {
     public class WorkflowEngine
     {
         private readonly IWorkflowDataService _dataService;
-        private readonly EmailService _email;
-        private readonly LeadService _leadService; // Optional for future WhatsApp integration
+        private readonly EmailService _emailService;
+        private readonly LeadService _leadService;
+        private readonly NotificationRoutingService _routingService; // 👈 Injected Notification Router
+        private readonly CrmDbContext _db;
 
-        public WorkflowEngine(IWorkflowDataService dataService, EmailService email, LeadService leadService)
+        public WorkflowEngine(
+            IWorkflowDataService dataService,
+            EmailService emailService,
+            LeadService leadService,
+            NotificationRoutingService routingService,
+            CrmDbContext db)
         {
             _dataService = dataService;
-            _email = email;
+            _emailService = emailService;
             _leadService = leadService;
+            _routingService = routingService;
+            _db = db;
         }
 
-        /// <summary>
-        /// Call this from LeadService or OrderService to queue a new event.
-        /// </summary>
         public async Task EnqueueEventAsync(string eventName, int targetId, string targetType)
         {
-            // 1. Get all active workflows for this event through the service
             var workflows = await _dataService.GetAllWorkflowsAsync();
-            var activeRules = workflows.Where(w => w.EventName == eventName && w.IsEnabled);
+            var matchedRules = workflows.Where(w => w.EventName == eventName && w.IsEnabled).ToList();
 
-            foreach (var rule in activeRules)
+            foreach (var rule in matchedRules)
             {
-                // 2. Persist the task in the database queue
                 await _dataService.EnqueueActionAsync(rule.Id, targetId, targetType);
             }
 
-            // 3. Trigger immediate processing for the local session
+            // Immediately trigger queue flush for real-time responsiveness
             await ProcessQueueAsync();
         }
 
-        // Core execution logic used by both instant and inactivity triggers
-        public async Task ExecuteWorkflowInternalAsync(int workflowId, dynamic customerData)
-        {
-            // 1. Get the specific rule
-            var workflows = await _dataService.GetAllWorkflowsAsync();
-            var rule = workflows.FirstOrDefault(w => w.Id == workflowId);
-
-            if (rule == null) return;
-
-            try
-            {
-                // 2. Handle WhatsApp
-                //if (rule.SendWhatsApp && !string.IsNullOrEmpty(customerData.Phone))
-                //{
-                //    string body = ParseTemplate(rule.TemplateBody, customerData);
-                //    await _wa.SendMessageAsync(customerData.Phone, body);
-                //}
-
-                // 3. Handle Email
-                if (rule.SendEmail && !string.IsNullOrEmpty(customerData.Email))
-                {
-                    string body = ParseTemplate(rule.TemplateBody, customerData);
-                    await _email.SendEmailAsync(customerData.Email, rule.WorkflowName, body);
-                }
-
-                // 4. Log the success so we don't repeat it tomorrow
-                // Note: We reuse EnqueueActionAsync logic or a direct log insert
-                await _dataService.MarkAsProcessedAsync(workflowId);
-            }
-            catch (Exception ex)
-            {
-                // Log error for Aggarwal Cycles Hub admin
-            }
-        }
-
-        /// <summary>
-        /// Processes pending tasks. Call this on App Startup and periodically.
-        /// </summary>
         public async Task ProcessQueueAsync()
         {
-            // 1. Fetch pending items from the service
-            var pendingItems = await _dataService.GetPendingQueueAsync();
+            var pending = await _dataService.GetPendingQueueAsync();
 
-            foreach (var item in pendingItems)
+            foreach (var item in pending)
             {
                 try
                 {
-                    // 2. Fetch the specific workflow rule
                     var workflows = await _dataService.GetAllWorkflowsAsync();
                     var rule = workflows.FirstOrDefault(w => w.Id == item.WorkflowId);
 
-                    // 3. Fetch target data (Lead/Order) - logic to be implemented based on targetType
-                    var data = await FetchTargetDataAsync(item.TargetId, item.TargetType);
-
-                    if (rule != null && data != null)
+                    if (rule != null)
                     {
-                        // WhatsApp Logic
-                        //if (!string.IsNullOrEmpty(rule.WhatsAppTemplate))
-                        //{
-                        //    string body = ParseTemplate(rule.WhatsAppTemplate, data);
-                        //    await _wa.SendMessageAsync(data.Phone, body);
-                        //}
-
-                        // Email Logic
-                        if (!string.IsNullOrEmpty(rule.TemplateBody))
+                        var targetData = await FetchTargetDataAsync(item.TargetId, item.TargetType);
+                        if (targetData != null)
                         {
-                            string body = ParseTemplate(rule.TemplateBody, data);
-                            await _email.SendEmailAsync(data.Email, rule.WorkflowName, body);
+                            await ExecuteRuleActionsAsync(rule, targetData, item.TargetId, item.TargetType);
                         }
-
-                        // 4. Mark as processed via service
-                        await _dataService.MarkAsProcessedAsync(item.Id);
                     }
+                    await _dataService.MarkAsProcessedAsync(item.Id);
                 }
                 catch (Exception ex)
                 {
-                    // Log error through a logging service if available
+                    System.Diagnostics.Debug.WriteLine($"[WORKFLOW ENGINE EXECUTION ERROR]: {ex.Message}");
                 }
             }
         }
 
-        private string ParseTemplate(string template, dynamic data)
+        private async Task ExecuteRuleActionsAsync(Workflow rule, dynamic data, int targetId, string targetType)
         {
-            if (string.IsNullOrEmpty(template)) return "";
+            // 1. WhatsApp Action
+            if (rule.SendWhatsApp && !string.IsNullOrWhiteSpace(rule.WhatsAppMessage))
+            {
+                string msg = FormatTemplate(rule.WhatsAppMessage, data);
+                if (rule.WhatsAppToLead && !string.IsNullOrWhiteSpace((string)data.Phone))
+                {
+                    // Dispatch to WhatsApp Gateway
+                }
+            }
 
-            // Reflection-based replacement for {{Property}} tags
+            // 2. Email Action
+            if (rule.SendEmail && !string.IsNullOrWhiteSpace(rule.EmailMessage))
+            {
+                string body = FormatTemplate(rule.EmailMessage, data);
+                if (rule.EmailToLead && !string.IsNullOrWhiteSpace((string)data.Email))
+                {
+                    await _emailService.SendEmailAsync(data.Email, rule.WorkflowName, body);
+                }
+            }
+
+            // 3. In-App Windows Toast Notification (via NotificationRoutingService)
+            if (rule.SendNotification && !string.IsNullOrWhiteSpace(rule.NotificationMessage))
+            {
+                string toastContent = FormatTemplate(rule.NotificationMessage, data);
+
+                // Determine recipient agent / assigned user
+                string targetUser = null;
+                try
+                {
+                    targetUser = data.AssignedTo ?? data.CreatedBy;
+                }
+                catch { /* AssignedTo not present on dynamic data */ }
+
+                int leadId = targetType == "Lead" ? targetId : 0;
+
+                var toastRequest = new NewToastRequest
+                {
+                    EventId = rule.Id,
+                    LeadId = leadId,
+                    ReminderType = rule.WorkflowName,
+                    MessageContent = toastContent,
+                    ScheduleTime = DateTime.Now,
+                    TargetUser = targetUser, // If null, fires for all / broadcast
+                    TargetMachine = null,
+                    SenderUser = "Workflow Engine"
+                };
+
+                await _routingService.DispatchTargetedToastAsync(toastRequest);
+            }
+        }
+
+        public async Task CheckTimeBasedSchedulesAsync()
+        {
+            using var conn = _db.CreateConnection();
+            var workflows = await _dataService.GetAllWorkflowsAsync();
+            var activeTimeRules = workflows.Where(w => w.IsEnabled).ToList();
+
+            foreach (var rule in activeTimeRules)
+            {
+                switch (rule.EventName)
+                {
+                    // 1. Leads not updated for X days
+                    case WorkflowEvents.NoUpdationSince when rule.ExecutionDays > 0:
+                        {
+                            const string sql = @"
+                    SELECT l.LeadId, l.CustomerName, l.Phone, l.Email, l.LeadHolder
+                    FROM Leads l
+                    WHERE DATEDIFF(CURDATE(), l.CreatedAt) = @days
+                      AND NOT EXISTS (
+                          SELECT 1 FROM workflowqueue wq 
+                          WHERE wq.WorkflowId = @wfId 
+                            AND wq.TargetId = l.LeadId 
+                            AND wq.TargetType = 'Lead'
+                            AND DATE(wq.ScheduledTime) = CURDATE()
+                      );";
+
+                            var leads = await conn.QueryAsync<dynamic>(sql, new { days = rule.ExecutionDays, wfId = rule.Id });
+                            foreach (var lead in leads)
+                            {
+                                // Enqueue with today's schedule, then process
+                                await _dataService.EnqueueActionAsync(rule.Id, (int)lead.LeadId, "Lead");
+                            }
+                            break;
+                        }
+
+                    // 2. Customers with no orders for X days
+                    case WorkflowEvents.NoOrderSince when rule.ExecutionDays > 0:
+                        {
+                            const string sql = @"
+                    SELECT l.LeadId, l.CustomerName, l.Phone, l.Email, l.LeadHolder
+                    FROM Leads l
+                    INNER JOIN Orders o ON l.LeadId = o.LeadId
+                    GROUP BY l.LeadId, l.CustomerName, l.Phone, l.Email, l.LeadHolder
+                    HAVING DATEDIFF(CURDATE(), MAX(o.OrderDate)) = @days
+                       AND NOT EXISTS (
+                           SELECT 1 FROM workflowqueue wq 
+                           WHERE wq.WorkflowId = @wfId 
+                             AND wq.TargetId = l.LeadId 
+                             AND wq.TargetType = 'Customer'
+                             AND DATE(wq.ScheduledTime) = CURDATE()
+                       );";
+
+                            var dormant = await conn.QueryAsync<dynamic>(sql, new { days = rule.ExecutionDays, wfId = rule.Id });
+                            foreach (var cust in dormant)
+                            {
+                                await _dataService.EnqueueActionAsync(rule.Id, (int)cust.LeadId, "Customer");
+                            }
+                            break;
+                        }
+
+                    // 3. Contact Birthday (Same Month & Day)
+                    // 1. Contact Birthday (Evaluated via Custom Fields)
+                    case WorkflowEvents.Birthday:
+                        {
+                            const string sql = @"
+            SELECT 
+                l.LeadId, 
+                l.CustomerName, 
+                l.Phone, 
+                l.Email, 
+                l.LeadHolder
+            FROM leads l
+            INNER JOIN customfieldvalues cfv ON l.LeadId = cfv.LeadId
+            INNER JOIN customfields cf ON cfv.FieldId = cf.FieldId
+            WHERE LOWER(cf.FieldName) IN ('birthday', 'dob', 'date of birth', 'birth date')
+              AND cfv.FieldValue IS NOT NULL 
+              AND TRIM(cfv.FieldValue) != ''
+              -- Safely extract Month and Day regardless of standard date format
+              AND MONTH(COALESCE(
+                    STR_TO_DATE(cfv.FieldValue, '%Y-%m-%d'),
+                    STR_TO_DATE(cfv.FieldValue, '%d/%m/%Y'),
+                    STR_TO_DATE(cfv.FieldValue, '%d-%m-%Y')
+                  )) = MONTH(CURDATE())
+              AND DAY(COALESCE(
+                    STR_TO_DATE(cfv.FieldValue, '%Y-%m-%d'),
+                    STR_TO_DATE(cfv.FieldValue, '%d/%m/%Y'),
+                    STR_TO_DATE(cfv.FieldValue, '%d-%m-%Y')
+                  )) = DAY(CURDATE())
+              -- Duplicate guard: Only trigger once per lead per calendar year
+              AND NOT EXISTS (
+                  SELECT 1 FROM workflowqueue wq 
+                  WHERE wq.WorkflowId = @wfId 
+                    AND wq.TargetId = l.LeadId 
+                    AND wq.TargetType = 'Lead'
+                    AND YEAR(wq.ScheduledTime) = YEAR(CURDATE())
+              );";
+
+                            var bdays = await conn.QueryAsync<dynamic>(sql, new { wfId = rule.Id });
+                            foreach (var person in bdays)
+                            {
+                                await _dataService.EnqueueActionAsync(rule.Id, (int)person.LeadId, "Lead");
+                            }
+                            break;
+                        }
+
+                    // 2. Contact Anniversary (Evaluated via Custom Fields)
+                    case WorkflowEvents.Anniversary:
+                        {
+                            const string sql = @"
+            SELECT 
+                l.LeadId, 
+                l.CustomerName, 
+                l.Phone, 
+                l.Email, 
+                l.LeadHolder
+            FROM leads l
+            INNER JOIN customfieldvalues cfv ON l.LeadId = cfv.LeadId
+            INNER JOIN customfields cf ON cfv.FieldId = cf.FieldId
+            WHERE LOWER(cf.FieldName) IN ('anniversary', 'anniversary date', 'marriage anniversary', 'wedding anniversary')
+              AND cfv.FieldValue IS NOT NULL 
+              AND TRIM(cfv.FieldValue) != ''
+              AND MONTH(COALESCE(
+                    STR_TO_DATE(cfv.FieldValue, '%Y-%m-%d'),
+                    STR_TO_DATE(cfv.FieldValue, '%d/%m/%Y'),
+                    STR_TO_DATE(cfv.FieldValue, '%d-%m-%Y')
+                  )) = MONTH(CURDATE())
+              AND DAY(COALESCE(
+                    STR_TO_DATE(cfv.FieldValue, '%Y-%m-%d'),
+                    STR_TO_DATE(cfv.FieldValue, '%d/%m/%Y'),
+                    STR_TO_DATE(cfv.FieldValue, '%d-%m-%Y')
+                  )) = DAY(CURDATE())
+              -- Duplicate guard: Only trigger once per lead per calendar year
+              AND NOT EXISTS (
+                  SELECT 1 FROM workflowqueue wq 
+                  WHERE wq.WorkflowId = @wfId 
+                    AND wq.TargetId = l.LeadId 
+                    AND wq.TargetType = 'Lead'
+                    AND YEAR(wq.ScheduledTime) = YEAR(CURDATE())
+              );";
+
+                            var anniversaries = await conn.QueryAsync<dynamic>(sql, new { wfId = rule.Id });
+                            foreach (var person in anniversaries)
+                            {
+                                await _dataService.EnqueueActionAsync(rule.Id, (int)person.LeadId, "Lead");
+                            }
+                            break;
+                        }
+                }
+            }
+
+            // Flush any freshly queued tasks
+            await ProcessQueueAsync();
+        }
+
+        private string FormatTemplate(string template, dynamic data)
+        {
+            if (string.IsNullOrEmpty(template)) return string.Empty;
+
             foreach (var prop in data.GetType().GetProperties())
             {
-                string tag = "{{" + prop.Name + "}}";
-                if (template.Contains(tag))
-                {
-                    template = template.Replace(tag, prop.GetValue(data)?.ToString() ?? "");
-                }
+                string atTag = $"@{prop.Name}";
+                string braceTag = "{{" + prop.Name + "}}";
+                string val = prop.GetValue(data)?.ToString() ?? string.Empty;
+
+                template = template.Replace(atTag, val, StringComparison.OrdinalIgnoreCase);
+                template = template.Replace(braceTag, val, StringComparison.OrdinalIgnoreCase);
             }
             return template;
         }
 
         private async Task<dynamic> FetchTargetDataAsync(int id, string type)
         {
-            var leads = await _leadService.GetLeadByIdAsync(id);
-            return leads; // Placeholder for actual object retrieval
-        }
-
-        public async Task CheckInactivityWorkflowsAsync()
-        {
-            var workflows = await _dataService.GetInactivityWorkflowsAsync(); // SQL: SELECT * FROM Workflows WHERE InactivityDays > 0
-
-            foreach (var wf in workflows)
+            switch (type)
             {
-                // Query users who haven't ordered for the specified number of days
-                var inactiveUsers = await _dataService.GetInactiveCustomersAsync(wf.InactivityDays);
+                case "Lead":
+                case "Customer":
+                    return await _leadService.GetLeadByIdAsync(id);
 
-                foreach (var user in inactiveUsers)
-                {
-                    // Avoid double-sending by checking WorkflowLogs
-                    if (!await _dataService.HasAlreadyReceivedInactivityNotice(user.Id, wf.Id))
-                    {
-                        await ExecuteWorkflowInternalAsync(wf.Id, user);
-                    }
-                }
+                default:
+                    return await _leadService.GetLeadByIdAsync(id);
             }
         }
     }

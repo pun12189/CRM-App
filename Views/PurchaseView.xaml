@@ -46,7 +46,17 @@
                     </DockPanel>
                 </Border>
 
-                <DataGrid Grid.Row="1" ItemsSource="{Binding PurchaseOrdersList, IsAsync=True}" SelectedItem="{Binding SelectedOrder}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
+                <DataGrid Grid.Row="1" ItemsSource="{Binding PurchaseOrdersList, IsAsync=True}" SelectedItem="{Binding SelectedOrder}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}" IsReadOnly="True" 
+GridLinesVisibility="All"
+HorizontalGridLinesBrush="Black"
+    VerticalGridLinesBrush="Black"
+    BorderThickness="2"
+    BorderBrush="Black"
+VirtualizingPanel.IsVirtualizing="True"
+VirtualizingPanel.VirtualizationMode="Recycling"
+VirtualizingPanel.ScrollUnit="Pixel"
+ScrollViewer.CanContentScroll="True"
+ScrollViewer.HorizontalScrollBarVisibility="Auto">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="PO Number" Width="1.5*">
                             <DataGridTemplateColumn.CellTemplate>

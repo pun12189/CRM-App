@@ -26,9 +26,36 @@ namespace Tijori.ViewModels
         [NotifyDataErrorInfo]
         private decimal _purchasePrice;
 
+        // --- New Procurement & Auto-Reorder Properties ---
+        [ObservableProperty]
+        [Range(1, 365, ErrorMessage = "Lead time must be at least 1 day.")]
+        [NotifyDataErrorInfo]
+        private int _leadTimeDays = 3;
+
+        [ObservableProperty]
+        [Range(1, 99, ErrorMessage = "Priority must be 1 or greater.")]
+        [NotifyDataErrorInfo]
+        private int _vendorPriority = 1;
+
+        [ObservableProperty]
+        private bool _isPreferredVendor = true;
+
         public bool IsEditMode { get; }
 
-        public LinkVendorProductDialogViewModel(int vendorId, System.Collections.Generic.IEnumerable<Product> availableProducts, VendorProductLinkDisplay? existingLink = null)
+        partial void OnSelectedProductChanged(Product? value)
+        {
+            // Only autofill defaults in Add mode so existing link data isn't wiped out during edit
+            if (value != null && !IsEditMode)
+            {
+                SupplierSku = value.ShortName ?? string.Empty;
+                PurchasePrice = value.CostPrice;
+            }
+        }
+
+        public LinkVendorProductDialogViewModel(
+            int vendorId,
+            IEnumerable<Product> availableProducts,
+            VendorProductLinkDisplay? existingLink = null)
         {
             _vendorId = vendorId;
             AllProducts = new ObservableCollection<Product>(availableProducts);
@@ -37,8 +64,13 @@ namespace Tijori.ViewModels
             {
                 IsEditMode = true;
                 SelectedProduct = AllProducts.FirstOrDefault(p => p.ProductId == existingLink.ProductId);
-                SupplierSku = existingLink.SupplierSku;
+                SupplierSku = existingLink.SupplierSku ?? string.Empty;
                 PurchasePrice = existingLink.PurchasePrice;
+
+                // Load existing link parameters (with fallbacks if zero/null)
+                LeadTimeDays = existingLink.LeadTimeDays > 0 ? existingLink.LeadTimeDays : 3;
+                VendorPriority = existingLink.VendorPriority > 0 ? existingLink.VendorPriority : 1;
+                IsPreferredVendor = existingLink.IsPreferredVendor;
             }
             else
             {
@@ -59,7 +91,7 @@ namespace Tijori.ViewModels
 
             if (HasErrors || PurchasePrice <= 0)
             {
-                MessageBox.Show("Please enter a valid purchase price.", "Validation Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Please enter a valid purchase price and ensure all fields are correct.", "Validation Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 

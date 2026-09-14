@@ -77,8 +77,16 @@
                           CanUserAddRows="False" 
                           IsReadOnly="True"
                           RowHeight="44" 
-                          GridLinesVisibility="Horizontal" 
-                          HorizontalGridLinesBrush="#F1F5F9" 
+                          GridLinesVisibility="All" 
+                          HorizontalGridLinesBrush="Black"                          
+                            VerticalGridLinesBrush="Black"
+                            BorderThickness="2"
+                            BorderBrush="Black"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling"
+                        VirtualizingPanel.ScrollUnit="Pixel"
+                        ScrollViewer.CanContentScroll="True"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
                           Style="{StaticResource MaterialDesignDataGrid}">
                     <DataGrid.Columns>
 
@@ -313,7 +321,7 @@
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"/>
 
                             <TextBox Grid.Column="2" Text="{Binding ActiveItem.ColorShade}" 
-                             materialDesign:HintAssist.Hint="Color / Shade" Padding="10,10,0,0"
+                             materialDesign:HintAssist.Hint="Color / Shade" Padding="10,0"
                              materialDesign:HintAssist.IsFloating="True"
                              FontSize="11.5" Height="34" Margin="0,0,6,0"
                              Style="{StaticResource MaterialDesignOutlinedTextBox}"/>

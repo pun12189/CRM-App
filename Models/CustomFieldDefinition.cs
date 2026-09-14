@@ -25,6 +25,7 @@ namespace Tijori.Models
         [ObservableProperty] private bool _isFilter;
         [ObservableProperty] private bool _isAdmin;
         [ObservableProperty] private bool _inPdf;
+        [ObservableProperty] private bool _inTable;
 
         // Raw Database JSON Storage Holder for Dropdown Options
         [ObservableProperty] private string? _seedValues;

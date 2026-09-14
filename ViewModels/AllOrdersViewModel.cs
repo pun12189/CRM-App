@@ -43,7 +43,7 @@ namespace Tijori.ViewModels
         [ObservableProperty] private decimal _totalPaymentsReceived;
         [ObservableProperty] private decimal _totalOutstandingBalance;
 
-        [ObservableProperty] private bool _isCounterPanelExpanded = false;
+        [ObservableProperty] private bool _isCounterPanelExpanded = true;
         [ObservableProperty] private CustomerStats _customerStats = new();
         [ObservableProperty] private bool _workspaceViewIsActive;
 
@@ -320,7 +320,7 @@ namespace Tijori.ViewModels
         {
             try
             {
-                var invoiceData = await _invoiceService.GetOrderInvoiceDataAsync(selectedOrder.OrderId);
+                var invoiceData = await _invoiceService.GetOrderInvoiceDataAsync(selectedOrder.OrderId, selectedOrder.DivisionId);
                 if (invoiceData == null)
                 {
                     MessageBox.Show("Unable to load invoice data for Order #" + selectedOrder.FormattedOrderId, "Error", MessageBoxButton.OK, MessageBoxImage.Warning);

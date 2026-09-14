@@ -74,6 +74,11 @@ namespace Tijori.ViewModels
         {
             _fieldService = fieldService;
             NewField.SeedValueOptionsList = new ObservableCollection<string>();
+
+            if (NewField != null)
+            {
+                NewField.PropertyChanged += OnNewFieldPropertyChanged;
+            }
         }
 
         public async Task InitializeAsync(string moduleType)
@@ -414,6 +419,10 @@ namespace Tijori.ViewModels
         private async Task UpdateFieldFlags(CustomFieldDefinition field)
         {
             if (field == null) return;
+
+            // Yield execution to let WPF data binding push the new boolean value to field
+            await Task.Yield();
+
             await _fieldService.SaveCustomFieldAsync(field);
         }
 

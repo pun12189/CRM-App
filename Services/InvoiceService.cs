@@ -1,12 +1,15 @@
 ﻿using Dapper;
+using QRCoder;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Tijori.Data;
 using Tijori.Models;
 
@@ -18,7 +21,7 @@ namespace Tijori.Services
 
         public InvoiceService(CrmDbContext context) => _context = context;
 
-        public async Task<InvoicePrintModel?> GetOrderInvoiceDataAsync(int orderId)
+        public async Task<InvoicePrintModel?> GetOrderInvoiceDataAsync(int orderId, int? divid)
         {
             using var conn = _context.CreateConnection();
 
@@ -45,10 +48,10 @@ namespace Tijori.Services
                     AccountNumber AS SellerAccountNumber, IfscCode AS SellerIfsc,
                     UpiId AS SellerUpi, TermsAndConditions, LogoData AS CompanyLogo
                 FROM companyprofile
-                WHERE DivisionId = 1 
+                WHERE DivisionId = @divid
                 LIMIT 1;";
 
-            var company = await conn.QueryFirstOrDefaultAsync<InvoicePrintModel>(companySql);
+            var company = await conn.QueryFirstOrDefaultAsync<InvoicePrintModel>(companySql, new { divid = (divid != null ? divid : 1) });
             if (company != null)
             {
                 invoice.SellerCompanyName = company.SellerCompanyName;
@@ -90,6 +93,50 @@ namespace Tijori.Services
             invoice.ExtraCharges = charges.ToList();
 
             return invoice;
+        }
+
+        private BitmapSource? GenerateUpiQrCode(string upiId, string payeeName, decimal amount, string invoiceNumber, bool isMerchantVpa = true)
+        {
+            if (string.IsNullOrWhiteSpace(upiId)) return null;
+
+            try
+            {
+                string cleanPayee = Uri.EscapeDataString(payeeName?.Trim() ?? "Merchant");
+                string cleanNote = Uri.EscapeDataString($"Inv-{invoiceNumber}".Replace(" ", "-"));
+
+                string upiPayload;
+
+                if (isMerchantVpa)
+                {
+                    // Fully compliant NPCI P2M Dynamic QR specification for GPay/PhonePe/Paytm
+                    upiPayload = $"upi://pay?pa={upiId.Trim()}&pn={cleanPayee}&am={amount:0.00}&cu=INR&tn={cleanNote}&mode=02&mc=0000";
+                }
+                else
+                {
+                    // For Personal (P2P) Accounts: Opens GPay directly to recipient, allowing the user to enter/confirm the amount
+                    upiPayload = $"upi://pay?pa={upiId.Trim()}&pn={cleanPayee}&cu=INR&tn={cleanNote}";
+                }
+
+                using var qrGenerator = new QRCodeGenerator();
+                // Use ECCLevel.Q (Quality) for higher contrast and error correction on camera scan
+                using var qrCodeData = qrGenerator.CreateQrCode(upiPayload, QRCodeGenerator.ECCLevel.Q);
+                using var qrCode = new PngByteQRCode(qrCodeData);
+                byte[] qrBytes = qrCode.GetGraphic(20);
+
+                using var stream = new MemoryStream(qrBytes);
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.StreamSource = stream;
+                bitmap.EndInit();
+                bitmap.Freeze();
+
+                return bitmap;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public FlowDocument CreateTaxInvoiceDocument(InvoicePrintModel inv, double printableWidth = 793.7)
@@ -209,13 +256,68 @@ namespace Tijori.Services
 
             var sumRow = new TableRow();
 
-            // Left: Bank & Remarks
+            // Left: Bank & Remarks + UPI QR Code
             var leftSummary = new TableCell();
-            leftSummary.Blocks.Add(new Paragraph(new Bold(new Run("Bank Account Details:"))) { Margin = new Thickness(0, 0, 0, 2) });
-            leftSummary.Blocks.Add(new Paragraph(new Run($"Bank: {inv.SellerBankName}  |  A/C: {inv.SellerAccountNumber}")) { FontSize = 8.5, Margin = new Thickness(0, 0, 0, 1) });
-            leftSummary.Blocks.Add(new Paragraph(new Run($"IFSC: {inv.SellerIfsc}  |  UPI: {inv.SellerUpi}")) { FontSize = 8.5, Margin = new Thickness(0, 0, 0, 6) });
-            if (!string.IsNullOrEmpty(inv.Remarks))
-                leftSummary.Blocks.Add(new Paragraph(new Run($"Remarks: {inv.Remarks}")) { FontSize = 8.5, Foreground = Brushes.DimGray, Margin = new Thickness(0) });
+
+            // Determine target payment amount (pay BalanceDue if pending, else GrandTotal)
+            decimal upiAmount = inv.BalanceDue > 0 ? inv.BalanceDue : inv.GrandTotal;
+            var qrBitmap = GenerateUpiQrCode(inv.SellerUpi, inv.SellerCompanyName, upiAmount, inv.InvoiceNumber);
+
+            if (qrBitmap != null)
+            {
+                // 2-column layout inside Left Cell: [Bank Details] | [QR Code Box]
+                var bankQrGrid = new Table { CellSpacing = 0 };
+                bankQrGrid.Columns.Add(new TableColumn { Width = new GridLength(contentWidth * 0.38) });
+                bankQrGrid.Columns.Add(new TableColumn { Width = new GridLength(contentWidth * 0.17) });
+
+                var bankQrRow = new TableRow();
+
+                // Bank text details
+                var bankTextCell = new TableCell();
+                bankTextCell.Blocks.Add(new Paragraph(new Bold(new Run("Bank Account Details:"))) { Margin = new Thickness(0, 0, 0, 2) });
+                bankTextCell.Blocks.Add(new Paragraph(new Run($"Bank: {inv.SellerBankName}")) { FontSize = 8.5, Margin = new Thickness(0, 0, 0, 1) });
+                bankTextCell.Blocks.Add(new Paragraph(new Run($"A/C: {inv.SellerAccountNumber}")) { FontSize = 8.5, Margin = new Thickness(0, 0, 0, 1) });
+                bankTextCell.Blocks.Add(new Paragraph(new Run($"IFSC: {inv.SellerIfsc}")) { FontSize = 8.5, Margin = new Thickness(0, 0, 0, 1) });
+                bankTextCell.Blocks.Add(new Paragraph(new Run($"UPI: {inv.SellerUpi}")) { FontSize = 8.5, Margin = new Thickness(0, 0, 0, 4) });
+
+                if (!string.IsNullOrEmpty(inv.Remarks))
+                    bankTextCell.Blocks.Add(new Paragraph(new Run($"Remarks: {inv.Remarks}")) { FontSize = 8, Foreground = Brushes.DimGray, Margin = new Thickness(0) });
+
+                // QR Code box
+                var qrCodeCell = new TableCell();
+                qrCodeCell.TextAlignment = TextAlignment.Center;
+
+                var qrImage = new System.Windows.Controls.Image
+                {
+                    Source = qrBitmap,
+                    Width = 72,
+                    Height = 72,
+                    HorizontalAlignment = HorizontalAlignment.Center
+                };
+
+                var imageContainer = new BlockUIContainer(qrImage) { Margin = new Thickness(0, 0, 0, 2) };
+                qrCodeCell.Blocks.Add(imageContainer);
+                qrCodeCell.Blocks.Add(new Paragraph(new Bold(new Run("Scan to Pay UPI"))) { FontSize = 7.5, Foreground = new SolidColorBrush(Color.FromRgb(23, 148, 161)), Margin = new Thickness(0) });
+                qrCodeCell.Blocks.Add(new Paragraph(new Run($"₹ {upiAmount:N2}")) { FontSize = 7.5, FontWeight = FontWeights.SemiBold, Foreground = Brushes.DimGray, Margin = new Thickness(0) });
+
+                bankQrRow.Cells.Add(bankTextCell);
+                bankQrRow.Cells.Add(qrCodeCell);
+
+                var bankQrGroup = new TableRowGroup();
+                bankQrGroup.Rows.Add(bankQrRow);
+                bankQrGrid.RowGroups.Add(bankQrGroup);
+
+                leftSummary.Blocks.Add(bankQrGrid);
+            }
+            else
+            {
+                // Fallback: Standard text layout when UPI ID is missing
+                leftSummary.Blocks.Add(new Paragraph(new Bold(new Run("Bank Account Details:"))) { Margin = new Thickness(0, 0, 0, 2) });
+                leftSummary.Blocks.Add(new Paragraph(new Run($"Bank: {inv.SellerBankName}  |  A/C: {inv.SellerAccountNumber}")) { FontSize = 8.5, Margin = new Thickness(0, 0, 0, 1) });
+                leftSummary.Blocks.Add(new Paragraph(new Run($"IFSC: {inv.SellerIfsc}  |  UPI: {inv.SellerUpi}")) { FontSize = 8.5, Margin = new Thickness(0, 0, 0, 6) });
+                if (!string.IsNullOrEmpty(inv.Remarks))
+                    leftSummary.Blocks.Add(new Paragraph(new Run($"Remarks: {inv.Remarks}")) { FontSize = 8.5, Foreground = Brushes.DimGray, Margin = new Thickness(0) });
+            }
 
             // Right: Tax Calculation & Grand Total Breakdown
             var rightSummary = new TableCell();

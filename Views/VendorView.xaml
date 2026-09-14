@@ -31,7 +31,8 @@ Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderB
                     </DockPanel>
                 </Border>
 
-                <DataGrid Grid.Row="1" ItemsSource="{Binding VendorsList, IsAsync=True}" SelectedItem="{Binding SelectedVendor}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}">
+                <DataGrid Grid.Row="1" ItemsSource="{Binding VendorsList, IsAsync=True}" SelectedItem="{Binding SelectedVendor}" AutoGenerateColumns="False" CanUserAddRows="False" Style="{StaticResource MaterialDesignDataGrid}" GridLinesVisibility="All" BorderBrush="Black" BorderThickness="2" HorizontalGridLinesBrush="Black" VerticalGridLinesBrush="Black" IsReadOnly="True" SelectionUnit="FullRow" VirtualizingPanel.IsVirtualizing="True"
+              VirtualizingPanel.VirtualizationMode="Recycling" VirtualizingPanel.ScrollUnit="Pixel" VirtualizingPanel.CacheLengthUnit="Item" VirtualizingPanel.CacheLength="10,20" ScrollViewer.CanContentScroll="True">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="Company Name" Width="2*">
                             <DataGridTemplateColumn.CellTemplate>

@@ -92,7 +92,9 @@ namespace Tijori.ViewModels
         public IEnumerable<Product> FilteredProducts => string.IsNullOrWhiteSpace(SearchText)
             ? AllProducts
             : AllProducts.Where(p => p.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
-                                     p.SKU.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+                                     p.SKU.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                                     p.ShortName.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                                     p.CategoryName.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
 
         partial void OnSearchTextChanged(string value) => OnPropertyChanged(nameof(FilteredProducts));
 
@@ -185,6 +187,23 @@ namespace Tijori.ViewModels
             foreach (var item in FilteredProducts.Cast<Product>())
             {
                 item.IsSelectedForAction = isChecked.Value;
+            }
+        }
+
+        [RelayCommand]
+        private async Task ToggleAutoReorderAsync(Product product)
+        {
+            if (product == null) return;
+
+            try
+            {
+                await _productService.EnableDisableAutoPOAsync(product, product.AutoReorderEnabled);
+            }
+            catch (Exception ex)
+            {
+                // Revert toggle if database update fails
+                product.AutoReorderEnabled = !product.AutoReorderEnabled;
+                MessageBox.Show($"Failed to update reorder status: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

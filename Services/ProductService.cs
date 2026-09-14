@@ -418,5 +418,35 @@ namespace Tijori.Services
             baseSql += " ORDER BY p.Name ASC;";
             return await db.QueryAsync<Product>(baseSql, parameters);
         }
+
+        public async Task<bool> EnableDisableAutoPOAsync(Product product, bool autoReorderEnabled)
+        {
+            using var db = _context.CreateConnection();
+            if (db.State == ConnectionState.Closed) await ((System.Data.Common.DbConnection)db).OpenAsync();
+
+            using var transaction = db.BeginTransaction();
+            try
+            {
+                // STEP 1: Upsert Parent Product (Including HasBatchTracking Column)
+                const string sql = @"
+            UPDATE products 
+            SET AutoReorderEnabled = @AutoReorderEnabled 
+            WHERE ProductId = @ProductId;";
+
+                await db.ExecuteAsync(sql, new
+                {
+                    AutoReorderEnabled = autoReorderEnabled,
+                    product.ProductId
+                }, transaction);
+
+                transaction.Commit();
+                return true;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
     }
 }

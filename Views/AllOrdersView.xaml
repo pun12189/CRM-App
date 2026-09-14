@@ -49,10 +49,10 @@
                             </Grid>
                             <Button Grid.Column="1" Content="IMPORT ORDER's" Command="{Binding ImportOrdersCommand}" HorizontalAlignment="Right"
                                 Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0"/>
-                            <Button Grid.Column="2" Content="NEW ORDER" Command="{Binding AddNewOrderCommand}" Visibility="Collapsed"
+                            <Button Grid.Column="2" Content="NEW ORDER" Command="{Binding AddNewOrderCommand}" 
                                  Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderBrush="#2E7D32" Margin="0,0,10,0" HorizontalAlignment="Right"/>
 
-                            <Menu Grid.Column="3" Background="#d47131" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0" Visibility="Collapsed">
+                            <Menu Grid.Column="3" Background="#d47131" Foreground="White" VerticalAlignment="Center" Margin="0,0,10,0">
                                 <MenuItem Header="ASK AI" Icon="{materialDesign:PackIcon Kind=Sparkles}" FontWeight="SemiBold" FontSize="13" Height="32" Padding="10,5,20,0" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                                 <MenuItem Height="32" Width="30" Padding="0" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
                                     <MenuItem.Header>
@@ -66,9 +66,9 @@
                                         
                                     </MenuItem.Items>
                                 </MenuItem>
-                            </Menu>
-
-                            <ToggleButton Grid.Column="4" Visibility="Collapsed"
+                            </Menu>                            
+                            
+                            <ToggleButton Grid.Column="4" 
                               IsChecked="{Binding IsCounterPanelExpanded}" 
                               Cursor="Hand"
                               Margin="5,0"
@@ -257,8 +257,11 @@
                       ItemsSource="{Binding OrderCollection, IsAsync=True}" 
                       AutoGenerateColumns="False" 
                       IsReadOnly="True" 
-                      GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="#E2E8F0"
+                      GridLinesVisibility="All"
+                      HorizontalGridLinesBrush="Black"
+                          VerticalGridLinesBrush="Black"
+                          BorderThickness="2"
+                          BorderBrush="Black"
                       VirtualizingPanel.IsVirtualizing="True"
                       VirtualizingPanel.VirtualizationMode="Recycling"
                       VirtualizingPanel.ScrollUnit="Pixel"
@@ -287,7 +290,7 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding InvoiceNumber}" 
+                                        <TextBlock Text="{Binding FormattedOrderId}" 
                                                Foreground="#2563EB" FontWeight="Bold" FontSize="12"
                                                HorizontalAlignment="Center" Cursor="Hand">
                                             <TextBlock.InputBindings>
@@ -298,7 +301,7 @@
                                         </TextBlock>
 
                                         <!-- Compact Order Type Tag -->
-                                        <!--<Border CornerRadius="3" Padding="4,1" Margin="0,2,0,0" HorizontalAlignment="Center" Background="LightBlue">
+                                        <Border CornerRadius="3" Padding="4,1" Margin="0,2,0,0" HorizontalAlignment="Center" Background="LightBlue">
                                             <TextBlock Text="{Binding InvoiceNumber, StringFormat='Ref id: {0}'}" FontSize="9" FontWeight="Bold" Foreground="Black">
                                                 <TextBlock.InputBindings>
                                                     <MouseBinding MouseAction="LeftClick" 
@@ -306,7 +309,7 @@
                                                       CommandParameter="{Binding}" />
                                                 </TextBlock.InputBindings>
                                             </TextBlock>
-                                        </Border>-->
+                                        </Border>
                                     </StackPanel>                                    
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -317,8 +320,8 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="6,2">
-                                        <TextBlock Text="{Binding FirmName, StringFormat='({0})'}" FontSize="11" Foreground="#64748B" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding CustomerName}" Foreground="#0F172A" FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis" Cursor="Hand"/>
+                                        <TextBlock Text="{Binding FirmName, StringFormat='({0})'}" FontSize="11" Foreground="#64748B" TextWrapping="Wrap"/>
+                                        <TextBlock Text="{Binding CustomerName}" Foreground="#0F172A" FontWeight="SemiBold" FontSize="12" TextWrapping="Wrap" Cursor="Hand"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
@@ -450,11 +453,11 @@
                         </DataGridTemplateColumn>
 
                         <!-- 8. CREATED AT -->
-                        <DataGridTemplateColumn Header="Created By" Width="1.2*">
+                        <DataGridTemplateColumn Header="Created By" Width=".9*">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="0,0,8,0">
-                                        <TextBlock Text="{Binding ProcessedBy, TargetNullValue='—'}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="11" Foreground="#4177c4"/>
+                                        <TextBlock Text="{Binding ProcessedBy, TargetNullValue='—'}" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="11" Foreground="#4177c4" TextWrapping="Wrap"/>
                                         <TextBlock Text="{Binding OrderDate, StringFormat='dd-MM-yyyy'}" FontSize="10" TextWrapping="Wrap" Foreground="#475569"/>
                                     </StackPanel>
                                 </DataTemplate>

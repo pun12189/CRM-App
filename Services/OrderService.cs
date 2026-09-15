@@ -1,7 +1,4 @@
-﻿using Tijori.Data;
-using Tijori.Models;
-using Tijori.ViewModels;
-using Dapper;
+﻿using Dapper;
 using DocumentFormat.OpenXml.Wordprocessing;
 using MySql.Data.MySqlClient;
 using MySqlX.XDevAPI;
@@ -12,13 +9,22 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Tijori.Core;
+using Tijori.Data;
+using Tijori.Models;
+using Tijori.ViewModels;
 
 namespace Tijori.Services
 {
     public class OrderService
     {
         private readonly CrmDbContext _context;
-        public OrderService(CrmDbContext context) => _context = context;
+        private readonly WorkflowEngine _workflowEngine;
+        public OrderService(CrmDbContext context, WorkflowEngine workflowEngine)
+        {
+            _context = context;
+            _workflowEngine = workflowEngine;
+        }
 
         public async Task<bool> SaveProformaAsync(Order order, LeadHistoryEntry history)
         {
@@ -413,6 +419,7 @@ namespace Tijori.Services
                 }
 
                 transaction.Commit();
+                await _workflowEngine.EnqueueEventAsync(WorkflowEvents.RepeatOrders, orderId, "Order");
                 return true;
             }
             catch (Exception ex)
@@ -479,15 +486,45 @@ namespace Tijori.Services
         {
             if (orderId <= 0 || string.IsNullOrWhiteSpace(newStatus)) return false;
 
-            const string sql = @"
-                UPDATE `Orders` 
-                SET `Status` = @Status 
-                WHERE `OrderId` = @OrderId;";
-
             using (IDbConnection db = _context.CreateConnection())
             {
-                int rowsAffected = await db.ExecuteAsync(sql, new { Status = newStatus, OrderId = orderId });
-                return rowsAffected > 0;
+                if (db.State != ConnectionState.Open)
+                    db.Open();
+
+                using (var tx = db.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. Update order status
+                        const string orderSql = @"
+                    UPDATE `Orders` 
+                    SET `Status` = @Status
+                    WHERE `OrderId` = @OrderId;";
+
+                        int rowsAffected = await db.ExecuteAsync(orderSql, new { Status = newStatus, OrderId = orderId }, tx);
+
+                        // 2. If the order is transitioning to "Dispatched", deduct product stock
+                        if (string.Equals(newStatus, "Dispatched", StringComparison.OrdinalIgnoreCase))
+                        {
+                            const string deductStockSql = @"
+                        UPDATE products p
+                        INNER JOIN orderitems od ON p.ProductId = od.ProductId
+                        SET p.RemainingStock = GREATEST(0, p.RemainingStock - od.Quantity)
+                        WHERE od.OrderId = @OrderId;";
+
+                            await db.ExecuteAsync(deductStockSql, new { OrderId = orderId }, tx);
+                        }
+
+                        // 3. Commit transaction so stock values persist before the Auto-PO query runs
+                        tx.Commit();
+                        return rowsAffected > 0;
+                    }
+                    catch
+                    {
+                        tx.Rollback();
+                        throw;
+                    }
+                }
             }
         }
 

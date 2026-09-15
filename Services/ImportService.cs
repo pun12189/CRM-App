@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using DocumentFormat.OpenXml.Vml.Office;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -240,7 +241,7 @@ namespace Tijori.Services
                             continue; // Skip invalid or empty row
                         }
 
-                        string? sku = GetValue("SKU", "Code", "ItemCode", "ProductCode");
+                        string? sku = GetValue("SKU", "Code", "ItemCode", "ProductCode", "SupplierSku", "Item Code");
                         string unit = GetValue("Unit", "UOM") ?? "Pcs";
                         string? packaging = GetValue("Packaging", "Packing");
                         string? manufacturer = GetValue("Manufacturer", "MfgBy");
@@ -329,7 +330,7 @@ namespace Tijori.Services
                         {
                             string updateProductSql = @"
                             UPDATE Products 
-                            SET RemainingStock = GREATEST(0, RemainingStock + @StockQty),
+                            SET RemainingStock = GREATEST(0, @StockQty),
                                 InitialStock = GREATEST(0, InitialStock + @StockQty),
                                 MRP = CASE WHEN @MRP > 0 THEN @MRP ELSE MRP END,
                                 CostPrice = CASE WHEN @CostPrice > 0 THEN @CostPrice ELSE CostPrice END,
@@ -450,7 +451,7 @@ namespace Tijori.Services
                             string updateBatchSql = @"
                                 UPDATE ProductBatches 
                                 SET 
-                                    CurrentStock = GREATEST(0, CurrentStock + @Quantity),
+                                    CurrentStock = GREATEST(0, @Quantity),
                                     QuantityReceived = QuantityReceived + @Quantity,
                                     MfgDate = COALESCE(@MfgDate, MfgDate),
                                     ExpiryDate = COALESCE(@ExpiryDate, ExpiryDate),
@@ -587,10 +588,11 @@ namespace Tijori.Services
                                 int freeQty = int.TryParse(GetVal(rowz, "Free Qty", "FreeQuantity", "Free"), out var fq) ? fq : 0;
                                 string batchNo = GetVal(rowz, "Batch", "BatchNumber");
                                 string brand = GetVal(rowz, "BrandName", "Brand");
+                                string sku = GetVal(rowz, "SupplierSku", "SKU", "Item Code", "ItemCode", "Code");
 
                                 if (qty > 0 || freeQty > 0)
                                 {
-                                    var (productId, costPrice) = await GetOrCreateProductContextAsync(connection, transaction, itemName, GetVal(rowz, "SKU"), rate, taxPercent, defaultCategoryId, divisionId, brand);
+                                    var (productId, costPrice, _) = await GetOrCreateProductContextAsync(connection, transaction, itemName, sku, rate, taxPercent, defaultCategoryId, divisionId, brand);
                                     int? batchId = await GetOrCreateBatchIdAsync(connection, transaction, productId, batchNo, qty + freeQty, rate, divisionId);
 
                                     decimal subTotal = lineTotalAmount != 0 ? lineTotalAmount : (rate * qty);
@@ -755,7 +757,8 @@ namespace Tijori.Services
                             }
                             else if (!string.IsNullOrWhiteSpace(vendorGst))
                             {
-                                await connection.ExecuteAsync("UPDATE Vendors SET GstNumber = @GstNumber WHERE VendorId = @VendorId AND (GstNumber IS NULL OR GstNumber = '');",
+                                await connection.ExecuteAsync(
+                                    "UPDATE Vendors SET GstNumber = @GstNumber WHERE VendorId = @VendorId AND (GstNumber IS NULL OR GstNumber = '');",
                                     new { GstNumber = vendorGst, VendorId = vendorId }, transaction);
                             }
 
@@ -784,11 +787,13 @@ namespace Tijori.Services
                                     decimal lineTotal = Math.Abs(decimal.TryParse(GetVal(rowz, "Amount", "Total", "TotalCost"), out var lt) ? lt : (qty * rate));
                                     string batchNo = GetVal(rowz, "Batch", "BatchNumber");
                                     string brand = GetVal(rowz, "Company Name", "BrandName", "Brand");
+                                    string sku = GetVal(rowz, "SupplierSku", "SKU", "Item Code", "ItemCode", "Code");
 
                                     returnTotalAmount += lineTotal;
                                     returnTaxAmount += taxAmt;
 
-                                    var (productId, _) = await GetOrCreateProductContextAsync(connection, transaction, itemName, GetVal(rowz, "SupplierSku", "SKU"), rate, taxPercent, defaultCategoryId, null, brand);
+                                    var (productId, _, _) = await GetOrCreateProductContextAsync(
+                                        connection, transaction, itemName, sku, rate, taxPercent, defaultCategoryId, null, brand, 0);
 
                                     var prLineParams = new DynamicParameters();
                                     prLineParams.Add("ProductId", productId);
@@ -837,10 +842,15 @@ namespace Tijori.Services
                                     int deductQty = lineParam.Get<int>("Quantity");
                                     string bNo = lineParam.Get<string>("BatchNumber");
 
-                                    await connection.ExecuteAsync("UPDATE Products SET RemainingStock = GREATEST(0, RemainingStock - @Qty) WHERE ProductId = @ProductId;", new { Qty = deductQty, ProductId = prodId }, transaction);
+                                    await connection.ExecuteAsync(
+                                        "UPDATE Products SET RemainingStock = GREATEST(0, RemainingStock - @Qty) WHERE ProductId = @ProductId;",
+                                        new { Qty = deductQty, ProductId = prodId }, transaction);
+
                                     if (!string.IsNullOrWhiteSpace(bNo))
                                     {
-                                        await connection.ExecuteAsync("UPDATE ProductBatches SET CurrentStock = GREATEST(0, CurrentStock - @Qty) WHERE ProductId = @ProductId AND BatchNumber = @BatchNumber;", new { Qty = deductQty, ProductId = prodId, BatchNumber = bNo }, transaction);
+                                        await connection.ExecuteAsync(
+                                            "UPDATE ProductBatches SET CurrentStock = GREATEST(0, CurrentStock - @Qty) WHERE ProductId = @ProductId AND BatchNumber = @BatchNumber;",
+                                            new { Qty = deductQty, ProductId = prodId, BatchNumber = bNo }, transaction);
                                     }
                                 }
 
@@ -890,9 +900,17 @@ namespace Tijori.Services
 
                                 string batchNo = GetVal(rowz, "Batch", "BatchNumber");
                                 string brand = GetVal(rowz, "Company Name", "BrandName", "Brand");
+                                string sku = GetVal(rowz, "SupplierSku", "SKU", "Item Code", "ItemCode", "Code");
 
-                                // Overhead charge detection (e.g. Courier, Cylinder, Packing Charges)
-                                if (totalUnits == 0 || itemName.Equals("FREIGHT", StringComparison.OrdinalIgnoreCase) || itemName.Contains("CHARGE", StringComparison.OrdinalIgnoreCase))
+                                // Refined check: only true logistics/service charges, not legitimate medicine names with "CHARGE"
+                                bool isServiceOrCharge = totalUnits == 0 ||
+                                    itemName.Equals("FREIGHT", StringComparison.OrdinalIgnoreCase) ||
+                                    itemName.Equals("COURIER CHARGES", StringComparison.OrdinalIgnoreCase) ||
+                                    itemName.Equals("PACKING CHARGES", StringComparison.OrdinalIgnoreCase) ||
+                                    itemName.EndsWith(" CHARGES", StringComparison.OrdinalIgnoreCase) ||
+                                    itemName.StartsWith("FREIGHT ", StringComparison.OrdinalIgnoreCase);
+
+                                if (isServiceOrCharge)
                                 {
                                     accumulatedChargesAmount += lineTotalAmount;
                                     accumulatedTaxAmount += taxAmount;
@@ -913,7 +931,14 @@ namespace Tijori.Services
                                 // Physical product processing
                                 if (totalUnits > 0)
                                 {
-                                    var (productId, _) = await GetOrCreateProductContextAsync(connection, transaction, itemName, GetVal(rowz, "SupplierSku", "SKU"), rate, taxPercent, defaultCategoryId, null, brand);
+                                    // We keep initialQty = 0 because stock inward is recorded via PurchaseOrderDetails + RemainingStock increment below
+                                    var (productId, _, _) = await GetOrCreateProductContextAsync(
+                                        connection, transaction, itemName, sku, rate, taxPercent, defaultCategoryId, null, brand, 0);
+
+                                    // Inward inventory to Products master
+                                    await connection.ExecuteAsync(
+                                        "UPDATE Products SET RemainingStock = RemainingStock + @TotalUnits WHERE ProductId = @ProductId;",
+                                        new { TotalUnits = totalUnits, ProductId = productId }, transaction);
 
                                     // Update Master Product Catalog Pricing & Brand
                                     await connection.ExecuteAsync(@"
@@ -942,7 +967,15 @@ namespace Tijori.Services
                         ON DUPLICATE KEY UPDATE 
                             CurrentStock = CurrentStock + @TotalUnits, 
                             QuantityReceived = QuantityReceived + @TotalUnits;",
-                                            new { ProductId = productId, BatchNumber = batchNo, MfgDate = orderDate, ExpiryDate = orderDate.AddYears(2), TotalUnits = totalUnits, MRP = mrp }, transaction);
+                                            new
+                                            {
+                                                ProductId = productId,
+                                                BatchNumber = batchNo,
+                                                MfgDate = orderDate,
+                                                ExpiryDate = orderDate.AddYears(2),
+                                                TotalUnits = totalUnits,
+                                                MRP = mrp
+                                            }, transaction);
                                     }
 
                                     accumulatedTaxableAmount += taxableBase;
@@ -995,7 +1028,7 @@ namespace Tijori.Services
 
                             int generatedPoId = await connection.ExecuteScalarAsync<int>(insertPoSql, poParams, transaction);
 
-                            // Insert Line Items & Inward Warehouse Stock
+                            // Insert Line Items
                             foreach (var itemParam in purchaseItemsToInsert)
                             {
                                 itemParam.Add("PurchaseOrderId", generatedPoId);
@@ -1009,11 +1042,6 @@ namespace Tijori.Services
                     @UnitPrice, @MRP, @DiscountPercent, @TaxPercent, @TaxAmount, @TotalAmount
                 );";
                                 await connection.ExecuteAsync(insertPoDetailSql, itemParam, transaction);
-
-                                // Inward aggregate stock to Products master
-                                await connection.ExecuteAsync(
-                                    "UPDATE Products SET RemainingStock = RemainingStock + @TotalUnits WHERE ProductId = @ProductId;",
-                                    itemParam, transaction);
                             }
 
                             // Insert Overhead / Service Charges
@@ -1401,66 +1429,135 @@ namespace Tijori.Services
             }
         }
 
-        private async Task<(int ProductId, decimal CostPrice)> GetOrCreateProductContextAsync(
-            IDbConnection db, IDbTransaction tx, string name, string sku, decimal unitPrice, decimal gstPercent, int? catId, int? divisionId, string brandName)
+        private async Task<(int ProductId, decimal CostPrice, bool IsNew)> GetOrCreateProductContextAsync(
+    IDbConnection db,
+    IDbTransaction tx,
+    string name,
+    string sku,
+    decimal unitPrice,
+    decimal gstPercent,
+    int? catId,
+    int? divisionId,
+    string brandName,
+    int initialQty = 0) // <-- Accept initial quantity from import row
         {
-            string query = "SELECT ProductId, CostPrice FROM Products WHERE LOWER(Name) = @Name OR (SKU IS NOT NULL AND LOWER(SKU) = @Sku) LIMIT 1;";
-            var prod = await db.QueryFirstOrDefaultAsync<dynamic>(query, new { Name = name.ToLower().Trim(), Sku = sku?.ToLower()?.Trim() }, tx);
+            const string query = @"
+        SELECT ProductId, CostPrice 
+        FROM Products 
+        WHERE LOWER(Name) = @Name 
+           OR (SKU IS NOT NULL AND SKU != '' AND LOWER(SKU) = @Sku) 
+        LIMIT 1;";
 
-            if (prod != null) return (prod.ProductId, (decimal)prod.CostPrice);
+            var prod = await db.QueryFirstOrDefaultAsync<dynamic>(query, new
+            {
+                Name = name.ToLower().Trim(),
+                Sku = string.IsNullOrWhiteSpace(sku) ? string.Empty : sku.ToLower().Trim()
+            }, tx);
+
+            if (prod != null)
+            {
+                return (prod.ProductId, (decimal)prod.CostPrice, false);
+            }
+
+            // Generate safe fallback SKU if empty
+            string resolvedSku = !string.IsNullOrWhiteSpace(sku)
+                ? sku.Trim()
+                : $"SKU-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}";
 
             var p = new DynamicParameters();
             p.Add("Name", name.Trim());
-            p.Add("ShortName", string.IsNullOrWhiteSpace(sku) ? $"SKU-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}" : sku.Trim());
-            p.Add("SKU", 5);
+            p.Add("ShortName", resolvedSku);
+            p.Add("SKU", 10); // <-- FIXED: Was hardcoded to 5
             p.Add("Unit", "Pcs");
             p.Add("CategoryId", catId);
             p.Add("Manufacturer", "Marg Auto Import");
             p.Add("Packaging", "Standard");
-            p.Add("InitialStock", 0);
-            p.Add("RemainingStock", 0);
+
+            // Set Initial & Remaining stock to incoming initial quantity for brand-new items
+            p.Add("InitialStock", initialQty);
+            p.Add("RemainingStock", initialQty);
+
             p.Add("MRP", unitPrice);
             p.Add("CostPrice", unitPrice);
             p.Add("SellingPrice", unitPrice);
             p.Add("GSTPercent", gstPercent);
-            p.Add("TotalCost", 0.00m);
+            p.Add("TotalCost", initialQty * unitPrice);
             p.Add("TrackCost", 1);
             p.Add("DivisionId", divisionId);
             p.Add("BrandName", string.IsNullOrWhiteSpace(brandName) ? "Generic" : brandName.Trim());
 
-            string insertSql = @"
-                INSERT INTO Products (Name, ShortName, SKU, Unit, CategoryId, Manufacturer, Packaging, InitialStock, RemainingStock, MRP, CostPrice, SellingPrice, GSTPercent, TotalCost, TrackCost, DivisionId, BrandName, CreatedAt) 
-                VALUES (@Name, @ShortName, @SKU, @Unit, @CategoryId, @Manufacturer, @Packaging, @InitialStock, @RemainingStock, @MRP, @CostPrice, @SellingPrice, @GSTPercent, @TotalCost, @TrackCost, @DivisionId, @BrandName, NOW());
-                SELECT LAST_INSERT_ID();";
+            const string insertSql = @"
+        INSERT INTO Products (
+            Name, ShortName, SKU, Unit, CategoryId, Manufacturer, Packaging, 
+            InitialStock, RemainingStock, MRP, CostPrice, SellingPrice, 
+            GSTPercent, TotalCost, TrackCost, DivisionId, BrandName, CreatedAt
+        ) VALUES (
+            @Name, @ShortName, @SKU, @Unit, @CategoryId, @Manufacturer, @Packaging, 
+            @InitialStock, @RemainingStock, @MRP, @CostPrice, @SellingPrice, 
+            @GSTPercent, @TotalCost, @TrackCost, @DivisionId, @BrandName, NOW()
+        );
+        SELECT LAST_INSERT_ID();";
 
             int newId = await db.ExecuteScalarAsync<int>(insertSql, p, tx);
-            return (newId, unitPrice);
+            return (newId, unitPrice, true);
         }
 
         private async Task<int?> GetOrCreateBatchIdAsync(
-            IDbConnection db, IDbTransaction tx, int productId, string batchNumber, int qty, decimal sellingPrice, int? divisionId)
+    IDbConnection db,
+    IDbTransaction tx,
+    int productId,
+    string batchNumber,
+    int qty,
+    decimal sellingPrice,
+    int? divisionId,
+    DateTime? mfgDate = null,
+    DateTime? expiryDate = null)
         {
             if (string.IsNullOrWhiteSpace(batchNumber)) return null;
 
-            string query = "SELECT BatchId FROM ProductBatches WHERE ProductId = @ProductId AND LOWER(BatchNumber) = @BNo LIMIT 1;";
-            int? existingBatchId = await db.QueryFirstOrDefaultAsync<int?>(query, new { ProductId = productId, BNo = batchNumber.ToLower().Trim() }, tx);
+            const string query = @"
+        SELECT BatchId 
+        FROM ProductBatches 
+        WHERE ProductId = @ProductId AND LOWER(BatchNumber) = @BNo 
+        LIMIT 1;";
 
-            if (existingBatchId.HasValue) return existingBatchId.Value;
+            int? existingBatchId = await db.QueryFirstOrDefaultAsync<int?>(query, new
+            {
+                ProductId = productId,
+                BNo = batchNumber.ToLower().Trim()
+            }, tx);
+
+            if (existingBatchId.HasValue && existingBatchId.Value > 0)
+            {
+                const string updateBatchSql = @"
+            UPDATE ProductBatches 
+            SET CurrentStock = CurrentStock + @Qty,
+                QuantityReceived = QuantityReceived + @Qty
+            WHERE BatchId = @BatchId;";
+
+                await db.ExecuteAsync(updateBatchSql, new { Qty = qty, BatchId = existingBatchId.Value }, tx);
+                return existingBatchId.Value;
+            }
 
             var b = new DynamicParameters();
             b.Add("ProductId", productId);
-            b.Add("DivisionId", divisionId.HasValue ? divisionId.Value : null);
+            b.Add("DivisionId", divisionId);
             b.Add("BatchNumber", batchNumber.Trim());
-            b.Add("MfgDate", null);
-            b.Add("ExpiryDate", null);
+            b.Add("MfgDate", mfgDate);
+            b.Add("ExpiryDate", expiryDate);
             b.Add("QuantityReceived", qty);
             b.Add("CurrentStock", qty);
             b.Add("MinimumSellingPrice", sellingPrice);
 
-            string insertSql = @"
-                INSERT INTO ProductBatches (ProductId, DivisionId, BatchNumber, MfgDate, ExpiryDate, QuantityReceived, CurrentStock, MinimumSellingPrice, CreatedAt) 
-                VALUES (@ProductId, @DivisionId, @BatchNumber, @MfgDate, @ExpiryDate, @QuantityReceived, @CurrentStock, @MinimumSellingPrice, NOW());
-                SELECT LAST_INSERT_ID();";
+            const string insertSql = @"
+        INSERT INTO ProductBatches (
+            ProductId, DivisionId, BatchNumber, MfgDate, ExpiryDate, 
+            QuantityReceived, CurrentStock, MinimumSellingPrice, CreatedAt
+        ) VALUES (
+            @ProductId, @DivisionId, @BatchNumber, @MfgDate, @ExpiryDate, 
+            @QuantityReceived, @CurrentStock, @MinimumSellingPrice, NOW()
+        );
+        SELECT LAST_INSERT_ID();";
 
             return await db.ExecuteScalarAsync<int>(insertSql, b, tx);
         }

@@ -1,10 +1,11 @@
-﻿using Tijori.Interfaces;
-using Tijori.Models;
-using Tijori.Services;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
 using System.Windows;
+using Tijori.Core;
+using Tijori.Interfaces;
+using Tijori.Models;
+using Tijori.Services;
 
 namespace Tijori.ViewModels
 {
@@ -13,6 +14,7 @@ namespace Tijori.ViewModels
         private readonly LeadService _service;
         private readonly OrderService _orderService;
         private readonly ProductService _productService;
+        private readonly WorkflowEngine _workflowEngine;
 
         public event Action<bool>? RequestClose;
 
@@ -405,7 +407,7 @@ namespace Tijori.ViewModels
 
             var success = await _orderService.SaveCompleteOrderAsync(this);
             if (success)
-            {
+            {                
                 RequestClose?.Invoke(true);
             }
         }

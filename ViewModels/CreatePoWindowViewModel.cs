@@ -177,19 +177,22 @@ namespace Tijori.ViewModels
                 {
                     if (line.ProductId == -1) // Custom Ad-hoc item flag caught
                     {
-                        // 1. Build the parent schema mapping metrics properties
+                        // 1. Build the parent schema mapping with reorder & threshold configurations
                         var productPayload = new Product
                         {
                             DivisionId = 1, // Default fallback or active session division configuration
-                            Name = line.ProductName,
-                            ShortName = line.ProductName,
-                            SKU = line.SupplierSku ?? $"SKU-{Guid.NewGuid().ToString()[..6].ToUpper()}",
+                            Name = line.ProductName,                            
+                            ShortName = line.SupplierSku ?? $"SKU-{Guid.NewGuid().ToString()[..6].ToUpper()}",
+                            SKU = "10", // Default minimum stock threshold for auto-reordering
+                            ReorderQuantity = 50,    // Default replenishment lot size
+                            AutoReorderEnabled = true,
                             Unit = "PCS",
-                            CategoryId = 1, // Map default categorical classification block id
+                            CategoryId = 1,          // Map default categorical classification block id
                             InitialStock = line.Quantity,
                             RemainingStock = line.Quantity,
                             CostPrice = line.UnitPrice,
-                            SellingPrice = line.UnitPrice * 1.25m,
+                            MRP = line.MRP > 0 ? line.MRP : (line.UnitPrice * 1.25m),
+                            SellingPrice = line.MRP > 0 ? line.MRP : (line.UnitPrice * 1.25m),
                             TrackCost = true
                         };
 
@@ -197,11 +200,13 @@ namespace Tijori.ViewModels
                         var batchPayload = new ProductBatch
                         {
                             DivisionId = 1,
-                            BatchNumber = $"BAT-{DateTime.Today:yyyyMM}-{Guid.NewGuid().ToString()[..4].ToUpper()}",
+                            BatchNumber = !string.IsNullOrWhiteSpace(line.BatchNumber)
+                                ? line.BatchNumber
+                                : $"BAT-{DateTime.Today:yyyyMM}-{Guid.NewGuid().ToString()[..4].ToUpper()}",
                             MfgDate = DateTime.Today,
                             ExpiryDate = DateTime.Today.AddYears(2), // Safe industrial lifecycle ceiling default
-                            QuantityReceived = line.Quantity,
-                            CurrentStock = line.Quantity,
+                            QuantityReceived = line.Quantity + line.FreeQuantity,
+                            CurrentStock = line.Quantity + line.FreeQuantity,
                             MinimumSellingPrice = line.UnitPrice * 1.10m
                         };
 
@@ -211,19 +216,38 @@ namespace Tijori.ViewModels
                         // Assign new permanent ID to line details mapping properties
                         line.ProductId = newlyGeneratedId;
 
-                        // Create link between this vendor and the new product code
-                        await _vendorService.SaveVendorProductLinkAsync(SelectedVendor.VendorId, newlyGeneratedId, line.SupplierSku ?? "GEN-SKU", line.UnitPrice);
+                        // Create link between this vendor and the new product code with priority and lead-time settings
+                        await _vendorService.SaveVendorProductLinkAsync(
+                            SelectedVendor.VendorId,
+                            newlyGeneratedId,
+                            line.SupplierSku ?? "GEN-SKU",
+                            line.UnitPrice,
+                            leadTimeDays: 3,
+                            vendorPriority: 1,
+                            isPreferredVendor: true
+                        );
                     }
                     finalizedLines.Add(line);
                 }
 
-                // STEP 4: Standard PO generation routine continues...
+                // STEP 4: Standard PO generation routine with full financial breakdown
+                decimal taxableBase = finalizedLines.Sum(l => l.Quantity * l.UnitPrice);
+                decimal totalTax = finalizedLines.Sum(l => l.TaxAmount);
+                decimal totalDiscount = finalizedLines.Sum(l => (l.Quantity * l.UnitPrice) * (l.DiscountPercent / 100m));
+                decimal grandTotal = PoTotalAmount > 0 ? PoTotalAmount : (taxableBase + totalTax - totalDiscount);
+
                 var poHeader = new PurchaseOrder
                 {
                     PoNumber = $"PO-{DateTime.Today:yyyyMMdd}-{Guid.NewGuid().ToString()[..4].ToUpper()}",
                     VendorId = SelectedVendor.VendorId,
                     OrderDate = DateTime.Today,
-                    TotalAmount = PoTotalAmount,
+                    InvoiceDate = DateTime.Today,
+                    ExpectedDeliveryDate = DateTime.Today.AddDays(7),
+                    TaxableAmount = taxableBase,
+                    DiscountAmount = totalDiscount,
+                    TaxAmount = totalTax,
+                    RoundOff = 0.00m,
+                    TotalAmount = grandTotal,
                     OrderStatus = "Draft",
                     CreatedBy = "Admin"
                 };

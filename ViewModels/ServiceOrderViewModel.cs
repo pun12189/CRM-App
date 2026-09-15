@@ -109,7 +109,7 @@ namespace Tijori.ViewModels
             {
                 CustomersList = new ObservableCollection<Lead>(customers);
                 FinishedProductsList = new ObservableCollection<Product>(products.Where(p => p.CategoryType == ItemClassification.FinishedGood));
-                RawMaterialsList = new ObservableCollection<Product>(products.Where(p => p.CategoryType == ItemClassification.RawMaterial));
+                RawMaterialsList = new ObservableCollection<Product>(products.Where(p => p.CategoryType == ItemClassification.RawMaterial || p.CategoryType == ItemClassification.PackagingMaterial));
                 MasterFormulationsList = new ObservableCollection<MasterFormulation>(formulations);
             });
         }

@@ -34,6 +34,7 @@ namespace Tijori.ViewModels
         private readonly IActionSecurityGuard _securityGuard;
         private readonly IServiceProvider _serviceProvider;
         private readonly ReturnService _returnService;
+        private readonly AutoPurchaseOrderService _autoPoService;
 
         [ObservableProperty]
         private ObservableCollection<SalesReturn> _creditNotes = new();
@@ -175,12 +176,13 @@ namespace Tijori.ViewModels
 
         #region CONSTRUCTOR
 
-        public OrderDetailsViewModel(LeadService leadService, OrderService orderService, CategoryService categoryService, IUserSession userSession, IOrderHistoryService orderHistoryService, IActionSecurityGuard securityGuard, IServiceProvider serviceProvider, ReturnService returnService)
+        public OrderDetailsViewModel(LeadService leadService, OrderService orderService, CategoryService categoryService, IUserSession userSession, IOrderHistoryService orderHistoryService, IActionSecurityGuard securityGuard, IServiceProvider serviceProvider, ReturnService returnService, AutoPurchaseOrderService autoPoService)
         {            
             _leadService = leadService;
             _orderService = orderService;
             _categoryService = categoryService;
             _userSession = userSession;
+            _autoPoService = autoPoService;
             _returnService = returnService;
             _orderHistoryService = orderHistoryService;
             _securityGuard = securityGuard;
@@ -541,7 +543,7 @@ namespace Tijori.ViewModels
                 paymentIcon = MessageBoxImage.Warning;
             }
 
-            // Optional: Ask for confirmation before dispatching
+            // Confirmation dialog before dispatching
             var result = MessageBox.Show(
                 $"Are you sure you want to dispatch Order #{SelectedOrder.FormattedOrderId}?\n\n{paymentInfoMessage}",
                 "Confirm Dispatch",
@@ -553,7 +555,7 @@ namespace Tijori.ViewModels
             string oldStatus = SelectedOrder.Status;
             string newStatus = "Dispatched";
 
-            // 2. Update database status
+            // 2. Update database status & deduct inventory
             bool updated = await _orderService.UpdateOrderStatusAsync(SelectedOrder.OrderId, newStatus);
 
             if (updated)
@@ -578,15 +580,45 @@ namespace Tijori.ViewModels
                 await _orderHistoryService.LogActivityAsync(historyLog);
                 await LoadOrderHistoryAsync();
 
-                // 4. Notify Commands to disable both Accept and Dispatch buttons
+                // 4. Notify Commands to update UI button states
                 RefreshButtonStates();
 
-                // 5. Success Message Box
-                MessageBox.Show(
-                    $"Order #{SelectedOrder.FormattedOrderId} has been dispatched successfully!\n\n{paymentInfoMessage}",
-                    "Order Dispatched",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                // 5. ⚡ Trigger Auto-Replenishment Scan & Draft PO Generation
+                List<int> autoPoIds = new();
+                try
+                {
+                    string actor = _userSession?.CurrentUser ?? "System Dispatch";
+                    autoPoIds = await _autoPoService.EvaluateAndGenerateAutoPOsAsync(actor);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[AUTO-PO ENGINE ERROR]: {ex.Message}");
+                }
+
+                // 6. Provide Consolidated Feedback to User
+                if (autoPoIds.Any())
+                {
+                    MessageBox.Show(
+                        $"Order #{SelectedOrder.FormattedOrderId} has been dispatched successfully!\n\n" +
+                        $"{paymentInfoMessage}\n\n" +
+                        $"⚠️ INVENTORY ALERT: Stock for one or more items dropped below minimum threshold.\n" +
+                        $"Generated {autoPoIds.Count} new Draft Purchase Order(s) for your preferred suppliers.",
+                        "Order Dispatched & POs Created",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                }
+                else
+                {
+                    MessageBox.Show(
+                        $"Order #{SelectedOrder.FormattedOrderId} has been dispatched successfully!\n\n{paymentInfoMessage}",
+                        "Order Dispatched",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Failed to dispatch order. Please check connection and try again.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

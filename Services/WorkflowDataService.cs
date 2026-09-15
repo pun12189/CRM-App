@@ -18,89 +18,78 @@ namespace Tijori.Services
         public async Task<IEnumerable<Workflow>> GetAllWorkflowsAsync()
         {
             using var conn = _db.CreateConnection();
-            return await conn.QueryAsync<Workflow>("SELECT * FROM Workflows");
+            const string sql = "SELECT * FROM workflows ORDER BY CreatedAt DESC";
+            return await conn.QueryAsync<Workflow>(sql);
         }
 
-        public async Task<bool> SaveWorkflowAsync(Workflow workflow)
+        public async Task<bool> SaveWorkflowAsync(Workflow wf)
         {
             using var conn = _db.CreateConnection();
-            // Using WorkflowName as the identifier or a simple insert for new rules
-            string sql = @"
-        INSERT INTO Workflows (WorkflowName, EventName, InactivityDays, SendEmail, SendWhatsApp, TemplateBody, IsEnabled)
-        VALUES (@WorkflowName, @EventName, @InactivityDays, @SendEmail, @SendWhatsApp, @TemplateBody, @IsEnabled)
-        ON DUPLICATE KEY UPDATE 
-            EventName=@EventName, 
-            InactivityDays=@InactivityDays, 
-            SendEmail=@SendEmail, 
-            SendWhatsApp=@SendWhatsApp, 
-            TemplateBody=@TemplateBody, 
-            IsEnabled=@IsEnabled";
+            const string sql = @"
+                INSERT INTO workflows (
+                    Id, WorkflowName, EventName, ExecutionDays, IsEnabled,
+                    SendWhatsApp, WhatsAppSender, WhatsAppToLead, WhatsAppToUser, WhatsAppMessage,
+                    SendEmail, EmailToLead, EmailToUser, EmailMessage,
+                    SendNotification, NotificationMessage, CreatedAt
+                ) VALUES (
+                    @Id, @WorkflowName, @EventName, @ExecutionDays, @IsEnabled,
+                    @SendWhatsApp, @WhatsAppSender, @WhatsAppToLead, @WhatsAppToUser, @WhatsAppMessage,
+                    @SendEmail, @EmailToLead, @EmailToUser, @EmailMessage,
+                    @SendNotification, @NotificationMessage, NOW()
+                )
+                ON DUPLICATE KEY UPDATE
+                    WorkflowName = @WorkflowName,
+                    EventName = @EventName,
+                    ExecutionDays = @ExecutionDays,
+                    IsEnabled = @IsEnabled,
+                    SendWhatsApp = @SendWhatsApp,
+                    WhatsAppSender = @WhatsAppSender,
+                    WhatsAppToLead = @WhatsAppToLead,
+                    WhatsAppToUser = @WhatsAppToUser,
+                    WhatsAppMessage = @WhatsAppMessage,
+                    SendEmail = @SendEmail,
+                    EmailToLead = @EmailToLead,
+                    EmailToUser = @EmailToUser,
+                    EmailMessage = @EmailMessage,
+                    SendNotification = @SendNotification,
+                    NotificationMessage = @NotificationMessage;";
 
-            return await conn.ExecuteAsync(sql, workflow) > 0;
+            return await conn.ExecuteAsync(sql, wf) > 0;
         }
 
-        public async Task<IEnumerable<WorkflowTag>> GetTagsByEventAsync(string eventName)
+        public async Task<bool> DeleteWorkflowAsync(int id)
         {
             using var conn = _db.CreateConnection();
-            return await conn.QueryAsync<WorkflowTag>(
-                "SELECT * FROM WorkflowTags WHERE EventName = @eventName", new { eventName });
+            return await conn.ExecuteAsync("DELETE FROM workflows WHERE Id = @id", new { id }) > 0;
+        }
+
+        public async Task<IEnumerable<WorkflowTag>> GetTagsForEventAsync(string eventName)
+        {
+            using var conn = _db.CreateConnection();
+            const string sql = "SELECT * FROM workflowtags WHERE EventName IN (@eventName, 'All')";
+            return await conn.QueryAsync<WorkflowTag>(sql, new { eventName });
         }
 
         public async Task EnqueueActionAsync(int workflowId, int targetId, string targetType)
         {
             using var conn = _db.CreateConnection();
-            await conn.ExecuteAsync(@"INSERT INTO WorkflowQueue (WorkflowId, TargetId, TargetType, ScheduledTime) 
-                                VALUES (@workflowId, @targetId, @targetType, NOW())",
-                                    new { workflowId, targetId, targetType });
+            const string sql = @"
+                INSERT INTO workflowqueue (WorkflowId, TargetId, TargetType, ScheduledTime, IsProcessed, CreatedAt)
+                VALUES (@workflowId, @targetId, @targetType, NOW(), 0, NOW());";
+            await conn.ExecuteAsync(sql, new { workflowId, targetId, targetType });
         }
 
         public async Task<IEnumerable<WorkflowQueueItem>> GetPendingQueueAsync()
         {
             using var conn = _db.CreateConnection();
-            return await conn.QueryAsync<WorkflowQueueItem>(
-                "SELECT * FROM WorkflowQueue WHERE IsProcessed = 0;");
+            const string sql = "SELECT * FROM workflowqueue WHERE IsProcessed = 0;";
+            return await conn.QueryAsync<WorkflowQueueItem>(sql);
         }
 
         public async Task MarkAsProcessedAsync(int queueId)
         {
             using var conn = _db.CreateConnection();
-            await conn.ExecuteAsync("UPDATE WorkflowQueue SET IsProcessed = 1 WHERE Id = @Id", new { Id = queueId });
-        }
-
-        // Fetches workflows where InactivityDays is set (e.g., > 0)
-        public async Task<IEnumerable<Workflow>> GetInactivityWorkflowsAsync()
-        {
-            using var conn = _db.CreateConnection();
-            return await conn.QueryAsync<Workflow>(
-                "SELECT * FROM Workflows WHERE InactivityDays > 0 AND IsEnabled = 1");
-        }
-
-        // Finds customers whose last order was exactly 'days' ago
-        public async Task<IEnumerable<dynamic>> GetInactiveCustomersAsync(int days)
-        {
-            using var conn = _db.CreateConnection();
-            string sql = @"
-            SELECT c.LeadId, c.CustomerName, c.Phone, c.Email 
-            FROM Leads c
-            JOIN Orders o ON c.LeadId = o.LeadId
-            GROUP BY c.LeadId
-            HAVING DATEDIFF(NOW(), MAX(o.OrderDate)) = @days";
-
-            return await conn.QueryAsync<dynamic>(sql, new { days });
-        }
-
-        // Prevents spamming the customer by checking if this specific workflow 
-        // was already sent to them recently
-        public async Task<bool> HasAlreadyReceivedInactivityNotice(int customerId, int workflowId)
-        {
-            using var conn = _db.CreateConnection();
-            string sql = @"
-            SELECT COUNT(1) FROM WorkflowLogs 
-            WHERE TargetId = @customerId 
-            AND WorkflowId = @workflowId 
-            AND ExecutedAt > DATE_SUB(NOW(), INTERVAL 30 DAY)";
-
-            return await conn.ExecuteScalarAsync<int>(sql, new { customerId, workflowId }) > 0;
+            await conn.ExecuteAsync("UPDATE workflowqueue SET IsProcessed = 1 WHERE Id = @queueId", new { queueId });
         }
     }
 }

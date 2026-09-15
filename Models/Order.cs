@@ -14,7 +14,7 @@ namespace Tijori.Models
     public partial class Order : ObservableObject
     {
         [ObservableProperty] private int _orderId;
-        [ObservableProperty] private int _divisionId;
+        [ObservableProperty] private int? _divisionId;
         [ObservableProperty] private int _leadId;
         [ObservableProperty] private DateTime _orderDate = DateTime.Now;
         [ObservableProperty] private decimal _totalAmount; // This holds the final snapshot figure

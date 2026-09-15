@@ -20,12 +20,9 @@ namespace Tijori.Services
         public async Task<IEnumerable<CustomFieldDefinition>> GetFieldsByModuleAsync(string moduleType)
         {
             const string sql = @"
-                SELECT 
-                    FieldId, FieldName, DisplayLabel, FieldType, ModuleType, 
-                    FieldTier, IsVisible, IsRequired, SeedValues, CreatedAt
-                FROM customfielddefinitions 
-                WHERE LOWER(ModuleType) = LOWER(@ModuleType)
-                ORDER BY FieldTier ASC, FieldId ASC;";
+        SELECT * FROM customfielddefinitions 
+        WHERE LOWER(ModuleType) = LOWER(@ModuleType)
+        ORDER BY FieldTier ASC, FieldId ASC;";
 
             using var db = _context.CreateConnection();
             if (db.State == ConnectionState.Closed) db.Open();
@@ -34,12 +31,19 @@ namespace Tijori.Services
 
             foreach (var field in fields)
             {
-                if (!string.IsNullOrEmpty(field.SeedValues))
+                if (!string.IsNullOrWhiteSpace(field.SeedValues))
                 {
-                    var options = JsonSerializer.Deserialize<List<string>>(field.SeedValues);
-                    if (options != null)
+                    try
                     {
-                        field.SeedValueOptionsList = new System.Collections.ObjectModel.ObservableCollection<string>(options);
+                        var options = JsonSerializer.Deserialize<List<string>>(field.SeedValues);
+                        if (options != null)
+                        {
+                            field.SeedValueOptionsList = new System.Collections.ObjectModel.ObservableCollection<string>(options);
+                        }
+                    }
+                    catch
+                    {
+                        field.SeedValueOptionsList = new System.Collections.ObjectModel.ObservableCollection<string>();
                     }
                 }
             }
@@ -67,6 +71,10 @@ namespace Tijori.Services
                 FieldType = @FieldType,
                 IsVisible = @IsVisible,
                 IsRequired = @IsRequired,
+                IsFilter = @IsFilter,
+                IsAdmin = @IsAdmin,
+                InPdf = @InPdf,
+                InTable = @InTable,
                 SeedValues = @SeedValues
             WHERE FieldId = @FieldId;";
 
@@ -77,15 +85,21 @@ namespace Tijori.Services
             // 2. IF NEW RECORD, INSERT WITH DUPLICATE KEY FALLBACK
             const string insertSql = @"
         INSERT INTO customfielddefinitions (
-            FieldName, DisplayLabel, FieldType, ModuleType, FieldTier, IsVisible, IsRequired, SeedValues
+            FieldName, DisplayLabel, FieldType, ModuleType, FieldTier, 
+            IsVisible, IsRequired, IsFilter, IsAdmin, InPdf, InTable, SeedValues
         ) VALUES (
-            @FieldName, @DisplayLabel, @FieldType, @ModuleType, @FieldTier, @IsVisible, @IsRequired, @SeedValues
+            @FieldName, @DisplayLabel, @FieldType, @ModuleType, @FieldTier, 
+            @IsVisible, @IsRequired, @IsFilter, @IsAdmin, @InPdf, @InTable, @SeedValues
         )
         ON DUPLICATE KEY UPDATE
             DisplayLabel = VALUES(DisplayLabel),
             FieldType = VALUES(FieldType),
             IsVisible = VALUES(IsVisible),
             IsRequired = VALUES(IsRequired),
+            IsFilter = VALUES(IsFilter),
+            IsAdmin = VALUES(IsAdmin),
+            InPdf = VALUES(InPdf),
+            InTable = VALUES(InTable),
             SeedValues = VALUES(SeedValues);";
 
             int affectedRows = await db.ExecuteAsync(insertSql, field);

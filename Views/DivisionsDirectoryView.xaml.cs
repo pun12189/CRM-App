@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace Tijori.Views
 {
     /// <summary>
-    /// Interaction logic for CompanyProfileView.xaml
+    /// Interaction logic for DivisionsDirectoryView.xaml
     /// </summary>
-    public partial class CompanyProfileView : UserControl
+    public partial class DivisionsDirectoryView : UserControl
     {
-        public CompanyProfileView()
+        public DivisionsDirectoryView()
         {
             InitializeComponent();
         }

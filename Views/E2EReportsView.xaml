@@ -111,7 +111,7 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                        <Grid>
+                        <!--<Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
@@ -126,7 +126,7 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </ScrollViewer>
-                        </Grid>
+                        </Grid>-->
                     </Border>
 
                     <!-- Secondary Comparison Entity Checklist Viewport -->
@@ -142,7 +142,7 @@
                                 </Style.Triggers>
                             </Style>
                         </Border.Style>
-                        <Grid>
+                        <!--<Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
@@ -157,7 +157,7 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </ScrollViewer>
-                        </Grid>
+                        </Grid>-->
                     </Border>
                 </Grid>
             </StackPanel>

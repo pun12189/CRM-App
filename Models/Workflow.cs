@@ -11,25 +11,32 @@ namespace Tijori.Models
     {
         public int Id { get; set; }
 
-        [ObservableProperty]
-        private string _workflowName;
+        [ObservableProperty] private string _workflowName = string.Empty;
+        [ObservableProperty] private string _eventName = "Select";
+        [ObservableProperty] private int _executionDays;
+        [ObservableProperty] private bool _isEnabled = true;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        [ObservableProperty]
-        private string _eventName; // Bound to ComboBox
+        // --- Active Channels ---
+        [ObservableProperty] private bool _sendWhatsApp;
+        [ObservableProperty] private bool _sendEmail;
+        [ObservableProperty] private bool _sendNotification;
 
-        [ObservableProperty]
-        private int _inactivityDays; // Bound to Inactivity TextBox
+        // --- WhatsApp Configuration ---
+        [ObservableProperty] private string _whatsAppSender = "Primary"; // "Primary" or "Leadholder"
+        [ObservableProperty] private bool _whatsAppToLead = true;
+        [ObservableProperty] private bool _whatsAppToUser;
+        [ObservableProperty] private string _whatsAppMessage = string.Empty;
 
-        [ObservableProperty]
-        private bool _sendEmail; // Bound to Email Checkbox
+        // --- Email Configuration ---
+        [ObservableProperty] private bool _emailToLead = true;
+        [ObservableProperty] private bool _emailToUser;
+        [ObservableProperty] private string _emailMessage = string.Empty;
 
-        [ObservableProperty]
-        private bool _sendWhatsApp; // Bound to WhatsApp Checkbox
+        // --- In-App Toast Notification ---
+        [ObservableProperty] private string _notificationMessage = string.Empty;
 
-        [ObservableProperty]
-        private string _templateBody; // Bound to unified TemplateBox
-
-        [ObservableProperty]
-        private bool _isEnabled = true;
+        // UI Grid Helper Property
+        public bool IsSelected { get; set; }
     }
 }

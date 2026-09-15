@@ -15,5 +15,8 @@ namespace Tijori.Models
         [ObservableProperty] private string _supplierSku = string.Empty;
         [ObservableProperty] private decimal _purchasePrice;
         [ObservableProperty] private int _currentStock;
+        [ObservableProperty] private bool _isPreferredVendor = true;
+        [ObservableProperty] private int _vendorPriority = 1;
+        [ObservableProperty] private int _leadTimeDays = 3;
     }
 }

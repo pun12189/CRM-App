@@ -48,6 +48,9 @@ namespace Tijori.Models
 
         [ObservableProperty] private bool _isExpanded;
 
+        [ObservableProperty] private int _reorderQuantity = 50;
+        [ObservableProperty] private bool _autoReorderEnabled = true;
+
         // Calculated Property
         public decimal TotalCost => SellingPrice + (SellingPrice * (GstPercent / 100));
 
@@ -70,6 +73,21 @@ namespace Tijori.Models
         partial void OnGstPercentChanged(decimal value) => OnPropertyChanged(nameof(TotalCost));
 
         [ObservableProperty] private byte[]? _productImageBytes;
+
+        public bool IsStockThresholdBreached
+        {
+            get
+            {
+                if (!AutoReorderEnabled) return false;
+
+                // Parse StockKeepingUnit / SKU limit safely
+                if (int.TryParse(SKU, out int threshold))
+                {
+                    return RemainingStock <= threshold;
+                }
+                return false;
+            }
+        }
 
         /// <summary>
         /// UI VISUAL HELPER: Dynamically decodes database image binary streams for your main products list dashboards

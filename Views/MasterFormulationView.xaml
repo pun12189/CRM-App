@@ -263,7 +263,7 @@
                     <TextBox Grid.Column="2" Padding="10,0" Text="{Binding NewIngredientPercentage, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" 
                              materialDesign:HintAssist.Hint="Qty (%)" Style="{StaticResource MaterialDesignOutlinedTextBox}" Height="38" Margin="0,0,10,0"/>
 
-                    <Button Grid.Column="3" Command="{Binding AddIngredientRowCommand}" Content="+ ADD INGREDIENT" Background="#1794A1" BorderBrush="#1794A1" Foreground="White" Height="38" Padding="14,0"/>
+                    <Button Grid.Column="3" Command="{Binding AddIngredientRowCommand}" CommandParameter="{Binding SelectedRawMaterialToAdd}" Content="+ ADD INGREDIENT" Background="#1794A1" BorderBrush="#1794A1" Foreground="White" Height="38" Padding="14,0"/>
                 </Grid>
             </Border>
 
@@ -278,7 +278,7 @@
                         <DataGridTemplateColumn Header="Quantity (%)" Width="130">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <TextBox Text="{Binding PercentageValue, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" FontWeight="Bold" Foreground="#0284C7" VerticalAlignment="Center"/>
+                                    <TextBox Text="{Binding PercentageValue, UpdateSourceTrigger=PropertyChanged, StringFormat='{}{0:N2}'}" FontWeight="Bold" Padding="5,0,0,5" Foreground="#0284C7" VerticalAlignment="Center"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>

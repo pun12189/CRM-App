@@ -71,7 +71,7 @@ Style="{StaticResource MaterialDesignRaisedButton}" Background="#2E7D32" BorderB
             </DataGrid.Resources>
 
             <DataGrid.Columns>
-                <DataGridTextColumn Header="#" Binding="{Binding UserId}" Width="55" 
+                <DataGridTextColumn Header="#" Binding="{Binding UserId}" Width="Auto" 
                             ElementStyle="{StaticResource ProfessionalLeftAlignStyle}"/>
 
                 <DataGridTemplateColumn Header="Name" Width="160">

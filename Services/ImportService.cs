@@ -240,14 +240,13 @@ namespace Tijori.Services
                         {
                             continue; // Skip invalid or empty row
                         }
-
-                        string? sku = GetValue("SKU", "Code", "ItemCode", "ProductCode", "SupplierSku", "Item Code");
+                        
                         string unit = GetValue("Unit", "UOM") ?? "Pcs";
                         string? packaging = GetValue("Packaging", "Packing");
                         string? manufacturer = GetValue("Manufacturer", "MfgBy");
                         string? brandName = GetValue("BrandName", "Brand", "Company");
                         string? vendorName = GetValue("Supplier", "VendorName", "Vendor", "SupplierName");
-                        string? shortName = GetValue("ShortName","Code") ?? (productName.Length > 20 ? productName[..20] : productName);
+                        string? shortName = GetValue("SKU", "Code", "ItemCode", "ProductCode", "SupplierSku", "Item Code") ?? (productName.Length > 20 ? productName[..20] : productName);
 
                         int stockQty = GetInt(0, "Current Stock", "InitialStock", "CurrentStock", "Stock", "Qty", "Quantity");
                         decimal costPrice = GetDecimal(0.00m, "Cost Price", "Purchase Price", "CostPrice", "PurchasePrice", "Rate");
@@ -274,13 +273,13 @@ namespace Tijori.Services
                         // =========================================================================
                         int productId = 0;
 
-                        if (!string.IsNullOrEmpty(sku))
-                        {
-                            productId = await connection.ExecuteScalarAsync<int>(
-                                "SELECT ProductId FROM Products WHERE SKU = @SKU LIMIT 1;",
-                                new { SKU = sku },
-                                transaction);
-                        }
+                        //if (!string.IsNullOrEmpty(sku))
+                        //{
+                        //    productId = await connection.ExecuteScalarAsync<int>(
+                        //        "SELECT ProductId FROM Products WHERE SKU = @SKU LIMIT 1;",
+                        //        new { SKU = sku },
+                        //        transaction);
+                        //}
 
                         if (productId == 0)
                         {
@@ -295,7 +294,7 @@ namespace Tijori.Services
                             var productParams = new DynamicParameters();
                             productParams.Add("Name", productName);
                             productParams.Add("ShortName", shortName);
-                            productParams.Add("SKU", sku);
+                            productParams.Add("SKU", 10);
                             productParams.Add("Unit", unit);
                             productParams.Add("CategoryId", catId);
                             productParams.Add("Manufacturer", manufacturer ?? vendorName);
@@ -392,7 +391,7 @@ namespace Tijori.Services
                             }
 
                             // Link Vendor to Product in vendorproductlinks (Idempotent upsert)
-                            string supplierSku = GetValue("SupplierSku", "SupplierCode", "Code") ?? sku;
+                            string supplierSku = GetValue("SupplierSku", "SupplierCode", "Code") ?? shortName;
 
                             string linkVendorProductSql = @"
                                 INSERT INTO vendorproductlinks (

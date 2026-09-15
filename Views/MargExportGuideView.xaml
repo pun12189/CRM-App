@@ -22,17 +22,17 @@
                            Margin="0,4,0,0"/>
             </StackPanel>
 
-            <!-- CARD 1: SALES REPORT -->
+            <!-- CARD 1: STOCK / INVENTORY REPORT -->
             <materialDesign:Card UniformCornerRadius="8" Padding="20" Margin="0,0,0,16" Background="White">
                 <StackPanel>
                     <!-- Header -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                        <Border Background="#E0F2FE" CornerRadius="6" Width="36" Height="36" Margin="0,0,12,0">
-                            <materialDesign:PackIcon Kind="CartOutline" Foreground="#0284C7" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Background="#FEF3C7" CornerRadius="6" Width="36" Height="36" Margin="0,0,12,0">
+                            <materialDesign:PackIcon Kind="PackageVariantClosed" Foreground="#D97706" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="1. Export Sales Report" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
-                            <TextBlock Text="Party-wise &amp; item-level sales ledger details" FontSize="12" Foreground="#64748B"/>
+                            <TextBlock Text="1. Export Stock Report" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="Closing inventory valuation, batches, and remaining balances" FontSize="12" Foreground="#64748B"/>
                         </StackPanel>
                     </StackPanel>
 
@@ -46,11 +46,11 @@
                                 </Border>
                                 <materialDesign:PackIcon Kind="ChevronRight" Foreground="#94A3B8" Width="16" Height="16" VerticalAlignment="Center" Margin="4,0,4,0"/>
                                 <Border Background="#E2E8F0" CornerRadius="4" Padding="8,3">
-                                    <TextBlock Text="Daily Reports" FontWeight="SemiBold" FontSize="12" Foreground="#1E293B"/>
+                                    <TextBlock Text="Stocks" FontWeight="SemiBold" FontSize="12" Foreground="#1E293B"/>
                                 </Border>
                                 <materialDesign:PackIcon Kind="ChevronRight" Foreground="#94A3B8" Width="16" Height="16" VerticalAlignment="Center" Margin="4,0,4,0"/>
-                                <Border Background="#BAE6FD" CornerRadius="4" Padding="8,3">
-                                    <TextBlock Text="Business &amp; Analysis" FontWeight="Bold" FontSize="12" Foreground="#0369A1"/>
+                                <Border Background="#FDE68A" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="Batch Report" FontWeight="Bold" FontSize="12" Foreground="#B45309"/>
                                 </Border>
                             </WrapPanel>
                         </StackPanel>
@@ -60,10 +60,10 @@
                     <Border Background="#FFFFFF" BorderBrush="#F1F5F9" BorderThickness="1" CornerRadius="6" Padding="12">
                         <StackPanel>
                             <TextBlock Text="Filter &amp; Export Instructions:" FontWeight="SemiBold" FontSize="12" Foreground="#334155" Margin="0,0,0,6"/>
-                            <TextBlock Text="• Set filters in analysis: Party vs items" FontSize="12" Foreground="#475569" Margin="0,2"/>
-                            <TextBlock Text="• Select 'Sales analysis' &amp; 'Details' in the next 2 dropdowns" FontSize="12" Foreground="#475569" Margin="0,2"/>
-                            <TextBlock Text="• Set desired date range > Click 'Show'" FontSize="12" Foreground="#475569" Margin="0,2"/>
-                            <TextBlock Text="• Click the 'Excel' icon or press Alt + P to export file" FontWeight="SemiBold" FontSize="12" Foreground="#0284C7" Margin="0,6,0,0"/>
+                            <TextBlock Text="• Store Filter: Select 'Whole' or 'Main Store'" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Select 'Batch Details' = Yes (to preserve batch numbers &amp; expiry)" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Value with: Cost Price / WAC" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Press Alt + P > Choose 'Excel Sheet' > Save file" FontWeight="SemiBold" FontSize="12" Foreground="#D97706" Margin="0,6,0,0"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -117,17 +117,17 @@
                 </StackPanel>
             </materialDesign:Card>
 
-            <!-- CARD 3: STOCK / INVENTORY REPORT -->
+            <!-- CARD 1: SALES REPORT -->
             <materialDesign:Card UniformCornerRadius="8" Padding="20" Margin="0,0,0,16" Background="White">
                 <StackPanel>
                     <!-- Header -->
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                        <Border Background="#FEF3C7" CornerRadius="6" Width="36" Height="36" Margin="0,0,12,0">
-                            <materialDesign:PackIcon Kind="PackageVariantClosed" Foreground="#D97706" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <Border Background="#E0F2FE" CornerRadius="6" Width="36" Height="36" Margin="0,0,12,0">
+                            <materialDesign:PackIcon Kind="CartOutline" Foreground="#0284C7" Width="20" Height="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <StackPanel VerticalAlignment="Center">
-                            <TextBlock Text="3. Export Stock / Inventory Report" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
-                            <TextBlock Text="Closing inventory valuation, batches, and remaining balances" FontSize="12" Foreground="#64748B"/>
+                            <TextBlock Text="3. Export Order Report" FontSize="16" FontWeight="Bold" Foreground="#0F172A"/>
+                            <TextBlock Text="Party-wise &amp; item-level sales ledger details" FontSize="12" Foreground="#64748B"/>
                         </StackPanel>
                     </StackPanel>
 
@@ -141,11 +141,11 @@
                                 </Border>
                                 <materialDesign:PackIcon Kind="ChevronRight" Foreground="#94A3B8" Width="16" Height="16" VerticalAlignment="Center" Margin="4,0,4,0"/>
                                 <Border Background="#E2E8F0" CornerRadius="4" Padding="8,3">
-                                    <TextBlock Text="Stocks" FontWeight="SemiBold" FontSize="12" Foreground="#1E293B"/>
+                                    <TextBlock Text="Daily Reports" FontWeight="SemiBold" FontSize="12" Foreground="#1E293B"/>
                                 </Border>
                                 <materialDesign:PackIcon Kind="ChevronRight" Foreground="#94A3B8" Width="16" Height="16" VerticalAlignment="Center" Margin="4,0,4,0"/>
-                                <Border Background="#FDE68A" CornerRadius="4" Padding="8,3">
-                                    <TextBlock Text="Stock Report / Current Stock" FontWeight="Bold" FontSize="12" Foreground="#B45309"/>
+                                <Border Background="#BAE6FD" CornerRadius="4" Padding="8,3">
+                                    <TextBlock Text="Business &amp; Analysis" FontWeight="Bold" FontSize="12" Foreground="#0369A1"/>
                                 </Border>
                             </WrapPanel>
                         </StackPanel>
@@ -155,14 +155,14 @@
                     <Border Background="#FFFFFF" BorderBrush="#F1F5F9" BorderThickness="1" CornerRadius="6" Padding="12">
                         <StackPanel>
                             <TextBlock Text="Filter &amp; Export Instructions:" FontWeight="SemiBold" FontSize="12" Foreground="#334155" Margin="0,0,0,6"/>
-                            <TextBlock Text="• Store Filter: Select 'Whole' or 'Main Store'" FontSize="12" Foreground="#475569" Margin="0,2"/>
-                            <TextBlock Text="• Select 'Batch Details' = Yes (to preserve batch numbers &amp; expiry)" FontSize="12" Foreground="#475569" Margin="0,2"/>
-                            <TextBlock Text="• Value with: Cost Price / WAC" FontSize="12" Foreground="#475569" Margin="0,2"/>
-                            <TextBlock Text="• Press Alt + P > Choose 'Excel Sheet' > Save file" FontWeight="SemiBold" FontSize="12" Foreground="#D97706" Margin="0,6,0,0"/>
+                            <TextBlock Text="• Set filters in analysis: Salesman vs Items" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Select 'Sales analysis' &amp; 'Details' in the next 2 dropdowns" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Set desired date range > Click 'Show'" FontSize="12" Foreground="#475569" Margin="0,2"/>
+                            <TextBlock Text="• Click the 'Excel' icon or press Alt + P to export file" FontWeight="SemiBold" FontSize="12" Foreground="#0284C7" Margin="0,6,0,0"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
-            </materialDesign:Card>
+            </materialDesign:Card>            
 
         </StackPanel>
     </ScrollViewer>

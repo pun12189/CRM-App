@@ -13,6 +13,8 @@ namespace Tijori.Models
 {
     public partial class Product : ObservableObject
     {
+        [ObservableProperty] private int _serialNumber;
+
         [ObservableProperty] private bool _isSelectedForAction;
 
         public int ProductId { get; set; }

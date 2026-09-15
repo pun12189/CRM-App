@@ -43,12 +43,12 @@ namespace Tijori.ViewModels
         /// <summary>
         /// Sum of: Remaining Stock * WAC Cost Price
         /// </summary>
-        public decimal GlobalInventoryCostValue => AllProducts.Sum(p => p.RemainingStock * p.CostPrice);
+        public decimal GlobalInventoryCostValue => AllProducts.Sum(p => Math.Max(0, p.RemainingStock) * p.CostPrice);
 
         /// <summary>
         /// Total value of potential tax locked inside your active on-shelf inventory
         /// </summary>
-        public decimal GlobalInventoryGstValue => AllProducts.Sum(p => p.RemainingStock * p.CostPrice * (p.GstPercent / 100));
+        public decimal GlobalInventoryGstValue => AllProducts.Sum(p => Math.Max(0, p.RemainingStock) * p.CostPrice * (Convert.ToDecimal(p.GstPercent) / 100.0m));
 
         /// <summary>
         /// Total portfolio asset value including base costs and integrated taxes
@@ -102,6 +102,12 @@ namespace Tijori.ViewModels
         {
             var products = await _productService.GetAllProductsAsync(1);
             AllProducts = new ObservableCollection<Product>(products);
+
+            int runningSerialNumber = 1;
+            foreach (var lead in AllProducts)
+            {
+                lead.SerialNumber = runningSerialNumber++;
+            }
 
             var categories = await _categoryService.GetAllCategoriesAsync();
             Categories = new ObservableCollection<Category>(categories);

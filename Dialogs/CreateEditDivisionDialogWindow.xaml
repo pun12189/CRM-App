@@ -93,13 +93,13 @@
                             <StackPanel Grid.Column="0" Margin="0,0,6,0">
                                 <TextBlock Text="Division Name *" FontSize="10" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,2"/>
                                 <TextBox Text="{Binding DivisionName, UpdateSourceTrigger=PropertyChanged}" 
-                                         materialDesign:HintAssist.Hint="e.g. Meltic, SofricONE"
+                                         materialDesign:HintAssist.Hint="e.g. LeadManch, SofricONE"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="11" Height="32" Padding="6,4"/>
                             </StackPanel>
                             <StackPanel Grid.Column="1" Margin="6,0,0,0">
                                 <TextBlock Text="Invoice Prefix" FontSize="10" FontWeight="SemiBold" Foreground="#334155" Margin="0,0,0,2"/>
                                 <TextBox Text="{Binding CurrentProfile.CompanyInitials, UpdateSourceTrigger=PropertyChanged}" 
-                                         materialDesign:HintAssist.Hint="e.g. MEL, SOF"
+                                         materialDesign:HintAssist.Hint="e.g. LM, SOF"
                                          Style="{StaticResource MaterialDesignOutlinedTextBox}" FontSize="11" Height="32" Padding="6,4"/>
                             </StackPanel>
                         </Grid>

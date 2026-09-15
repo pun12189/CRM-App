@@ -157,11 +157,7 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock x:Name="TxtSerialNumber"  VerticalAlignment="Center"  HorizontalAlignment="Center" Foreground="DarkSlateGray">
-                                    <TextBlock.Text>
-                                        <Binding RelativeSource="{RelativeSource AncestorType=DataGridRow}" Path="(DataGrid.AlternationIndex)" Converter="{StaticResource IndexToNumberConverter}"/>
-                                    </TextBlock.Text>
-                                </TextBlock>
+                                <TextBlock x:Name="TxtSerialNumber" Text="{Binding SerialNumber}" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="DarkSlateGray"/>
 
                                 <CheckBox Grid.Row="1" IsChecked="{Binding IsSelectedForAction, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Grid>

@@ -221,155 +221,156 @@
                 <ScrollViewer x:Name="MainWorkspaceScroller" Visibility="{Binding IsMainGridVisible, Converter={StaticResource BooleanToVisibilityConverter}}" VerticalScrollBarVisibility="Auto" ScrollChanged="MainWorkspaceScroller_OnScrollChanged">
                     <VirtualizingStackPanel Orientation="Vertical">
 
-                        <!-- TOP BAR BOX BLOCK: DATABASE SERVICES AND CONNECTIVITY OPTION CARD -->
-                        <materialDesign:Card Padding="24" Margin="4,0,4,24" Background="White" UniformCornerRadius="8" materialDesign:ElevationAssist.Elevation="Dp4">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
+                        <UniformGrid Columns="2">
+                            <!-- TOP BAR BOX BLOCK: DATABASE SERVICES AND CONNECTIVITY OPTION CARD -->
+                            <materialDesign:Card Padding="10" Margin="4,0,4,0" Background="White" UniformCornerRadius="8" materialDesign:ElevationAssist.Elevation="Dp4">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                    <TextBlock FontSize="15" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Left">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Text" Value="Network Connectivity Mode"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
-                                                        <Setter Property="Text" Value="Cloud Environment Mode"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <TextBlock FontSize="15" FontWeight="Bold" Foreground="#1F2937" HorizontalAlignment="Left">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="Network Connectivity Mode"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
+                                                            <Setter Property="Text" Value="Cloud Environment Mode"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
 
-                                    <TextBlock FontSize="13" Foreground="#4B5563" TextWrapping="Wrap" HorizontalAlignment="Left" Margin="0,6,0,0" LineHeight="18">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Text" Value="Allows cloud communications like external webhook automations, email server syncing, and background notifications."/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
-                                                        <Setter Property="Text" Value="TIJORI is running on an active cloud configuration environment. Core communications, webhooks, and live background synchronization pipelines are permanently operational."/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                        <TextBlock FontSize="13" Foreground="#4B5563" TextWrapping="Wrap" HorizontalAlignment="Left" Margin="0,6,0,0" LineHeight="18">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="Allows cloud communications like external webhook automations, email server syncing, and background notifications."/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
+                                                            <Setter Property="Text" Value="TIJORI is running on an active cloud configuration environment. Core communications, webhooks, and live background synchronization pipelines are permanently operational."/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
 
-                                    <TextBlock FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Left" Margin="0,8,0,0">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Text" Value="⚠️ Keeping the software offline is highly recommended for isolated local office speeds."/>
-                                                <Setter Property="Foreground" Value="#EA580C"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
-                                                        <Setter Property="Text" Value="✅ Cloud database synchronization pipelines are operating securely over a verified network connection."/>
-                                                        <Setter Property="Foreground" Value="#16A34A"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                        <TextBlock FontSize="12" FontWeight="SemiBold" HorizontalAlignment="Left" Margin="0,8,0,0">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="⚠️ Keeping the software offline is highly recommended for isolated local office speeds."/>
+                                                    <Setter Property="Foreground" Value="#EA580C"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
+                                                            <Setter Property="Text" Value="✅ Cloud database synchronization pipelines are operating securely over a verified network connection."/>
+                                                            <Setter Property="Foreground" Value="#16A34A"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
 
-                                    <Button Command="{Binding ChangeDatabaseConfigCommand}" 
+                                        <Button Command="{Binding ChangeDatabaseConfigCommand}" 
                                             Content="🔧 Change Database Server Configuration" 
                                             Style="{StaticResource MaterialDesignFlatButton}" 
                                             Foreground="#2563EB" FontSize="13" FontWeight="SemiBold" 
                                             HorizontalAlignment="Left" Margin="0,12,0,0" Padding="0" Height="24"/>
-                                </StackPanel>
+                                    </StackPanel>
 
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0">
-                                    <TextBlock Width="65" TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0" FontSize="13" FontWeight="Black">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Text" Value="OFFLINE"/>
-                                                <Setter Property="Foreground" Value="#9CA3AF"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding ToggleOnlineServices}" Value="True">
-                                                        <Setter Property="Text" Value="ONLINE"/>
-                                                        <Setter Property="Foreground" Value="#1794A1"/>
-                                                    </DataTrigger>
-                                                    <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0">
+                                        <TextBlock Width="65" TextAlignment="Right" VerticalAlignment="Center" Margin="0,0,12,0" FontSize="13" FontWeight="Black">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Text" Value="OFFLINE"/>
+                                                    <Setter Property="Foreground" Value="#9CA3AF"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ToggleOnlineServices}" Value="True">
+                                                            <Setter Property="Text" Value="ONLINE"/>
+                                                            <Setter Property="Foreground" Value="#1794A1"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
 
-                                    <ToggleButton Cursor="Hand" VerticalAlignment="Center"
+                                        <ToggleButton Cursor="Hand" VerticalAlignment="Center"
                                                   IsChecked="{Binding ToggleOnlineServices, Mode=TwoWay}"
                                                   Command="{Binding UpdateOnlineServicesOptionCommand}"
                                                   CommandParameter="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
                                                   ToolTip="Switch software modes between connected networks and completely local network layers.">
-                                        <ToggleButton.Style>
-                                            <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignSwitchToggleButton}">
-                                                <Setter Property="Visibility" Value="Visible"/>
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
-                                                        <Setter Property="Visibility" Value="Collapsed"/>
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </ToggleButton.Style>
-                                    </ToggleButton>
-                                </StackPanel>
-                            </Grid>
-                        </materialDesign:Card>
-
-                        <!-- SECURITY CONTROL CARD (MERGED SYSTEM SECURITY MANAGEMENT WIDGET PANEL) -->
-                        <materialDesign:Card Padding="20" Margin="4,0,4,24" Background="White" UniformCornerRadius="8" materialDesign:ElevationAssist.Elevation="Dp4">
-                            <StackPanel>
-                                <TextBlock Text="Security &amp; Policy Settings" Style="{StaticResource MaterialDesignBodyLargeTextBlock}" Margin="0,0,0,4" FontWeight="Bold" FontSize="16"/>
-                                <TextBlock Text="Manage global access restrictions and multi-factor authentication requirements requirements across standard installations." Style="{StaticResource MaterialDesignBody2TextBlock}" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,16"/>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                        <TextBlock Text="Enforce Global Action-Level 2FA Protection Layer" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" FontWeight="Bold" FontSize="14" Foreground="#374151"/>
-                                        <TextBlock Text="When activated, protected buttons (Downloads, Document Views, etc) demand an administrative token confirmation window challenge sequence." Style="{StaticResource MaterialDesignBody2TextBlock}" TextWrapping="Wrap" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,4,0,0"/>
+                                            <ToggleButton.Style>
+                                                <Style TargetType="ToggleButton" BasedOn="{StaticResource MaterialDesignSwitchToggleButton}">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsToggleVisible}" Value="False">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </ToggleButton.Style>
+                                        </ToggleButton>
                                     </StackPanel>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
-                                        <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}" Cursor="Hand"
+                                </Grid>
+                            </materialDesign:Card>
+
+                            <!-- SECURITY CONTROL CARD (MERGED SYSTEM SECURITY MANAGEMENT WIDGET PANEL) -->
+                            <materialDesign:Card Padding="15" Margin="4,0,4,0" Background="White" UniformCornerRadius="8" materialDesign:ElevationAssist.Elevation="Dp4">
+                                <StackPanel>
+                                    <TextBlock Text="Security &amp; Policy Settings" Style="{StaticResource MaterialDesignBodyLargeTextBlock}" Margin="0,0,0,4" FontWeight="Bold" FontSize="16"/>
+                                    <TextBlock Text="Manage global access restrictions and multi-factor authentication requirements requirements across standard installations." Style="{StaticResource MaterialDesignBody2TextBlock}" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,0,16" TextWrapping="Wrap"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock Text="Enforce Global Action-Level 2FA Protection Layer" Style="{StaticResource MaterialDesignSubtitle1TextBlock}" FontWeight="Bold" FontSize="14" Foreground="#374151"  TextWrapping="Wrap"/>
+                                            <TextBlock Text="When activated, protected buttons (Downloads, Document Views, etc) demand an administrative token confirmation window challenge sequence." Style="{StaticResource MaterialDesignBody2TextBlock}" TextWrapping="Wrap" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,4,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                                            <ToggleButton Style="{StaticResource MaterialDesignSwitchToggleButton}" Cursor="Hand"
                                                       IsChecked="{Binding IsMaster2FAEnabled}" 
                                                       Command="{Binding ProcessPolicyToggleCommand}"
                                                       IsEnabled="{Binding IsRegistrationPending, Converter={StaticResource InverseBoolToVis}}"/>
-                                    </StackPanel>
-                                </Grid>
-
-                                <!-- NESTED QR SYSTEM GRAPHIC ZONE (DISPLAY ONLY WHEN GENERATING TOKENS INTERNALLY) -->
-                                <Border Margin="0,16,0,0" Padding="16" Background="#1E1E1E" CornerRadius="8" Visibility="{Binding IsRegistrationPending, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <Border Grid.Column="0" BorderThickness="1" BorderBrush="#444" Background="White" Padding="6" CornerRadius="4" Width="120" Height="120" VerticalAlignment="Center">
-                                            <Image Source="{Binding AdminQrCodeSource}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
-                                        </Border>
-                                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
-                                            <TextBlock Text="PAIR SYSTEM ADMINISTRATOR SMARTPHONE TOOL" Foreground="White" FontWeight="Bold" FontSize="13" Margin="0,0,0,4"/>
-                                            <TextBlock Text="Scan code via Google/Microsoft Authenticator app then verify the configuration token down below." Foreground="LightGray" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                                            <TextBox Text="{Binding VerificationCodeInput, UpdateSourceTrigger=PropertyChanged}" MaxLength="6" FontSize="16" TextAlignment="Center" FontWeight="Bold" Width="140" HorizontalAlignment="Left" Height="38" Padding="5,0" VerticalContentAlignment="Center" materialDesign:HintAssist.Hint="XXXXXX" materialDesign:HintAssist.Foreground="Black" Background="WhiteSmoke" Foreground="Black" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
-                                            <TextBlock Text="{Binding SecurityErrorMessage}" Foreground="OrangeRed" FontSize="11" Margin="4,2,0,0"/>
-                                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                                                <Button Content="VERIFY &amp; CONFIRM" Command="{Binding ConfirmAdminRegistrationCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Background="#2193b0" Foreground="White" Margin="0,0,10,0" Height="34" FontSize="11"/>
-                                                <Button Content="CANCEL" Command="{Binding CancelRegistrationChangeCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="DarkGray" Height="34" FontSize="11"/>
-                                            </StackPanel>
                                         </StackPanel>
                                     </Grid>
-                                </Border>
-                            </StackPanel>
-                        </materialDesign:Card>
 
+                                    <!-- NESTED QR SYSTEM GRAPHIC ZONE (DISPLAY ONLY WHEN GENERATING TOKENS INTERNALLY) -->
+                                    <Border Margin="0,16,0,0" Padding="16" Background="#1E1E1E" CornerRadius="8" Visibility="{Binding IsRegistrationPending, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0" BorderThickness="1" BorderBrush="#444" Background="White" Padding="6" CornerRadius="4" Width="120" Height="120" VerticalAlignment="Center">
+                                                <Image Source="{Binding AdminQrCodeSource}" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                                <TextBlock Text="PAIR SYSTEM ADMINISTRATOR SMARTPHONE TOOL" Foreground="White" FontWeight="Bold" FontSize="13" Margin="0,0,0,4"/>
+                                                <TextBlock Text="Scan code via Google/Microsoft Authenticator app then verify the configuration token down below." Foreground="LightGray" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                                <TextBox Text="{Binding VerificationCodeInput, UpdateSourceTrigger=PropertyChanged}" MaxLength="6" FontSize="16" TextAlignment="Center" FontWeight="Bold" Width="140" HorizontalAlignment="Left" Height="38" Padding="5,0" VerticalContentAlignment="Center" materialDesign:HintAssist.Hint="XXXXXX" materialDesign:HintAssist.Foreground="Black" Background="WhiteSmoke" Foreground="Black" Style="{StaticResource MaterialDesignOutlinedTextBox}"/>
+                                                <TextBlock Text="{Binding SecurityErrorMessage}" Foreground="OrangeRed" FontSize="11" Margin="4,2,0,0"/>
+                                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                                    <Button Content="VERIFY &amp; CONFIRM" Command="{Binding ConfirmAdminRegistrationCommand}" Style="{StaticResource MaterialDesignRaisedButton}" Background="#2193b0" Foreground="White" Margin="0,0,10,0" Height="34" FontSize="11"/>
+                                                    <Button Content="CANCEL" Command="{Binding CancelRegistrationChangeCommand}" Style="{StaticResource MaterialDesignFlatButton}" Foreground="DarkGray" Height="34" FontSize="11"/>
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
+                            </materialDesign:Card>
+                        </UniformGrid>
                         <!-- ================================================================= -->
                         <!-- CATEGORY WORKSPACE MATRIX VIEWS (LINKED DIRECTLY TO RAIL ACTIONS) -->
                         <!-- ================================================================= -->
 
                         <!-- WORKSPACE VIEW 1: INTERNAL SETUP MATRICES GRID -->
-                        <StackPanel x:Name="SecInternalSetup" Margin="0,0,0,32">
+                        <StackPanel x:Name="SecInternalSetup" Margin="0,20,0,32">
                             <TextBlock Text="INTERNAL INFRASTRUCTURE SETTINGS" FontSize="12" FontWeight="Black" Foreground="#64748B" Margin="8,0,0,8"/>
                             <UniformGrid Columns="4">
                                 <Button Style="{StaticResource ModernActionCardStyle}" security:SecurityGuard.Requires="Divisions:View" CommandParameter="CProfile" Command="{Binding NavigateToSettingCommand}">

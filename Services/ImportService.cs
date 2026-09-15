@@ -493,7 +493,7 @@ namespace Tijori.Services
                     else if (type == ImportType.Order)
                     {
                         int? defaultCategoryId = await GetOrCreateLookupIdAsync(connection, transaction, "Categories", "CategoryName", "General");
-                        
+
                         string GetVal(IDictionary<string, object> row, params string[] keys)
                         {
                             foreach (var k in keys)
@@ -518,34 +518,53 @@ namespace Tijori.Services
                                    !string.IsNullOrWhiteSpace(party);
                         }).ToList();
 
-                        // 2. Group strictly by Bill No# (e.g. "HLP1473")
                         var orderGroups = validOrderRows
                             .GroupBy(r => GetVal(r, "Bill No#", "Bill No", "BillNo", "InvoiceNumber", "VCN"), StringComparer.OrdinalIgnoreCase)
                             .Where(g => !string.IsNullOrWhiteSpace(g.Key))
                             .ToList();
 
+                        // =========================================================================
+                        // 1. BULK PRE-FETCH TO ELIMINATE N+1 DATABASE NETWORK ROUND TRIPS
+                        // =========================================================================
+                        var existingInvoiceSet = (await connection.QueryAsync<string>(
+                            "SELECT InvoiceNumber FROM Orders WHERE InvoiceNumber IS NOT NULL;", transaction: transaction))
+                            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                        var divisionCache = (await connection.QueryAsync<(int Id, string Name)>(
+                            "SELECT Id, Name FROM Divisions;", transaction: transaction))
+                            .ToDictionary(x => x.Name.Trim().ToLower(), x => x.Id);
+
+                        // =========================================================================
+                        // 2. PROCESS ORDER GROUPS
+                        // =========================================================================
                         foreach (var group in orderGroups)
                         {
                             string invoiceNo = group.Key!;
                             var primaryRow = group.First();
 
-                            int? leadId = await GetOrCreateLeadIdAsync(connection, transaction, GetVal(primaryRow, "Party Name", "PartyName", "CustomerName"));
+                            // Skip existing orders immediately without querying DB
+                            if (existingInvoiceSet.Contains(invoiceNo))
+                            {
+                                continue;
+                            }
+
+                            string partyName = GetVal(primaryRow, "Party Name", "PartyName", "CustomerName");
+                            int? leadId = await GetOrCreateLeadIdAsync(connection, transaction, partyName);
                             if (!leadId.HasValue) continue;
 
-                            int? divisionId = await GetOrCreateDivisionAsync(connection, transaction, "Divisions", "Name", GetVal(primaryRow, "Company Name", "COMPANY", "Division"));
-
-                            const string checkExistingSql = @"
-                                SELECT OrderId FROM Orders 
-                                WHERE InvoiceNumber = @InvoiceNumber 
-                                  AND (@DivisionId IS NULL OR DivisionId = @DivisionId) 
-                                LIMIT 1;";
-
-                            int existingOrderId = await connection.ExecuteScalarAsync<int>(checkExistingSql,
-                                new { InvoiceNumber = invoiceNo, DivisionId = divisionId }, transaction);
-
-                            if (existingOrderId > 0)
+                            string divisionName = GetVal(primaryRow, "Company Name", "COMPANY", "Division").Trim().ToLower();
+                            int? divisionId = null;
+                            if (!string.IsNullOrWhiteSpace(divisionName))
                             {
-                                continue; // Skip already imported invoice
+                                if (divisionCache.TryGetValue(divisionName, out int dId))
+                                {
+                                    divisionId = dId;
+                                }
+                                else
+                                {
+                                    divisionId = await GetOrCreateDivisionAsync(connection, transaction, "Divisions", "Name", divisionName);
+                                    if (divisionId.HasValue) divisionCache[divisionName] = divisionId.Value;
+                                }
                             }
 
                             string salesPerson = GetVal(primaryRow, "Sales Men", "SalesMan", "LeadHolder", "ProcessedBy");
@@ -559,6 +578,10 @@ namespace Tijori.Services
                             var itemsToInsert = new List<DynamicParameters>();
                             var chargesToInsert = new List<DynamicParameters>();
 
+                            // For batch stock deductions
+                            var productDeductions = new Dictionary<int, int>();
+                            var batchDeductions = new Dictionary<int, int>();
+
                             foreach (var rowz in group)
                             {
                                 string itemName = GetVal(rowz, "Item Name", "ItemName", "ProductName");
@@ -570,7 +593,12 @@ namespace Tijori.Services
                                 decimal lineTotalAmount = decimal.TryParse(GetVal(rowz, "Amount", "Total"), out var lt) ? lt : 0.00m;
 
                                 // Extra Freight / Charges handling
-                                if (itemName.Equals("FREIGHT", StringComparison.OrdinalIgnoreCase) || itemName.Contains("CHARGE", StringComparison.OrdinalIgnoreCase))
+                                bool isServiceOrCharge = itemName.Equals("FREIGHT", StringComparison.OrdinalIgnoreCase) ||
+                                                         itemName.Equals("COURIER CHARGES", StringComparison.OrdinalIgnoreCase) ||
+                                                         itemName.Equals("PACKING CHARGES", StringComparison.OrdinalIgnoreCase) ||
+                                                         itemName.EndsWith(" CHARGES", StringComparison.OrdinalIgnoreCase);
+
+                                if (isServiceOrCharge)
                                 {
                                     accumulatedExtraChargesAmount += lineTotalAmount;
                                     accumulatedGstAmount += taxAmount;
@@ -586,14 +614,19 @@ namespace Tijori.Services
 
                                 int qty = int.TryParse(GetVal(rowz, "Qty", "Quantity"), out var q) ? q : 0;
                                 int freeQty = int.TryParse(GetVal(rowz, "Free Qty", "FreeQuantity", "Free"), out var fq) ? fq : 0;
+                                int totalQty = qty + freeQty;
+
                                 string batchNo = GetVal(rowz, "Batch", "BatchNumber");
                                 string brand = GetVal(rowz, "BrandName", "Brand");
                                 string sku = GetVal(rowz, "SupplierSku", "SKU", "Item Code", "ItemCode", "Code");
 
-                                if (qty > 0 || freeQty > 0)
+                                if (totalQty > 0)
                                 {
-                                    var (productId, costPrice, _) = await GetOrCreateProductContextAsync(connection, transaction, itemName, sku, rate, taxPercent, defaultCategoryId, divisionId, brand);
-                                    int? batchId = await GetOrCreateBatchIdAsync(connection, transaction, productId, batchNo, qty + freeQty, rate, divisionId);
+                                    var (productId, costPrice, _) = await GetOrCreateProductContextAsync(
+                                        connection, transaction, itemName, sku, rate, taxPercent, defaultCategoryId, divisionId, brand, 0);
+
+                                    int? batchId = await GetOrCreateBatchIdAsync(
+                                        connection, transaction, productId, batchNo, totalQty, rate, divisionId, orderDate, orderDate.AddYears(2));
 
                                     decimal subTotal = lineTotalAmount != 0 ? lineTotalAmount : (rate * qty);
                                     decimal gstComputed = taxAmount != 0 ? taxAmount : (subTotal * (taxPercent / 100));
@@ -605,15 +638,21 @@ namespace Tijori.Services
                                     var itemParams = new DynamicParameters();
                                     itemParams.Add("ProductId", productId);
                                     itemParams.Add("BatchId", batchId);
-                                    itemParams.Add("Quantity", qty + freeQty);
+                                    itemParams.Add("Quantity", totalQty);
                                     itemParams.Add("UnitPrice", rate);
                                     itemParams.Add("CostPrice", costPrice);
                                     itemParams.Add("GSTPercent", taxPercent);
                                     itemParams.Add("SubTotal", subTotal);
                                     itemParams.Add("GstAmount", gstComputed);
                                     itemParams.Add("Total", subTotal + gstComputed);
-
                                     itemsToInsert.Add(itemParams);
+
+                                    // Queue deductions
+                                    productDeductions[productId] = productDeductions.GetValueOrDefault(productId) + totalQty;
+                                    if (batchId.HasValue)
+                                    {
+                                        batchDeductions[batchId.Value] = batchDeductions.GetValueOrDefault(batchId.Value) + totalQty;
+                                    }
                                 }
                             }
 
@@ -627,12 +666,12 @@ namespace Tijori.Services
                             orderParams.Add("TotalAmount", accumulatedTotalAmount);
                             orderParams.Add("TotalCostAmount", accumulatedTotalCostAmount);
                             orderParams.Add("OrderType", GetVal(primaryRow, "Type", "OrderType") ?? "Sale");
-                            orderParams.Add("PaymentStatus", totalAmountPaid >= finalGrandTotal ? "Paid" : totalAmountPaid > 0 ? "Partially Paid" : "Unpaid");
+                            orderParams.Add("PaymentStatus", totalAmountPaid >= finalGrandTotal ? "Fully Paid" : totalAmountPaid > 0 ? "Partially Paid" : "Unpaid");
                             orderParams.Add("AmountPaid", totalAmountPaid);
                             orderParams.Add("LeadHolder", salesPerson);
                             orderParams.Add("InvoiceNumber", invoiceNo);
                             orderParams.Add("ProformaNumber", GetVal(primaryRow, "ProformaNumber"));
-                            orderParams.Add("Status", totalAmountPaid >= finalGrandTotal ? "Fully Paid" : "Pending");
+                            orderParams.Add("Status", "Pending");
                             orderParams.Add("Description", $"Marg Import - {invoiceNo} ({salesPerson})");
                             orderParams.Add("ProcessedBy", salesPerson);
                             orderParams.Add("GrandTotal", finalGrandTotal);
@@ -653,38 +692,51 @@ namespace Tijori.Services
             SELECT LAST_INSERT_ID();";
 
                             int generatedOrderId = await connection.ExecuteScalarAsync<int>(insertOrderSql, orderParams, transaction);
+                            existingInvoiceSet.Add(invoiceNo); // Mark as inserted for rest of loop
 
-                            // Insert Items and adjust Remaining Stock
-                            foreach (var itemParam in itemsToInsert)
+                            // 3. BATCH INSERT ORDER ITEMS IN ONE COMMAND
+                            if (itemsToInsert.Count > 0)
                             {
-                                itemParam.Add("OrderId", generatedOrderId);
-                                const string insertItemSql = @"
+                                foreach (var item in itemsToInsert)
+                                {
+                                    item.Add("OrderId", generatedOrderId);
+                                }
+
+                                const string batchInsertItemSql = @"
                 INSERT INTO OrderItems (OrderId, BatchId, ProductId, Quantity, UnitPrice, CostPrice, GSTPercent, SubTotal, GstAmount, Total) 
                 VALUES (@OrderId, @BatchId, @ProductId, @Quantity, @UnitPrice, @CostPrice, @GSTPercent, @SubTotal, @GstAmount, @Total);";
-                                await connection.ExecuteAsync(insertItemSql, itemParam, transaction);
 
-                                int targetProdId = itemParam.Get<int>("ProductId");
-                                int stockDeductionQty = itemParam.Get<int>("Quantity");
-                                int? targetBatchId = itemParam.Get<int?>("BatchId");
+                                await connection.ExecuteAsync(batchInsertItemSql, itemsToInsert, transaction);
 
-                                await connection.ExecuteAsync("UPDATE Products SET `RemainingStock` = `RemainingStock` - @Qty WHERE ProductId = @ProductId;",
-                                    new { Qty = stockDeductionQty, ProductId = targetProdId }, transaction);
-
-                                if (targetBatchId.HasValue)
+                                // Fast Stock Deductions
+                                foreach (var kvp in productDeductions)
                                 {
-                                    await connection.ExecuteAsync("UPDATE ProductBatches SET CurrentStock = CurrentStock - @Qty WHERE BatchId = @BatchId;",
-                                        new { Qty = stockDeductionQty, BatchId = targetBatchId.Value }, transaction);
+                                    await connection.ExecuteAsync(
+                                        "UPDATE Products SET RemainingStock = RemainingStock - @Qty WHERE ProductId = @ProductId;",
+                                        new { Qty = kvp.Value, ProductId = kvp.Key }, transaction);
+                                }
+
+                                foreach (var kvp in batchDeductions)
+                                {
+                                    await connection.ExecuteAsync(
+                                        "UPDATE ProductBatches SET CurrentStock = CurrentStock - @Qty WHERE BatchId = @BatchId;",
+                                        new { Qty = kvp.Value, BatchId = kvp.Key }, transaction);
                                 }
                             }
 
-                            // Insert Extra Charges
-                            foreach (var chargeParam in chargesToInsert)
+                            // 4. BATCH INSERT CHARGES
+                            if (chargesToInsert.Count > 0)
                             {
-                                chargeParam.Add("OrderId", generatedOrderId);
-                                const string insertChargeSql = @"
+                                foreach (var charge in chargesToInsert)
+                                {
+                                    charge.Add("OrderId", generatedOrderId);
+                                }
+
+                                const string batchInsertChargeSql = @"
                 INSERT INTO OrderExtraCharges (OrderId, ChargeName, Amount, GSTPercent, IsDiscount) 
                 VALUES (@OrderId, @ChargeName, @Amount, @GSTPercent, @IsDiscount);";
-                                await connection.ExecuteAsync(insertChargeSql, chargeParam, transaction);
+
+                                await connection.ExecuteAsync(batchInsertChargeSql, chargesToInsert, transaction);
                             }
 
                             await SaveTier3CustomValuesAsync(connection, transaction, generatedOrderId, "Order", primaryRow, mappedTier3PropertyNames, customFieldIdMap);

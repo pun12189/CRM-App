@@ -22,7 +22,7 @@ namespace Tijori.ViewModels
         [ObservableProperty]
         private ObservableCollection<string> _availableModules = new()
         {
-            "Leads",
+            //"Leads",
             "Customers",
             "Products",
             "Orders",

@@ -202,17 +202,35 @@ namespace Tijori.ViewModels
             // 2. Extract the IDs for your database operation
             List<int> leadIdsToProcess = selectedLeads.Select(l => l.LeadId).ToList();
 
-            var confirm = MessageBox.Show($"Are you sure you want to delete {leadIdsToProcess.Count} selected leads?",
-                                         "Confirm Batch Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            string warningMessage =
+                $"Are you sure you want to delete {leadIdsToProcess.Count} selected lead(s)?\n\n" +
+                "Important Notice:\n" +
+                "• Any existing sales orders, invoices, and ledger payments linked to these lead(s) will be unlinked.\n" +
+                "• The transaction history will remain intact but will display as '[Deleted User]'.\n" +
+                "• Attached documents and lead activity history will be permanently deleted.\n\n" +
+                "Do you wish to proceed?";
+
+            var confirm = MessageBox.Show(
+                warningMessage,
+                "Confirm Permanent Delete & Unlink",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
 
             if (confirm != MessageBoxResult.Yes) return;
 
             // 3. Pass the IDs list to your service layer
-            await _leadService.BulkDeleteLeadsAsync(leadIdsToProcess);
+            bool success = await _leadService.BulkDeleteLeadsAsync(leadIdsToProcess);
 
-            // 4. Refresh your grid data
-            await LoadLeads();
-            RecalculateSelectionStates();
+            if (success)
+            {
+                // 4. Refresh your grid data
+                await LoadLeads();
+                RecalculateSelectionStates();
+            }
+            else
+            {
+                MessageBox.Show("An error occurred while attempting to delete the selected leads.", "Delete Failed", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         [RelayCommand(CanExecute = nameof(HasSelection))]

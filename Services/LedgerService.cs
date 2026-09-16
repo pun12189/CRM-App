@@ -23,26 +23,27 @@ namespace Tijori.Services
         public async Task<List<PaymentEntry>> GetAllLedgerEntriesAsync()
         {
             const string sql = @"
-                SELECT 
-                    p.PaymentId,
-                    p.OrderId,
-                    p.LeadId,
-                    l.CustomerName,
-                    l.CompanyName,
-                    o.OrderType,
-                    p.AmountReceived,
-                    p.Remarks,
-                    CASE 
-                        WHEN p.AmountReceived < 0 THEN 'Debit'
-                        ELSE 'Credit'
-                    END AS TransactionType,
-                    COALESCE(u.FullName, 'Admin') AS RecordedBy,
-                    p.PaymentDate
-                FROM Payments p
-                LEFT JOIN `Orders` o ON p.OrderId = o.OrderId
-                LEFT JOIN `Leads` l ON p.LeadId = l.LeadId
-                LEFT JOIN `Users` u ON p.UserId = u.UserId
-                ORDER BY p.PaymentId DESC;";
+        SELECT 
+            p.PaymentId,
+            p.OrderId,
+            p.LeadId,
+            COALESCE(l.CustomerName, 'Deleted User') AS CustomerName,
+            COALESCE(l.CompanyName, '-') AS CompanyName,
+            o.OrderType,
+            p.AmountReceived,
+            p.Remarks,
+            CASE 
+                WHEN p.AmountReceived < 0 THEN 'Debit'
+                ELSE 'Credit'
+            END AS TransactionType,
+            COALESCE(u.FullName, 'Admin') AS RecordedBy,
+            p.PaymentDate
+        FROM Payments p
+        LEFT JOIN `Orders` o ON p.OrderId = o.OrderId
+        LEFT JOIN `Leads` l ON p.LeadId = l.LeadId
+        LEFT JOIN `Users` u ON p.UserId = u.UserId
+        ORDER BY p.PaymentId DESC;";
+
             try
             {
                 using (IDbConnection db = _context.CreateConnection())
@@ -51,10 +52,10 @@ namespace Tijori.Services
                     return result.ToList();
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return new List<PaymentEntry>();
-            }            
+            }
         }
 
         public async Task<bool> DeleteLedgerEntryAsync(int paymentId)

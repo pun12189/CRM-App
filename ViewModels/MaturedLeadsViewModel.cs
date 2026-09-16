@@ -311,8 +311,17 @@ namespace Tijori.ViewModels
             // 2. Extract the IDs for your database operation
             List<int> leadIdsToProcess = selectedLeads.Select(l => l.LeadId).ToList();
 
-            var confirm = MessageBox.Show($"Are you sure you want to delete {leadIdsToProcess.Count} selected leads?",
-                                         "Confirm Bulk Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            string confirmationPrompt =
+                $"Are you sure you want to delete {leadIdsToProcess.Count} selected lead(s)?\n\n" +
+                "Note: Any historical orders, invoices, or payment transactions linked to these leads " +
+                "will be unlinked and marked as '[Deleted User]' to preserve your ledger records.\n\n" +
+                "Do you want to continue?";
+
+            var confirm = MessageBox.Show(
+                confirmationPrompt,
+                "Confirm Bulk Delete & Unlink",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
 
             if (confirm != MessageBoxResult.Yes) return;
 

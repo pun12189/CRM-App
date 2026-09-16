@@ -5,6 +5,7 @@ using Org.BouncyCastle.Asn1.X509;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -137,23 +138,46 @@ namespace Tijori.Services
             return rows > 0;
         }
 
-        // Delete a lead
-        public async Task<bool> DeleteLeadAsync(int leadId)
-        {
-            using var db = _context.CreateConnection();
-            // Note: LeadHistory has a Foreign Key with ON DELETE CASCADE in our SQL schema
-            string sql = "DELETE FROM Leads WHERE LeadId = @leadId";
-            var rows = await db.ExecuteAsync(sql, new { leadId });
-            return rows > 0;
-        }
-
         public async Task<bool> BulkDeleteLeadsAsync(IEnumerable<int> leadIds)
         {
-            using var conn = _context.CreateConnection();
-            string sql = "DELETE FROM Leads WHERE LeadId IN @Ids";
+            var idList = leadIds?.ToList();
+            if (idList == null || !idList.Any()) return false;
 
-            int affected = await conn.ExecuteAsync(sql, new { Ids = leadIds });
-            return affected > 0;
+            using var conn = _context.CreateConnection();
+            if (conn.State == ConnectionState.Closed)
+                await ((System.Data.Common.DbConnection)conn).OpenAsync();
+
+            using var tx = conn.BeginTransaction();
+            try
+            {
+                // 1. Unlink transactions so past invoices/records remain safe (will display as 'Deleted User')
+                await conn.ExecuteAsync("UPDATE orders SET LeadId = NULL WHERE LeadId IN @Ids;", new { Ids = idList }, tx);
+                await conn.ExecuteAsync("UPDATE payments SET LeadId = NULL WHERE LeadId IN @Ids;", new { Ids = idList }, tx);
+                await conn.ExecuteAsync("UPDATE service_orders SET CustomerId = NULL WHERE CustomerId IN @Ids;", new { Ids = idList }, tx);
+
+                // 2. Clean up child metadata and mapping tables
+                await conn.ExecuteAsync("DELETE FROM leaddivisions WHERE LeadId IN @Ids;", new { Ids = idList }, tx);
+                await conn.ExecuteAsync("DELETE FROM customer_brands WHERE CustomerId IN @Ids;", new { Ids = idList }, tx);
+                await conn.ExecuteAsync("DELETE FROM leadhistory WHERE LeadId IN @Ids;", new { Ids = idList }, tx);
+                await conn.ExecuteAsync("DELETE FROM ModuleUploadedDocuments WHERE ModuleType = 'Lead' AND EntityId IN @Ids;", new { Ids = idList }, tx);
+                await conn.ExecuteAsync("DELETE FROM customfieldvalues WHERE EntityType = 'Lead' AND EntityId IN @Ids;", new { Ids = idList }, tx);
+
+                // 3. Delete parent leads
+                int affected = await conn.ExecuteAsync("DELETE FROM Leads WHERE LeadId IN @Ids;", new { Ids = idList }, tx);
+
+                tx.Commit();
+                return affected > 0;
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
+        }
+
+        public async Task<bool> DeleteLeadAsync(int leadId)
+        {
+            return await BulkDeleteLeadsAsync(new[] { leadId });
         }
 
         public async Task<bool> BulkDeadLeadsAsync(IEnumerable<int> leadIds)
@@ -822,12 +846,16 @@ ORDER BY l.LeadId DESC;";
         public async Task<IEnumerable<Models.Order>> GetAllOrdersWithCustomerNamesAsync()
         {
             using var db = _context.CreateConnection();
-            // Join Orders with Leads to get the CustomerName for each order
-            string sql = @"
-        SELECT o.*, l.CustomerName , l.CompanyName as FirmName
+
+            // Use LEFT JOIN so orders with NULL/deleted LeadId are preserved
+            const string sql = @"
+        SELECT 
+            o.*, 
+            COALESCE(l.CustomerName, 'Deleted User') AS CustomerName, 
+            COALESCE(l.CompanyName, '-') AS FirmName
         FROM Orders o
-        INNER JOIN Leads l ON o.LeadId = l.LeadId
-        ORDER BY o.OrderDate DESC";
+        LEFT JOIN Leads l ON o.LeadId = l.LeadId
+        ORDER BY o.OrderDate DESC;";
 
             return await db.QueryAsync<Models.Order>(sql);
         }

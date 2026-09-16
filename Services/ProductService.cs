@@ -31,29 +31,45 @@ namespace Tijori.Services
         {
             using var db = _context.CreateConnection();
 
-            string sql = @"
-                SELECT 
-                    p.*, 
-                    c.CategoryName AS CategoryName,
-                    c.CategoryType,
-                    IFNULL(b.AggStock, 0) AS RemainingStock,
-                    IFNULL(b.BatchCount, 0) AS TotalBatchesCount,
-                    CASE 
-                        WHEN IFNULL(b.AggStock, 0) > 0 THEN ROUND(b.TotalValue / b.AggStock, 2)
-                        ELSE p.CostPrice 
-                    END AS CostPrice
-                FROM Products p
-                LEFT JOIN Categories c ON p.CategoryId = c.Id
-                LEFT JOIN (
-                    SELECT 
-                        ProductId, 
-                        SUM(CurrentStock) AS AggStock,
-                        COUNT(BatchId) AS BatchCount,
-                        SUM(CurrentStock * MinimumSellingPrice) AS TotalValue
-                    FROM ProductBatches                    
-                    GROUP BY ProductId
-                ) b ON p.ProductId = b.ProductId        
-                ORDER BY p.Name ASC;"; /*WHERE DivisionId = @DivId*/
+            const string sql = @"
+        SELECT 
+            p.*, 
+            c.CategoryName AS CategoryName,
+            c.CategoryType,
+
+            -- 1. If Batch Tracking is ON, read live aggregate from ProductBatches; 
+            --    Otherwise, read directly from the product master table.
+            CASE 
+                WHEN p.HasBatchTracking = 1 THEN IFNULL(b.AggStock, 0)
+                ELSE p.RemainingStock 
+            END AS RemainingStock,
+
+            -- 2. Total batches count (0 if batch tracking is disabled)
+            CASE 
+                WHEN p.HasBatchTracking = 1 THEN IFNULL(b.BatchCount, 0)
+                ELSE 0 
+            END AS TotalBatchesCount,
+
+            -- 3. Cost Price: Weighted average cost if batch tracked, else master CostPrice
+            CASE 
+                WHEN p.HasBatchTracking = 1 AND IFNULL(b.AggStock, 0) > 0 
+                    THEN ROUND(b.TotalValue / b.AggStock, 2)
+                ELSE p.CostPrice 
+            END AS CostPrice
+
+        FROM Products p
+        LEFT JOIN Categories c ON p.CategoryId = c.Id
+        LEFT JOIN (
+            SELECT 
+                ProductId, 
+                SUM(CurrentStock) AS AggStock,
+                COUNT(BatchId) AS BatchCount,
+                SUM(CurrentStock * MinimumSellingPrice) AS TotalValue
+            FROM ProductBatches
+            GROUP BY ProductId
+        ) b ON p.ProductId = b.ProductId
+        WHERE (@DivId = 0 OR p.DivisionId = @DivId OR p.DivisionId IS NULL)
+        ORDER BY p.Name ASC;";
 
             return await db.QueryAsync<Product>(sql, new { DivId = divisionId });
         }

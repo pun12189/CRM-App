@@ -348,20 +348,20 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <!--<DataGridTemplateColumn Header="Actions" Width="Auto">
+                <DataGridTemplateColumn Header="Actions" Width="80">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <Button Style="{StaticResource MaterialDesignIconButton}" Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
-                                    <materialDesign:PackIcon Kind="Edit" Foreground="Orange"/>
+                                <Button Width="22" Height="22" Padding="0" Style="{StaticResource MaterialDesignIconButton}" Command="{Binding DataContext.EditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
+                                    <materialDesign:PackIcon Kind="Edit" Foreground="Orange" Width="15" Height="15"/>
                                 </Button>
-                                <Button Style="{StaticResource MaterialDesignIconButton}" Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
-                                    <materialDesign:PackIcon Kind="Delete" Foreground="Red"/>
+                                <Button Width="22" Height="22" Padding="0" Style="{StaticResource MaterialDesignIconButton}" Command="{Binding DataContext.DeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" CommandParameter="{Binding}">
+                                    <materialDesign:PackIcon Kind="Trash" Foreground="Red" Width="15" Height="15"/>
                                 </Button>
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>-->
+                </DataGridTemplateColumn>
             </DataGrid.Columns>
             <DataGrid.RowDetailsTemplate>
                 <DataTemplate>

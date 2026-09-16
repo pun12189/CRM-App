@@ -6,7 +6,7 @@ namespace Tijori.Models
     {
         public int BatchId { get; set; }
         public int ProductId { get; set; }
-        public int DivisionId { get; set; }
+        public int? DivisionId { get; set; }
 
         [ObservableProperty] private string _batchNumber = string.Empty;
         [ObservableProperty] private DateTime? _mfgDate;

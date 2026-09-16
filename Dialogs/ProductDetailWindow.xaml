@@ -8,7 +8,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Icon="/Assets/opn.png" ShowInTaskbar="False" WindowStartupLocation="CenterOwner"
-        Title="Product Details" Width="600" Height="Auto" SizeToContent="Height">
+        Title="Product Details" Width="700" SizeToContent="Height">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <conv:StringToUpperConverter x:Key="StringToUpperConverter"/>
@@ -305,9 +305,9 @@
 
                 <!-- SECTION 4: ACTIONS PANEL FOOTER -->
                 <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5,20,5,5">
-                    <TextBlock Text="{Binding ValidationErrorMessage}" 
-                               Foreground="#C62828" FontWeight="SemiBold" 
-                               VerticalAlignment="Center" Margin="0,0,15,0"
+                    <TextBlock Text="{Binding ValidationErrorMessage}" MaxWidth="300"
+                               Foreground="#C62828" FontWeight="SemiBold" TextWrapping="Wrap"
+                               VerticalAlignment="Center" Margin="0,0,15,0" HorizontalAlignment="Left"
                                Visibility="{Binding IsValidationErrorVisible, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                     <Button Content="Reset Fields" 

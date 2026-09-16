@@ -18,7 +18,7 @@ namespace Tijori.Models
         [ObservableProperty] private bool _isSelectedForAction;
 
         public int ProductId { get; set; }
-        public int DivisionId { get; set; } = 1;
+        public int? DivisionId { get; set; }
         [ObservableProperty] private string _name = string.Empty;
         [ObservableProperty] private string _shortName = string.Empty;
         [ObservableProperty] private string _brandName = string.Empty;

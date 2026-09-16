@@ -246,8 +246,51 @@ namespace Tijori.ViewModels
         [RelayCommand]
         private async Task Delete(Product p)
         {
-            if (await _productService.DeleteProductAsync(p.ProductId))
-                await LoadInitialData();
+            if (p == null) return;
+
+            int usageCount = await _productService.GetProductUsageCountAsync(p.ProductId);
+
+            if (usageCount > 0)
+            {
+                // Prompt with explicit warning about linked transactions
+                var result = System.Windows.MessageBox.Show(
+                    $"'{p.Name}' is linked to {usageCount} order/purchase transaction record(s).\n\n" +
+                    "Deleting this product will permanently remove all associated invoice line items and batches.\n\n" +
+                    "Do you want to proceed and permanently delete?",
+                    "Warning: Existing Records Linked",
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Warning);
+
+                if (result != System.Windows.MessageBoxResult.Yes) return;
+            }
+            else
+            {
+                // Standard confirmation for unlinked products
+                var result = System.Windows.MessageBox.Show(
+                    $"Are you sure you want to delete '{p.Name}'?",
+                    "Confirm Delete",
+                    System.Windows.MessageBoxButton.YesNo,
+                    System.Windows.MessageBoxImage.Question);
+
+                if (result != System.Windows.MessageBoxResult.Yes) return;
+            }
+
+            try
+            {
+                bool isDeleted = await _productService.ForceDeleteProductAsync(p.ProductId);
+                if (isDeleted)
+                {
+                    await LoadInitialData();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show(
+                    $"Failed to delete product: {ex.Message}",
+                    "Deletion Error",
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Error);
+            }
         }
 
         [RelayCommand]

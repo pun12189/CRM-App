@@ -127,104 +127,151 @@ namespace Tijori.Services
         public async Task<bool> UpsertProductWithBatchAsync(Product product, ProductBatch batch)
         {
             using var db = _context.CreateConnection();
-            if (db.State == ConnectionState.Closed) await ((System.Data.Common.DbConnection)db).OpenAsync();
+            if (db.State == ConnectionState.Closed)
+                await ((System.Data.Common.DbConnection)db).OpenAsync();
 
             using var transaction = db.BeginTransaction();
             try
             {
-                // STEP 1: Upsert Parent Product (Including HasBatchTracking Column)
-                string productSql;
+                int? resolvedDivisionId = (product.DivisionId.HasValue && product.DivisionId.Value > 0) ? product.DivisionId.Value : null;
+
+                product.DivisionId = resolvedDivisionId;
+                batch.DivisionId = resolvedDivisionId;
+
+                // -----------------------------------------------------------------
+                // STEP 1: INSERT OR UPDATE `products` TABLE
+                // -----------------------------------------------------------------
                 if (product.ProductId == 0)
                 {
-                    productSql = @"
-                    INSERT INTO Products (
-                        DivisionId, Name, ShortName, BrandName, SKU, Unit, CategoryId, Manufacturer, Packaging, 
-                        InitialStock, RemainingStock, MRP, CostPrice, SellingPrice, GSTPercent, TotalCost, TrackCost, 
-                        HasBatchTracking, MfgDate, ExpiryDate, CreatedAt
-                    ) VALUES (
-                        @DivisionId, @Name, @ShortName, @BrandName, @SKU, @Unit, @CategoryId, @Manufacturer, @Packaging, 
-                        @InitialStock, @RemainingStock, @MRP, @CostPrice, @SellingPrice, @GSTPercent, @TotalCost, @TrackCost, 
-                        @HasBatchTracking, @MfgDate, @ExpiryDate, NOW()
-                    );
-                    SELECT LAST_INSERT_ID();";
+                    const string insertProductSql = @"
+                INSERT INTO products (
+                    DivisionId, Name, ShortName, BrandName, SKU, Unit, CategoryId, 
+                    Manufacturer, Packaging, InitialStock, RemainingStock, ReorderQuantity, 
+                    AutoReorderEnabled, MRP, CostPrice, SellingPrice, GSTPercent, TotalCost, 
+                    TrackCost, HasBatchTracking, MfgDate, ExpiryDate, CreatedAt
+                ) VALUES (
+                    @DivisionId, @Name, @ShortName, @BrandName, @SKU, @Unit, @CategoryId, 
+                    @Manufacturer, @Packaging, @InitialStock, @RemainingStock, @ReorderQuantity, 
+                    @AutoReorderEnabled, @MRP, @CostPrice, @SellingPrice, @GSTPercent, @TotalCost, 
+                    @TrackCost, @HasBatchTracking, @MfgDate, @ExpiryDate, NOW()
+                );";
 
-                    product.ProductId = await db.ExecuteScalarAsync<int>(productSql, product, transaction);
-                    batch.ProductId = product.ProductId;
+                    await db.ExecuteAsync(insertProductSql, product, transaction);
+
+                    // Fetch the generated ProductId explicitly
+                    product.ProductId = await db.ExecuteScalarAsync<int>("SELECT LAST_INSERT_ID();", transaction: transaction);
                 }
                 else
                 {
-                    productSql = @"
-                    UPDATE Products 
-                    SET 
-                        Name = @Name, ShortName = @ShortName, BrandName = @BrandName, SKU = @SKU, Unit = @Unit,
-                        CategoryId = @CategoryId, Manufacturer = @Manufacturer, Packaging = @Packaging,
-                        MRP = @MRP, SellingPrice = @SellingPrice, GSTPercent = @GSTPercent, 
-                        TotalCost = @TotalCost, TrackCost = @TrackCost, HasBatchTracking = @HasBatchTracking,
-                        MfgDate = @MfgDate, ExpiryDate = @ExpiryDate
-                    WHERE ProductId = @ProductId AND DivisionId = @DivisionId;";
+                    const string updateProductSql = @"
+                UPDATE products 
+                SET 
+                    DivisionId = @DivisionId,
+                    Name = @Name,
+                    ShortName = @ShortName,
+                    BrandName = @BrandName,
+                    SKU = @SKU,
+                    Unit = @Unit,
+                    CategoryId = @CategoryId,
+                    Manufacturer = @Manufacturer,
+                    Packaging = @Packaging,
+                    ReorderQuantity = @ReorderQuantity,
+                    AutoReorderEnabled = @AutoReorderEnabled,
+                    MRP = @MRP,
+                    SellingPrice = @SellingPrice,
+                    GSTPercent = @GSTPercent,
+                    TotalCost = @TotalCost,
+                    TrackCost = @TrackCost,
+                    HasBatchTracking = @HasBatchTracking,
+                    MfgDate = @MfgDate,
+                    ExpiryDate = @ExpiryDate
+                WHERE ProductId = @ProductId;";
 
-                    await db.ExecuteAsync(productSql, product, transaction);
+                    await db.ExecuteAsync(updateProductSql, product, transaction);
                 }
 
-                // STEP 2: Upsert Child Product Batch
-                string batchSql;
+                // -----------------------------------------------------------------
+                // STEP 2: LINK BATCH TO VALID PRODUCT & DIVISION
+                // -----------------------------------------------------------------
+                batch.ProductId = product.ProductId; // MUST be set for both Insert and Update
+                if (batch.DivisionId == 0)
+                {
+                    batch.DivisionId = product.DivisionId;
+                }
+
+                // Default fallback batch number if none is supplied in the form
+                if (string.IsNullOrWhiteSpace(batch.BatchNumber))
+                {
+                    batch.BatchNumber = "DEFAULT";
+                }
+
+                // -----------------------------------------------------------------
+                // STEP 3: INSERT OR UPDATE `productbatches` TABLE
+                // -----------------------------------------------------------------
                 if (batch.BatchId == 0)
                 {
-                    batchSql = @"
-                        INSERT INTO ProductBatches (
-                            ProductId, DivisionId, BatchNumber, MfgDate, ExpiryDate, 
-                            QuantityReceived, CurrentStock, MinimumSellingPrice, CreatedAt
-                        ) VALUES (
-                            @ProductId, @DivisionId, @BatchNumber, @MfgDate, @ExpiryDate, 
-                            @QuantityReceived, @CurrentStock, @MinimumSellingPrice, NOW()
-                        );";
+                    const string insertBatchSql = @"
+                INSERT INTO productbatches (
+                    ProductId, DivisionId, BatchNumber, MfgDate, ExpiryDate, 
+                    QuantityReceived, CurrentStock, MinimumSellingPrice, CreatedAt
+                ) VALUES (
+                    @ProductId, @DivisionId, @BatchNumber, @MfgDate, @ExpiryDate, 
+                    @QuantityReceived, @CurrentStock, @MinimumSellingPrice, NOW()
+                );";
+
+                    await db.ExecuteAsync(insertBatchSql, batch, transaction);
+                    batch.BatchId = await db.ExecuteScalarAsync<int>("SELECT LAST_INSERT_ID();", transaction: transaction);
                 }
                 else
                 {
-                    batchSql = @"
-                        UPDATE ProductBatches 
-                        SET 
-                            BatchNumber = @BatchNumber,
-                            MfgDate = @MfgDate,
-                            ExpiryDate = @ExpiryDate,
-                            QuantityReceived = @QuantityReceived,
-                            CurrentStock = @CurrentStock,
-                            MinimumSellingPrice = @MinimumSellingPrice
-                        WHERE BatchId = @BatchId AND ProductId = @ProductId AND DivisionId = @DivisionId;";
+                    const string updateBatchSql = @"
+                UPDATE productbatches 
+                SET 
+                    DivisionId = @DivisionId,
+                    BatchNumber = @BatchNumber,
+                    MfgDate = @MfgDate,
+                    ExpiryDate = @ExpiryDate,
+                    QuantityReceived = @QuantityReceived,
+                    CurrentStock = @CurrentStock,
+                    MinimumSellingPrice = @MinimumSellingPrice
+                WHERE BatchId = @BatchId AND ProductId = @ProductId;";
+
+                    await db.ExecuteAsync(updateBatchSql, batch, transaction);
                 }
 
-                await db.ExecuteAsync(batchSql, batch, transaction);
-
-                // STEP 3: Recalculate Aggregates in DB
+                // -----------------------------------------------------------------
+                // STEP 4: RECALCULATE STOCK & WAC IN `products`
+                // -----------------------------------------------------------------
                 const string syncSql = @"
-                    UPDATE Products p 
-                    SET 
-                        p.InitialStock = IFNULL((SELECT SUM(QuantityReceived) FROM ProductBatches WHERE ProductId = p.ProductId), 0),
-                        p.RemainingStock = IFNULL((SELECT SUM(CurrentStock) FROM ProductBatches WHERE ProductId = p.ProductId AND CurrentStock > 0), 0),
-                        p.CostPrice = IFNULL(
-                            (SELECT ROUND(SUM(CurrentStock * MinimumSellingPrice) / SUM(CurrentStock), 2) 
-                             FROM ProductBatches 
-                             WHERE ProductId = p.ProductId AND CurrentStock > 0), 
-                            @FallbackCost
-                        )
-                    WHERE p.ProductId = @ProductId AND p.DivisionId = @DivisionId;";
+            UPDATE products p 
+            SET 
+                p.InitialStock = IFNULL((SELECT SUM(QuantityReceived) FROM productbatches WHERE ProductId = p.ProductId), 0),
+                p.RemainingStock = IFNULL((SELECT SUM(CurrentStock) FROM productbatches WHERE ProductId = p.ProductId AND CurrentStock > 0), 0),
+                p.CostPrice = IFNULL(
+                    (SELECT ROUND(SUM(CurrentStock * MinimumSellingPrice) / NULLIF(SUM(CurrentStock), 0), 2) 
+                     FROM productbatches 
+                     WHERE ProductId = p.ProductId AND CurrentStock > 0), 
+                    @FallbackCost
+                )
+            WHERE p.ProductId = @ProductId;";
 
                 await db.ExecuteAsync(syncSql, new
                 {
                     ProductId = product.ProductId,
-                    DivisionId = product.DivisionId,
-                    FallbackCost = batch.MinimumSellingPrice
+                    FallbackCost = batch.MinimumSellingPrice > 0 ? batch.MinimumSellingPrice : product.CostPrice
                 }, transaction);
 
-                // STEP 4: Fetch Updated Aggregates for UI Binding
+                // -----------------------------------------------------------------
+                // STEP 5: SYNC UPDATED VALUES BACK TO MODEL
+                // -----------------------------------------------------------------
                 const string fetchUpdatedSql = @"
-                    SELECT RemainingStock, InitialStock, CostPrice 
-                    FROM Products 
-                    WHERE ProductId = @ProductId AND DivisionId = @DivisionId;";
+            SELECT RemainingStock, InitialStock, CostPrice 
+            FROM products 
+            WHERE ProductId = @ProductId LIMIT 1;";
 
                 var updatedMetrics = await db.QuerySingleAsync<(int Remaining, int Initial, decimal Wac)>(
                     fetchUpdatedSql,
-                    new { ProductId = product.ProductId, DivisionId = product.DivisionId },
+                    new { ProductId = product.ProductId },
                     transaction
                 );
 
@@ -242,10 +289,45 @@ namespace Tijori.Services
             }
         }
 
-        public async Task<bool> DeleteProductAsync(int id)
+        public async Task<int> GetProductUsageCountAsync(int productId)
         {
             using var db = _context.CreateConnection();
-            return await db.ExecuteAsync("DELETE FROM Products WHERE ProductId = @id", new { id }) > 0;
+            const string sql = @"
+        SELECT 
+            (SELECT COUNT(1) FROM OrderItems WHERE ProductId = @productId) +
+            (SELECT COUNT(1) FROM PurchaseOrderDetails WHERE ProductId = @productId);";
+
+            return await db.ExecuteScalarAsync<int>(sql, new { productId });
+        }
+
+        public async Task<bool> ForceDeleteProductAsync(int productId)
+        {
+            using var db = _context.CreateConnection();
+            if (db.State == ConnectionState.Closed)
+                await ((System.Data.Common.DbConnection)db).OpenAsync();
+
+            using var tx = db.BeginTransaction();
+            try
+            {
+                // 1. Remove child records referencing this product
+                await db.ExecuteAsync("DELETE FROM OrderItems WHERE ProductId = @productId;", new { productId }, tx);
+                await db.ExecuteAsync("DELETE FROM PurchaseOrderDetails WHERE ProductId = @productId;", new { productId }, tx);
+                await db.ExecuteAsync("DELETE FROM ProductBatches WHERE ProductId = @productId;", new { productId }, tx);
+
+                // 2. Remove Tier-3 Custom Field values if mapped
+                await db.ExecuteAsync("DELETE FROM customfieldvalues WHERE EntityId = @productId AND EntityType = 'Product';", new { productId }, tx);
+
+                // 3. Delete the parent product record
+                int rows = await db.ExecuteAsync("DELETE FROM products WHERE ProductId = @productId;", new { productId }, tx);
+
+                tx.Commit();
+                return rows > 0;
+            }
+            catch
+            {
+                tx.Rollback();
+                throw;
+            }
         }
 
         public async Task<bool> IsBatchNumberDuplicateAsync(string batchNumber, int divisionId)

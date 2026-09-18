@@ -24,7 +24,7 @@
 
                 <ListBox SelectedValue="{Binding SelectedContext, Mode=TwoWay}" SelectedValuePath="Tag" Style="{StaticResource MaterialDesignNavigationListBox}">
                     <ListBoxItem Content="🏷️ Items" Tag="{x:Static enums:CategoryContext.Items}"/>
-                    <ListBoxItem Content="🎯 Leads" Tag="{x:Static enums:CategoryContext.Leads}"/>
+                    <ListBoxItem Content="🎯 Leads" Tag="{x:Static enums:CategoryContext.Leads}" Visibility="Collapsed"/>
                     <ListBoxItem Content="🤝 Customers" Tag="{x:Static enums:CategoryContext.Customers}"/>
                     <ListBoxItem Content="📁 Documents" Tag="{x:Static enums:CategoryContext.Documents}"/>
                 </ListBox>

@@ -81,19 +81,63 @@ namespace Tijori.ViewModels
         {
             if (user == null) return;
 
-            // Warning about Data Integrity
-            string message = $"Permanently deleting {user.FullName} will remove all their records. " +
-                             "It is recommended to simply 'Deactivate' them instead. Proceed with Delete?";
-
-            MessageBoxResult isConfirmed = MessageBox.Show(message, "Permanent Deletion Warning", MessageBoxButton.OKCancel);
-
-            if (isConfirmed == MessageBoxResult.OK)
+            if (user.Role == UserRole.Admin)
             {
-                bool success = await _staffService.SoftDeleteUserAsync(user);
+                MessageBox.Show("Administrator accounts cannot be deactivated or deleted.",
+                                "Action Denied", MessageBoxButton.OK, MessageBoxImage.Stop);
+                return;
+            }
+
+            string promptMessage =
+                $"Manage staff removal for: {user.FullName} ({user.Role})\n\n" +
+                "• Click [Yes] to DEACTIVATE (Recommended - keeps transaction & ledger history).\n" +
+                "• Click [No] to PERMANENTLY DELETE (Hard delete from the database).\n" +
+                "• Click [Cancel] to abort.";
+
+            MessageBoxResult choice = MessageBox.Show(
+                promptMessage,
+                "Deactivate or Permanently Delete?",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Warning);
+
+            if (choice == MessageBoxResult.Cancel) return;
+
+            try
+            {
+                bool success = false;
+
+                if (choice == MessageBoxResult.Yes)
+                {
+                    // 1. Soft Delete / Deactivate (Sets IsActive = 0)
+                    success = await _staffService.SoftDeleteUserAsync(user);
+                }
+                else if (choice == MessageBoxResult.No)
+                {
+                    // Double check before permanent removal
+                    var confirmHardDelete = MessageBox.Show(
+                        $"Are you absolutely sure you want to PERMANENTLY delete {user.FullName}?\nThis action cannot be undone.",
+                        "Confirm Permanent Deletion",
+                        MessageBoxButton.OKCancel,
+                        MessageBoxImage.Error);
+
+                    if (confirmHardDelete != MessageBoxResult.OK) return;
+
+                    // 2. Hard Delete (Physical DELETE from database)
+                    success = await _staffService.DeleteUserAsync(user.UserId);
+                }
+
                 if (success)
                 {
                     UsersList.Remove(user);
                 }
+            }
+            catch (InvalidOperationException opEx)
+            {
+                MessageBox.Show(opEx.Message, "Security Policy", MessageBoxButton.OK, MessageBoxImage.Hand);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Operation failed: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

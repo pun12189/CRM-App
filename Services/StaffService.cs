@@ -29,8 +29,8 @@ namespace Tijori.Services
             try
             {
                 const string sql = @"
-                    INSERT INTO Users (Email, Password, FullName, Phone, Role, SeniorId, DepartmentId, MonthlyTarget, IsActive, CreatedDate)
-                    VALUES (@Email, @Password, @FullName, @Phone, @Role, @SeniorId, @DepartmentId, @MonthlyTarget, @IsActive, NOW());
+                    INSERT INTO Users (Email, Password, FullName, UserName, Phone, Role, SeniorId, DepartmentId, MonthlyTarget, IsActive, CreatedDate)
+                    VALUES (@Email, @Password, @FullName, @UserName, @Phone, @Role, @SeniorId, @DepartmentId, @MonthlyTarget, @IsActive, NOW());
                     SELECT LAST_INSERT_ID();";
 
                 int newUserId = await db.QuerySingleAsync<int>(sql, user, transaction: transaction);
@@ -60,6 +60,7 @@ namespace Tijori.Services
                     UPDATE Users 
                     SET Email = @Email, 
                         FullName = @FullName, 
+                        UserName = @UserName,
                         Phone = @Phone, 
                         Role = @Role, 
                         SeniorId = @SeniorId, 

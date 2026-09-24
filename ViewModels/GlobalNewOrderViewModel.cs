@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows;
+using System.Windows.Data;
 using Tijori.Core;
 using Tijori.Interfaces;
 using Tijori.Models;
@@ -93,6 +95,26 @@ namespace Tijori.ViewModels
                 decimal chargesTotal = OtherCharges.Sum(x => x.TotalCharge);
                 return Math.Round(OrderValue + chargesTotal, 2);
             }
+        }
+
+        private string _productSearchText;
+        public string ProductSearchText
+        {
+            get => _productSearchText;
+            set
+            {
+                if (SetProperty(ref _productSearchText, value))
+                {
+                    ApplyProductFilter();
+                }
+            }
+        }
+
+        private ICollectionView _productsView;
+        public ICollectionView ProductsView
+        {
+            get => _productsView;
+            set => SetProperty(ref _productsView, value);
         }
 
         public GlobalNewOrderViewModel(LeadService service, OrderService orderService, ProductService productService, IUserSession userSession)
@@ -428,13 +450,23 @@ namespace Tijori.ViewModels
             // 2. Transform and flatten data trees into the ComboBox representation structure
             foreach (var prod in AllMasterProducts)
             {
+                var dtext = $"{prod.Name}({prod.ShortName}) ({prod.InnerBatchesCollection.Count} Batches) (Stock: {prod.RemainingStock}) (Avg Price: ₹{prod.CostPrice:N2})";
+
+                if (prod.InnerBatchesCollection.Count <= 0)
+                {
+                    dtext = $"{prod.Name} ({prod.ShortName}) (Stock: {prod.RemainingStock}) (Avg Price: ₹{prod.CostPrice:N2})";
+                }
+
                 // Create Parent Product Summary Anchor
                 ProductsLookupCollection.Add(new OrderProductLookupItem
                 {
                     ProductId = prod.ProductId,
                     BatchId = null,
                     IsBatchRow = false,
-                    DisplayText = $"{prod.Name} ({prod.InnerBatchesCollection.Count} Batches) (Stock: {prod.RemainingStock}) (Avg Price: ₹{prod.CostPrice:N2})",
+                    ProductName = prod.Name,
+                    ShortName = prod.ShortName,
+                    BatchNumber = string.Empty,
+                    DisplayText = dtext,
                     AvailableStock = prod.RemainingStock,
                     Price = prod.SellingPrice
                 });
@@ -448,12 +480,41 @@ namespace Tijori.ViewModels
                         ProductId = prod.ProductId,
                         BatchId = batch.BatchId,
                         IsBatchRow = true,
+                        ProductName = prod.Name,
+                        ShortName = prod.ShortName,
+                        BatchNumber = batch.BatchNumber,
                         DisplayText = $"-> {batch.BatchNumber} (Exp: {batch.ExpiryDate:dd-MM-yyyy}) (Stock: {batch.CurrentStock}) (Price: ₹{batch.MinimumSellingPrice:N2})",
                         AvailableStock = batch.CurrentStock,
                         Price = prod.SellingPrice
                     });
                 }
             }
+
+            ProductsView = CollectionViewSource.GetDefaultView(ProductsLookupCollection);
+            ProductsView.Filter = FilterProductItem;
+        }
+
+        private bool FilterProductItem(object obj)
+        {
+            if (string.IsNullOrWhiteSpace(ProductSearchText))
+                return true;
+
+            if (obj is OrderProductLookupItem item)
+            {
+                string query = ProductSearchText.Trim();
+
+                // Check if query matches Name, ShortName, or BatchNumber
+                return (!string.IsNullOrEmpty(item.ProductName) && item.ProductName.Contains(query, StringComparison.OrdinalIgnoreCase))
+                    || (!string.IsNullOrEmpty(item.ShortName) && item.ShortName.Contains(query, StringComparison.OrdinalIgnoreCase))
+                    || (!string.IsNullOrEmpty(item.BatchNumber) && item.BatchNumber.Contains(query, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return false;
+        }
+
+        private void ApplyProductFilter()
+        {
+            ProductsView?.Refresh();
         }
     }
 }

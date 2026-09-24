@@ -69,10 +69,11 @@
                         </Grid.RowDefinitions>
 
                         <ComboBox Grid.Row="2" x:Name="ProductSelectionCombo"
-                              ItemsSource="{Binding ProductsLookupCollection}"
+                              ItemsSource="{Binding ProductsView}"
                               SelectedItem="{Binding SelectedLookupRow}"
-                              TextSearch.TextPath="DisplayText"
-                              materialDesign:HintAssist.Hint="Select Product or Specific Batch"
+                              Text="{Binding ProductSearchText, UpdateSourceTrigger=PropertyChanged}"
+                              IsTextSearchEnabled="False"
+                              materialDesign:HintAssist.Hint="Select Product, Short Name or Batch"
                               Style="{StaticResource MaterialDesignOutlinedComboBox}"
                               IsEditable="True"
                               VerticalAlignment="Center">
